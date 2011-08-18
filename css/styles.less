@@ -1,0 +1,100 @@
+@spacing: 15px;
+@light: 40%;
+
+@darkColor: #555;
+@lightColor: #EEE;
+
+// Sensible header sizes with no hardcoded sizes
+// for better use on mobile devices
+h1 {
+	font-size: 2.31em;
+}
+h2 {
+	font-size: 1.87em;
+}
+h3 {
+	font-size: 1.38em;
+}
+h4 {
+	font-size: 1.23em;
+}
+h5 {
+	font-size: 1.07em;
+}
+h6 {
+	font-size: 0.7em;
+	text-transform: uppercase;
+}
+
+// First headings don't get a top-margin
+h1, h2, h3, h4, h5, h6 {
+	&:first-child {
+		margin-top: 0px;
+	}
+}
+
+body {
+	background-color: @lightColor;
+	padding: 0px;
+	margin: 0px;
+
+	> * {
+		width: 100%;
+	}
+
+	.wrapper {
+		min-width: 320px-2*@spacing;
+		max-width: 480px-2*@spacing;
+		margin: 0px auto;
+		padding: 0px @spacing;
+	}
+
+	> header {
+		background-color: @darkColor;
+		color: @lightColor;
+		width: auto;
+		margin: @spacing 0;
+		border-top: 1px lighten(@darkColor, @light) solid;
+		border-bottom: 1px darken(@darkColor, @light) solid;
+
+		h1 {
+			text-align: center;
+			margin: 0.67em 0px !important;
+		}
+	}
+	> article {
+		section:not(#related), #related > ul > li {
+			.round-corners(3px);
+			margin: @spacing/2 0;
+			padding: @spacing/2 @spacing;
+			background-color: @darkColor;
+		}
+
+		#related {
+			> ul {
+				margin: 0px;
+				margin-top: @spacing;
+				padding: 0px;
+				list-style: none;
+			}
+		}
+	}
+	footer {
+		color: @lightColor;
+		background-color: @darkColor;
+	}
+}
+
+// Helpers
+.round-corners(@radius: 5px) {
+	-moz-border-radius: @radius;
+	-webkit-border-radius: @radius;
+	-khtml-border-radius: @radius;
+	border-radius: @radius;
+}
+
+.shadow(@dx, @dy, @blur, @color) {
+	-moz-box-shadow: @dx @dy @blur @color;
+	-webkit-box-shadow: @dx @dy @blur @color;
+	box-shadow: @dx @dy @blur @color;
+}
