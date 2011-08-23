@@ -12,6 +12,10 @@
 	.wait()
 	.script('js/load/showtweet.js');
 
+	// Comments
+	Loader
+	.script('http://connect.facebook.net/en_US/all.js#xfbml=1');
+
 	// Media Query polyfill
 	Modernizr.mq('(min-width)') ||
 	Loader
