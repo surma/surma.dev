@@ -1,0 +1,1 @@
+MyTwitter.getTweet('surmair', '.mytwitter');
