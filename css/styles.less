@@ -51,7 +51,8 @@ body {
 			color: @lightColor;
 			background-color: @darkColor;
 			overflow: hidden;
-			padding: 0px @spacing;
+			margin: @spacing/2 0;
+			padding: @spacing/2 @spacing;
 		}
 	}
 
@@ -69,11 +70,6 @@ body {
 		}
 	}
 	> article {
-		section {
-			margin: @spacing/2 0;
-			padding: @spacing/2 @spacing;
-			background-color: @darkColor;
-		}
 		.fb_iframe_widget {
 			width: 100%;
 			> * {
