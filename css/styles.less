@@ -1,42 +1,18 @@
+@obituaryMargin: 10px;
+@obituaryBorder: 5px;
 @spacing: 15px;
 @light: 40%;
 
-@darkColor: #555;
-@lightColor: #EEE;
-
-// Sensible header sizes with no hardcoded sizes
-// for better use on mobile devices
-h1 {
-	font-size: 2.31em;
-}
-h2 {
-	font-size: 1.87em;
-}
-h3 {
-	font-size: 1.38em;
-}
-h4 {
-	font-size: 1.23em;
-}
-h5 {
-	font-size: 1.07em;
-}
-h6 {
-	font-size: 0.7em;
-	text-transform: uppercase;
-}
-
-// First headings don't get a top-margin
-h1, h2, h3, h4, h5, h6 {
-	&:first-child {
-		margin-top: 0px;
-	}
-}
+@color1: #000;
+@color2: #FFF;
 
 body {
-	background-color: @lightColor;
+	font-family: Baskerville, Times, serif;
+	color: @color1;
+	background-color: @color2;
 	padding: 0px;
-	margin: 0px;
+	margin: @obituaryMargin;
+	border: @obituaryBorder @color1 solid;
 
 	> * {
 		width: 100%;
@@ -47,29 +23,39 @@ body {
 		max-width: 480px-2*@spacing;
 		margin: 0px auto;
 		> * {
-			.round-corners(3px);
-			color: @lightColor;
-			background-color: @darkColor;
 			overflow: hidden;
-			margin: @spacing/2 0;
 			padding: @spacing/2 @spacing;
+			margin: 0 @spacing;
 		}
 	}
 
 	> header {
-		color: @lightColor;
-		background-color: @darkColor;
 		width: auto;
-		margin: @spacing 0;
-		border-top: 1px lighten(@darkColor, @light) solid;
-		border-bottom: 1px darken(@darkColor, @light) solid;
+		margin: 3*@spacing 0;
 
-		h1 {
+		h1, h2, h3 {
+			margin: 0.67em 0 0 0 !important;
+			padding: 0 !important;
 			text-align: center;
-			margin: 0.67em 0px !important;
+		}
+		h1 {
+			font-size: 2.31em;
+			text-decoration: underline;
+		}
+		h2, h3 {
+			margin: 0 !important;
+			font-style: italic;
+			font-weight: normal;
+			font-size: 0.9em;
+		}
+		h3 {
+			font-size: 0.8em;
 		}
 	}
 	> article {
+		.wrapper > *{
+			.separator();
+		}
 		.fb_iframe_widget {
 			width: 100%;
 			> * {
@@ -81,23 +67,41 @@ body {
 		}
 	}
 	ul#relatedlinks > li {
-		.round-corners(3px);
-		margin: @spacing/2 0;
+		.separator();
 		padding: @spacing/2 @spacing;
-		background-color: @darkColor;
+		margin: 0 @spacing;
 	}
 	#relatedlinks {
 		background-color: transparent;
-		padding: 0px;
+		padding: 0;
+		margin: 0;
+		border: 0;
 		list-style: none;
-		margin: 0px;
 	}
 	footer {
-		background-color: @darkColor;
+		border-top: 1px @color1 solid;
 	}
+}
+.github-ribbon {
+	position: absolute;
+	top: @obituaryMargin + @obituaryBorder;
+	right: @obituaryMargin + @obituaryBorder;
+	width: 149px;
+	height: 149px;
+}
+
+// Tag designs
+dl > dt {
+	font-weight: bold;
 }
 
 // Helpers
+.separator() {
+	//.round-corners(3px);
+	border-top: 1px @color1 solid;
+	//border-bottom: 1px @color1 solid;
+}
+
 .round-corners(@radius: 5px) {
 	-moz-border-radius: @radius;
 	-webkit-border-radius: @radius;
