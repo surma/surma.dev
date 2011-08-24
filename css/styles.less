@@ -7,10 +7,11 @@
 @color2: #FFF;
 
 body {
-	font-family: Baskerville, Times, serif;
+	font-family: 'Merriweather', serif;
+	font-size: 0.8em;
 	color: @color1;
 	background-color: @color2;
-	padding: 0px;
+	padding: @obituaryMargin;
 	margin: @obituaryMargin;
 	border: @obituaryBorder @color1 solid;
 
@@ -19,13 +20,13 @@ body {
 	}
 
 	.wrapper {
-		min-width: 320px-2*@spacing;
-		max-width: 480px-2*@spacing;
+		min-width: 240px-(2*@obituaryMargin+@obituaryBorder);
+		max-width: 480px-(2*@obituaryMargin+@obituaryBorder);
 		margin: 0px auto;
 		> * {
 			overflow: hidden;
 			padding: @spacing/2 @spacing;
-			margin: 0 @spacing;
+			//margin: 0 @spacing;
 		}
 	}
 
@@ -39,7 +40,9 @@ body {
 			text-align: center;
 		}
 		h1 {
+			font-family: 'Alice', serif;
 			font-size: 2.31em;
+			font-weight: normal;
 			text-decoration: underline;
 		}
 		h2, h3 {
@@ -69,7 +72,7 @@ body {
 	ul#relatedlinks > li {
 		.separator();
 		padding: @spacing/2 @spacing;
-		margin: 0 @spacing;
+		//margin: 0 @spacing;
 	}
 	#relatedlinks {
 		background-color: transparent;
@@ -93,6 +96,10 @@ body {
 // Tag designs
 dl > dt {
 	font-weight: bold;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: 'Alice', serif;
 }
 
 // Helpers
