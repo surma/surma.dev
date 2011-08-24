@@ -1,13 +1,13 @@
 (function(Loader) {
 	// Less
-	Loader.script('js/load/less.js');
+	Loader.script('/js/load/less.js');
 
 	// MyTwitter
 	Loader
 	.setOptions('AlwaysPreserveOrder')
-	.script('js/load/jquery.js')
-	.script('js/load/mytwitter.js')
-	.script('js/load/showtweet.js');
+	.script('/js/load/jquery.js')
+	.script('/js/load/mytwitter.js')
+	.script('/js/load/showtweet.js');
 
 	// Social Plugins
 	Loader.script('http://platform.twitter.com/widgets.js')
@@ -16,5 +16,5 @@
 
 	// Media Query polyfill
 	Modernizr.mq('(min-width)')
-	|| Loader.script('js/load/respond.js');
+	|| Loader.script('/js/load/respond.js');
 })($LAB);
