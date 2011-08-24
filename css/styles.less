@@ -59,7 +59,14 @@ body {
 		.wrapper > *{
 			.separator();
 		}
-		.fb_iframe_widget {
+
+		#social {
+			text-align: center;
+			iframe.fb_ltr {
+				vertical-align: baseline;
+			}
+		}
+		#comments .fb_iframe_widget {
 			width: 100%;
 			> * {
 				width: 100%;
@@ -72,7 +79,6 @@ body {
 	ul#relatedlinks > li {
 		.separator();
 		padding: @spacing/2 @spacing;
-		//margin: 0 @spacing;
 	}
 	#relatedlinks {
 		background-color: transparent;
@@ -85,6 +91,7 @@ body {
 		border-top: 1px @color1 solid;
 	}
 }
+
 .github-ribbon {
 	position: absolute;
 	top: @obituaryMargin + @obituaryBorder;
@@ -104,9 +111,7 @@ h1, h2, h3, h4, h5, h6 {
 
 // Helpers
 .separator() {
-	//.round-corners(3px);
 	border-top: 1px @color1 solid;
-	//border-bottom: 1px @color1 solid;
 }
 
 .round-corners(@radius: 5px) {
