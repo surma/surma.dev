@@ -5,6 +5,7 @@
 
 @color1: #000;
 @color2: #FFF;
+@linkColor: lighten(@color1, 40%);
 
 body {
 	font-family: 'Merriweather', serif;
@@ -19,21 +20,13 @@ body {
 		width: 100%;
 	}
 
-	.wrapper {
-		min-width: 240px-(2*@obituaryMargin+@obituaryBorder);
-		max-width: 480px-(2*@obituaryMargin+@obituaryBorder);
-		margin: 0px auto;
-		> * {
-			overflow: hidden;
-			padding: @spacing/2 @spacing;
-			//margin: 0 @spacing;
-		}
-	}
-
 	> header {
 		width: auto;
 		margin: 3*@spacing 0;
 
+		a:link, a:visited, a:hover, a:active {
+			color: @color1;
+		}
 		h1, h2, h3 {
 			margin: 0.67em 0 0 0 !important;
 			padding: 0 !important;
@@ -76,19 +69,46 @@ body {
 			}
 		}
 	}
-	ul#relatedlinks > li {
-		.separator();
+}
+
+.wrapper {
+	min-width: 240px-(2*@obituaryMargin+@obituaryBorder);
+	max-width: 480px-(2*@obituaryMargin+@obituaryBorder);
+	margin: 0px auto;
+	> * {
+		overflow: hidden;
 		padding: @spacing/2 @spacing;
+		//margin: 0 @spacing;
 	}
-	#relatedlinks {
-		background-color: transparent;
-		padding: 0;
-		margin: 0;
-		border: 0;
-		list-style: none;
-	}
-	footer {
-		border-top: 1px @color1 solid;
+}
+
+
+#pagetitle + * {
+	border-top: 0;
+}
+
+ul#relatedlinks > li {
+	.separator();
+	padding: @spacing/2 @spacing;
+}
+
+#relatedlinks {
+	background-color: transparent;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	list-style: none;
+}
+
+footer {
+	border-top: 1px @color1 solid;
+}
+
+#pages {
+	list-style: none;
+	> li {
+		display: inline;
+	margin: 0 auto;
 	}
 }
 
@@ -107,6 +127,16 @@ dl > dt {
 
 h1, h2, h3, h4, h5, h6 {
 	font-family: 'Alice', serif;
+}
+
+a:link, a:active, a:hover, a:visited {
+	color: @linkColor;
+	text-decoration:none;
+	border: 0;
+}
+
+a:not(.notag):before {
+	content: '»';
 }
 
 // Helpers

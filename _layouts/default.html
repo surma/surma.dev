@@ -36,12 +36,37 @@
 			</div>
 		</header>
 		<article>
-			<div class="wrapper" style="text-align: center;">
-				<h1>
-					I'm sooo working on this. Honestly
+			<div class="wrapper">
+				<h1 id="pagetitle">
+					{{ page.title }}
 				</h1>
+				{{ content }}
 			</div>
 		</article>
+		<footer>
+			<div class="wrapper">
+				<ul id="pages">
+					<li><a href="/about.html" class="notag">About</a></li>
+					<li><a href="/impressum.html" class="notag">impressum</a></li>
+				</ul>
+				<section id="aboutme">
+					Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+				</section>
+				<section class="mytwitter">
+					<header>
+						<div>
+							<img class="profileimg">
+							<span class="name"></span>
+							<a href="https://twitter.com/surmair" data-show-count=false class="twitter-follow-button">Follow me!</a>
+						</div>
+						<div class="userdescription">
+						</div>
+					</header>
+					<div class="tweet">
+					</div>
+				</section>
+			</div>
+		</footer>
 		<script src="/js/LAB.js"></script>
 		<script src="/js/main.js"></script>
 
