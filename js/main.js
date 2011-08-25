@@ -4,9 +4,11 @@
 
 	// MyTwitter
 	Loader
-	.setOptions('AlwaysPreserveOrder')
 	.script('/js/load/jquery.js')
+	.wait()
 	.script('/js/load/mytwitter.js')
+	.script('/js/load/linkextractor.js')
+	.wait()
 	.script('/js/load/showtweet.js');
 
 	// Social Plugins

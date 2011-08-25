@@ -76,9 +76,14 @@ body {
 	margin: 0;
 	.separator();
 	list-style: none;
-	> li {
-		padding: @spacing/2 0;
+	> dt {
+		font-weight: normal;
+		padding-top: @spacing/2;
 	}
+	> dd {
+		padding-bottom: @spacing/2;
+	}
+
 }
 
 #social {
@@ -167,7 +172,7 @@ a:link, a:active, a:hover, a:visited {
 a:not(.notag) {
 	border-bottom: 1px @linkColor dotted;
 	&:before {
-		content: '»';
+		content: '» ';
 	}
 }
 

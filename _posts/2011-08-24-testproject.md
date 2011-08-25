@@ -21,8 +21,8 @@ Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
 Lorem *ipsum* dolor sit **amet**, consectetuer `adipiscing` elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
 
 
-Let's do some [linking](http://www.google.de "Google").
-And this is a [link][google] with a labeled link source.
+Let's do some [linking](http://www.google.de "The famous search engine").
+And this is a [link][asdf-systems] with a labeled link source.
 
 
 I wonder, how Text is gonna flow around this?  I wonder, how Text is gonna flow around this?  I wonder, how Text is gonna flow around this?
@@ -35,7 +35,7 @@ I want to show you a quote:
 
 > And in this quote, I'll have another quote:
 
-> > Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+> > [Lorem ipsum] dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
 
 > See? That's useless.
 
@@ -58,6 +58,6 @@ And some awesome lists:
 1. Ich will nicht mit dir reden
 
 
-[google]: http://www.google.de "Google's homepage"
-
+[asdf-systems]: http://www.asdf-systems.de "A small but apparently very capable company from Berlin, Germany"
+[Lorem ipsum]: http://www.loremipsum.de "A blind text generator with adjustable length"
 [googlelogo]: http://www.google.com/intl/en_com/images/srpr/logo3w.png
