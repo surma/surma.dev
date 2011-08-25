@@ -49,7 +49,7 @@ body {
 			font-size: 0.8em;
 		}
 	}
-	> article {
+	> article, > nav {
 		.wrapper > * {
 			.separator();
 		}
@@ -68,8 +68,12 @@ body {
 }
 
 
-#pagetitle + * {
-	border-top: 0;
+#pagetitle {
+	margin-top: 0;
+	+ * {
+		border-top: 0;
+	}
+
 }
 
 #relatedlinks {
