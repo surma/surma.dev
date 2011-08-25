@@ -5,6 +5,7 @@
 
 @color1: #000;
 @color2: #FFF;
+@linkColor: lighten(@color1, 40%);
 
 body {
 	font-family: 'Merriweather', serif;
@@ -110,6 +111,16 @@ dl > dt {
 
 h1, h2, h3, h4, h5, h6 {
 	font-family: 'Alice', serif;
+}
+
+a:link, a:active, a:hover, a:visited {
+	color: @linkColor;
+	text-decoration:none;
+	border: 0;
+}
+
+a:not(.notag):before {
+	content: '»';
 }
 
 // Helpers
