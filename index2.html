@@ -1,17 +1,19 @@
 ---
-layout: default
+layout: page
 title: Index
 ---
 <section id="projectlist">
 	<h1>List of projects</h2>
 	<ul>
 		{% for post in site.posts %}
-		<li><a href="{{ post.url }}">{{ post.title }}</a> - {{ post.date | date_to_string }}</li>
+			{% if post.layout == "post" %}
+				<li><a href="{{ post.url }}">{{ post.title }}</a> - {{ post.date | date_to_string }}</li>
+			{% endif %}
 		{% endfor %}
 	</ul>
 </section>
 <section id="social">
-<g:plusone size="medium" href="http://www.78762.de/index.html"></g:plusone>
-<a href="http://twitter.com/share" data-url="http://www.78762.de/index.html" data-text="Another project idea by @surmair" class="twitter-share-button">Tweet</a>
-<fb:like href="http://www.78762.de/index.html" send="false" layout="button_count" width="110" show_faces="false" action="like"></fb:like>
+<g:plusone size="medium" href="http://www.78762.de/"></g:plusone>
+<a href="http://twitter.com/share" data-url="http://www.78762.de/" data-text="Project ideas by @surmair" class="twitter-share-button">Tweet</a>
+<fb:like href="http://www.78762.de/" send="false" layout="button_count" width="110" show_faces="false" action="like"></fb:like>
 </section>
