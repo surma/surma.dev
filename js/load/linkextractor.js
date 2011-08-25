@@ -3,7 +3,7 @@
 	function shorten(s) {
 		return s.replace(/^(https?|ftps?):\/\/(www\.)?/, '');
 	}
-	var $c = $('#relatedlinks');
+	var $c = $('<dl>').attr('id', 'relatedlinks');
 	$('#main a').each(function() {
 		var $dt = $('<dt>');
 		var $dd = $('<dd>');
@@ -15,4 +15,7 @@
 		$dt.prepend($link);
 		$c.append($dt, $dd);
 	});
+	if($c.children().size() > 0) {
+		$c.insertAfter('#social');
+	}
 })(jQuery);
