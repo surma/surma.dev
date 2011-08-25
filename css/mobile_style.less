@@ -7,6 +7,7 @@
 @color1: #000;
 @color2: #FFF;
 @linkColor: lighten(@color1, 40%);
+@greyedOut: lighten(@color1, 70%);
 
 body {
 	font-family: 'Merriweather', serif;
@@ -70,6 +71,9 @@ body {
 
 #pagetitle {
 	margin: 0;
+	+ * {
+		border-top: 0;
+	}
 }
 
 #main {
@@ -133,6 +137,13 @@ footer {
 	}
 }
 
+#note {
+	color: @greyedOut;
+	font-size: 0.7em;
+	text-align: right;
+}
+
+
 .mytwitter {
 	.separator();
 	> header {
@@ -167,10 +178,6 @@ footer {
 }
 
 // Tag designs
-dl > dt {
-	font-weight: bold;
-}
-
 h1, h2, h3, h4, h5, h6 {
 	font-family: 'Alice', serif;
 }
