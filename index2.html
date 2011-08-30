@@ -1,12 +1,12 @@
 ---
-layout: page
+layout: nosocial
 title: Index
 ---
 <section id="projectlist">
 	<h1>List of projects</h2>
 	<dl>
 		{% for post in site.posts %}
-			{% if post.layout == "post" %}
+			{% if post.categories contains "project" %}
 			<dt>
 				<a href="{{ post.url }}">{{ post.title }}</a>
 			</dt>

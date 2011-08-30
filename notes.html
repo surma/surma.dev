@@ -1,0 +1,16 @@
+---
+layout: nosocial
+title: Notes
+---
+<section id="projectlist">
+	<h1>List of projects</h2>
+	<dl>
+		{% for post in site.posts %}
+			{% if post.categories contains "note" %}
+			<dt>
+				<a href="{{ post.url }}">{{ post.title }}</a> ﹡ {{ post.date | date: "%d %B %Y" }}
+			</dt>
+			{% endif %}
+		{% endfor %}
+	</dl>
+</section>

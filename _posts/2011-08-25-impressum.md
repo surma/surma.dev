@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: nosocial
 title: Impressum
 permalink: impressum.html
 ---

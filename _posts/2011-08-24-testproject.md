@@ -1,7 +1,8 @@
 ---
-layout: post
+layout: social
 title: Testproject
 startdate: 2011-09-15
+categories: [project]
 ---
 
 # Ueberschrift 1
