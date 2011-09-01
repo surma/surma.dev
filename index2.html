@@ -3,7 +3,6 @@ layout: nosocial
 title: Index
 ---
 <section id="projectlist">
-	<h1>List of projects</h2>
 	<dl>
 		{% for post in site.posts %}
 			{% if post.categories contains "project" %}
@@ -11,9 +10,21 @@ title: Index
 				<a href="{{ post.url }}">{{ post.title }}</a>
 			</dt>
 			<dd>
-				✝ {{ post.date | date: "%d %B %Y" }}{% if post.startdate %},
-				﹡{{ post.startdate | date: "%d %B %Y"}}
-				{% endif %}
+				<div class="dates">
+					<span>✝</span> {{ post.date | date: "%d %B %Y" }},
+					<span>﹡</span> {% if post.startdate %}
+						{{ post.startdate | date: "%d %B %Y"}}
+					{% else %}
+						unknown
+					{% endif %}
+				</div>
+				<div class="obituary">
+					{% if post.obituary %}
+						{{ post.obituary }}
+					{% else %}
+						We are left speechless.
+					{% endif %}
+				</div>
 			</dd>
 			{% endif %}
 		{% endfor %}

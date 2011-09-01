@@ -1,9 +1,7 @@
 ---
 layout: social
-title: Testproject
-startdate: 2011-09-15
+title: Another Test
 categories: [project]
-obituary: A beloved idea, project and waste of time.
 ---
 
 # Ueberschrift 1
