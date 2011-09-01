@@ -55,6 +55,12 @@ body {
 		}
 	}
 	> article, > nav {
+		a.active {
+			font-weight: bold;
+			&:hover {
+				font-style: normal;
+			}
+		}
 		.wrapper > * {
 			.separator();
 		}
@@ -75,7 +81,6 @@ body {
 	> * {
 		overflow: hidden;
 		padding: @spacing/2 @spacing;
-		//margin: 0 @spacing;
 	}
 }
 

@@ -38,10 +38,18 @@
 		<nav>
 			<div class="wrapper">
 				<ul id="pages">
-					<li><a href="/about.html" class="notag">About</a></li>
-					<li><a href="/impressum.html" class="notag">Impressum</a></li>
-					<li><a href="/notes.html" class="notag">Notes</a></li>
-					<li><a href="/index2.html" class="notag">Obituary</a></li>
+					<li><a href="/about.html" class="notag {% if page.title == "About" %}active{% endif %}">
+						About
+					</a></li>
+					<li><a href="/impressum.html" class="notag {% if page.title == "Impressum" %}active{% endif %}">
+						Impressum
+					</a></li>
+					<li><a href="/notes.html" class="notag {% if page.title == "Notes" %}active{% endif %}">
+						Notes
+					</a></li>
+					<li><a href="/index2.html" class="notag {% if page.title == "Obituary" %}active{% endif %}">
+						Obituary
+					</a></li>
 				</ul>
 			</div>
 		</nav>
