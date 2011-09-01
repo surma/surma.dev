@@ -28,6 +28,7 @@ body {
 
 		a:link, a:visited, a:hover, a:active {
 			color: @color1;
+			font-style: normal !important;
 		}
 		h1, h2, h3 {
 			margin: 0.67em 0 0 0 !important;
@@ -189,14 +190,21 @@ a:link, a:active, a:hover, a:visited {
 	color: @linkColor;
 	text-decoration: none;
 }
+a:hover {
+	font-style: italic;
+}
 
 a {
+	border-bottom: 1px @linkColor dotted;
 	&:before {
-		border-bottom: 1px @linkColor dotted;
+		font-style: normal;
 		content: '➳ ';
 	}
-	&.notag:before {
-		content: '';
+	&.notag {
+		border-bottom: 0;
+		&:before {
+			content: '';
+		}
 	}
 }
 
