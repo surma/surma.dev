@@ -1,5 +1,5 @@
 ---
-layout: social
+layout: post
 title: Another Test
 categories: [project]
 ---

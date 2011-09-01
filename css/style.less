@@ -63,6 +63,9 @@ body {
 		}
 		.wrapper > * {
 			.separator();
+			&:first-child {
+				margin-top: 0;
+			}
 		}
 	}
 	> article {
@@ -93,9 +96,19 @@ body {
 }
 
 #main {
-	border-top: 0;
+	header {
+		text-align: center;
+		h1 {
+			font-size: 1.3em;
+		}
+		.dates {
+			> span {
+				font-style: normal;
+			}
+			font-style: italic;
+		}
+	}
 }
-
 #birthday {
 	border-top: 0;
 	font-size: 0.8em;

@@ -1,5 +1,5 @@
 ---
-layout: social
+layout: post
 title: Testproject
 startdate: 2011-09-15
 categories: [project]
