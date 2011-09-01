@@ -28,17 +28,21 @@ body {
 
 		a:link, a:visited, a:hover, a:active {
 			color: @color1;
+			border: 0;
 		}
 		h1, h2, h3 {
 			margin: 0.67em 0 0 0 !important;
 			padding: 0 !important;
 			text-align: center;
+			> span {
+				text-decoration: underline;
+			}
 		}
 		h1 {
 			font-family: 'Alice', serif;
 			font-size: 2.31em;
 			font-weight: normal;
-			text-decoration: underline;
+			//text-decoration: underline;
 		}
 		h2, h3 {
 			margin: 0 !important;
