@@ -11,12 +11,12 @@ title: Obituary
 			</dt>
 			<dd>
 				<div class="dates">
-					<span>✝</span> {{ post.date | date: "%d %B %Y" }},
-					<span>﹡</span> {% if post.startdate %}
+					<span class="nobr">✝ {{ post.date | date: "%d %B %Y" }},</span>
+					<span class="nobr">﹡ {% if post.startdate %}
 						{{ post.startdate | date: "%d %B %Y"}}
 					{% else %}
 						unknown
-					{% endif %}
+					{% endif %}</span>
 				</div>
 				<div class="obituary">
 					{% if post.obituary %}

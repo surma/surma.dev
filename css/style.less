@@ -33,15 +33,14 @@ body {
 			margin: 0.67em 0 0 0 !important;
 			padding: 0 !important;
 			text-align: center;
-			> span {
-				text-decoration: underline;
-			}
 		}
-		h1 {
+		h1.title {
 			font-family: 'Alice', serif;
 			font-size: 2.31em;
 			font-weight: normal;
-			//text-decoration: underline;
+			> span {
+				text-decoration: underline;
+			}
 		}
 		h2, h3 {
 			margin: 0 !important;
@@ -229,6 +228,9 @@ footer {
 		}
 	}
 	.tweet {
+		a {
+			white-space: nowrap;
+		}
 		clear: both;
 		text-align: center;
 
@@ -273,6 +275,9 @@ a {
 	}
 }
 
+.nobr {
+	white-space: nowrap;
+}
 // Helpers
 .separator() {
 	border-top: 1px @color1 solid;
