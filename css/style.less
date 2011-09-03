@@ -2,7 +2,6 @@
 @obituaryBorder: 5px;
 @spacing: 15px;
 @light: 40%;
-@numPages: 4;
 
 @color1: #000;
 @color2: #FFF;
@@ -153,13 +152,18 @@ footer {
 #pages {
 	list-style: none;
 	margin: 0;
+	text-align: center;
 	> li {
-		width: 100%/@numPages;
-		&:first-child {
-			float:left;
-		}
-		float: right;
+		width: 100%/3;
 		text-align: center;
+		float: right;
+		&.first {
+			float: left;
+			text-align: left;
+		}
+		&.last {
+			text-align: right;
+		}
 	}
 	+ * {
 		.separator();
