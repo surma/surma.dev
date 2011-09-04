@@ -2,7 +2,6 @@
 @obituaryBorder: 5px;
 @spacing: 15px;
 @light: 40%;
-@numPages: 4;
 
 @color1: #000;
 @color2: #FFF;
@@ -28,17 +27,20 @@ body {
 
 		a:link, a:visited, a:hover, a:active {
 			color: @color1;
+			font-style: normal !important;
 		}
 		h1, h2, h3 {
 			margin: 0.67em 0 0 0 !important;
 			padding: 0 !important;
 			text-align: center;
 		}
-		h1 {
+		h1.title {
 			font-family: 'Alice', serif;
 			font-size: 2.31em;
 			font-weight: normal;
-			text-decoration: underline;
+			> span {
+				text-decoration: underline;
+			}
 		}
 		h2, h3 {
 			margin: 0 !important;
@@ -51,9 +53,25 @@ body {
 		}
 	}
 	> article, > nav {
+		a.active {
+			font-weight: bold;
+			&:hover {
+				font-style: normal;
+			}
+		}
 		.wrapper > * {
 			.separator();
+			&:first-child {
+				margin-top: 0;
+			}
 		}
+	}
+	> article {
+		border-bottom: @obituaryBorder @color1 solid;
+	}
+	> footer {
+		margin-top: 1px;
+		border-top: 1px @color1 solid;
 	}
 }
 
@@ -64,7 +82,6 @@ body {
 	> * {
 		overflow: hidden;
 		padding: @spacing/2 @spacing;
-		//margin: 0 @spacing;
 	}
 }
 
@@ -77,14 +94,23 @@ body {
 }
 
 #main {
-	border-top: 0;
+	header {
+		text-align: center;
+		h1 {
+			font-size: 1.3em;
+		}
+		.dates {
+			> span {
+				font-style: normal;
+			}
+			font-style: italic;
+		}
+	}
 }
-
 #birthday {
 	border-top: 0;
 	font-size: 0.8em;
 }
-
 
 #relatedlinks {
 	margin: 0;
@@ -95,6 +121,7 @@ body {
 		padding-top: @spacing/2;
 	}
 	> dd {
+		padding-top: @spacing/4;
 		padding-bottom: @spacing/2;
 	}
 
@@ -124,16 +151,54 @@ footer {
 #pages {
 	list-style: none;
 	margin: 0;
+	text-align: center;
 	> li {
-		width: 100%/@numPages;
-		&:first-child {
-			float:left;
-		}
-		float: right;
+		width: 100%/3;
 		text-align: center;
+		float: right;
+		&.first {
+			float: left;
+			text-align: left;
+		}
+		&.last {
+			text-align: right;
+		}
 	}
 	+ * {
 		.separator();
+	}
+}
+
+#projectlist {
+	text-align: center;
+	a {
+		border: 0;
+		&:before {
+			content: '';
+		}
+	}
+	dt {
+		font-size: 1.3em;
+		margin: 0;
+		padding: @spacing;
+		margin-top: @spacing;
+		border-top: @obituaryBorder @color1 solid;
+		border-left: @obituaryBorder @color1 solid;
+		border-right: @obituaryBorder @color1 solid;
+	}
+	dd {
+		font-style: italic;
+		margin: 0;
+		padding-left: @spacing;
+		padding-right: @spacing;
+		padding-bottom: @spacing;
+		border-bottom: @obituaryBorder @color1 solid;
+		border-left: @obituaryBorder @color1 solid;
+		border-right: @obituaryBorder @color1 solid;
+		margin-bottom: @spacing;
+		span {
+			font-style: normal;
+		}
 	}
 }
 
@@ -146,24 +211,21 @@ footer {
 
 .mytwitter {
 	.separator();
-	> header {
-		.profileimg {
-			float: left;
-			margin-right: @spacing/2;
-			margin-bottom: @spacing/2;
-		}
-		.name {
-			//float:left;
-		}
-		.twitter-follow-button {
-			width: 150px !important;
-		}
-		.userdescription {
-			font-style: italic;
-		}
+	.profileimg {
+		float: left;
+		margin-right: @spacing/2;
+	}
+	.name {
+		font-style: italic;
+	}
+	.twitter-follow-button {
+		width: 150px !important;
+		margin-top: @spacing/2;
 	}
 	.tweet {
-		clear: both;
+		a {
+			white-space: nowrap;
+		}
 		text-align: center;
 
 	}
@@ -181,19 +243,36 @@ footer {
 h1, h2, h3, h4, h5, h6 {
 	font-family: 'Alice', serif;
 }
+blockquote {
+	font-style: italic;
+	margin: 1em 0 1em 40px;
+}
 
 a:link, a:active, a:hover, a:visited {
 	color: @linkColor;
 	text-decoration: none;
 }
+a:hover {
+	font-style: italic;
+}
 
-a:not(.notag) {
+a {
 	border-bottom: 1px @linkColor dotted;
 	&:before {
-		content: '» ';
+		font-style: normal;
+		content: '➳ ';
+	}
+	&.notag {
+		border-bottom: 0;
+		&:before {
+			content: '';
+		}
 	}
 }
 
+.nobr {
+	white-space: nowrap;
+}
 // Helpers
 .separator() {
 	border-top: 1px @color1 solid;

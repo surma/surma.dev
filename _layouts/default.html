@@ -7,7 +7,7 @@
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-		<title>Surma's Obituary Column - {{ post.title }}</title>
+		<title>Surma’s Obituary Column - {{ post.title }}</title>
 		<meta name="description" content="">
 		<meta name="author" content="">
 
@@ -26,30 +26,33 @@
 		<header>
 			<div class="wrapper">
 				<a href="/index2.html" class="notag">
-					<h1>
-						Surma's<br>
-						Obituary Column
+					<h1 class="title">
+						<span>Surma’s<br>
+						Obituar</span>y<span> Column</span>
 					</h1>
 				</a>
-				<h2>Beloved project ideas, which didn't quite make it...</h2>
+				<h2><span class="nobr">Beloved project ideas,</span><span class="nobr">which didn’t quite make it...</span></h2>
 				<h3>yet.</h3>
 			</div>
 		</header>
 		<nav>
 			<div class="wrapper">
 				<ul id="pages">
-					<li><a href="/about.html" class="notag">About</a></li>
-					<li><a href="/impressum.html" class="notag">Impressum</a></li>
-					<li><a href="/notes.html" class="notag">Notes</a></li>
-					<li><a href="/index2.html" class="notag">Obituary</a></li>
+					<li class="first"><a href="/about.html" class="notag {% if page.title == "About" %}active{% endif %}">
+						About
+					</a></li>
+					</li>
+					<li class="last"><a href="/notes.html" class="notag {% if page.title == "Notes" %}active{% endif %}">
+						Notes
+					</a></li>
+					<li><a href="/index2.html" class="notag {% if page.title == "Obituary" %}active{% endif %}">
+						Obituary
+					</a></li>
 				</ul>
 			</div>
 		</nav>
 		<article>
 			<div class="wrapper">
-				<h1 id="pagetitle">
-					{{ page.title }}
-				</h1>
 				{{ content }}
 			</div>
 		</article>
@@ -59,18 +62,19 @@
 					Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
 				</section>
 				<section class="mytwitter">
-					<header>
-						<img class="profileimg">
-						<div class="name"></div>
-						<a href="https://twitter.com/surmair" data-show-count=false class="twitter-follow-button">Follow me!</a>
-					</header>
+					<img class="profileimg">
+					<div class="name"></div>
+					<a href="https://twitter.com/surmair" data-show-count=false class="twitter-follow-button">Follow me!</a>
+				</section>
+				<section class="mytwitter">
 					<div class="tweet">
 					</div>
 				</section>
 				<section id="note">
 					© 2011 Alexander "Surma" Surma<br>
-					This content is licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a><br>
-					Last update: {{site.time | date: "%d %B %Y %H:%M:%S (%Z)"}}
+					This content is licensed under <a href="http://creativecommons.org/licenses/by/3.0/" class="notag">CC BY 3.0</a><br>
+					Last update: {{site.time | date: "%d %B %Y %H:%M:%S (%Z)"}}<br>
+					<a href="/impressum.html" class="notag">Impressum</a>
 				</section>
 			</div>
 		</footer>
