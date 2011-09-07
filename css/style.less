@@ -1,0 +1,303 @@
+@obituaryMargin: 10px;
+@obituaryBorder: 5px;
+@spacing: 15px;
+@light: 40%;
+
+@color1: #000;
+@color2: #FFF;
+@linkColor: lighten(@color1, 40%);
+@greyedOut: lighten(@color1, 70%);
+
+body {
+	font-family: 'Merriweather', serif;
+	font-size: 0.8em;
+	color: @color1;
+	background-color: @color2;
+	padding: @obituaryMargin;
+	margin: @obituaryMargin;
+	border: @obituaryBorder @color1 solid;
+
+	> * {
+		width: 100%;
+	}
+
+	> header {
+		width: auto;
+		margin: 3*@spacing 0;
+
+		a:link, a:visited, a:hover, a:active {
+			color: @color1;
+			font-style: normal !important;
+		}
+		h1, h2, h3 {
+			margin: 0.67em 0 0 0 !important;
+			padding: 0 !important;
+			text-align: center;
+		}
+		h1.title {
+			font-family: 'Alice', serif;
+			font-size: 2.31em;
+			font-weight: normal;
+			> span {
+				text-decoration: underline;
+			}
+		}
+		h2, h3 {
+			margin: 0 !important;
+			font-style: italic;
+			font-weight: normal;
+			font-size: 0.9em;
+		}
+		h3 {
+			font-size: 0.8em;
+		}
+	}
+	> article, > nav {
+		a.active {
+			font-weight: bold;
+			&:hover {
+				font-style: normal;
+			}
+		}
+		.wrapper > * {
+			.separator();
+			&:first-child {
+				margin-top: 0;
+			}
+		}
+	}
+	> article {
+		border-bottom: @obituaryBorder @color1 solid;
+	}
+	> footer {
+		margin-top: 1px;
+		border-top: 1px @color1 solid;
+	}
+}
+
+.wrapper {
+	min-width: 240px-(2*@obituaryMargin+@obituaryBorder);
+	max-width: 480px-(2*@obituaryMargin+@obituaryBorder);
+	margin: 0px auto;
+	> * {
+		overflow: hidden;
+		padding: @spacing/2 @spacing;
+	}
+}
+
+
+#pagetitle {
+	margin: 0;
+	+ * {
+		border-top: 0;
+	}
+}
+
+#main {
+	header {
+		text-align: center;
+		h1 {
+			font-variant: small-caps;
+			letter-spacing: 0.3em;
+			font-size: 1.3em;
+		}
+		.dates {
+			> span {
+				font-style: normal;
+			}
+			font-style: italic;
+		}
+	}
+}
+#birthday {
+	border-top: 0;
+	font-size: 0.8em;
+}
+
+#relatedlinkslist {
+	margin: 0;
+	list-style: none;
+	> dt {
+		font-weight: normal;
+		padding-top: @spacing/2;
+	}
+	> dd {
+		padding-top: @spacing/4;
+		padding-bottom: @spacing/2;
+	}
+
+}
+
+#social {
+	text-align: center;
+	iframe.fb_ltr {
+		vertical-align: baseline;
+	}
+}
+
+#comments .fb_iframe_widget {
+	width: 100%;
+	> * {
+		width: 100%;
+		iframe {
+			width: 100% !important;
+		}
+	}
+}
+
+footer {
+	border-top: 1px @color1 solid;
+}
+
+#pages {
+	list-style: none;
+	margin: 0;
+	text-align: center;
+	> li {
+		width: 100%/3;
+		text-align: center;
+		float: right;
+		&.first {
+			float: left;
+			text-align: left;
+		}
+		&.last {
+			text-align: right;
+		}
+	}
+	+ * {
+		.separator();
+	}
+}
+
+#notelist {
+	ul {
+		list-style: none;
+		padding: 0;
+	}
+}
+
+#projectlist {
+	text-align: center;
+	a {
+		font-variant: small-caps;
+		letter-spacing: 0.3em;
+		border: 0;
+		&:before {
+			content: '';
+		}
+	}
+	dt {
+		font-size: 1.3em;
+		margin: 0;
+		padding: @spacing;
+		margin-top: @spacing;
+		border-top: @obituaryBorder @color1 solid;
+		border-left: @obituaryBorder @color1 solid;
+		border-right: @obituaryBorder @color1 solid;
+	}
+	dd {
+		font-style: italic;
+		margin: 0;
+		padding-left: @spacing;
+		padding-right: @spacing;
+		padding-bottom: @spacing;
+		border-bottom: @obituaryBorder @color1 solid;
+		border-left: @obituaryBorder @color1 solid;
+		border-right: @obituaryBorder @color1 solid;
+		margin-bottom: @spacing;
+		span {
+			font-style: normal;
+		}
+	}
+}
+
+#note {
+	color: @greyedOut;
+	font-size: 0.7em;
+	text-align: right;
+}
+
+
+.mytwitter {
+	.separator();
+	.profileimg {
+		float: left;
+		margin-right: @spacing/2;
+	}
+	.name {
+		font-style: italic;
+	}
+	.twitter-follow-button {
+		width: 150px !important;
+		margin-top: @spacing/2;
+	}
+	.tweet {
+		a {
+			white-space: nowrap;
+		}
+		text-align: center;
+
+	}
+}
+
+.github-ribbon {
+	position: absolute;
+	top: @obituaryMargin + @obituaryBorder;
+	right: @obituaryMargin + @obituaryBorder;
+	width: 149px;
+	height: 149px;
+}
+
+// Tag designs
+h1, h2, h3, h4, h5, h6 {
+	font-family: 'Alice', serif;
+}
+blockquote {
+	font-style: italic;
+	margin: 1em 0 1em 40px;
+}
+
+a:link, a:active, a:hover, a:visited {
+	color: @linkColor;
+	text-decoration: none;
+}
+a:hover {
+	font-style: italic;
+}
+
+a {
+	border-bottom: 1px @linkColor dotted;
+	&:before {
+		font-style: normal;
+		content: '➳ ';
+	}
+	&.notag {
+		border-bottom: 0;
+		&:before {
+			content: '';
+		}
+	}
+}
+
+.nobr {
+	white-space: nowrap;
+}
+// Helpers
+.separator() {
+	border-top: 1px @color1 solid;
+}
+
+.round-corners(@radius: 5px) {
+	-moz-border-radius: @radius;
+	-webkit-border-radius: @radius;
+	-khtml-border-radius: @radius;
+	border-radius: @radius;
+}
+
+.shadow(@dx, @dy, @blur, @color) {
+	-moz-box-shadow: @dx @dy @blur @color;
+	-webkit-box-shadow: @dx @dy @blur @color;
+	box-shadow: @dx @dy @blur @color;
+}
+

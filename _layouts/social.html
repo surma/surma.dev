@@ -1,0 +1,18 @@
+---
+layout: default
+---
+<section id="main">
+	{{ content }}
+</section>
+<section id="social">
+	<g:plusone size="medium" href="http://www.78762.de{{page.url}}"></g:plusone>
+	<a href="http://twitter.com/share" data-url="http://www.78762.de{{page.url}}" data-text="Another project idea by @surmair" class="twitter-share-button">Tweet</a>
+	<fb:like href="http://www.78762.de{{page.url}}" send="false" layout="button_count" width="110" show_faces="false" action="like"></fb:like>
+</section>
+<section id="comments">
+	<fb:comments href="http://www.78762.de{{page.url}}" num_posts="2" width="500"></fb:comments>
+</section>
+{% if page.nolinkextraction == null or page.nolinkextraction == false %}
+	<section id="relatedlinks">
+	</section>
+{% endif %}
