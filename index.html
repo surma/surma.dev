@@ -1,56 +1,38 @@
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
-<!--[if IE 7]>	  <html class="no-js ie7 oldie" lang="en"> <![endif]-->
-<!--[if IE 8]>	  <html class="no-js ie8 oldie" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
-		<title>Surma's Obituary Column - {{ post.title }}</title>
-		<meta name="description" content="">
-		<meta name="author" content="">
-
-		<meta name="viewport" content="width=device-width,initial-scale=1">
-
-		<link rel="stylesheet" href="/css/normalizr.css" />
-		<link rel="stylesheet" href='http://fonts.googleapis.com/css?family=Alice|Merriweather'>
-		<link rel="stylesheet/less" type="text/css" href="/css/style.less" />
-
-		<script src="/js/modernizr-2.0.6.js"></script>
-	</head>
-	<body>
-		<a href="http://github.com/surma" class="notag">
-			<img class="github-ribbon" src="https://a248.e.akamai.net/assets.github.com/img/7afbc8b248c68eb468279e8c17986ad46549fb71/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub">
-		</a>
-		<header>
-			<div class="wrapper">
-				<a href="/index.html" class="notag">
-					<h1>
-						Surma's<br>
-						Obituary Column
-					</h1>
-				</a>
-				<h2>Beloved project ideas, which didn't quite make it...</h2>
-				<h3>yet.</h3>
-			</div>
-		</header>
-		<article>
-			<div class="wrapper" style="text-align: center;">
-				<h1>
-					I'm sooo working on this. Honestly
-				</h1>
-			</div>
-		</article>
-		<script src="/js/LAB.js"></script>
-		<script src="/js/main.js"></script>
-
-		<div id="fb-root"></div>
-		<!-- Google Chrome Frame -->
-		<!--[if lt IE 7 ]>
-			<script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.2/CFInstall.min.js"></script>
-			<script>window.attachEvent("onload",function(){CFInstall.check({mode:"overlay"})})</script>
-		<![endif]-->
-
-	</body>
-</html>
+---
+layout: page
+title: Obituary
+nolinkextraction: true
+---
+<section id="projectlist">
+	<dl>
+		{% for post in site.posts %}
+			{% if post.categories contains "project" %}
+			<dt>
+				<a href="{{ post.url }}">{{ post.title }}</a>
+			</dt>
+			<dd>
+				<div class="dates">
+					<span class="nobr">✝ {{ post.date | date: "%d %B %Y" }},</span>
+					<span class="nobr">﹡ {% if post.startdate %}
+						{{ post.startdate | date: "%d %B %Y"}}
+					{% else %}
+						unknown
+					{% endif %}</span>
+				</div>
+				<div class="obituary">
+					{% if post.obituary %}
+						{{ post.obituary }}
+					{% else %}
+						A lonely, descriptionless project.
+					{% endif %}
+				</div>
+			</dd>
+			{% endif %}
+		{% endfor %}
+	</dl>
+</section>
+<section id="social">
+<g:plusone size="medium" href="http://www.78762.de/"></g:plusone>
+<a href="http://twitter.com/share" data-url="http://www.78762.de/" data-text="Project ideas by @surmair" class="twitter-share-button">Tweet</a>
+<fb:like href="http://www.78762.de/" send="false" layout="button_count" width="110" show_faces="false" action="like"></fb:like>
+</section>

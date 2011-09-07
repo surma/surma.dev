@@ -1,9 +1,9 @@
 (function($) {
 
 	function shorten(s) {
-		return s.replace(/^(https?|ftps?):\/\/(www\.)?/, '');
+		return s.replace(/^(https?|ftps?|mailto):(\/\/)?(www\.)?/, '');
 	}
-	var $c = $('<dl>').attr('id', 'relatedlinks');
+	var $c = $('<dl>').attr('id', 'relatedlinkslist');
 	$('#main a').each(function() {
 		var $dt = $('<dt>');
 		var $dd = $('<dd>');
@@ -16,6 +16,6 @@
 		$c.append($dt, $dd);
 	});
 	if($c.children().size() > 0) {
-		$c.insertAfter('#social');
+		$c.appendTo('#relatedlinks');
 	}
 })(jQuery);

@@ -12,3 +12,7 @@ layout: default
 <section id="comments">
 	<fb:comments href="http://www.78762.de{{page.url}}" num_posts="2" width="500"></fb:comments>
 </section>
+{% if page.nolinkextraction == null or page.nolinkextraction == false %}
+	<section id="relatedlinks">
+	</section>
+{% endif %}
