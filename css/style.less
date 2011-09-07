@@ -273,7 +273,8 @@ a {
 	border-bottom: 1px @linkColor dotted;
 	&:before {
 		font-style: normal;
-		content: '➳ ';
+		// Unicode-Space so it doesn't wrap
+		content: "➳\0000a0";
 	}
 	&.notag {
 		border-bottom: 0;
