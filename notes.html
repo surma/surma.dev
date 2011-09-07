@@ -2,15 +2,14 @@
 layout: nosocial
 title: Notes
 ---
-<section id="projectlist">
-	<h1>List of projects</h2>
-	<dl>
+<section id="notelist">
+	<ul>
 		{% for post in site.posts %}
 			{% if post.categories contains "note" %}
-			<dt>
+			<li>
 				<a href="{{ post.url }}">{{ post.title }}</a> ﹡ {{ post.date | date: "%d %B %Y" }}
-			</dt>
+			</li>
 			{% endif %}
 		{% endfor %}
-	</dl>
+	</ul>
 </section>
