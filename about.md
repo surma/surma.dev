@@ -34,4 +34,4 @@ The project’s day of birth is the day, I actually started to work on it.
 I did it this way, because then “*the project being born*” actually makes sense.
 
 If you have ideas, additions, corrections or criticism – be that on some existing entry or a completely
-new one – feel free to leave a comment below that project or write me a e-mail [`alexander.surma@gmail.com`](mailto:alexander.surma@gmail.com "My e-mail address").
+new one – feel free to leave a comment below that project or write me a e-mail [alexander.surma@gmail.com](mailto:alexander.surma@gmail.com "My e-mail address").

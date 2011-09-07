@@ -4,3 +4,7 @@ layout: default
 <section id="main">
 	{{ content }}
 </section>
+{% if page.nolinkextraction == null or page.nolinkextraction == false %}
+	<section id="relatedlinks">
+	</section>
+{% endif %}
