@@ -13,7 +13,10 @@
 		var desc = $(this).attr('title');
 
 		$dd.text(desc);
-		var $link = $("<a>").attr('href', href).text(shortlink);
+		var $link = $("<a>")
+			.attr('href', href)
+			.attr('target', "_blank")
+			.text(shortlink);
 		$dt.prepend($link);
 		$c.append($dt, $dd);
 	});

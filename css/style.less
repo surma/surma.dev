@@ -9,6 +9,7 @@
 @greyedOut: lighten(@color1, 70%);
 
 body {
+	line-height: 1.5em;
 	font-family: 'Merriweather', serif;
 	font-size: 0.8em;
 	color: @color1;
@@ -94,6 +95,7 @@ body {
 }
 
 #main {
+	text-align: justify;
 	header {
 		text-align: center;
 		h1 {
@@ -213,6 +215,7 @@ footer {
 }
 
 #note {
+	line-height: 1.3em;
 	color: @greyedOut;
 	font-size: 0.7em;
 	text-align: right;
@@ -270,7 +273,8 @@ a {
 	border-bottom: 1px @linkColor dotted;
 	&:before {
 		font-style: normal;
-		content: '➳ ';
+		// Unicode-Space so it doesn't wrap
+		content: "➳\0000a0";
 	}
 	&.notag {
 		border-bottom: 0;
