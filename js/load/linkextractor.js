@@ -13,6 +13,11 @@
 		var shortlink = shorten(href);
 		var desc = $(this).attr('title');
 
+		if(shortlink.length > 30) {
+			var len = shortlink.length;
+			shortlink = shortlink.substr(0,20)+"..."+shortlink.substr(len-8, len);
+		}
+
 		$dd.text(desc);
 		var $link = $("<a>")
 			.attr('href', href)
