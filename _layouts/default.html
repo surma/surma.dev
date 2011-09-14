@@ -37,7 +37,15 @@
 		</header>
 		<nav>
 			<div class="wrapper">
-				<ul id="pages">
+				<ul class="pages">
+					<li class="first">&nbsp;</li>
+					</li>
+					<li class="last">&nbsp;</li>
+					<li><a href="/index.html" class="notag {% if page.title == "Obituary" %}active{% endif %}">
+						Obituary
+					</a></li>
+				</ul>
+				<ul class="pages">
 					<li class="first"><a href="/about.html" class="notag {% if page.title == "About" %}active{% endif %}">
 						About
 					</a></li>
@@ -45,8 +53,8 @@
 					<li class="last"><a href="/notes.html" class="notag {% if page.title == "Notes" %}active{% endif %}">
 						Notes
 					</a></li>
-					<li><a href="/index.html" class="notag {% if page.title == "Obituary" %}active{% endif %}">
-						Obituary
+					<li><a href="/search.html" class="notag {% if page.title == "Search" %}active{% endif %}">
+						Search
 					</a></li>
 				</ul>
 			</div>
