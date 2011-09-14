@@ -6,6 +6,7 @@
 
 	var $c = $('<dl>').attr('id', 'relatedlinkslist');
 	$('#main a').each(function() {
+		$(this).attr('target', "_blank");
 		var $dt = $('<dt>');
 		var $dd = $('<dd>');
 		var href = $(this).attr('href');
