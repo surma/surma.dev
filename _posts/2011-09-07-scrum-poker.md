@@ -5,7 +5,7 @@ obituary: 21<sup>st</sup> century scrum poker
 categories: [project]
 ---
 ## The project
-Not available.
+As always, the code is hosted on [GitHub].
 
 ## The idea
 In the past few weeks I have been investigatin a lot of web-based Scrum tools. I do not want to go into the details of Scrum, but one aspect of it is the so call *Scrum poker*.
@@ -37,6 +37,7 @@ I want people to be able to create **“poker rooms”** which are **secured by 
 ### Expansion pack functionality
  * The master can pass his mastery to someone else.
 
+[GitHub]: https://github.com/surma/scrum21stcenturypoker "The project’s repository on GitHub"
 [Wandercircus]: http://www.wandercircus.com "Sending bots to IRC channels to reenact a part of a movie"
 [Websockets]: http://en.wikipedia.org/wiki/WebSocket "A permanent connection to the webserver allows real-time events"
 [Google AppEngine]: http://code.google.com/appengine/ "Deploying apps which scale automatically"
