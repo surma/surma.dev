@@ -1,7 +1,6 @@
 ---
 layout: page
 title: About
-permalink: about.html
 ---
 The (un)original idea
 =================

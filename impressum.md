@@ -1,7 +1,6 @@
 ---
 layout: page
 title: Impressum
-permalink: impressum.html
 nolinkextraction: true
 ---
 ### Angaben gemäß § 5 TMG:
