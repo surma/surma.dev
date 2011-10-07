@@ -7,18 +7,16 @@
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-		<title>Surma’s Obituary Column</title>
-		<meta name="description" content="">
-		<meta name="author" content="">
+		<title>Surma’s Obituary Column - {{page.title}}</title>
 
 		<meta name="viewport" content="width=device-width,initial-scale=1">
 
-		<meta property="og:title" content="{{page.title}}"/>
+		<meta property="og:title" content="Surma’s Obituary Column - {{page.title}}"/>
 		<meta property="og:type" content="blog"/>
 		<meta property="og:url" content="http://78762.de{{page.url}}"/>
 		<meta property="og:image" content="http://78762.de/cross.png"/>
 		<meta property="og:site_name" content="Surma’s Obituary Column"/>
-		<meta property="og:description" content="{% if page.obituary %}{{page.obituary}}{% else %}A list of beloved project ideas{% endif %}"/>
+		<meta property="og:description" content="{% if page.obituary %}{{page.obituary}}. Surma’s Obituary Column is a list of my project ideas."/>
 
 		<link rel="stylesheet" href="/css/normalizr.css" />
 		<link rel="stylesheet" href='http://fonts.googleapis.com/css?family=Alice|Merriweather'>
@@ -84,7 +82,7 @@
 				<section id="note">
 					© 2011 Alexander "Surma" Surma<br>
 					This content is licensed under <a href="http://creativecommons.org/licenses/by/3.0/" class="notag">CC BY 3.0</a><br>
-					v1.0.1 Last update: {{site.time | date: "%d %B %Y %H:%M:%S (%Z)"}}<br>
+					v1.0.2 Last update: {{site.time | date: "%d %B %Y %H:%M:%S (%Z)"}}<br>
 					<a href="/impressum.html" class="notag">Impressum</a>
 				</section>
 			</div>
