@@ -4,6 +4,10 @@
 		return s.replace(/^(https?|ftps?|mailto):(\/\/)?(www\.)?/, '');
 	}
 
+	var $target = $('#relatedlinks');
+	if($target.length <= 0) {
+		return;
+	}
 	var $c = $('<dl>').attr('id', 'relatedlinkslist');
 	$('#main a').each(function() {
 		$(this).attr('target', "_blank");
