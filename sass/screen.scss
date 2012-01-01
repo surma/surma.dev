@@ -1,0 +1,35 @@
+@import url(http://fonts.googleapis.com/css?family=Quattrocento);
+@import "compass/reset";
+
+$columns: 16;
+@mixin span($n) {
+	width: 99%*$n/$columns;
+}
+
+html, body {
+	font-family: 'Quattrocento', serif;
+	height: 100%;
+}
+
+
+.container {
+	position: relative;
+	margin: 0 auto;
+	height: 100%;
+	width: 100%;
+	max-width: 800px;
+
+	#email {
+		font-size: 22px;
+		position: absolute;
+		bottom: 0;
+		width: 100%;
+		margin-bottom: 20px;
+		span.letter {
+			display: inline-block;
+			text-align: center;
+			@include span(1);
+		}
+	}
+}
+
