@@ -2,6 +2,8 @@
 @import "compass/reset";
 
 $columns: 16;
+$lightgray: lighten(black, 80%);
+
 @mixin span($n) {
 	width: 99%*$n/$columns;
 }
@@ -9,6 +11,10 @@ $columns: 16;
 html, body {
 	font-family: 'Quattrocento', serif;
 	height: 100%;
+}
+
+body {
+	padding: 5px;
 }
 
 
@@ -33,3 +39,12 @@ html, body {
 	}
 }
 
+footer {
+	color: $lightgray;
+	text-align: right;
+	font-size: 8px;
+	a {
+		text-decoration: none;
+		color: inherit;
+	}
+}

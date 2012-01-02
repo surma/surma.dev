@@ -64,13 +64,18 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   display: block;
 }
 
-/* line 9, ../sass/screen.scss */
+/* line 11, ../sass/screen.scss */
 html, body {
   font-family: 'Quattrocento', serif;
   height: 100%;
 }
 
-/* line 15, ../sass/screen.scss */
+/* line 16, ../sass/screen.scss */
+body {
+  padding: 5px;
+}
+
+/* line 21, ../sass/screen.scss */
 .container {
   position: relative;
   margin: 0 auto;
@@ -78,7 +83,7 @@ html, body {
   width: 100%;
   max-width: 800px;
 }
-/* line 22, ../sass/screen.scss */
+/* line 28, ../sass/screen.scss */
 .container #email {
   font-size: 22px;
   position: absolute;
@@ -86,9 +91,21 @@ html, body {
   width: 100%;
   margin-bottom: 20px;
 }
-/* line 28, ../sass/screen.scss */
+/* line 34, ../sass/screen.scss */
 .container #email span.letter {
   display: inline-block;
   text-align: center;
   width: 6.188%;
+}
+
+/* line 42, ../sass/screen.scss */
+footer {
+  color: #cccccc;
+  text-align: right;
+  font-size: 8px;
+}
+/* line 46, ../sass/screen.scss */
+footer a {
+  text-decoration: none;
+  color: inherit;
 }
