@@ -8,6 +8,7 @@ define([
       defaults: {
         startIndex: 0,
         endIndex: 0,
+        position: 0,
       },
 
       initialize: function() {

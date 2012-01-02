@@ -14,11 +14,18 @@ define([
       });
       return c;
     };
-    var EmailView = Backbone.View.extend({
 
+    var socialTemplate = _.template('\
+    <li id="<%=name%>" style="width: <%=width%>%;"> \
+      <figure> \
+        <img src="img/social/<%=name%>.png" alt="<%=name%>"> \
+      </figure> \
+    </li>');
+
+    var EmailView = Backbone.View.extend({
       events: {
-        'mouseover #icons div': 'highlight',
-        'mouseout #icons div': 'hide',
+        'mouseenter #social > li': 'highlight',
+        'mouseleave #social > li': 'hide',
       },
 
       initialize: function() {
@@ -32,10 +39,14 @@ define([
           $c.append(letter);
         });
 
-        var $c = $(this.el).find('#icons');
+        var $c = $(this.el).find('#social');
+        var numSocialElements = this.options.identity.models.length;
         _.each(this.options.identity.models, function(socialelement) {
-         var name = socialelement.id;
-         $('<div>').attr('id', name).text(name).appendTo($c);
+          var name = socialelement.id;
+          $c.append(socialTemplate({
+            name: name,
+            width: 99.0/3,
+          }));
         });
 
         return this;
@@ -46,7 +57,11 @@ define([
       },
 
       highlight: function(e) {
-        var id = $(e.srcElement).attr('id');
+        var id = $(e.srcElement);
+        if(id.context.tagName.toLowerCase() != "li") {
+          id = $(id.parent());
+        }
+        id = id.attr('id');
         var socialelement = this.options.identity.get(id);
         this.highlightLetters(socialelement.get('startIndex'), socialelement.get('endIndex'));
       },
@@ -60,5 +75,6 @@ define([
       },
     });
     return EmailView;
+
 });
 

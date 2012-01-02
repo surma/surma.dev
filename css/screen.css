@@ -1,4 +1,5 @@
 @import url(http://fonts.googleapis.com/css?family=Quattrocento);
+@import url(http://fonts.googleapis.com/css?family=Marko+One);
 /* line 17, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
@@ -64,61 +65,139 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   display: block;
 }
 
-/* line 16, ../sass/screen.scss */
+/* line 30, ../sass/screen.scss */
 html, body {
   font-family: 'Quattrocento', serif;
   height: 100%;
+  background-color: #fff6ef;
 }
 
-/* line 21, ../sass/screen.scss */
+/* line 36, ../sass/screen.scss */
 body {
   padding: 5px;
 }
 
-/* line 26, ../sass/screen.scss */
+/* line 41, ../sass/screen.scss */
 #container {
   position: relative;
   margin: 0 auto;
   height: 100%;
   width: 100%;
-  max-width: 500px;
+  max-width: 700px;
 }
-/* line 33, ../sass/screen.scss */
+/* line 47, ../sass/screen.scss */
+#container #social {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  *zoom: 1;
+}
+/* line 38, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/general/_clearfix.scss */
+#container #social:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+/* line 52, ../sass/screen.scss */
+#container #social li {
+  display: block;
+  float: left;
+  text-align: center;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+/* line 59, ../sass/screen.scss */
+#container #social li > figure {
+  display: inline-block;
+  border: 0;
+  margin: 10%;
+  padding: 10%;
+  cursor: pointer;
+  border-top: 4px solid #fff6ef;
+  background-color: #fff6ef;
+  -moz-border-radius-bottomleft: 4px;
+  -webkit-border-bottom-left-radius: 4px;
+  -o-border-bottom-left-radius: 4px;
+  -ms-border-bottom-left-radius: 4px;
+  -khtml-border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  -moz-border-radius-bottomright: 4px;
+  -webkit-border-bottom-right-radius: 4px;
+  -o-border-bottom-right-radius: 4px;
+  -ms-border-bottom-right-radius: 4px;
+  -khtml-border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  -moz-transition-property: all;
+  -webkit-transition-property: all;
+  -o-transition-property: all;
+  transition-property: all;
+  -moz-transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+  -o-transition-duration: 0.5s;
+  transition-duration: 0.5s;
+}
+/* line 61, ../sass/screen.scss */
+#container #social li > figure > img {
+  border: 0;
+  max-width: 72px;
+  width: 100%;
+  height: auto;
+}
+/* line 76, ../sass/screen.scss */
+#container #social li > figure:hover {
+  border-top-color: #ffd4b0;
+  background-color: #4d2300;
+}
+/* line 84, ../sass/screen.scss */
 #container #email {
-  font-size: 22px;
-  position: absolute;
-  bottom: 0;
+  font-size: 40px;
+  font-family: 'Marko One', serif;
+  font-weight: 700;
   width: 100%;
   margin-bottom: 20px;
+  text-align: center;
+  text-shadow: 2px 2px 2px #4d2300;
+  color: #806a58;
 }
-/* line 39, ../sass/screen.scss */
+@media (max-width: 700px) {
+  /* line 84, ../sass/screen.scss */
+  #container #email {
+    font-size: 28px;
+  }
+}
+@media (max-width: 520px) {
+  /* line 84, ../sass/screen.scss */
+  #container #email {
+    font-size: 20px;
+  }
+}
+/* line 99, ../sass/screen.scss */
 #container #email span.letter {
-  text-shadow: 1px 3px 3px #cccccc;
-  color: #cccccc;
   display: inline-block;
   text-align: center;
   width: 6.188%;
-  -moz-transition-property: color;
-  -webkit-transition-property: color;
-  -o-transition-property: color;
-  transition-property: color;
+  -moz-transition-property: all;
+  -webkit-transition-property: all;
+  -o-transition-property: all;
+  transition-property: all;
   -moz-transition-duration: 1s;
   -webkit-transition-duration: 1s;
   -o-transition-duration: 1s;
   transition-duration: 1s;
 }
-/* line 46, ../sass/screen.scss */
+/* line 104, ../sass/screen.scss */
 #container #email span.letter.highlighted {
-  color: black;
+  color: #ffd4b0;
 }
 
-/* line 53, ../sass/screen.scss */
+/* line 111, ../sass/screen.scss */
 footer {
-  color: #cccccc;
+  color: #ffa961;
   text-align: right;
   font-size: 8px;
 }
-/* line 57, ../sass/screen.scss */
+/* line 115, ../sass/screen.scss */
 footer a {
   text-decoration: none;
   color: inherit;

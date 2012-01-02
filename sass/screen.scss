@@ -1,13 +1,27 @@
 @import url(http://fonts.googleapis.com/css?family=Quattrocento);
+@import url(http://fonts.googleapis.com/css?family=Marko+One);
 @import "compass/reset";
 @import "compass/css3/transition";
 @import "compass/css3/text-shadow";
+@import "compass/css3/border-radius";
+@import "compass/utilities/general/clearfix";
 
 $columns: 16;
 $lightgray: lighten(black, 80%);
 
-$email_normal: $lightgray;
-$email_highlighted: black;
+$color_1: #FFA961;
+$color_2: #806A58;
+$color_3: #4D2300;
+$color_4: #FFD4B0;
+$color_5: #FFF6EF;
+
+$width: 700px;
+$num_chars: 16;
+$email_font_size: 40px;
+$email_normal: $color_2;
+$email_highlighted: $color_4;
+$email_shadow: $color_3;
+$email_shadow_blur: 2px;
 
 @mixin span($n) {
 	width: 99%*$n/$columns;
@@ -16,6 +30,7 @@ $email_highlighted: black;
 html, body {
 	font-family: 'Quattrocento', serif;
 	height: 100%;
+	background-color: $color_5;
 }
 
 body {
@@ -28,21 +43,64 @@ body {
 	margin: 0 auto;
 	height: 100%;
 	width: 100%;
-	max-width: 500px;
+	max-width: $width;
+	#social {
+		padding: 0;
+		margin: 0;
+		border: 0;
+		@include pie-clearfix;
+		li {
+			display: block;
+			float: left;
+			text-align: center;
+			padding: 0;
+			margin: 0;
+			border: 0;
+			> figure {
+				display: inline-block;
+				> img {
+					border: 0;
+					max-width: 72px;
+					width: 100%;
+					height: auto;
+				}
+				border: 0;
+				margin: 10%;
+				padding: 10%;
+				cursor: pointer;
+				border-top: 4px solid $color_5;
+				background-color: $color_5;
+				@include border-bottom-left-radius(4px);
+				@include border-bottom-right-radius(4px);
+				@include single-transition("all", 0.5s);
+				&:hover {
+					border-top-color: $color_4;
+					background-color: $color_3;
+				}
+			}
+		}
+	}
 
 	#email {
-		font-size: 22px;
-		position: absolute;
-		bottom: 0;
+		font-size: $email_font_size;
+		@media (max-width: 700px) {
+			font-size: $email_font_size * 0.7;
+		}
+		@media (max-width: 520px) {
+			font-size: $email_font_size * 0.5;
+		}
+		font-family: 'Marko One', serif;
+		font-weight: 700;
 		width: 100%;
 		margin-bottom: 20px;
+		text-align: center;
+		text-shadow: 2px 2px $email_shadow_blur $email_shadow;
+		color: $email_normal;
 		span.letter {
-			text-shadow: 1px 3px 3px $lightgray;
-			color: $email_normal;
 			display: inline-block;
 			text-align: center;
 			@include span(1);
-			@include single-transition("color", 1s);
+			@include single-transition("all", 1s);
 			&.highlighted {
 				color: $email_highlighted;
 			}
@@ -51,7 +109,7 @@ body {
 }
 
 footer {
-	color: $lightgray;
+	color: $color_1;
 	text-align: right;
 	font-size: 8px;
 	a {
