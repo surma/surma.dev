@@ -12,6 +12,6 @@ require.config({
 
 });
 
-require(['misc/letterify'], function(Letterify){
-	Letterify.apply("#email");
+require(['views/email'], function(EmailView) {
+	var ev = new EmailView({el: $("#container")});
 });

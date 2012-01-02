@@ -64,47 +64,61 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   display: block;
 }
 
-/* line 11, ../sass/screen.scss */
+/* line 16, ../sass/screen.scss */
 html, body {
   font-family: 'Quattrocento', serif;
   height: 100%;
 }
 
-/* line 16, ../sass/screen.scss */
+/* line 21, ../sass/screen.scss */
 body {
   padding: 5px;
 }
 
-/* line 21, ../sass/screen.scss */
-.container {
+/* line 26, ../sass/screen.scss */
+#container {
   position: relative;
   margin: 0 auto;
   height: 100%;
   width: 100%;
-  max-width: 800px;
+  max-width: 500px;
 }
-/* line 28, ../sass/screen.scss */
-.container #email {
+/* line 33, ../sass/screen.scss */
+#container #email {
   font-size: 22px;
   position: absolute;
   bottom: 0;
   width: 100%;
   margin-bottom: 20px;
 }
-/* line 34, ../sass/screen.scss */
-.container #email span.letter {
+/* line 39, ../sass/screen.scss */
+#container #email span.letter {
+  text-shadow: 1px 3px 3px #cccccc;
+  color: #cccccc;
   display: inline-block;
   text-align: center;
   width: 6.188%;
+  -moz-transition-property: color;
+  -webkit-transition-property: color;
+  -o-transition-property: color;
+  transition-property: color;
+  -moz-transition-duration: 1s;
+  -webkit-transition-duration: 1s;
+  -o-transition-duration: 1s;
+  transition-duration: 1s;
+}
+/* line 46, ../sass/screen.scss */
+#container #email span.letter.highlighted {
+  color: black;
 }
 
-/* line 42, ../sass/screen.scss */
+/* line 53, ../sass/screen.scss */
 footer {
   color: #cccccc;
   text-align: right;
   font-size: 8px;
 }
-/* line 46, ../sass/screen.scss */
+/* line 57, ../sass/screen.scss */
 footer a {
   text-decoration: none;
   color: inherit;
