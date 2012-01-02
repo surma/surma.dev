@@ -5,11 +5,12 @@
 @import "compass/css3/text-shadow";
 @import "compass/css3/border-radius";
 @import "compass/utilities/general/clearfix";
+@import "compass/css3/box-shadow";
 
 $columns: 16;
 $lightgray: lighten(black, 80%);
 
-$color_1: #FFA961;
+$color_1: #FD8A2A;
 $color_2: #806A58;
 $color_3: #4D2300;
 $color_4: #FFD4B0;
@@ -19,9 +20,9 @@ $width: 700px;
 $num_chars: 16;
 $email_font_size: 40px;
 $email_normal: $color_2;
-$email_highlighted: $color_4;
-$email_shadow: $color_3;
-$email_shadow_blur: 2px;
+$email_highlighted: $color_1;
+$shadow_color: $color_3;
+$shadow_blur: 2px;
 
 @mixin span($n) {
 	width: 99%*$n/$columns;
@@ -70,12 +71,13 @@ body {
 				cursor: pointer;
 				border-top: 4px solid $color_5;
 				background-color: $color_5;
-				@include border-bottom-left-radius(4px);
-				@include border-bottom-right-radius(4px);
+				@include border-bottom-left-radius(9px);
+				@include border-bottom-right-radius(9px);
 				@include single-transition("all", 0.5s);
 				&:hover {
-					border-top-color: $color_4;
-					background-color: $color_3;
+					border-top-color: $color_1;
+					background-color: $color_4;
+					@include single-box-shadow($shadow_color, 2px, 2px, $shadow_blur);
 				}
 			}
 		}
@@ -94,13 +96,13 @@ body {
 		width: 100%;
 		margin-bottom: 20px;
 		text-align: center;
-		text-shadow: 2px 2px $email_shadow_blur $email_shadow;
+		@include single-text-shadow($shadow_color, 2px, 2px, $shadow_blur);
 		color: $email_normal;
 		span.letter {
 			display: inline-block;
 			text-align: center;
 			@include span(1);
-			@include single-transition("all", 1s);
+			@include single-transition("all", 0.5s);
 			&.highlighted {
 				color: $email_highlighted;
 			}
