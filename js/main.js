@@ -1,8 +1,3 @@
-// Author: Thomas Davis <thomasalwyndavis@gmail.com>
-// Filename: main.js
-
-// Require.js allows us to configure shortcut alias
-// Their usage will become more apparent futher along in the tutorial.
 require.config({
   paths: {
     jquery: 'libs/jquery/jquery-min',
@@ -12,6 +7,42 @@ require.config({
 
 });
 
-require(['views/email'], function(EmailView) {
-	var ev = new EmailView({el: $("#container")});
+require(['collections/identity', 'models/social_element', 'views/email'], function(Identity, SocialElement, EmailView) {
+	var id = new Identity([
+		new SocialElement({
+			id: 'twitter',
+			startIndex: 6,
+			endIndex: 13,
+		}),
+		new SocialElement({
+			id: 'mail',
+			startIndex: 1,
+			endIndex: 16,
+		}),
+		new SocialElement({
+			id: 'www',
+			startIndex: 7,
+			endIndex: 16,
+		}),
+		new SocialElement({
+			id: 'facebook',
+			startIndex: 7,
+			endIndex: 13,
+		}),
+		new SocialElement({
+			id: 'geeklist',
+			startIndex: 6,
+			endIndex: 11,
+		}),
+		new SocialElement({
+			id: 'github',
+			startIndex: 7,
+			endIndex: 11,
+		}),
+	],
+	{
+		identity_string: 'surma@surmair.de',
+	}
+	);
+	var ev = new EmailView({identity: id, el: $('#container')});
 });

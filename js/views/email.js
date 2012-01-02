@@ -17,8 +17,8 @@ define([
     var EmailView = Backbone.View.extend({
 
       events: {
-        'mouseover #icons #twitter'  : 'highlightTwitter',
-        'mouseout #icons #twitter'  : 'hideAll',
+        'mouseover #icons div': 'highlight',
+        'mouseout #icons div': 'hide',
       },
 
       initialize: function() {
@@ -26,20 +26,29 @@ define([
       },
 
       render: function() {
-        var letters = letterify_string('surma@surmair.de')
         var $c = $(this.el).find('#email');
+        var letters = letterify_string(this.options.identity.identity_string);
         _(letters).each(function(letter) {
           $c.append(letter);
         });
+
+        var $c = $(this.el).find('#icons');
+        _.each(this.options.identity.models, function(socialelement) {
+         var name = socialelement.id;
+         $('<div>').attr('id', name).text(name).appendTo($c);
+        });
+
         return this;
       },
 
-      hideAll: function() {
+      hide: function() {
         this.highlightLetters(0, 0);
       },
 
-      highlightTwitter: function() {
-        this.highlightLetters(6, 13);
+      highlight: function(e) {
+        var id = $(e.srcElement).attr('id');
+        var socialelement = this.options.identity.get(id);
+        this.highlightLetters(socialelement.get('startIndex'), socialelement.get('endIndex'));
       },
 
       highlightLetters: function(start, end) {
