@@ -15,6 +15,15 @@ define([
       return c;
     };
 
+    var get_sourceid = function(e) {
+        var id = $(e.srcElement);
+        while (id.get(0).nodeName.toLowerCase() != "li") {
+          id = $(id.parent());
+        }
+        id = id.attr('id');
+        return id;
+    }
+
     var socialTemplate = _.template('\
     <li id="<%=name%>" style="width: <%=width%>%;"> \
       <figure> \
@@ -24,8 +33,9 @@ define([
 
     var EmailView = Backbone.View.extend({
       events: {
-        'mouseenter #social > li': 'highlight',
-        'mouseleave #social > li': 'hide',
+        'mouseenter #social > li > figure': 'highlight',
+        'mouseleave #social > li > figure': 'hide',
+        'click #social > li > figure': 'open',
       },
 
       initialize: function() {
@@ -52,16 +62,18 @@ define([
         return this;
       },
 
+      open: function(e) {
+        var id = get_sourceid(e);
+        var socialelement = this.options.identity.get(id);
+        window.open(socialelement.get('link'));
+      },
+
       hide: function() {
         this.highlightLetters(0, 0);
       },
 
       highlight: function(e) {
-        var id = $(e.srcElement);
-        if(id.context.tagName.toLowerCase() != "li") {
-          id = $(id.parent());
-        }
-        id = id.attr('id');
+        var id = get_sourceid(e);
         var socialelement = this.options.identity.get(id);
         this.highlightLetters(socialelement.get('startIndex'), socialelement.get('endIndex'));
       },

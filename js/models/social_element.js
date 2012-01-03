@@ -9,6 +9,7 @@ define([
         startIndex: 0,
         endIndex: 0,
         position: 0,
+        link: "",
       },
 
       initialize: function() {
