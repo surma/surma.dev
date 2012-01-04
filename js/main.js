@@ -8,55 +8,63 @@ require.config({
 });
 
 require(['collections/identity', 'models/social_element', 'views/email'], function(Identity, SocialElement, EmailView) {
+	var cnt = 0;
 	var id = new Identity([
-		new SocialElement({
-			id: 'twitter',
-			link: 'http://twitter.com/surmair',
-			position: 2,
-			startIndex: 6,
-			endIndex: 13,
-		}),
 		new SocialElement({
 			id: 'mail',
 			link: 'mailto:surma@surmair.de',
-			position: 0,
+			position: cnt++,
 			startIndex: 1,
 			endIndex: 16,
 		}),
 		new SocialElement({
+			id: 'twitter',
+			link: 'http://twitter.com/surmair',
+			position: cnt++,
+			startIndex: 6,
+			endIndex: 13,
+		}),
+		new SocialElement({
 			id: 'www',
 			link: 'http://surmair.de',
-			position: 1,
+			position: cnt++,
 			startIndex: 7,
 			endIndex: 16,
 		}),
 		new SocialElement({
 			id: 'facebook',
 			link: 'http://facebook.com/surmair',
-			position: 4,
+			position: cnt++,
 			startIndex: 7,
 			endIndex: 13,
 		}),
 		new SocialElement({
-			id: 'geeklist',
-			link: 'http://geekli.st/surma',
-			position: 6,
-			startIndex: 6,
-			endIndex: 11,
-		}),
-		new SocialElement({
 			id: 'github',
 			link: 'http://github.com/surma',
-			position: 5,
+			position: cnt++,
 			startIndex: 7,
 			endIndex: 11,
 		}),
 		new SocialElement({
 			id: 'gplus',
 			link: 'http://gplus.to/surma',
-			position: 3,
+			position: cnt++,
 			startIndex: 7,
 			endIndex: 11,
+		}),
+		new SocialElement({
+			id: 'geeklist',
+			link: 'http://geekli.st/surma',
+			position: cnt++,
+			startIndex: 6,
+			endIndex: 11,
+		}),
+		new SocialElement({
+			id: 'delicious',
+			link: 'http://delicious.com/surmair',
+			position: cnt++,
+			startIndex: 7,
+			endIndex: 13,
 		}),
 	],
 	{
