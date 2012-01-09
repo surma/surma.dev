@@ -66,6 +66,13 @@ require(['collections/identity', 'models/social_element', 'views/email'], functi
 			startIndex: 7,
 			endIndex: 13,
 		}),
+		new SocialElement({
+			id: 'tumblr',
+			link: 'http://surmair.tumblr.com',
+			position: cnt++,
+			startIndex: 7,
+			endIndex: 13,
+		}),
 	],
 	{
 		identity_string: 'surma@surmair.de',
