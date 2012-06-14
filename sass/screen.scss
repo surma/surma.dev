@@ -1,0 +1,6 @@
+@import "compass/reset";
+@import "compass/css3/box-sizing";
+
+* {
+        @include box-sizing(border-box);
+}
