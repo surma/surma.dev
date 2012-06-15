@@ -1,0 +1,23 @@
+@import "http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,700&subset=latin,greek";
+@import "config/miso";
+
+$normal-text-size: 15pt;
+$headline-text-size: 21pt;
+$headline2-text-size: $headline-text-size;
+
+@mixin normal-text() {
+	font-family: 'Open Sans Condensed', sans-serif;
+	font-size: $normal-text-size;
+}
+
+@mixin headline-text() {
+	font-family: 'Miso-Bold', sans-serif;
+	font-size: $headline-text-size;
+	text-transform: uppercase;
+}
+
+@mixin headline2-text() {
+	font-family: 'Miso-Light', sans-serif;
+	font-size: $headline2-text-size;
+	text-transform: uppercase;
+}

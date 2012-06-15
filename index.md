@@ -1,4 +1,4 @@
 ---
-layout: boilerplate
+layout: mainlayout
 ---
 Hello

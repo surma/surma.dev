@@ -1,6 +1,7 @@
 @import "compass/reset";
 @import "compass/css3/box-sizing";
-@import "vars";
+@import "config/vars";
+@import "config/fonts";
 
 * {
         @include box-sizing(border-box);
@@ -11,4 +12,7 @@ body {
 	width: $main-width;
 	padding: $main-padding;
 	margin: 0 auto;
+    @include normal-text();
 }
+
+@import "fragments/header";
