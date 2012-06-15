@@ -1,0 +1,3 @@
+@mixin box {
+	@include border-radius($corner-radius);
+}

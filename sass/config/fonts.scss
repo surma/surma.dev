@@ -8,16 +8,19 @@ $headline2-text-size: $headline-text-size;
 @mixin normal-text() {
 	font-family: 'Open Sans Condensed', sans-serif;
 	font-size: $normal-text-size;
+	color: $text-color;
 }
 
 @mixin headline-text() {
 	font-family: 'Miso-Bold', sans-serif;
 	font-size: $headline-text-size;
 	text-transform: uppercase;
+	color: $text-color;
 }
 
 @mixin headline2-text() {
 	font-family: 'Miso-Light', sans-serif;
 	font-size: $headline2-text-size;
 	text-transform: uppercase;
+	color: $text-color;
 }

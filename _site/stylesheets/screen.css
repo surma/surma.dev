@@ -110,14 +110,14 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   src: url("webfonts/233FE0_2_0.eot?#iefix") format("embedded-opentype"), url("webfonts/233FE0_2_0.woff") format("woff"), url("webfonts/233FE0_2_0.ttf") format("truetype");
 }
 
-/* line 7, ../sass/screen.scss */
+/* line 9, ../sass/screen.scss */
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 
-/* line 11, ../sass/screen.scss */
+/* line 13, ../sass/screen.scss */
 body {
   background-color: #eeeee8;
   width: 1024px;
@@ -125,6 +125,7 @@ body {
   margin: 0 auto;
   font-family: 'Open Sans Condensed', sans-serif;
   font-size: 15pt;
+  color: black;
 }
 
 /* @license
@@ -177,12 +178,24 @@ body > header .wrapper div h1 {
   font-family: 'Miso-Bold', sans-serif;
   font-size: 21pt;
   text-transform: uppercase;
+  color: black;
 }
 /* line 9, ../sass/fragments/header/styling.scss */
 body > header .wrapper div h2 {
   font-family: 'Miso-Light', sans-serif;
   font-size: 21pt;
   text-transform: uppercase;
+  color: black;
+}
+
+/* line 1, ../sass/fragments/main/styling.scss */
+body > #main {
+  background-color: white;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  -o-border-radius: 4px;
+  border-radius: 4px;
 }
 
 @media (min-width: 1024px) {
@@ -228,5 +241,14 @@ body > header .wrapper div h2 {
   body > header .wrapper img {
     display: inline-block;
     margin-left: 40px;
+  }
+
+  /* line 1, ../sass/fragments/main/w1024.scss */
+  body > #main {
+    display: inline-block;
+    vertical-align: top;
+    padding: 15px 30px;
+    width: 610px;
+    margin: 0 15px;
   }
 }

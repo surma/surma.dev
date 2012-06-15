@@ -1,15 +1,17 @@
 @import "compass/reset";
 @import "compass/css3/box-sizing";
 @import "compass/css3/transform";
+@import "compass/css3/border-radius";
 @import "config/vars";
 @import "config/fonts";
+@import "config/mixins";
 
 * {
         @include box-sizing(border-box);
 }
 
 body {
-	background-color: $light;
+	background-color: $base-color;
 	width: $main-width;
 	padding: $main-padding;
 	margin: 0 auto;
@@ -17,6 +19,9 @@ body {
 }
 
 @import "fragments/header/styling";
+@import "fragments/main/styling";
+
 @media (min-width: 1024px) {
 	@import "fragments/header/w1024";
+	@import "fragments/main/w1024";
 }
