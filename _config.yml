@@ -1,0 +1,5 @@
+auto:        true
+
+source:      .
+destination: ./_site
+permalink:   /:title.html
