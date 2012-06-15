@@ -20,8 +20,10 @@ body {
 
 @import "fragments/header/styling";
 @import "fragments/main/styling";
+@import "fragments/aside/styling";
 
 @media (min-width: 1024px) {
 	@import "fragments/header/w1024";
 	@import "fragments/main/w1024";
+	@import "fragments/aside/w1024";
 }

@@ -1,0 +1,14 @@
+body > aside {
+	display: inline-block;
+	vertical-align: top;
+	width: 190px;
+	margin-right: $gap;
+	> div {
+		font-size: 18px;
+		padding: $gap 2*$gap;
+		margin: $gap 0;
+		&:first-child {
+			margin-top: 0;
+		}
+	}
+}

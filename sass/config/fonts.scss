@@ -1,12 +1,13 @@
 @import "http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,700&subset=latin,greek";
 @import "config/miso";
 
-$normal-text-size: 15pt;
-$headline-text-size: 21pt;
+$normal-text-size: 15px;
+$headline-text-size: 21px;
 $headline2-text-size: $headline-text-size;
 
 @mixin normal-text() {
 	font-family: 'Open Sans Condensed', sans-serif;
+	font-weight: 700;
 	font-size: $normal-text-size;
 	color: $text-color;
 }

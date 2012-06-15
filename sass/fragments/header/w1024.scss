@@ -7,6 +7,7 @@ body > header {
 	vertical-align: bottom;
 	width: $header-width;
 	height: $header-height;
+	margin-right: $gap;
 	.wrapper {
 		position:relative;
 		top: -$header-width;
@@ -24,6 +25,14 @@ body > header {
 			letter-spacing: 0.12em;
 			vertical-align: bottom;
 			padding-bottom: 13px;
+			h1 {
+				font-size: 30px !important;
+				letter-spacing: 0.12em;
+			}
+			h2 {
+				font-size: 21px !important;
+				letter-spacing: 0.12em;
+			}
 		}
 		img {
 			display: inline-block;

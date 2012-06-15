@@ -1,0 +1,11 @@
+body > aside {
+	> div {
+		@include box();
+		@include headline-text();
+		background-color: $light-color;
+		&.highlight {
+			background-color: $strong-color;
+			color: $light-color;
+		}
+	}
+}
