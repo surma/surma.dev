@@ -2,6 +2,7 @@
 @import "compass/css3/box-sizing";
 @import "compass/css3/transform";
 @import "compass/css3/border-radius";
+@import "compass/utilities/general/clearfix";
 @import "config/vars";
 @import "config/fonts";
 @import "config/mixins";
@@ -21,9 +22,11 @@ body {
 @import "fragments/header/styling";
 @import "fragments/main/styling";
 @import "fragments/aside/styling";
+@import "fragments/footer/styling";
 
 @media (min-width: 1024px) {
 	@import "fragments/header/w1024";
 	@import "fragments/main/w1024";
 	@import "fragments/aside/w1024";
+	@import "fragments/footer/w1024";
 }

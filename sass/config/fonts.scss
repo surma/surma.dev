@@ -4,6 +4,7 @@
 $normal-text-size: 15px;
 $headline-text-size: 21px;
 $headline2-text-size: $headline-text-size;
+$footer-text-size: 16px;
 
 @mixin normal-text() {
 	font-family: 'Open Sans Condensed', sans-serif;
@@ -14,6 +15,7 @@ $headline2-text-size: $headline-text-size;
 
 @mixin headline-text() {
 	font-family: 'Miso-Bold', sans-serif;
+	font-weight: 700;
 	font-size: $headline-text-size;
 	text-transform: uppercase;
 	color: $text-color;
@@ -21,7 +23,15 @@ $headline2-text-size: $headline-text-size;
 
 @mixin headline2-text() {
 	font-family: 'Miso-Light', sans-serif;
+	font-weight: 300;
 	font-size: $headline2-text-size;
 	text-transform: uppercase;
+	color: $text-color;
+}
+
+@mixin footer-text() {
+	font-family: 'Miso-Light', sans-serif;
+	font-weight: 300;
+	font-size: $footer-text-size;
 	color: $text-color;
 }

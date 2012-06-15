@@ -1,0 +1,15 @@
+body > footer {
+	@include footer-text();
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	a {
+		text-decoration: none;
+		font-style: normal;
+		color: $text-color;
+		padding: 0 $gap;
+		&:hover {
+			background-color: $text-color;
+			color: $strong-color;
+		}
+	}
+}

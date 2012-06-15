@@ -109,14 +109,14 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   src: url("webfonts/233FE0_2_0.eot?#iefix") format("embedded-opentype"), url("webfonts/233FE0_2_0.woff") format("woff"), url("webfonts/233FE0_2_0.ttf") format("truetype");
 }
 
-/* line 9, ../sass/screen.scss */
+/* line 10, ../sass/screen.scss */
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 
-/* line 13, ../sass/screen.scss */
+/* line 14, ../sass/screen.scss */
 body {
   background-color: #eeeee8;
   width: 1024px;
@@ -131,6 +131,7 @@ body {
 /* line 4, ../sass/fragments/header/styling.scss */
 body > header .wrapper div h1 {
   font-family: 'Miso-Bold', sans-serif;
+  font-weight: 700;
   font-size: 21px;
   text-transform: uppercase;
   color: black;
@@ -138,6 +139,7 @@ body > header .wrapper div h1 {
 /* line 7, ../sass/fragments/header/styling.scss */
 body > header .wrapper div h2 {
   font-family: 'Miso-Light', sans-serif;
+  font-weight: 300;
   font-size: 21px;
   text-transform: uppercase;
   color: black;
@@ -161,6 +163,7 @@ body > aside > div {
   -o-border-radius: 4px;
   border-radius: 4px;
   font-family: 'Miso-Bold', sans-serif;
+  font-weight: 700;
   font-size: 21px;
   text-transform: uppercase;
   color: black;
@@ -170,6 +173,28 @@ body > aside > div {
 body > aside > div.highlight {
   background-color: #eac64b;
   color: white;
+}
+
+/* line 1, ../sass/fragments/footer/styling.scss */
+body > footer {
+  font-family: 'Miso-Light', sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  color: black;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+/* line 5, ../sass/fragments/footer/styling.scss */
+body > footer a {
+  text-decoration: none;
+  font-style: normal;
+  color: black;
+  padding: 0 15px;
+}
+/* line 10, ../sass/fragments/footer/styling.scss */
+body > footer a:hover {
+  background-color: black;
+  color: #eac64b;
 }
 
 @media (min-width: 1024px) {
@@ -184,14 +209,11 @@ body > aside > div.highlight {
   }
   /* line 11, ../sass/fragments/header/w1024.scss */
   body > header .wrapper {
-    position: relative;
+    position: absolute;
     top: -85px;
-    left: -335px;
+    right: 0px;
     width: 420px;
-    height: 85px;
     text-align: right;
-    -webkit-transform-style: flat;
-    transform-style: flat;
     -webkit-transform-origin: right bottom;
     -moz-transform-origin: right bottom;
     -ms-transform-origin: right bottom;
@@ -202,27 +224,27 @@ body > aside > div.highlight {
     -ms-transform: rotate(-90deg);
     -o-transform: rotate(-90deg);
     transform: rotate(-90deg);
-    float: left;
   }
-  /* line 22, ../sass/fragments/header/w1024.scss */
+  /* line 19, ../sass/fragments/header/w1024.scss */
   body > header .wrapper div {
     display: inline-block;
     text-align: right;
     letter-spacing: 0.12em;
     vertical-align: bottom;
-    padding-bottom: 13px;
   }
-  /* line 28, ../sass/fragments/header/w1024.scss */
+  /* line 24, ../sass/fragments/header/w1024.scss */
   body > header .wrapper div h1 {
     font-size: 30px !important;
     letter-spacing: 0.12em;
+    margin-bottom: 6px;
   }
-  /* line 32, ../sass/fragments/header/w1024.scss */
+  /* line 29, ../sass/fragments/header/w1024.scss */
   body > header .wrapper div h2 {
     font-size: 21px !important;
     letter-spacing: 0.12em;
+    margin-bottom: 13px;
   }
-  /* line 37, ../sass/fragments/header/w1024.scss */
+  /* line 35, ../sass/fragments/header/w1024.scss */
   body > header .wrapper img {
     display: inline-block;
     margin-left: 40px;
@@ -233,7 +255,7 @@ body > aside > div.highlight {
     display: inline-block;
     vertical-align: top;
     padding: 15px 30px;
-    width: 610px;
+    width: 600px;
     margin-right: 15px;
   }
 
@@ -253,5 +275,42 @@ body > aside > div.highlight {
   /* line 10, ../sass/fragments/aside/w1024.scss */
   body > aside > div:first-child {
     margin-top: 0;
+  }
+
+  /* line 4, ../sass/fragments/footer/w1024.scss */
+  body > footer {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    width: 16px;
+    height: 420px;
+  }
+  /* line 10, ../sass/fragments/footer/w1024.scss */
+  body > footer .wrapper {
+    position: absolute;
+    top: -16px;
+    right: 0px;
+    width: 420px;
+    text-align: right;
+    -webkit-transform-origin: right bottom;
+    -moz-transform-origin: right bottom;
+    -ms-transform-origin: right bottom;
+    -o-transform-origin: right bottom;
+    transform-origin: right bottom;
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+  }
+  /* line 18, ../sass/fragments/footer/w1024.scss */
+  body > footer .wrapper a {
+    display: block;
+    float: left;
+  }
+  /* line 22, ../sass/fragments/footer/w1024.scss */
+  body > footer .wrapper div {
+    display: inline-block;
+    float: right;
   }
 }

@@ -9,29 +9,27 @@ body > header {
 	height: $header-height;
 	margin-right: $gap;
 	.wrapper {
-		position:relative;
+		position: absolute;
 		top: -$header-width;
-		left: -$header-height + $header-width;
+		right: 0px;
 		width: $header-height;
-		height: $header-width;
 		text-align: right;
-		@include transform-style(flat);
 		@include apply-origin(right bottom, false);
 		@include rotate(-90deg);
-		float: left;
 		div {
 			display: inline-block;
 			text-align: right;
 			letter-spacing: 0.12em;
 			vertical-align: bottom;
-			padding-bottom: 13px;
 			h1 {
 				font-size: 30px !important;
 				letter-spacing: 0.12em;
+				margin-bottom: 6px;
 			}
 			h2 {
 				font-size: 21px !important;
 				letter-spacing: 0.12em;
+				margin-bottom: 13px;
 			}
 		}
 		img {

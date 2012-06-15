@@ -1,0 +1,27 @@
+// After-the-fact units!
+$footer-width: 16px;
+$footer-height: 420px;
+body > footer {
+	position: relative;
+	display: inline-block;
+	vertical-align: top;
+	width: $footer-width;
+	height: $footer-height;
+	.wrapper {
+		position: absolute;
+		top: -$footer-width;
+		right: 0px;
+		width: $footer-height;
+		text-align: right;
+		@include apply-origin(right bottom, false);
+		@include rotate(-90deg);
+		a {
+			display: block;
+			float: left;
+		}
+		div {
+			display: inline-block;
+			float: right;
+		}
+	}
+}
