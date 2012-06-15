@@ -1,6 +1,3 @@
-@import "compass/css3/transform";
-@import "config/fonts";
-
 // After-the-fact units!
 $header-width: 85px;
 $header-height: 420px;
@@ -28,12 +25,6 @@ body > header {
 			vertical-align: bottom;
 			padding-bottom: 13px;
 			padding-right: 40px;
-			h1 {
-				@include headline-text();
-			}
-			h2 {
-				@include headline2-text();
-			}
 		}
 		img {
 			display: inline-block;

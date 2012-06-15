@@ -1,5 +1,6 @@
 @import "compass/reset";
 @import "compass/css3/box-sizing";
+@import "compass/css3/transform";
 @import "config/vars";
 @import "config/fonts";
 
@@ -15,4 +16,7 @@ body {
     @include normal-text();
 }
 
-@import "fragments/header";
+@import "fragments/header/styling";
+@media (min-width: 1024px) {
+	@import "fragments/header/w1024";
+}

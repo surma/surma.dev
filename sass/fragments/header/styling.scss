@@ -1,0 +1,14 @@
+@import "config/fonts";
+
+body > header {
+	.wrapper {
+		div {
+			h1 {
+				@include headline-text();
+			}
+			h2 {
+				@include headline2-text();
+			}
+		}
+	}
+}
