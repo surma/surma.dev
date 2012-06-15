@@ -118,7 +118,7 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 
 /* line 14, ../sass/screen.scss */
 body {
-  background-color: #eeeee8;
+  background-color: #ecece5;
   width: 1024px;
   padding: 50px 25px 50px 50px;
   margin: 0 auto;
@@ -130,8 +130,8 @@ body {
 
 /* line 4, ../sass/fragments/header/styling.scss */
 body > header .wrapper div h1 {
-  font-family: 'Miso-Bold', sans-serif;
-  font-weight: 700;
+  font-family: 'Miso', sans-serif;
+  font-weight: 500;
   font-size: 21px;
   text-transform: uppercase;
   color: black;
@@ -162,8 +162,8 @@ body > aside > div {
   -ms-border-radius: 4px;
   -o-border-radius: 4px;
   border-radius: 4px;
-  font-family: 'Miso-Bold', sans-serif;
-  font-weight: 700;
+  font-family: 'Miso', sans-serif;
+  font-weight: 500;
   font-size: 21px;
   text-transform: uppercase;
   color: black;
@@ -171,7 +171,7 @@ body > aside > div {
 }
 /* line 6, ../sass/fragments/aside/styling.scss */
 body > aside > div.highlight {
-  background-color: #eac64b;
+  background-color: #fdbc2e;
   color: white;
 }
 
@@ -194,7 +194,7 @@ body > footer a {
 /* line 10, ../sass/fragments/footer/styling.scss */
 body > footer a:hover {
   background-color: black;
-  color: #eac64b;
+  color: #fdbc2e;
 }
 
 @media (min-width: 1024px) {

@@ -14,8 +14,8 @@ $footer-text-size: 16px;
 }
 
 @mixin headline-text() {
-	font-family: 'Miso-Bold', sans-serif;
-	font-weight: 700;
+	font-family: 'Miso', sans-serif;
+	font-weight: 500;
 	font-size: $headline-text-size;
 	text-transform: uppercase;
 	color: $text-color;
