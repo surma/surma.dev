@@ -5,12 +5,22 @@ $normal-text-size: 15px;
 $headline-text-size: 21px;
 $headline2-text-size: $headline-text-size;
 $footer-text-size: 16px;
+$line-height: 1.35em;
 
-@mixin normal-text() {
+@mixin intro-text() {
 	font-family: 'Open Sans Condensed', sans-serif;
 	font-weight: 700;
 	font-size: $normal-text-size;
 	color: $text-color;
+	line-height: $line-height;
+}
+
+@mixin normal-text() {
+	font-family: 'Open Sans Condensed', sans-serif;
+	font-weight: 400;
+	font-size: $normal-text-size;
+	color: $text-color;
+	line-height: $line-height;
 }
 
 @mixin headline-text() {

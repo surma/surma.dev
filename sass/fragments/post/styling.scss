@@ -1,0 +1,29 @@
+body > #main {
+	h1 {
+		@include headline-text();
+		a {
+			text-decoration: none;
+			color: $text-color;
+		}
+		background-color: $strong-color;
+	}
+	section {
+		div {
+			p {
+				a {
+					color: $strong-color;
+					text-decoration: none;
+					&:hover {
+						background-color: black;
+					}
+				}
+				strong, b {
+					font-weight: 700;
+				}
+				em, i, u {
+					font-weight: 700;
+				}
+			}
+		}
+	}
+}

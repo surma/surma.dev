@@ -1,0 +1,90 @@
+body > #main {
+	> h1 {
+		display: inline-block;
+		margin-bottom: 2*$gap;
+	}
+	> section {
+		@include clearfix();
+		margin-bottom: $gap;
+		figure {
+			display: block;
+			float: left;
+			margin-right: $gap;
+			margin-bottom: $gap;
+			a.thumb {
+				display: block;
+			}
+			a.image {
+				display: none;
+			}
+		}
+		h1 {
+			display: inline-block;
+			margin-bottom: $gap;
+			&:hover {
+				display: block;
+			}
+			a.open {
+				display: inline;
+			}
+			a.close {
+				display: none;
+			}
+		}
+		div {
+			> * {
+				@include normal-text();
+				display: none;
+			}
+			p {
+				margin: $gap 0;
+				&:first-child {
+					margin-top: 0;
+				}
+				&:last-child {
+					margin-bottom: 0;
+				}
+			}
+			p:first-child {
+				@include intro-text();
+				display: block;
+			}
+		}
+		&:target {
+			h1 {
+				display: block;
+				a.open {
+					display: none;
+				}
+				a.close {
+					display: inline;
+				}
+			}
+			figure {
+				width: 100%;
+				display: block;
+				text-align: center;
+				margin-right: 0;
+				.thumb {
+					display: none;
+				}
+				.image {
+					display: inline-block;
+				}
+			}
+			div {
+				> * {
+					display: block;
+				}
+				&:after {
+					display: block;
+					width: 100%;
+					height: $gap;
+					background-color: $strong-color;
+					margin-top: $gap;
+					content: ' ';
+				}
+			}
+		}
+	}
+}

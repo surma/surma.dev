@@ -1,0 +1,9 @@
+---
+layout: mainlayout
+---
+<h1>What I do</h1>
+{% for post in site.posts %}
+	{% if post.category contains "project" %}
+		{% include post.html %}
+	{% endif %}
+{% endfor %}

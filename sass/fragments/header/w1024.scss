@@ -4,7 +4,7 @@ $header-height: 420px;
 body > header {
 	position: relative;
 	display: inline-block;
-	vertical-align: bottom;
+	vertical-align: top;
 	width: $header-width;
 	height: $header-height;
 	margin-right: $gap;
@@ -22,11 +22,13 @@ body > header {
 			letter-spacing: 0.12em;
 			vertical-align: bottom;
 			h1 {
+				line-height: 1em;
 				font-size: 30px !important;
 				letter-spacing: 0.12em;
 				margin-bottom: 6px;
 			}
 			h2 {
+				line-height: 1em;
 				font-size: 21px !important;
 				letter-spacing: 0.12em;
 				margin-bottom: 13px;
