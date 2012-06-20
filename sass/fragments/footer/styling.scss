@@ -3,6 +3,9 @@ body > footer {
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
 	a {
+		&:before {
+			display: none;
+		}
 		text-decoration: none;
 		font-style: normal;
 		color: $text-color;

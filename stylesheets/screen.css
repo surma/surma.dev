@@ -109,14 +109,24 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   src: url("webfonts/233FE0_2_0.eot?#iefix") format("embedded-opentype"), url("webfonts/233FE0_2_0.woff") format("woff"), url("webfonts/233FE0_2_0.ttf") format("truetype");
 }
 
-/* line 10, ../sass/screen.scss */
+/* line 11, ../sass/screen.scss */
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 }
 
-/* line 14, ../sass/screen.scss */
+/* line 16, ../sass/screen.scss */
+p, a, h1, h2 {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}
+
+/* line 20, ../sass/screen.scss */
 body {
   background-color: #ecece5;
   width: 1024px;
@@ -186,31 +196,35 @@ body > #main h1 a {
   color: black;
 }
 /* line 7, ../sass/fragments/post/styling.scss */
+body > #main h1 a:hover {
+  background-color: transparent;
+}
+/* line 10, ../sass/fragments/post/styling.scss */
 body > #main h1 a:before {
   display: none;
 }
-/* line 16, ../sass/fragments/post/styling.scss */
+/* line 19, ../sass/fragments/post/styling.scss */
 body > #main section figure a:hover {
   background-color: transparent;
 }
-/* line 19, ../sass/fragments/post/styling.scss */
+/* line 22, ../sass/fragments/post/styling.scss */
 body > #main section figure a:before {
   display: none;
 }
-/* line 26, ../sass/fragments/post/styling.scss */
+/* line 29, ../sass/fragments/post/styling.scss */
 body > #main section div p a {
   color: #fdbc2e;
   text-decoration: none;
 }
-/* line 29, ../sass/fragments/post/styling.scss */
+/* line 32, ../sass/fragments/post/styling.scss */
 body > #main section div p a:hover {
   background-color: black;
 }
-/* line 33, ../sass/fragments/post/styling.scss */
+/* line 36, ../sass/fragments/post/styling.scss */
 body > #main section div p strong, body > #main section div p b {
   font-weight: 700;
 }
-/* line 36, ../sass/fragments/post/styling.scss */
+/* line 39, ../sass/fragments/post/styling.scss */
 body > #main section div p em, body > #main section div p i, body > #main section div p u {
   font-weight: 700;
 }
@@ -269,7 +283,11 @@ body > footer a {
   color: black;
   padding: 0 15px;
 }
-/* line 10, ../sass/fragments/footer/styling.scss */
+/* line 6, ../sass/fragments/footer/styling.scss */
+body > footer a:before {
+  display: none;
+}
+/* line 13, ../sass/fragments/footer/styling.scss */
 body > footer a:hover {
   background-color: black;
   color: #fdbc2e;

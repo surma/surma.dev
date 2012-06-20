@@ -3,12 +3,18 @@
 @import "compass/css3/transform";
 @import "compass/css3/border-radius";
 @import "compass/utilities/general/clearfix";
+@import "compass/css3/user-interface";
 @import "config/vars";
 @import "config/fonts";
 @import "config/mixins";
 
 * {
         @include box-sizing(border-box);
+		@include user-select(none);
+}
+
+p, a, h1, h2 {
+	@include user-select(text);
 }
 
 body {
@@ -18,6 +24,7 @@ body {
 	margin: 0 auto;
     @include normal-text();
 }
+
 
 @import "fragments/links";
 @import "fragments/header/styling";
