@@ -1,5 +1,19 @@
-<div>
-Social kram. bla bla bla
+<div class="social merge">
+	<h1>Find me on</h1>
+	<div>
+		{% for social in page.socials %}
+		<figure>
+			<a href="{{social.link}}">
+				<img src="/img/social/{{social.name}}.png" class="normal" />
+				<img src="/img/social/{{social.name}}_hover.png" class="hover" />
+			</a>
+		</figure>
+		{% endfor %}
+	</div>
+</div>
+<div class="contact">
+	<h1>Contact me</h1>
+	<a href="mailto:surma@surmair.de">surma@surmair.de</a>
 </div>
 <div>
 News #1

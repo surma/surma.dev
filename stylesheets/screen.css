@@ -188,7 +188,42 @@ body > #main section div p em, body > #main section div p i, body > #main sectio
   font-weight: 700;
 }
 
-/* line 2, ../sass/fragments/aside/styling.scss */
+/* line 3, ../sass/fragments/aside/styling.scss */
+body > aside > .social div {
+  margin-bottom: -15px;
+}
+/* line 5, ../sass/fragments/aside/styling.scss */
+body > aside > .social div figure {
+  display: inline-block;
+  margin-right: 15px;
+  margin-bottom: 7.5px;
+}
+/* line 9, ../sass/fragments/aside/styling.scss */
+body > aside > .social div figure a {
+  display: inline;
+  text-decoration: none;
+}
+/* line 12, ../sass/fragments/aside/styling.scss */
+body > aside > .social div figure a .normal {
+  display: inline;
+}
+/* line 15, ../sass/fragments/aside/styling.scss */
+body > aside > .social div figure a .hover {
+  display: none;
+}
+/* line 18, ../sass/fragments/aside/styling.scss */
+body > aside > .social div figure a:hover {
+  background-color: transparent;
+}
+/* line 20, ../sass/fragments/aside/styling.scss */
+body > aside > .social div figure a:hover .normal {
+  display: none;
+}
+/* line 23, ../sass/fragments/aside/styling.scss */
+body > aside > .social div figure a:hover .hover {
+  display: inline;
+}
+/* line 31, ../sass/fragments/aside/styling.scss */
 body > aside > div {
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
@@ -202,10 +237,64 @@ body > aside > div {
   color: black;
   background-color: white;
 }
-/* line 6, ../sass/fragments/aside/styling.scss */
+/* line 35, ../sass/fragments/aside/styling.scss */
+body > aside > div h1 {
+  font-family: 'Miso', sans-serif;
+  font-weight: 500;
+  font-size: 21px;
+  text-transform: uppercase;
+  color: black;
+  display: inline-block;
+  background-color: #fdbc2e;
+  margin: 15px 0;
+}
+/* line 40, ../sass/fragments/aside/styling.scss */
+body > aside > div h1:first-child {
+  margin-top: 0;
+}
+/* line 44, ../sass/fragments/aside/styling.scss */
 body > aside > div.highlight {
   background-color: #fdbc2e;
   color: white;
+}
+/* line 48, ../sass/fragments/aside/styling.scss */
+body > aside > div.merge {
+  -moz-border-radius-bottomright: 0;
+  -webkit-border-bottom-right-radius: 0;
+  -ms-border-bottom-right-radius: 0;
+  -o-border-bottom-right-radius: 0;
+  border-bottom-right-radius: 0;
+  -moz-border-radius-bottomleft: 0;
+  -webkit-border-bottom-left-radius: 0;
+  -ms-border-bottom-left-radius: 0;
+  -o-border-bottom-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-bottom: 0;
+}
+/* line 52, ../sass/fragments/aside/styling.scss */
+body > aside > div.merge + div {
+  -moz-border-radius-topright: 0;
+  -webkit-border-top-right-radius: 0;
+  -ms-border-top-right-radius: 0;
+  -o-border-top-right-radius: 0;
+  border-top-right-radius: 0;
+  -moz-border-radius-topleft: 0;
+  -webkit-border-top-left-radius: 0;
+  -ms-border-top-left-radius: 0;
+  -o-border-top-left-radius: 0;
+  border-top-left-radius: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+/* line 59, ../sass/fragments/aside/styling.scss */
+body > aside > div a {
+  text-decoration: none;
+  color: black;
+}
+/* line 62, ../sass/fragments/aside/styling.scss */
+body > aside > div a:hover {
+  color: #fdbc2e;
+  background-color: black;
 }
 
 /* line 1, ../sass/fragments/footer/styling.scss */
