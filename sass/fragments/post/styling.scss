@@ -4,10 +4,23 @@ body > #main {
 		a {
 			text-decoration: none;
 			color: $text-color;
+			&:before {
+				display: none;
+			}
 		}
 		background-color: $strong-color;
 	}
 	section {
+		figure {
+			a {
+				&:hover {
+					background-color: transparent;
+				}
+				&:before {
+					display: none;
+				}
+			}
+		}
 		div {
 			p {
 				a {

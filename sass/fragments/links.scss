@@ -1,0 +1,11 @@
+a {
+	text-decoration: none;
+	color: $strong-color;
+	&:hover {
+		color: $strong-color;
+		background-color: $text-color;
+	}
+	&:before {
+		content: '→ ';
+	}
+}

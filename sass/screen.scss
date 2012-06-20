@@ -19,6 +19,7 @@ body {
     @include normal-text();
 }
 
+@import "fragments/links";
 @import "fragments/header/styling";
 @import "fragments/main/styling";
 @import "fragments/post/styling";

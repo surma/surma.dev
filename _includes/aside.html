@@ -15,9 +15,10 @@
 	<h1>Contact me</h1>
 	<a href="mailto:surma@surmair.de">surma@surmair.de</a>
 </div>
-<div>
-News #1
-</div>
-<div class="highlight">
-Wichtige News
-</div>
+{% for post in site.posts %}
+	{% if post.category contains "aside" %}
+		<div class="{% if post.category contains "highlight" %}highlight{% endif %}">
+			{{post.content}}
+		</div>
+	{% endif %}
+{% endfor %}

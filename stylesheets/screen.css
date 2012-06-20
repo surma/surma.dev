@@ -129,6 +129,21 @@ body {
   line-height: 1.35em;
 }
 
+/* line 1, ../sass/fragments/links.scss */
+a {
+  text-decoration: none;
+  color: #fdbc2e;
+}
+/* line 4, ../sass/fragments/links.scss */
+a:hover {
+  color: #fdbc2e;
+  background-color: black;
+}
+/* line 8, ../sass/fragments/links.scss */
+a:before {
+  content: '→ ';
+}
+
 /* line 4, ../sass/fragments/header/styling.scss */
 body > header .wrapper div h1 {
   font-family: 'Miso', sans-serif;
@@ -170,60 +185,41 @@ body > #main h1 a {
   text-decoration: none;
   color: black;
 }
-/* line 13, ../sass/fragments/post/styling.scss */
+/* line 7, ../sass/fragments/post/styling.scss */
+body > #main h1 a:before {
+  display: none;
+}
+/* line 16, ../sass/fragments/post/styling.scss */
+body > #main section figure a:hover {
+  background-color: transparent;
+}
+/* line 19, ../sass/fragments/post/styling.scss */
+body > #main section figure a:before {
+  display: none;
+}
+/* line 26, ../sass/fragments/post/styling.scss */
 body > #main section div p a {
   color: #fdbc2e;
   text-decoration: none;
 }
-/* line 16, ../sass/fragments/post/styling.scss */
+/* line 29, ../sass/fragments/post/styling.scss */
 body > #main section div p a:hover {
   background-color: black;
 }
-/* line 20, ../sass/fragments/post/styling.scss */
+/* line 33, ../sass/fragments/post/styling.scss */
 body > #main section div p strong, body > #main section div p b {
   font-weight: 700;
 }
-/* line 23, ../sass/fragments/post/styling.scss */
+/* line 36, ../sass/fragments/post/styling.scss */
 body > #main section div p em, body > #main section div p i, body > #main section div p u {
   font-weight: 700;
 }
 
-/* line 3, ../sass/fragments/aside/styling.scss */
-body > aside > .social div {
-  margin-bottom: -15px;
-}
-/* line 5, ../sass/fragments/aside/styling.scss */
-body > aside > .social div figure {
-  display: inline-block;
-  margin-right: 15px;
-  margin-bottom: 7.5px;
+/* line 4, ../sass/fragments/aside/styling.scss */
+body > aside > .social a:before, body > aside > .contact a:before {
+  display: none;
 }
 /* line 9, ../sass/fragments/aside/styling.scss */
-body > aside > .social div figure a {
-  display: inline;
-  text-decoration: none;
-}
-/* line 12, ../sass/fragments/aside/styling.scss */
-body > aside > .social div figure a .normal {
-  display: inline;
-}
-/* line 15, ../sass/fragments/aside/styling.scss */
-body > aside > .social div figure a .hover {
-  display: none;
-}
-/* line 18, ../sass/fragments/aside/styling.scss */
-body > aside > .social div figure a:hover {
-  background-color: transparent;
-}
-/* line 20, ../sass/fragments/aside/styling.scss */
-body > aside > .social div figure a:hover .normal {
-  display: none;
-}
-/* line 23, ../sass/fragments/aside/styling.scss */
-body > aside > .social div figure a:hover .hover {
-  display: inline;
-}
-/* line 31, ../sass/fragments/aside/styling.scss */
 body > aside > div {
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
@@ -237,64 +233,24 @@ body > aside > div {
   color: black;
   background-color: white;
 }
-/* line 35, ../sass/fragments/aside/styling.scss */
+/* line 13, ../sass/fragments/aside/styling.scss */
 body > aside > div h1 {
   font-family: 'Miso', sans-serif;
   font-weight: 500;
   font-size: 21px;
   text-transform: uppercase;
   color: black;
-  display: inline-block;
   background-color: #fdbc2e;
-  margin: 15px 0;
 }
-/* line 40, ../sass/fragments/aside/styling.scss */
-body > aside > div h1:first-child {
-  margin-top: 0;
-}
-/* line 44, ../sass/fragments/aside/styling.scss */
+/* line 17, ../sass/fragments/aside/styling.scss */
 body > aside > div.highlight {
   background-color: #fdbc2e;
   color: white;
 }
-/* line 48, ../sass/fragments/aside/styling.scss */
-body > aside > div.merge {
-  -moz-border-radius-bottomright: 0;
-  -webkit-border-bottom-right-radius: 0;
-  -ms-border-bottom-right-radius: 0;
-  -o-border-bottom-right-radius: 0;
-  border-bottom-right-radius: 0;
-  -moz-border-radius-bottomleft: 0;
-  -webkit-border-bottom-left-radius: 0;
-  -ms-border-bottom-left-radius: 0;
-  -o-border-bottom-left-radius: 0;
-  border-bottom-left-radius: 0;
-  margin-bottom: 0;
-}
-/* line 52, ../sass/fragments/aside/styling.scss */
-body > aside > div.merge + div {
-  -moz-border-radius-topright: 0;
-  -webkit-border-top-right-radius: 0;
-  -ms-border-top-right-radius: 0;
-  -o-border-top-right-radius: 0;
-  border-top-right-radius: 0;
-  -moz-border-radius-topleft: 0;
-  -webkit-border-top-left-radius: 0;
-  -ms-border-top-left-radius: 0;
-  -o-border-top-left-radius: 0;
-  border-top-left-radius: 0;
-  margin-top: 0;
-  padding-top: 0;
-}
-/* line 59, ../sass/fragments/aside/styling.scss */
+/* line 21, ../sass/fragments/aside/styling.scss */
 body > aside > div a {
   text-decoration: none;
   color: black;
-}
-/* line 62, ../sass/fragments/aside/styling.scss */
-body > aside > div a:hover {
-  color: #fdbc2e;
-  background-color: black;
 }
 
 /* line 1, ../sass/fragments/footer/styling.scss */
@@ -504,15 +460,88 @@ body > footer a:hover {
     width: 190px;
     margin-right: 15px;
   }
-  /* line 6, ../sass/fragments/aside/w1024.scss */
+  /* line 7, ../sass/fragments/aside/w1024.scss */
+  body > aside > .social div {
+    margin-bottom: -15px;
+  }
+  /* line 9, ../sass/fragments/aside/w1024.scss */
+  body > aside > .social div figure {
+    display: inline-block;
+    margin-right: 15px;
+    margin-bottom: 7.5px;
+  }
+  /* line 13, ../sass/fragments/aside/w1024.scss */
+  body > aside > .social div figure a {
+    display: inline;
+    text-decoration: none;
+  }
+  /* line 16, ../sass/fragments/aside/w1024.scss */
+  body > aside > .social div figure a .normal {
+    display: inline;
+  }
+  /* line 19, ../sass/fragments/aside/w1024.scss */
+  body > aside > .social div figure a .hover {
+    display: none;
+  }
+  /* line 22, ../sass/fragments/aside/w1024.scss */
+  body > aside > .social div figure a:hover {
+    background-color: transparent;
+  }
+  /* line 24, ../sass/fragments/aside/w1024.scss */
+  body > aside > .social div figure a:hover .normal {
+    display: none;
+  }
+  /* line 27, ../sass/fragments/aside/w1024.scss */
+  body > aside > .social div figure a:hover .hover {
+    display: inline;
+  }
+  /* line 35, ../sass/fragments/aside/w1024.scss */
   body > aside > div {
     font-size: 18px;
     padding: 15px 30px;
     margin: 15px 0;
   }
-  /* line 10, ../sass/fragments/aside/w1024.scss */
+  /* line 39, ../sass/fragments/aside/w1024.scss */
   body > aside > div:first-child {
     margin-top: 0;
+  }
+  /* line 42, ../sass/fragments/aside/w1024.scss */
+  body > aside > div h1 {
+    display: inline-block;
+    margin: 15px 0;
+  }
+  /* line 45, ../sass/fragments/aside/w1024.scss */
+  body > aside > div h1:first-child {
+    margin-top: 0;
+  }
+  /* line 49, ../sass/fragments/aside/w1024.scss */
+  body > aside > div.merge {
+    -moz-border-radius-bottomright: 0;
+    -webkit-border-bottom-right-radius: 0;
+    -ms-border-bottom-right-radius: 0;
+    -o-border-bottom-right-radius: 0;
+    border-bottom-right-radius: 0;
+    -moz-border-radius-bottomleft: 0;
+    -webkit-border-bottom-left-radius: 0;
+    -ms-border-bottom-left-radius: 0;
+    -o-border-bottom-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-bottom: 0;
+  }
+  /* line 53, ../sass/fragments/aside/w1024.scss */
+  body > aside > div.merge + div {
+    -moz-border-radius-topright: 0;
+    -webkit-border-top-right-radius: 0;
+    -ms-border-top-right-radius: 0;
+    -o-border-top-right-radius: 0;
+    border-top-right-radius: 0;
+    -moz-border-radius-topleft: 0;
+    -webkit-border-top-left-radius: 0;
+    -ms-border-top-left-radius: 0;
+    -o-border-top-left-radius: 0;
+    border-top-left-radius: 0;
+    margin-top: 0;
+    padding-top: 0;
   }
 
   /* line 4, ../sass/fragments/footer/w1024.scss */
