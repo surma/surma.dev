@@ -1,28 +1,27 @@
 // After-the-fact units!
-$header-width: 85px;
-$header-height: 420px;
-body > header {
-	float: left;
+$footer-width: 16px;
+$footer-height: 420px;
+body > footer {
 	position: relative;
 	display: inline-block;
 	vertical-align: top;
-	width: $header-width;
-	height: $header-height;
-	margin-right: $gap;
+	width: $footer-width;
+	height: $footer-height;
 	.wrapper {
 		position: absolute;
-		top: -$header-width;
+		top: -$footer-width;
 		right: 0px;
-		width: $header-height;
+		width: $footer-height;
 		text-align: right;
 		@include apply-origin(right bottom, false);
 		@include rotate(-90deg);
+		a {
+			display: block;
+			float: left;
+		}
 		div {
 			display: inline-block;
-		}
-		img {
-			display: inline-block;
-			margin-left: 40px;
+			float: right;
 		}
 	}
 }

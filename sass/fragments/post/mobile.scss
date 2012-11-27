@@ -1,0 +1,108 @@
+body > #main {
+	> h1 {
+		display: inline-block;
+		margin-bottom: 2*$gap;
+	}
+	> section {
+		@include clearfix();
+		@include border-bottom-right-radius($corner-radius);
+		@include border-top-right-radius($corner-radius);
+		@include transition-property(background, border);
+		@include transition-duration(0.5s);
+		height: $thumb-size;
+		margin-bottom: $gap;
+		figure {
+			display: block;
+			float: left;
+			margin-right: $gap;
+			margin-bottom: $gap;
+			width: $thumb-size;
+			height: $thumb-size;
+			a.thumb {
+				display: block;
+			}
+			a.image {
+				display: none;
+			}
+		}
+		h1 {
+			display: inline-block;
+			margin-bottom: $gap;
+			&:hover {
+				display: block;
+			}
+			a.open {
+				display: inline;
+			}
+			a.close {
+				display: none;
+			}
+		}
+		> div {
+			> .text {
+				padding: 0 $gap;
+				> * {
+					@include normal-text();
+					display: none;
+				}
+				p {
+					margin: $gap 0;
+					&:first-child {
+						margin-top: 0;
+					}
+					&:last-child {
+						margin-bottom: 0;
+					}
+				}
+				p:first-child {
+					@include intro-text();
+					display: block;
+				}
+			}
+		}
+		&:hover {
+			background-color: $base-color;
+		}
+		&:target {
+			@include box();
+			height: auto !important;
+			h1 {
+				display: block;
+				a.open {
+					display: none;
+				}
+				a.close {
+					display: inline;
+				}
+			}
+			figure {
+				width: 100%;
+				display: block;
+				text-align: center;
+				width: 100% !important;
+				height: auto !important;
+				.thumb {
+					display: none;
+				}
+				.image {
+					display: inline-block;
+				}
+			}
+			> div {
+				> .text {
+					> * {
+						display: block;
+					}
+				}
+				&:after {
+					display: block;
+					width: 100%;
+					height: $gap;
+					background-color: $strong-color;
+					margin-top: $gap;
+					content: ' ';
+				}
+			}
+		}
+	}
+}
