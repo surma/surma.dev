@@ -1,0 +1,13 @@
+body > header {
+	display: block;
+	.wrapper {
+		text-align: right;
+		div {
+			display: inline-block;
+		}
+		img {
+			display: inline-block;
+			margin-left: 40px;
+		}
+	}
+}

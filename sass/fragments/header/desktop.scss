@@ -19,21 +19,6 @@ body > header {
 		@include rotate(-90deg);
 		div {
 			display: inline-block;
-			text-align: right;
-			letter-spacing: 0.12em;
-			vertical-align: bottom;
-			h1 {
-				line-height: 1em;
-				font-size: 30px !important;
-				letter-spacing: 0.12em;
-				margin-bottom: 6px;
-			}
-			h2 {
-				line-height: 1em;
-				font-size: 21px !important;
-				letter-spacing: 0.12em;
-				margin-bottom: 13px;
-			}
 		}
 		img {
 			display: inline-block;

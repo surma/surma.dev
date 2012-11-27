@@ -1,0 +1,53 @@
+body > aside {
+	display: block;
+	> .social {
+		div {
+			figure {
+				display: inline-block;
+				margin: 0;
+				a {
+					display: inline;
+					text-decoration: none;
+					.normal {
+						display: inline;
+					}
+					.hover {
+						display: none;
+					}
+					&:hover {
+						background-color: transparent;
+						.normal {
+							display: none;
+						}
+						.hover {
+							display: inline;
+						}
+					}
+				}
+			}
+		}
+	}
+	> div {
+		@include clearfix();
+		padding-left: $gap;
+		font-size: 18px;
+		@include border-radius(0);
+		h1 {
+			float: left;
+			display: inline-block;
+			margin-right: $gap;
+			margin-bottom: $gap;
+		}
+		&:first-child {
+			margin-top: $gap;
+			padding-top: $gap;
+			@include border-top-left-radius($corner-radius);
+			@include border-top-right-radius($corner-radius);
+		}
+		&:last-child {
+			margin-bottom: $gap;
+			@include border-bottom-left-radius($corner-radius);
+			@include border-bottom-right-radius($corner-radius);
+		}
+	}
+}

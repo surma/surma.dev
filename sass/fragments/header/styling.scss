@@ -1,11 +1,22 @@
 body > header {
 	.wrapper {
 		div {
+			text-align: right;
+			letter-spacing: 0.12em;
+			vertical-align: bottom;
 			h1 {
 				@include headline-text();
+				line-height: 1em;
+				font-size: 30px !important;
+				letter-spacing: 0.12em;
+				margin-bottom: 6px;
 			}
 			h2 {
 				@include headline2-text();
+				line-height: 1em;
+				font-size: 21px !important;
+				letter-spacing: 0.12em;
+				margin-bottom: 13px;
 			}
 		}
 	}

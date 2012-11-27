@@ -1,0 +1,15 @@
+body > footer {
+	display: block;
+	margin-top: $gap;
+	.wrapper {
+		text-align: right;
+		a {
+			display: block;
+			float: left;
+		}
+		div {
+			display: inline-block;
+			float: right;
+		}
+	}
+}

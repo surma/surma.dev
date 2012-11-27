@@ -20,9 +20,6 @@ p, a, h1, h2 {
 
 body {
 	background-color: $base-color;
-	width: $main-width;
-	padding: $main-padding;
-	margin: 0 auto;
     @include normal-text();
 }
 
@@ -34,10 +31,27 @@ body {
 @import "fragments/aside/styling";
 @import "fragments/footer/styling";
 
-@media (min-width: 1024px) {
+@media (min-width: 1000px) {
+	body {
+		width: $main-width;
+		padding: $main-padding;
+		margin: 0 auto;
+	}
 	@import "fragments/header/desktop";
 	@import "fragments/main/desktop";
 	@import "fragments/post/desktop";
 	@import "fragments/aside/desktop";
 	@import "fragments/footer/desktop";
+}
+@media(max-width: 999px) {
+	body {
+		width: 100%;
+		padding: $gap;
+		margin: 0;
+	}
+	@import "fragments/header/mobile";
+	@import "fragments/main/mobile";
+	@import "fragments/post/mobile";
+	@import "fragments/aside/mobile";
+	@import "fragments/footer/mobile";
 }
