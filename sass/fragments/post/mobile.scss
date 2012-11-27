@@ -85,7 +85,12 @@ body > #main {
 					display: none;
 				}
 				.image {
-					display: inline-block;
+					display: block;
+					padding: $gap 0;
+					img {
+						width: 100%;
+						max-width: 500px;
+					}
 				}
 			}
 			> div {
