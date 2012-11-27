@@ -5,7 +5,8 @@ body > #main {
 	}
 	> section {
 		@include clearfix();
-		@include box();
+		@include border-bottom-right-radius($corner-radius);
+		@include border-top-right-radius($corner-radius);
 		@include transition-property(background, border);
 		@include transition-duration(0.5s);
 		height: $thumb-size;
@@ -63,6 +64,7 @@ body > #main {
 			background-color: $base-color;
 		}
 		&:target {
+			@include box();
 			height: auto !important;
 			h1 {
 				display: block;
