@@ -35,9 +35,9 @@ body {
 @import "fragments/footer/styling";
 
 @media (min-width: 1024px) {
-	@import "fragments/header/w1024";
-	@import "fragments/main/w1024";
-	@import "fragments/post/w1024";
-	@import "fragments/aside/w1024";
-	@import "fragments/footer/w1024";
+	@import "fragments/header/desktop";
+	@import "fragments/main/desktop";
+	@import "fragments/post/desktop";
+	@import "fragments/aside/desktop";
+	@import "fragments/footer/desktop";
 }
