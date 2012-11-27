@@ -1,15 +1,10 @@
 body > aside {
-	display: inline-block;
-	vertical-align: top;
-	width: 190px;
-	margin-right: $gap;
+	display: block;
 	> .social {
 		div {
-			margin-bottom: -$gap;
 			figure {
 				display: inline-block;
-				margin-right: $gap;
-				margin-bottom: $gap/2;
+				margin: 0;
 				a {
 					display: inline;
 					text-decoration: none;
@@ -33,29 +28,26 @@ body > aside {
 		}
 	}
 	> div {
+		@include clearfix();
+		padding-left: $gap;
 		font-size: 18px;
-		padding: $gap 2*$gap;
-		margin: $gap 0;
-		&:first-child {
-			margin-top: 0;
-		}
+		@include border-radius(0);
 		h1 {
+			float: left;
 			display: inline-block;
-			margin: $gap 0;
-			&:first-child {
-				margin-top: 0;
-			}
+			margin-right: $gap;
+			margin-bottom: $gap;
 		}
-		&.merge {
-			@include border-bottom-right-radius(0);
-			@include border-bottom-left-radius(0);
-			margin-bottom: 0;
-			+ div {
-				@include border-top-right-radius(0);
-				@include border-top-left-radius(0);
-				margin-top: 0;
-				padding-top: 0;
-			}
+		&:first-child {
+			margin-top: $gap;
+			padding-top: $gap;
+			@include border-top-left-radius($corner-radius);
+			@include border-top-right-radius($corner-radius);
+		}
+		&:last-child {
+			margin-bottom: $gap;
+			@include border-bottom-left-radius($corner-radius);
+			@include border-bottom-right-radius($corner-radius);
 		}
 	}
 }
