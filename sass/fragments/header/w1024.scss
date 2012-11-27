@@ -2,6 +2,7 @@
 $header-width: 85px;
 $header-height: 420px;
 body > header {
+	float: left;
 	position: relative;
 	display: inline-block;
 	vertical-align: top;
