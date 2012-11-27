@@ -1,8 +1,5 @@
 body > #main {
-	float: left;
-	display: inline-block;
+	display: block;
 	vertical-align: top;
-	padding: $gap 2*$gap;
-	width: 600px;
-	margin-right: $gap;
+	padding: $gap;
 }
