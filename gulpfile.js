@@ -20,12 +20,21 @@ var AUTOPREFIXER_BROWSERS = [
   'bb >= 10'
 ];
 
-gulp.task('jshint', function () {
+gulp.task('scripts', function () {
   return gulp.src('app/scripts/**/*.js')
     .pipe(reload({stream: true, once: true}))
-    .pipe($.jshint())
+    .pipe($.jshint({
+      esnext: true
+    }))
     .pipe($.jshint.reporter('jshint-stylish'))
-    .pipe($.if(!browserSync.active, $.jshint.reporter('fail')));
+    .pipe($.if(!browserSync.active, $.jshint.reporter('fail')))
+    .pipe($.traceur({
+      modules: 'inline'
+    }))
+    .pipe($.rename(function(item) {
+      item.basename = item.basename.replace(/^(.+)\.es6$/i, '$1');
+    }))
+    .pipe(gulp.dest('.tmp/scripts/'));
 });
 
 gulp.task('images', function () {
@@ -56,11 +65,11 @@ gulp.task('styles', function () {
 });
 
 gulp.task('html', function () {
-  var assets = $.useref.assets({searchPath: '{.tmp,app}'});
+  var assets = $.useref.assets({searchPath: ['node_modules', 'bower_components', '.tmp', 'app']});
 
   return gulp.src('app/**/*.html')
     .pipe(assets)
-    .pipe($.if('*.js', $.uglify()))
+    // .pipe($.if('*.js', $.uglify()))
     .pipe($.if('*.css', $.csso()))
     .pipe(assets.restore())
     .pipe($.useref())
@@ -74,15 +83,15 @@ gulp.task('clean', function(done) {
   $.cache.clearAll(done);
 });
 
-gulp.task('serve', ['styles'], function () {
+gulp.task('serve', ['scripts', 'styles'], function () {
   browserSync({
     notify: false,
-    server: ['.tmp', 'app']
+    server: ['node_modules', 'bower_components', '.tmp', 'app']
   });
 
   gulp.watch(['app/**/*.html'], reload);
   gulp.watch(['app/styles/**/*.{scss,css}'], ['styles', reload]);
-  gulp.watch(['app/scripts/**/*.js'], ['jshint']);
+  gulp.watch(['app/scripts/**/*.js'], ['scripts']);
   gulp.watch(['app/images/**/*'], reload);
 });
 
@@ -94,5 +103,5 @@ gulp.task('serve:dist', ['default'], function () {
 });
 
 gulp.task('default', ['clean'], function (cb) {
-  runSequence('styles', ['jshint', 'html', 'images', 'copy'], cb);
+  runSequence('styles', 'scripts', ['html', 'images', 'copy'], cb);
 });
