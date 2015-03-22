@@ -1,0 +1,7 @@
+{
+  "name": "surma.link",
+  "version": "0.0.0",
+  "dependencies": {
+    "reset-scss": "*"
+  }
+}

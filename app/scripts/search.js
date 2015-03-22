@@ -1,9 +1,9 @@
 (function () {
-  var search = document.querySelector('#search');
+  var search = document.querySelector('#searchpanel');
   window.toggleSearchPanel = function() {
     search.classList.add('transitioning');
     search.classList.toggle('visible');
-  }
+  };
 
   search.addEventListener('transitionend', function() {
     search.classList.remove('transitioning');
@@ -13,4 +13,6 @@
       toggleSearchPanel();
     }
   });
+
+  document.querySelector('#search').addEventListener('click', toggleSearchPanel);
 })();

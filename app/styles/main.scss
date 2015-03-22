@@ -1,10 +1,13 @@
 @import '_colors.scss';
+@import '_fonts.scss';
+
+@import '../../bower_components/reset-scss/reset';
 
 body {
   background-color: $darker;
 }
 
-#search {
+#searchpanel {
   background-color: $dark;
   opacity: 0;
   display: block;
@@ -22,5 +25,30 @@ body {
   &.visible {
     visibility: visible;
     opacity: 1;
+  }
+}
+
+#buttonpanel {
+  background-color: $light;
+  display: inline-block;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  ul {
+    display: inline-block;
+  }
+  li {
+    display: inline-block;
+    color: $darker;
+    font-size: 32px;
+    line-height: 32px;
+    width: 32px;
+    text-align: center;
+    padding: 6px;
+    transition: color ease-in-out 150ms;
+    cursor: pointer;
+    &:hover {
+      color: $dark;
+    }
   }
 }
