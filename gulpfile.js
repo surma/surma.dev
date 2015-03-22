@@ -48,13 +48,7 @@ gulp.task('copy', function () {
 });
 
 gulp.task('styles', function () {
-  return gulp.src([
-    'app/styles/**/*.scss',
-  ])
-    .pipe($.rubySass({
-      style: 'expanded',
-      precision: 10
-    }))
+  return $.rubySass('app/styles/')
     .on('error', console.error.bind(console))
     .pipe($.autoprefixer({browsers: AUTOPREFIXER_BROWSERS}))
     .pipe(gulp.dest('.tmp/styles'))
