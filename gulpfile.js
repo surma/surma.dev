@@ -3,19 +3,22 @@ var gulp = require('gulp');
 var $ = require('gulp-load-plugins')();
 var pkg = require('./package.json');
 
-gulp.task('serve', function() {
+gulp.task('serve', ['build'], function() {
   browserSync.init({
     server: {
-      baseDir: 'app'
+      baseDir: 'dist'
     }
   });
-  $.watch('./app/*', browserSync.reload);
+  $.watch('./app/*', ['reload']);
 });
+
+gulp.task('reload', ['build'], browserSync.reload);
 
 gulp.task('build', ['html', 'images']);
 
 gulp.task('html', function() {
   return gulp.src('app/index.html')
+    .pipe($.htmlAutoprefixer())
     .pipe($.minifyInline())
     .pipe($.minifyHtml())
     .pipe(gulp.dest('dist'));

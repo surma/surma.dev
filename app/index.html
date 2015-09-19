@@ -11,13 +11,14 @@
       border: 0;
       margin: 0;
       box-sizing: border-box;
-      background-color: black;
+      background-color: #FDD835;
       overflow: hidden;
+      user-select: none;
     }
     svg {
       width: 100vw;
       height: 100vh;
-      fill: #FF9100;
+      fill: #3E2723;
     }
     text {
       font-family: 'Open Sans Condensed';
@@ -35,7 +36,7 @@
     .path {
       fill: none;
       stroke-width: 0.5;
-      stroke: #FF9100;
+      stroke: #3E2723;
     }
     .path, .icon, tspan {
       transition: all 0.6s ease-in-out;
@@ -44,15 +45,15 @@
       cursor: pointer;
     }
     .icon:hover {
-      fill: #FFE0B2;
+      fill: #3E2723;
     }
     .icon:hover .path {
       stroke-dashoffset: 0 !important;
-      stroke: #FFE0B2;
+      stroke: #3E2723;
     }
     #chrome-logo path {
       stroke-width: 8;
-      stroke: black;
+      stroke: #FDD835;
     }
 
   </style>
@@ -111,13 +112,6 @@
         <path d="M-8.7,111.4l47-80c-7.4,8.8-17.7,14.9-29,17l-20,63"/>
         <path d="M100.3-49.6h-101c15.2,0.1,29.6,7.1,39,19l64-16"/>
       </g>
-      <filter id="shadow" x="0" y="0" width="200%" height="200%">
-        <feOffset result="offOut" in="SourceGraphic" dx="0.2" dy="0.2" />
-        <feColorMatrix result="matrixOut" in="offOut" type="matrix"
-        values="0.5 0 0 0 0 0 0.5 0 0 0 0 0 0.5 0 0 0 0 0 1 0" />
-        <feGaussianBlur result="blurOut" in="matrixOut" stdDeviation="0.6" />
-        <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
-      </filter>
     </defs>
     <g class="icon" id="chrome" transform="translate(25, -25)" data:highlight="3,4" data:link="https://surmair.de">
       <use xlink:href="#chrome-logo" />
@@ -143,7 +137,7 @@
       <path class="path" d="M -10 0 h -10 v -10 h -21 v -5" />
       <path class="path" d="M 10 0 h 5 0 v -10 h -8 v -5" />
     </g>
-    <text filter="url(#shadow)">
+    <text>
       <tspan>surma</tspan><tspan>@</tspan><tspan>surmair</tspan><tspan>.de</tspan>
     </text>
   </svg>
@@ -164,7 +158,7 @@
           newStylesheet.appendChild(
             document.createTextNode(
               '#' + icon.id + ':hover ~ text tspan:nth-child(' + highlight +'){' +
-              'fill: #FFE0B2;' +
+              'fill: #3E2723;' +
               '}'));
         });
       });
