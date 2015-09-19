@@ -12,10 +12,17 @@ gulp.task('serve', function() {
   $.watch('./app/*', browserSync.reload);
 });
 
-gulp.task('build', function() {
-  return gulp.src('app/*')
+gulp.task('build', ['html', 'images']);
+
+gulp.task('html', function() {
+  return gulp.src('app/index.html')
     .pipe($.minifyInline())
     .pipe($.minifyHtml())
+    .pipe(gulp.dest('dist'));
+});
+
+gulp.task('images', function() {
+  return gulp.src('app/*.png')
     .pipe(gulp.dest('dist'));
 });
 
