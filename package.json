@@ -1,0 +1,16 @@
+{
+  "name": "surma.github.io",
+  "version": "1.0.0",
+  "description": "Personal website",
+  "author": "Surma <surma@surma.link>",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "gulp": "^3.9.0",
+    "gulp-load-plugins": "^0.10.0",
+    "gulp-watch": "^4.3.5"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.9.3"
+  }
+}

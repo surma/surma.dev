@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+<head>
+  <title>Surma</title>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,700' rel='stylesheet' type='text/css'>
+  <style>
+    html, body, svg {
+      padding: 0;
+      border: 0;
+      margin: 0;
+      box-sizing: border-box;
+      background-color: black;
+    }
+    svg {
+      width: 100vw;
+      height: 100vh;
+      fill: #FF9100;
+    }
+    text {
+      font-family: 'Open Sans Condensed';
+      text-anchor: middle;
+    }
+    tspan {
+      alignment-baseline: middle;
+    }
+    rect {
+      opacity: 0;
+    }
+    body.unresolved .path {
+      display: none;
+    }
+    .path {
+      fill: none;
+      stroke-width: 0.5;
+      stroke: #FF9100;
+    }
+    .path, .icon, tspan {
+      transition: all 0.3s ease-in-out;
+    }
+    .icon {
+      cursor: pointer;
+    }
+    .icon:hover {
+      fill: #FFE0B2;
+    }
+    .icon:hover .path {
+      stroke-dashoffset: 0 !important;
+      stroke: #FFE0B2;
+    }
+    #chrome-logo path {
+      stroke-width: 8;
+      stroke: black;
+    }
+  </style>
+</head>
+<body class="unresolved">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    preserveAspectRatio="xMidYMid meet"
+    viewBox="-50 -50 100 100">
+    <defs>
+      <g id="twitter-logo" transform="scale(0.08) translate(-282.32053,-396.30734)">
+        <path d="M368.1,343.1c-6.3,2.8-13.1,4.7-20.2,5.5c7.3-4.4,12.8-11.2,15.5-19.5c-6.8,4-14.3,7-22.3,8.5
+        c-6.4-6.8-15.6-11.1-25.7-11.1c-19.4,0-35.2,15.8-35.2,35.2c0,2.8,0.3,5.4,0.9,8c-29.2-1.5-55.2-15.5-72.5-36.8
+        c-3,5.2-4.8,11.2-4.8,17.7c0,12.2,6.2,23,15.7,29.3c-5.8-0.2-11.2-1.8-15.9-4.4c0,0.1,0,0.3,0,0.4c0,17,12.1,31.3,28.2,34.5
+        c-3,0.8-6.1,1.2-9.3,1.2c-2.3,0-4.5-0.2-6.6-0.6c4.5,14,17.5,24.2,32.9,24.4c-12,9.4-27.2,15.1-43.7,15.1c-2.8,0-5.6-0.2-8.4-0.5
+        c15.6,10,34.1,15.8,53.9,15.8c64.7,0,100.1-53.6,100.1-100.1c0-1.5,0-3-0.1-4.6C357.4,356.4,363.4,350.2,368.1,343.1L368.1,343.1z"
+        />
+      </g>
+      <g id="github-logo" transform="scale(0.12)">
+        <path d="M0-58.9c-33.3,0-60.4,27-60.4,60.4c0,26.7,17.3,49.3,41.3,57.3c3,0.6,4.1-1.3,4.1-2.9
+        c0-1.4-0.1-6.2-0.1-11.2c-16.8,3.7-20.3-7.1-20.3-7.1c-2.7-7-6.7-8.8-6.7-8.8c-5.5-3.7,0.4-3.7,0.4-3.7c6.1,0.4,9.3,6.2,9.3,6.2
+        c5.4,9.2,14.1,6.6,17.6,5c0.5-3.9,2.1-6.6,3.8-8.1c-13.4-1.5-27.5-6.7-27.5-29.8c0-6.6,2.4-12,6.2-16.2c-0.6-1.5-2.7-7.7,0.6-16
+        c0,0,5.1-1.6,16.6,6.2c4.8-1.3,10-2,15.1-2c5.1,0,10.3,0.7,15.1,2c11.5-7.8,16.6-6.2,16.6-6.2c3.3,8.3,1.2,14.5,0.6,16
+        c3.9,4.2,6.2,9.6,6.2,16.2c0,23.2-14.1,28.3-27.6,29.8C13.1,30,15,33.7,15,39.3c0,8.1-0.1,14.6-0.1,16.6c0,1.6,1.1,3.5,4.1,2.9
+        c24-8,41.3-30.6,41.3-57.3C60.4-31.9,33.4-58.9,0-58.9z"/>
+        <path d="M-37.5,27.8c-0.1,0.3-0.6,0.4-1,0.2c-0.4-0.2-0.7-0.6-0.5-0.9c0.1-0.3,0.6-0.4,1-0.2
+        C-37.6,27.1-37.4,27.5-37.5,27.8L-37.5,27.8z M-38.3,27.3"/>
+        <path d="M-35.1,30.5c-0.3,0.3-0.9,0.1-1.2-0.3c-0.4-0.4-0.5-1-0.2-1.3c0.3-0.3,0.8-0.1,1.2,0.3
+        C-34.8,29.7-34.8,30.3-35.1,30.5L-35.1,30.5z M-35.6,29.9"/>
+        <path d="M-32.7,34c-0.4,0.3-1,0-1.3-0.5c-0.4-0.5-0.4-1.2,0-1.4c0.4-0.3,1,0,1.3,0.5C-32.3,33.1-32.3,33.7-32.7,34
+        L-32.7,34z M-32.7,34"/>
+        <path d="M-29.4,37.4c-0.3,0.4-1,0.3-1.6-0.2c-0.5-0.5-0.7-1.2-0.3-1.5c0.3-0.4,1-0.3,1.6,0.2
+        C-29.2,36.3-29.1,37-29.4,37.4L-29.4,37.4z M-29.4,37.4"/>
+        <path d="M-24.9,39.3c-0.1,0.5-0.8,0.7-1.5,0.5c-0.7-0.2-1.1-0.8-1-1.2c0.1-0.5,0.8-0.7,1.5-0.5
+        C-25.2,38.3-24.8,38.8-24.9,39.3L-24.9,39.3z M-24.9,39.3"/>
+        <path d="M-20,39.7c0,0.5-0.6,0.9-1.3,0.9c-0.7,0-1.3-0.4-1.3-0.9c0-0.5,0.6-0.9,1.3-0.9C-20.6,38.8-20,39.2-20,39.7
+        L-20,39.7z M-20,39.7"/>
+        <path d="M-15.4,38.9c0.1,0.5-0.4,1-1.1,1.1c-0.7,0.1-1.3-0.2-1.4-0.7c-0.1-0.5,0.4-1,1.1-1.1
+        C-16.1,38.1-15.5,38.4-15.4,38.9L-15.4,38.9z M-15.4,38.9"/>
+      </g>
+      <g id="email-logo" transform="scale(0.7)">
+        <path d="M8-8H-8c-1.1,0-2,0.9-2,2l0,12c0,1.1,0.9,2,2,2H8c1.1,0,2-0.9,2-2V-6C10-7.1,9.1-8,8-8z M8-4L0,1l-8-5v-2l8,5
+        l8-5V-4z"/>
+        <path fill="none" d="M-12-12h24v24h-24V-12z"/>
+      </g>
+      <g id="chrome-logo" transform="scale(0.065)">
+        <circle cx="-0.2" cy="0" r="45" stroke="0"/>
+        <path d="M100.3-49.6C72.7-105,5.5-127.6-49.9-100c-17.3,8.6-32,21.5-42.9,37.4l45,78
+        	C-56-10.9-41.4-39-15-47.3c4.6-1.5,9.5-2.2,14.3-2.3"/>
+        <path d="M-92.7-62.6c-34.4,51.4-20.7,121,30.7,155.4c15.9,10.7,34.3,17.1,53.3,18.6l47-80
+        	c-17.6,21.3-49.1,24.3-70.4,6.7c-7.2-6-12.6-13.9-15.6-22.7"/>
+        <path d="M-8.7,111.4c61.7,4.7,115.5-41.6,120.1-103.2c1.5-19.9-2.3-39.8-11.1-57.8h-101
+        	C26.9-49.4,49.2-27,49,0.7c-0.1,11.2-3.8,22-10.8,30.8"/>
+        <path d="M-92.7-62.6l45,78c-3.3-11.2-2.6-23.2,2-34l-45-47"/>
+        <path d="M-8.7,111.4l47-80c-7.4,8.8-17.7,14.9-29,17l-20,63"/>
+        <path d="M100.3-49.6h-101c15.2,0.1,29.6,7.1,39,19l64-16"/>
+      </g>
+      <filter id="shadow" x="0" y="0" width="200%" height="200%">
+        <feOffset result="offOut" in="SourceGraphic" dx="0.2" dy="0.2" />
+        <feColorMatrix result="matrixOut" in="offOut" type="matrix"
+        values="0.5 0 0 0 0 0 0.5 0 0 0 0 0 0.5 0 0 0 0 0 1 0" />
+        <feGaussianBlur result="blurOut" in="matrixOut" stdDeviation="0.6" />
+        <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+      </filter>
+    </defs>
+    <g class="icon" id="chrome" transform="translate(25, -25)" data:highlight="3,4" data:link="https://surmair.de">
+      <use xlink:href="#chrome-logo" />
+      <rect x="-8" y="-8" width="16" height="16" />
+      <path class="path" d="M -10 0 h -10 v 10 h -12 v 5" />
+      <path class="path" d="M 10 0 h 10 v 10 h 5 v 5" />
+    </g>
+    <g class="icon" id="email" transform="translate(-25, -25)" data:highlight="1,2,3,4" data:link="mailto:surma@surmair.de">
+      <use xlink:href="#email-logo" />
+      <rect x="-8" y="-8" width="16" height="16" />
+      <path class="path" d="M -10 0 h -10 v 10 h -5 v 5" />
+      <path class="path" d="M 10 0 h 10 v 10 h 55 v 5" />
+    </g>
+    <g class="icon" id="github" transform="translate(-25, 25)" data:highlight="1" data:link="https://github.com/surma">
+      <use xlink:href="#github-logo" />
+      <rect x="-8" y="-8" width="16" height="16" />
+      <path class="path" d="M -10 0 h -10 v -10 h -5 v -5" />
+      <path class="path" d="M 10 0 h 5 0 v -10 h -6 v -5" />
+    </g>
+    <g class="icon" id="twitter" transform="translate(25, 25)" data:highlight="2,3" data:link="https://twitter.com/surmair">
+      <use xlink:href="#twitter-logo" />
+      <rect x="-8" y="-8" width="16" height="16" />
+      <path class="path" d="M -10 0 h -10 v -10 h -21 v -5" />
+      <path class="path" d="M 10 0 h 5 0 v -10 h -8 v -5" />
+    </g>
+    <text filter="url(#shadow)">
+      <tspan>surma</tspan><tspan>@</tspan><tspan>surmair</tspan><tspan>.de</tspan>
+    </text>
+  </svg>
+  <script>
+    (function() {
+      var newStylesheet = document.createElement('style');
+      Array.prototype.forEach.call(document.querySelectorAll('.icon'), function(icon) {
+        Array.prototype.forEach.call(icon.querySelectorAll('.path'), function(path) {
+          var length = path.getTotalLength();
+          path.style.strokeDasharray = length + ' ' + length;
+          path.style.strokeDashoffset = length;
+        });
+        var link = icon.getAttribute('data:link')
+        icon.addEventListener('click', function() {
+          window.open(link);
+        })
+        icon.getAttribute('data:highlight').split(',').forEach(function(highlight) {
+          newStylesheet.appendChild(
+            document.createTextNode(
+              '#' + icon.id + ':hover ~ text tspan:nth-child(' + highlight +'){' +
+              'fill: #FFE0B2;' +
+              '}'));
+        });
+      });
+      document.head.appendChild(newStylesheet);
+      document.body.className = '';
+    })();
+  </script>
+</body>
+</html>
