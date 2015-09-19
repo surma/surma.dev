@@ -11,3 +11,12 @@ gulp.task('serve', function() {
   });
   $.watch('./app/*', browserSync.reload);
 });
+
+gulp.task('build', function() {
+  return gulp.src('app/*')
+    .pipe($.minifyInline())
+    .pipe($.minifyHtml())
+    .pipe(gulp.dest('dist'));
+});
+
+gulp.task('default', ['build']);
