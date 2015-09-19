@@ -1,12 +1,13 @@
 {
   "name": "surma.github.io",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Personal website",
   "author": "Surma <surma@surma.link>",
   "private": true,
   "license": "MIT",
   "dependencies": {
     "gulp": "^3.9.0",
+    "gulp-html-autoprefixer": "0.0.1",
     "gulp-load-plugins": "^0.10.0",
     "gulp-minify-html": "^1.0.4",
     "gulp-minify-inline": "^0.1.1"
