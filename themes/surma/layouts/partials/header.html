@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surma.link</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <meta name="theme-color" content="{{.Site.Params.themecolor}}">
+
+    <!-- lazy-loaded styles -->
+    <noscript class="lazyload">
+      <link rel="stylesheet" href="styles/main.css">
+    </noscript>
+
+    <!-- module loader -->
+    <script>
+    var require = {
+      baseUrl: './',
+      waitSeconds: 0
+    };
+    </script>
+    <script src="nobabel/requirejs/require.js" data-main="main.js" defer></script>

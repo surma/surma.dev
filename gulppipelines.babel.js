@@ -35,7 +35,7 @@ export default {
     $.sourcemaps.write('.')
   ],
   'html': () => [
-    $.replace('{{_!_version_!_}}', pkg.version),
+    $.replace('{%_!_version_!_%}', pkg.version),
     $.minifyInline(),
     $.minifyHtml()
   ],
