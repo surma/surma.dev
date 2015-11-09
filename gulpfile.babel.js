@@ -14,7 +14,6 @@ const unhandledFilesGlob = [
 ];
 
 const defaultBrowserSyncConfig = {
-  directory: true,
   reloadOnRestart: true,
   open: false
 };
