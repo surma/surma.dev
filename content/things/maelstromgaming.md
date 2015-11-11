@@ -23,9 +23,9 @@ DevTools’ timeline can help you figure this out.
 ![Timeline while scrolling](12fps.png)
 
 The bars at the top show that we are *way* below 60fps, even below 30fps. The
-bars are green, which means “rasterized” and “paint” is responsible. Yes,
+bars are green, which means “rasterized” and “paint” are responsible. Yes,
 [“rasterize” and “paint” are two operations][Rasterize and Paint]. A single
-bar shows a duration of 80ms, which would mean are rendering with
+bar shows a duration of 80ms, which would mean we are rendering with
 12fps. That’s not good.
 
 Parallax scrolling is notorious for impacting scrolling performance negatively
@@ -169,7 +169,7 @@ var rAFScheduled = false;
 {{< /highlight >}}
 
 `parallax` is just the configuration object which defines the parallax scrolling speed.
-A factor of 0 would attach the image to the background image, exactly like
+A factor of 0 would attach the image to the background, exactly like
 `background-attachment: fixed`. A factor of 1 means normal behavior, as in the
 background image is attached to the element.
 
@@ -187,11 +187,11 @@ to calculate it once. This is about performance, after all, remember?
 
 Let’s get to the handlers for the `scroll` and `resize` event. Both of them just
 update the values of our intermediate variables defined earlier.
-The intermediate variables lets us avoid accessing
+The intermediate variables let us avoid accessing
 the `window` object, which can trigger a “sync layout”, another expensive operation.
 Additionally, `scroll` issues a `requestAnimationFrame`, where the translation
 of the background images will be calculated and applied. This debounces the
-calculation of the new image positions.
+calculation of the new image positions, as it only needs to happen once per frame.
 
 {{< highlight JS >}}
 window.addEventListener('scroll', function() {
