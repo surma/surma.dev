@@ -1,5 +1,6 @@
 import gulp from 'gulp';
 import browserSync from 'browser-sync';
+import {exec} from 'child_process';
 
 // Pipelines for each file extension
 import pipelines from './gulppipelines.babel.js';
@@ -19,7 +20,7 @@ const defaultBrowserSyncConfig = {
 };
 
 // Serve the built app
-gulp.task('serve', ['build'], () => {
+gulp.task('serve', ['build', 'hugo'], () => {
   const options = Object.assign({}, defaultBrowserSyncConfig, {
     server: {
       baseDir: 'dist'
@@ -35,6 +36,10 @@ gulp.task('serve', ['build'], () => {
   });
   gulp.watch(unhandledFilesGlob,
     ['unhandled-files', browserSyncInstance.reload]);
+});
+
+gulp.task('hugo', () => {
+  return exec('hugo --watch');
 });
 
 // Build the app and put it in `dist`
