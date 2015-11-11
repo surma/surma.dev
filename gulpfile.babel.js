@@ -1,6 +1,9 @@
 import gulp from 'gulp';
 import browserSync from 'browser-sync';
 import {exec} from 'child_process';
+import gulpLoadPlugins from 'gulp-load-plugins';
+import pkg from './package.json';
+import s3conf from './s3conf.json';
 
 // Pipelines for each file extension
 import pipelines from './gulppipelines.babel.js';
@@ -13,6 +16,8 @@ const unhandledFilesGlob = [
     .map(extension => '!app/**/*.' + extension),
   'bower?components/**/*'
 ];
+
+const $ = gulpLoadPlugins();
 
 const defaultBrowserSyncConfig = {
   reloadOnRestart: true,
@@ -66,4 +71,14 @@ gulp.task('unhandled-files', () => {
     dot: true
   })
   .pipe(gulp.dest('dist'));
+});
+
+gulp.task('deploy', () => {
+  const cred = Object.assign({}, s3conf);
+  Object.keys(cred).forEach(key => {
+    cred[key] = process.env[key.toUpperCase()] || cred[key];
+  });
+
+  return gulp.src('dist/**/*')
+  .pipe($.s3(cred));
 });
