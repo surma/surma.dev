@@ -36,5 +36,11 @@
   <script src="/nobabel/requirejs/require.js" data-main="/things.js" defer></script>
 </head>
 <body>
+<h1>{{.Title}}</h1>
 {{.Content}}
+
+<blockquote>
+  <a href="https://twitter.com/surmair">Surma</a>, {{.Date.Format "2006-01-02"}}
+</blockquote>
+
 {{ partial "footer.html" . }}
