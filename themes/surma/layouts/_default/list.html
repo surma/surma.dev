@@ -1,9 +1,4 @@
-<!doctype html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, minimum-scale=1.0">
-  <title>Surma</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+  {{ partial "header.html" . }}
   <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,700' rel='stylesheet' type='text/css'>
   <style>
     html, body, svg {
@@ -21,7 +16,7 @@
       fill: #3E2723;
     }
     text {
-      font-family: 'Open Sans Condensed';
+      font-family: 'Open Sans Condensed', sans-serif;
       text-anchor: middle;
     }
     tspan {
@@ -55,7 +50,6 @@
       stroke-width: 8;
       stroke: #FDD835;
     }
-
   </style>
 </head>
 <body class="unresolved">
@@ -166,5 +160,4 @@
       document.body.className = '';
     })();
   </script>
-</body>
-</html>
+{{ partial "footer.html" . }}

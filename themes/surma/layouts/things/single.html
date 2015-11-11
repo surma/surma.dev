@@ -1,0 +1,40 @@
+{{ partial "header.html" . }}
+  <noscript class="lazyload">
+    <link rel="stylesheet" href="/styles/things.css">
+  </noscript>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+
+  <!-- Styles for First Render -->
+  <style>
+    html {
+      font-size: 18px;
+    }
+    html, body {
+     padding: 0;
+     border: 0;
+     margin: 0 auto;
+     background-color: #FDD835;
+     font-family: 'Open Sans', sans-serif;
+     line-height: 1.4rem;
+    }
+    body {
+     padding: 0 1rem;
+     width: 100%;
+     max-width: 720px;
+    }
+    img {
+     width: 100%;
+    }
+    h1, h2 {
+     font-family: 'Open Sans Condensed', sans-serif;
+    }
+  </style>
+
+  <!-- module loader -->
+  <script src="/nobabel/requirejs/require.js" data-main="/things.js" defer></script>
+</head>
+<body>
+{{.Content}}
+{{ partial "footer.html" . }}
