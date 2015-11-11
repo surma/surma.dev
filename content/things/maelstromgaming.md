@@ -1,4 +1,7 @@
-# Maelstrom Gaming and 12 fps
+{
+  "title": "Maelstrom Gaming and 12 fps",
+  "date": "2015-11-11"
+}
 
 [Maelstrom Gaming] is a team competing in [League of Legends]. But that’s not
 what this is about. This is about their homepage and parallax scrolling. I
@@ -20,8 +23,9 @@ DevTools’ timeline can help you figure this out.
 ![Timeline while scrolling](12fps.png)
 
 The bars at the top show that we are *way* below 60fps, even below 30fps. The
-bars are green, which means “rasterized paint” is responsible. A single
-rasterized paint shows a duration of 80ms, which would mean are rendering with
+bars are green, which means “rasterized” and “paint” is responsible. Yes,
+[“rasterize” and “paint” are two operations][Rasterize and Paint]. A single
+bar shows a duration of 80ms, which would mean are rendering with
 12fps. That’s not good.
 
 Parallax scrolling is notorious for impacting scrolling performance negatively
@@ -31,10 +35,12 @@ my colleague [Paul Lewis], well-known performance connoisseur, wrote a
 
 ![DOM inspector showing dangerous element styles](parallax.png)
 
-The DOM inspector shows element styles being set by JavaScript, suggesting that
-`background-position` is being used to move the background images. A strong
+The DOM inspector shows element styles being set by JavaScript (i.e. they flash
+pink when scrolling), suggesting that
+`background-position` is being used to move the background images – a strong
 indicator for a “not right” implementation of parallax scrolling. A quick look
-at [CSS triggers] reveals that changing `background-position` will *always*
+at [CSS triggers] \(another helpful website by, you guessed it, Paul Lewis)
+reveals that changing `background-position` will *always*
 trigger a repaint – an expensive operation, that is also entirely unnecessary
 considering that the individual visuals haven’t changed, they just changed
 position. Since these repaints are triggered on every frame when scrolling, the
@@ -61,9 +67,10 @@ frame rate plummets.
 Looking at the code, I found that the site was using a jQuery plugin to do it’s
 parallaxin’. I removed that plugin and its invocation, and indeed, the background
 images weren’t moving anymore but scrolling performance didn’t increase, either.
-`background-attachment: fixed`, which is set on all the containers with a
-background image, is another way to trigger a repaint on every frame while
-scrolling, so I removed the background images altogether for now.
+Looking around further, I found `background-attachment: fixed` set on all the
+containers with a background image. That property is another way to trigger a
+repaint on every frame while scrolling, so I just removed the background images
+altogether because I got impatient.
 
 ![Scrolling performance without background images](nobgs.png)
 
@@ -74,16 +81,19 @@ were easily hitting 60fps. So let’s get our hands dirty trying to fix this.
 
 I won’t reiterate everything Paul explained in [his article][Parallax scrolling],
 as he did it better than I ever could, so I will rather document what I *did*.
-But the TL;DR is: We want to move the background images to their own compositing
+**But the TL;DR is:**
+
+> We want to move the background images to their own compositing
 layer to utilize the GPU and move them around with CSS transforms to avoid
 repaints.
 
-I added a background element to each of the sections of the website. This
-element will be moved to its own compositing layer by specifying
-`will-change: transform` and will only have a background image. The parallax
-effect will be achieved by applying a `translateY()` transform on scroll.
-The element will get `position: absolute` and get a `z-index` so it can
-be “under” the content of the section. Like a real, grown-up background image.
+I added a new element for the background image to each of the sections
+of the website. This
+element will be moved to its own compositing layer and will only have a
+background image. The parallax effect will be achieved by applying a
+`translateY()` transform after scrolling. The element will get `position: absolute`
+and get a `z-index` so it can be “under” the content of the section. Like a
+real, grown-up background image.
 
 {{< highlight HTML >}}
 <div id="second">
@@ -126,8 +136,13 @@ I am not necessarily proud of the `*:not(.background)` selector, but it was the
 easiest way to ensure that all other content had a higher `z-index` than the
 background element.
 
+`will-change: transform` is a CSS trick to force an element onto its own
+compositing layer. Sadly, though, it’s one of those things that doesn’t work
+in every browser. For example, to accommodate Safari, you will need to use a 3D
+transform like `transform: translate3d(0, y, 0)` to achieve the desired effect.
+
 The images are now neither fixed nor is there a parallax effect, but we are at
-60fps *with*, which is… progress. Let’s re-implement the parallax effect.
+60fps *with* images, which is… progress. Let’s re-implement the parallax effect.
 
 ## Actually parallaxin’
 
@@ -147,9 +162,13 @@ var parallax = {
     factor: 0
   }
 };
+
+var windowHeight = window.innerHeight;
+var scrollY = window.scrollY;
+var rAFScheduled = false;
 {{< /highlight >}}
 
-This is just the configuration object which defines the parallax scrolling speed.
+`parallax` is just the configuration object which defines the parallax scrolling speed.
 A factor of 0 would attach the image to the background image, exactly like
 `background-attachment: fixed`. A factor of 1 means normal behavior, as in the
 background image is attached to the element.
@@ -158,56 +177,64 @@ background image is attached to the element.
 // Gather offset data
 Object.keys(parallax).forEach(function(id) {
   parallax[id].element = document.querySelector(id).querySelector('.background');
-  parallax[id].initialTop = absoluteOffsetTop(parallax[id].element);
+  parallax[id].initialTop = parallax[id].element.getBoundingClientRect().top + window.scrollY;
 });
 {{< /highlight >}}
 
 Here we are fetching the actual background element as well as its distance to
 the top of the page. We need this data for the parallax effect, but we only need
 to calculate it once. This is about performance, after all, remember?
-`absoluteOffsetTop` is a little helper function that calculates the offset to
-the top of the page, since `offsetTop` is relative to `offsetParent`, which is
-*not* the top of the page once you start using `position: relative` or
-`position: absolute`.
 
-{{< highlight JS >}}
-function absoluteOffsetTop(element) {
-  var y = 0;
-  while(element) {
-    y += element.offsetTop;
-    element = element.offsetParent;
-  }
-}
-{{< /highlight >}}
-
-Let’s get to the actual scroll handler. There’s some arithmetic going on, but
-think about parallax scrolling this way: Parallax scrolling are images behaving
-like `background-attachment: fixed`, but additionally move by a small fraction
-of what you actually scrolled.
+Let’s get to the handlers for the `scroll` and `resize` event. Both of them just
+update the values of our intermediate variables defined earlier.
+The intermediate variables lets us avoid accessing
+the `window` object, which can trigger a “sync layout”, another expensive operation.
+Additionally, `scroll` issues a `requestAnimationFrame`, where the translation
+of the background images will be calculated and applied. This debounces the
+calculation of the new image positions.
 
 {{< highlight JS >}}
 window.addEventListener('scroll', function() {
-  Object.keys(parallax).forEach(function(id) {
-    // This offset alone would emulate fixed positioning
-    var offset = -parallax[id].initialTop + window.scrollY;
+  scrollY = window.scrollY;
+  if(!rAFScheduled) {
+    rADScheduled = true;
+    requestAnimationFrame(updateParallaxImages);
+  }
+});
 
-    // If the top border of the content container is on the bottom
-    // border of the screen: scroll = 0
-    // Of the bottom border of the content container is on the top
-    // border of the screen: scroll = 1
-    var scroll = (window.scrollY - parallax[id].initialTop + window.innerHeight)/(2*window.innerHeight);
-    offset -= (1-scroll)*window.innerHeight*parallax[id].factor;
-    parallax[id].element.style.transform = 'translateY(' + Math.round(offset) + 'px)';
-  });
+window.addEventListener('resize', function() {
+  windowHeight = window.innerHeight;
 });
 {{< /highlight >}}
+
+There’s some arithmetic going on in `updateParallaxImages`, but to make it more
+intuitive think about
+parallax scrolling this way: Parallax scrolling are images behaving like
+`background-attachment: fixed`, but additionally move by a small fraction of
+the distance you actually scrolled.
+
+{{< highlight JS >}}
+function updateParallaxImages() {
+  Object.keys(parallax).forEach(function(id) {
+    // This offset alone would emulate fixed positioning
+    var offset = -parallax[id].initialTop + scrollY;
+
+    // If the top border of the container is on the bottom
+    // border of the screen: scroll = 0
+    // Of the bottom border of the container is on the top
+    // border of the screen: scroll = 1
+    var scroll = (scrollY - parallax[id].initialTop + windowHeight)/(2*windowHeight);
+    offset -= (1-scroll)*windowHeight*parallax[id].factor;
+    parallax[id].element.style.transform = 'translateY(' + Math.round(offset) + 'px)';
+  });
+}{{< /highlight >}}
 
 And with that, we have implemented our own parallax scrolling effect that works
 at a buttery-smooth 60fps.
 
 ![60fps with moving background images](60fps.png)
 
-## Did you think I was done?
+## I am done. No really, tho, I’m not done…
 
 This is where I wanted to stop, but it turns out that the site is doing some
 other stuff wrong as well that is related to the parallax scrolling: The images
@@ -226,16 +253,17 @@ required to have a decent visual on retina displays. Rather, it’s the image fo
 PNGs excel at large areas of the same color, that’s why digital drawings are
 usually saved as PNG. These however are photographs with gradients, noise and no
 sharp edges. So PNG’s compression won’t do much. Lossy compressions achieve
-drastically smaller file sizes by same *perceived* quality.
+drastically smaller file sizes while maintaining *perceived* quality.
 
 Simply by converting the background images and the player images further down
 on the page to JPEG with ImageMagick’s `convert`, I cut the total size from 3MB
-to 650KB, without any visual impact.
+to 650KB, without any visual impact. By piping our new JPGs through [ImageOptim],
+I saved another 21KB.
 
-![Network inspector showing a total page size of 650KB](650kb.png)
+![Network inspector showing a total page size of 629KB](629kb.png)
 
 That’s a lot better. It’s still pretty big for a page like this, but a reduction
-to 21% of it’s original size is a good start.
+to 20% of it’s original size is a good start.
 
 ## What’s left?
 
@@ -246,8 +274,8 @@ better on this page:
 and load the appropriate version
 [using media queries][Responsive background images].
 * Remove jQuery and it’s plugins, currently weighing in at roughly 128KB and
-only a tiny fraction of the code is being used.
-* Don’t include the entire Font Awesome font for the very small number icons of
+only a tiny fraction of the code being used.
+* Don’t include the entire Font Awesome font for the very small number of
 icons on this website. I’d prefer individual SVGs in this case.
 * Minify HTML, JS and CSS (saves 11KB).
 * Enable GZIP/Deflate compression (saves another 150KB!!).
@@ -264,9 +292,11 @@ about) can be found in my [surma-dump/maelstromgaming] repository on GitHub.
 
 [Maelstrom Gaming]: http://www.maelstromgaming.org/
 [League of Legends]: http://www.leagueoflegends.com/
+[Rasterize and Paint]: http://stackoverflow.com/questions/27392133/in-the-dev-tools-timeline-what-are-the-empty-green-rectangles/27426601#27426601
 [Paul Lewis]: http://twitter.com/aerotwist
 [Parallax scrolling]: http://www.html5rocks.com/en/tutorials/speed/parallax/
 [CSS triggers]: http://csstriggers.com/
+[ImageOptim]: https://imageoptim.com/
 [Responsive background images]: http://www.smashingmagazine.com/2013/07/simple-responsive-images-with-css-background-images/
 [Critical CSS]: http://www.smashingmagazine.com/2015/08/understanding-critical-css/
 [surma-dump/maelstromgaming]: https://github.com/surma-dump/maelstromgaming
