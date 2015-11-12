@@ -8,6 +8,30 @@
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <meta name="theme-color" content="{{.Site.Params.themecolor}}">
+    <meta property="og:title" content="Surma.link – {{.Title}}" />
+    <meta name="twitter:title" content="Surma.link – {{.Title}}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="{{.Permalink}}" />
+    {{ if isset .Params "socialmediaimage" }}
+      <meta property="og:image" content="{{.Permalink}}{{.Params.socialmediaimage}}" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:image" content="{{.Permalink}}{{.Params.socialmediaimage}}" />
+    {{ else }}
+      <meta name="twitter:card" content="summary" />
+    {{ end }}
+    {{ if eq .URL "/" }}
+      <meta property="og:description" content="No Description" />
+      <meta name="twitter:description" content="No Description" />
+    {{ else }}
+      {{ if .Description }}
+        <meta property="og:description" content="{{.Description}}" />
+        <meta name="twitter:description" content="{{.Description}}" />
+      {{ else if .Summary }}
+        <meta property="og:description" content="{{.Summary}}" />
+        <meta name="twitter:description" content="{{.Summary}}" />
+      {{ end }}
+    {{ end }}
+    <meta name="twitter:site" content="{{.Site.Params.twitterhandle}}" />
 
     <!-- module loader -->
     <script>

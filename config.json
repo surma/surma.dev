@@ -8,6 +8,7 @@
   "disableSitemap": true,
   "disableRSS": true,
   "params": {
-    "themecolor": "#FDD835"
+    "themecolor": "#FDD835",
+    "twitterhandle": "@surmair"
   }
 }

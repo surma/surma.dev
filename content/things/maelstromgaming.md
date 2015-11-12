@@ -1,11 +1,15 @@
 {
   "title": "Maelstrom Gaming and 12 fps",
-  "date": "2015-11-11"
+  "date": "2015-11-11",
+  "socialmediaimage": "12fps.png"
 }
 
 [Maelstrom Gaming] is a team competing in [League of Legends]. But that’s not
-what this is about. This is about their homepage and parallax scrolling. I
-stumbled upon their homepage and realized they had extreme performance issues when
+what this is about. This is about their homepage and parallax scrolling.
+
+<!--more-->
+
+I stumbled upon their homepage and realized they had extreme performance issues when
 scrolling. After a quick look in DevTools showed that it was fixable,
 I decided to write about the process as it would make a really nice show-case
 on how to detect, analyze and solve performance issues. The site is a single
