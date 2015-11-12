@@ -4,6 +4,9 @@ import {exec} from 'child_process';
 import gulpLoadPlugins from 'gulp-load-plugins';
 import pkg from './package.json';
 import s3conf from './s3conf.json';
+import hugoconf from './hugoconf.json';
+import fs from 'fs';
+import runSequence from 'run-sequence';
 
 // Pipelines for each file extension
 import pipelines from './gulppipelines.babel.js';
@@ -24,8 +27,13 @@ const defaultBrowserSyncConfig = {
   open: false
 };
 
+Object.keys(s3conf).forEach(key => {
+  s3conf[key] = process.env[key.toUpperCase()] || s3conf[key];
+});
+hugoconf.baseurl = `https://${s3conf.bucket}`
+
 // Serve the built app
-gulp.task('serve', ['build', 'hugo'], () => {
+gulp.task('serve', ['build', 'hugo:watch'], () => {
   const options = Object.assign({}, defaultBrowserSyncConfig, {
     server: {
       baseDir: 'dist'
@@ -43,13 +51,25 @@ gulp.task('serve', ['build', 'hugo'], () => {
     ['unhandled-files', browserSyncInstance.reload]);
 });
 
-gulp.task('hugo', () => {
+gulp.task('hugo:config', () => {
+  fs.writeFileSync('config.json', JSON.stringify(hugoconf));
+});
+
+gulp.task('hugo:watch', ['hugo:config'], () => {
   return exec('hugo --watch');
+});
+
+gulp.task('hugo:build', ['hugo:config'], () => {
+  return exec('hugo');
 });
 
 // Build the app and put it in `dist`
 gulp.task('default', ['build']);
-gulp.task('build', [...Object.keys(pipelines), 'unhandled-files']);
+gulp.task('build', (cb) => {
+  runSequence('hugo:build',
+    [...Object.keys(pipelines), 'unhandled-files'],
+    cb);
+});
 
 // Generate tasks defined in `gulppipelines.babel.js`
 Object.keys(pipelines).forEach(extension => {
@@ -74,11 +94,6 @@ gulp.task('unhandled-files', () => {
 });
 
 gulp.task('deploy', () => {
-  const cred = Object.assign({}, s3conf);
-  Object.keys(cred).forEach(key => {
-    cred[key] = process.env[key.toUpperCase()] || cred[key];
-  });
-
   return gulp.src('dist/**/*')
-  .pipe($.s3(cred));
+  .pipe($.s3(s3conf));
 });
