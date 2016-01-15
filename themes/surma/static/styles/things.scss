@@ -7,11 +7,14 @@ div.highlight {
   border-left: 1.5rem solid transparent;
   border-right: 1.5rem solid transparent;
 }
-
 pre, code {
   font-family: 'Source Code Pro';
+  white-space: pre-wrap;
 }
-
+pre {
+  padding: 0.7rem 1.4rem;
+  background-color: rgba(0, 0, 0, 0.12);
+}
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Open Sans Condensed', sans-serif;
 }
@@ -27,4 +30,26 @@ blockquote {
   margin-right: 0;
   padding: 0.7rem 1.4rem;
   background-color: rgba(0, 0, 0, 0.12);
+}
+#TableOfContents {
+  font-size: 0.7rem;
+  background-color: rgba(0, 0, 0, 0.12);
+  padding: 0.7rem 1.4rem;
+}
+#TableOfContents a {
+  text-decoration: none;
+
+}
+#TableOfContents > ul > li > ul > li > a:before {
+  content: '→ ';
+}
+#TableOfContents ul, li {
+  margin: 0;
+  padding: 0;
+}
+#TableOfContents > ul > li > ul > li > ul > li {
+  margin-left: 2em;
+}
+#TableOfContents li {
+  list-style: none;
 }
