@@ -151,13 +151,19 @@ content-length:316
 
 No HTTP/2 support just yet :(
 
-> We expect to support it by the end of the year [2015], during the 1.7 development cycle.
+> We expect to support it by the end of the year [2015], during the 1.7 development cycle. [Source][haproxy source]
 
 ### AWS (ELB & S3)
 
 No HTTP/2 support just yet :(
 
 Workaround: Set up your own loadbalancer on EC2 using nginx.
+
+### IIS
+
+No stable HTTP/2 support just yet :(
+
+> Windows 10 is now available, and HTTP/2 support is present in Windows 10 and the Server 2016 Technical Preview. [Source][IIS source]
 
 ## PaaS
 
@@ -253,6 +259,8 @@ If you find mistakes, insufficient information or are missing a software package
 [Apache]: https://httpd.apache.org/
 [nginx]: https://www.nginx.com/
 [Jetty]: http://www.eclipse.org/jetty/
+[IIS source]: http://blogs.iis.net/davidso/http2
+[haproxy source]: http://www.haproxy.org/news.html
 [blacklisting weak ciphers]: https://cipherli.st/
 [Nginx installation guide]: http://nginx.org/en/linux_packages.html#mainline
 [node-http2]: https://www.npmjs.com/package/http2
