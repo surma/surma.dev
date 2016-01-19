@@ -97,7 +97,7 @@ content-type:text/html
 
 ### nginx
 
-You need [nginx] `>= 1.9.5`. At the time of writing, that is not a “stabel” but a “mainline” version. Luckily, [Nginx installation guide] is very simple and covers multiple distributions (including multiple versions of Ubuntu).
+You need [nginx] `>= 1.9.5`. At the time of writing, that is not a “stable” but a “mainline” version. Luckily, [Nginx installation guide] is very simple and covers multiple distributions (including multiple versions of Ubuntu).
 
 Open your website’s configuration and either add or modify the section for HTTPS.
 
