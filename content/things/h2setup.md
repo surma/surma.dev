@@ -159,6 +159,12 @@ No HTTP/2 support just yet :(
 
 Workaround: Set up your own loadbalancer on EC2 using nginx.
 
+### Google Cloud Storage
+
+If you use a non-custom domain you will get HTTP/2 automatically. For non-custom domains, there is no HTTP/2 support just yet :(
+
+Workaround: Set up your own loadbalancer on GCE using nginx.
+
 ### IIS
 
 No stable HTTP/2 support just yet :(
