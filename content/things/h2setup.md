@@ -1,7 +1,7 @@
 {
   "title": "Setting up HTTP/2",
   "date": "2016-01-15",
-  "socialmediaimage": "12fps.png"
+  "socialmediaimage": "h2setup.jpg"
 }
 
 At [Chrome Dev Summit 2015] I gave [a talk about HTTP/2]. I am genuinely excited about the benefits HTTP/2 brings to the web, to its developers and its users alike. If you don’t know about those, I’ll cheekily recommend my own talk – this post is more of a follow-up to the talk.
@@ -168,6 +168,8 @@ No HTTP/2 support just yet :(
 ### AppEngine
 
 If you use a non-custom domain or have uploaded a TLS certificate for your custom domain, you will get HTTP/2 automatically:
+
+![Dialog for uploading a certificate with Google AppEngine](gaecert.png)
 
 ```
 $ ~/pkg/curl/bin/curl -I -k --http2 https://deis-test-910.appspot.com
