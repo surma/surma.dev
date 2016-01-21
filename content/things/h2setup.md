@@ -147,6 +147,13 @@ content-type:text/html;charset=iso-8859-1
 content-length:316
 ```
 
+### Tomcat
+
+No stable HTTP/2 support just yet :(
+
+> Tomcat 9 together with Java 9 will have HTTP/2 support, both are not
+stable just yet. [Source][tomcat source]
+
 ### HAProxy
 
 No HTTP/2 support just yet :(
@@ -265,6 +272,7 @@ If you find mistakes, insufficient information or are missing a software package
 [Apache]: https://httpd.apache.org/
 [nginx]: https://www.nginx.com/
 [Jetty]: http://www.eclipse.org/jetty/
+[tomcat source]: http://stackoverflow.com/questions/30855281/tomcat-support-for-http-2-0
 [IIS source]: http://blogs.iis.net/davidso/http2
 [haproxy source]: http://www.haproxy.org/news.html
 [blacklisting weak ciphers]: https://cipherli.st/
