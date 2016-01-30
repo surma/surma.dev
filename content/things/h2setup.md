@@ -6,6 +6,8 @@
 
 At [Chrome Dev Summit 2015] I gave [a talk about HTTP/2]. I am genuinely excited about the benefits HTTP/2 brings to the web, to its developers and its users alike. If you don’t know about those, I’ll cheekily recommend my own talk – this post is more of a follow-up to the talk.
 
+<!--more-->
+
 A few months have passed since that talk and the landscape keeps maturing and developing. The biggest perceived barriers to getting HTTP/2 set up are obtaining a HTTPS certificate and the lacking server-side support. This blog post is supposed to give you an overview of how to overcome these barriers categorized by the server technology you use. Keep in mind that the steps provided here cover the bare minimum to get HTTP/2 working. I will not cover [blacklisting weak ciphers] or anything else that I consider out of scope. If you need a kickstart on HTTPS, let me recommend [@addyosmani]’s and [@gauntface]’s [episode of “Totally Tooling Tips”][https-ttt].
 
 ## Generic Solution
