@@ -216,7 +216,7 @@ I had the privilege to play around with a “frankenstein build”, that had hac
 
 ![DevTools going crazy in the Hamster build](devtools.png)
 
-However, the first of these specs may be available behind a “OMG this is totally not stable” flag soon️.
+However, the first of these specs may be available behind a “OMG this is totally not for production” flag soon(tm) in Canary.
 
 For what it’s worth, I have open-sourced the [code for the demo][Houdini Samples] videos I made so you can get a feeling on what working with worklets (put that on a shirt!) feels like.
 
