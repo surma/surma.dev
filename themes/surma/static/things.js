@@ -7,3 +7,5 @@ fontLoader([
   'https://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic',
   'https://fonts.googleapis.com/css?family=Source+Code+Pro'
 ]);
+
+import 'modules/background-color';

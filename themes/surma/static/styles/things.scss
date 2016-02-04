@@ -46,6 +46,10 @@ blockquote {
   text-decoration: none;
 }
 #yellowdude {
+  &:before {
+    content: '💡';
+    padding-right: 1em;
+  }
   position: fixed;
   transform: translateX(90%);
   border-top-left-radius: 2px;

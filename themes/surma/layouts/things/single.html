@@ -75,14 +75,6 @@
 </blockquote>
 
 <div id="yellowdude">
-  &lt; <span>Dude, tune down the yellow!</span>
+  <span></span>
 </div>
-<script>
-  var bar = document.querySelector('#yellowdude');
-  bar.querySelector('span').addEventListener('click', function() {
-    document.documentElement.classList.add('noyellow');
-    bar.parentElement.removeChild(bar);
-  });
-</script>
-
 {{ partial "footer.html" . }}
