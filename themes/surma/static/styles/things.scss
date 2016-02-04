@@ -1,6 +1,14 @@
 * {
   box-sizing: border-box;
 }
+html, body {
+  transition: background-color 1s ease-in-out;
+}
+html.noyellow {
+  &, & > body {
+    background-color: white;
+  }
+}
 div.highlight {
   overflow: scroll;
   width: 100%;
@@ -36,4 +44,21 @@ blockquote {
 }
 #TableOfContents a {
   text-decoration: none;
+}
+#yellowdude {
+  position: fixed;
+  transform: translateX(90%);
+  border-top-left-radius: 2px;
+  right: 0;
+  bottom: 0;
+  padding: 0.5em;
+  background-color: rgba(0, 0, 0, 0.78);
+  color: rgba(255, 255, 255, 0.78);
+  transition: transform 0.3s ease-in-out;
+  &:hover {
+    transform: translateX(0);
+  }
+  > span {
+    cursor: pointer;
+  }
 }
