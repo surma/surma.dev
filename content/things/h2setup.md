@@ -35,6 +35,7 @@ If you are extraordinarily lazy (as any developer should be), I have uploaded a 
 At the time of writing, [LetsEncrypt] is in public beta so everyone can get a valid SSL certificate for free that is valid for 3 months and can be renewed indefinitely. So, I guess, we’ve got that covered. Moving on!
 
 ## Tools
+### Curl
 
 I used [curl] to check that all experiments were successful. Make sure your version of `curl` actually supports HTTP/2, as the version that comes with Ubuntu 14.04 does not.
 
@@ -46,6 +47,10 @@ Features: IPv6 Largefile NTLM NTLM_WB SSL libz TLS-SRP HTTP2 UnixSockets
 ```
 
 Note how `HTTP2` is being listed under “Features”. I resorted to compiling my own version.
+
+### KeyCDN
+
+Alternatively, you can use KeyCDN’s [HTTP/2 test][keycdn h2 test] tool, that visit any URL for you and tell you if HTTP/2 has been set up correctly.
 
 ## Servers
 
@@ -270,6 +275,7 @@ If you find mistakes, insufficient information or are missing a software package
 [private key]: https://f.surma.link/server.key
 [LetsEncrypt]: https://letsencrypt.org/2015/12/03/entering-public-beta.html
 [curl]: http://curl.haxx.se/
+[keycdn h2 test]: https://tools.keycdn.com/http2-test
 [w3techs.com]: http://w3techs.com/technologies/overview/web_server/all
 [Apache]: https://httpd.apache.org/
 [nginx]: https://www.nginx.com/
