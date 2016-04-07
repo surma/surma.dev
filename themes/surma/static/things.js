@@ -1,5 +1,5 @@
-import cssLoader from 'modules/defer-css';
-cssLoader();
+import lazyload from 'modules/lazyload';
+lazyload();
 
 import fontLoader from 'modules/font-loader';
 fontLoader([
