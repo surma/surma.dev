@@ -25,7 +25,7 @@ export default {
       precision: 10
     }).on('error', $.sass.logError),
     $.autoprefixer({browsers: ['last 2 versions']}),
-    $.minifyCss(),
+    // $.minifyCss(),
     $.sourcemaps.write('.')
   ],
   'css': () => [

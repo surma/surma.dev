@@ -1,68 +1,5 @@
 {{ partial "header.html" . }}
-  <noscript class="lazyload">
-    <link rel="stylesheet" href="/styles/things.css">
-  </noscript>
 
-  <!-- Styles for First Render -->
-  <style>
-    html {
-      font-size: 18px;
-    }
-    html, body {
-     padding: 0;
-     border: 0;
-     margin: 0 auto;
-     background-color: #FDD835;
-     font-family: 'Open Sans', sans-serif;
-     line-height: 1.4rem;
-    }
-    body {
-     padding: 0 1rem;
-     width: 100%;
-     max-width: 720px;
-    }
-    img {
-     width: 100%;
-    }
-    h1, h2 {
-     font-family: 'Open Sans Condensed', sans-serif;
-     line-height: 1em;
-    }
-    div.highlight {
-      margin: 1.5rem 0;
-    }
-    div.highlight pre {
-      padding: 0;
-    }
-    pre {
-      padding: 0.7rem 1.4rem;
-    }
-    blockquote {
-      margin-left: 0;
-      margin-right: 0;
-      padding: 0.7rem 1.4rem;
-    }
-    #TableOfContents {
-      font-size: 0.7rem;
-      padding: 0.7rem 1.4rem;
-    }
-    #TableOfContents ul, li {
-      margin: 0;
-      padding: 0;
-    }
-    #TableOfContents > ul > li > ul > li > a:before {
-      content: '→ ';
-    }
-    #TableOfContents > ul > li > ul > li > ul li {
-      margin-left: 2em;
-    }
-    #TableOfContents li {
-      list-style: none;
-    }
-  </style>
-
-  <!-- module loader -->
-  <script src="/nobabel/requirejs/require.js" data-main="/things.js" defer></script>
 </head>
 <body>
 <h1>{{.Title}}</h1>
@@ -70,11 +7,8 @@
 
 {{.Content}}
 
-<blockquote>
+<footer>
   <a href="https://twitter.com/surmair">Surma</a>, {{.Date.Format "2006-01-02"}}
-</blockquote>
+</footer>
 
-<div id="yellowdude">
-  <span></span>
-</div>
 {{ partial "footer.html" . }}
