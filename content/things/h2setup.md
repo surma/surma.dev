@@ -35,6 +35,22 @@ If you are extraordinarily lazy (as any developer should be), I have uploaded a 
 At the time of writing, [LetsEncrypt] is in public beta so everyone can get a valid SSL certificate for free that is valid for 3 months and can be renewed indefinitely. So, I guess, we’ve got that covered. Moving on!
 
 ## Tools
+### SimpleHTTP2Server
+
+For **local development**, setting up a webserver and generating a certificate with OpenSSL is quite tedious. For that purpose (and that purpose only) I wrote a small tool called `simplehttp2server`. It’s a binary that serves the currenty directory using HTTP/2 and even has support for push. You can also use this tool as a shorthand to generate a certificate for `localhost`.
+
+You can grab the binaries from the [release section][simplehttp2 release] of the [GitHub repository][simplehttp2 repo], where you’ll also find the README with more details. For the lazy, there’s even a “[Totally Tooling Minitip]” I did.
+
+### http2-push-detect
+
+Before Chrome’s DevTools showed pushes, there’s was no good way to figure out if HTTP/2 push was actually working as you intended. Enter [http2-push-detect], which lists all the resources that a server pushes for a given request URL.
+
+```
+$ npm install -g http2-push-detect
+$ http2-push-detect https://nghttp2.org/
+Receiving pushed resource: /stylesheets/screen.css
+```
+
 ### Curl
 
 I used [curl] to check that all experiments were successful. Make sure your version of `curl` actually supports HTTP/2, as the version that comes with Ubuntu 14.04 does not.
@@ -156,10 +172,21 @@ content-length:316
 
 ### Tomcat
 
-No stable HTTP/2 support just yet :(
+[Tomcat] >= 9 has support for HTTP/2. Adjust your `conf/server.xml` to match the following
 
-> Tomcat 9 together with Java 9 will have HTTP/2 support, both are not
-stable just yet. [Source][tomcat source]
+```
+<Connector port="8443"
+protocol="org.apache.coyote.http11.Http11AprProtocol"
+maxThreads="150" SSLEnabled="true">
+    <UpgradeProtocol className="org.apache.coyote.http2.Http2Protocol"/>
+    <SSLHostConfig honorCipherOrder="false">
+    <Certificate certificateKeyFile="conf/ca.key"
+        certificateFile="conf/ca.crt"/>
+    </SSLHostConfig>
+</Connector>
+```
+
+[Source][tomcat source]
 
 ### HAProxy
 
@@ -169,13 +196,11 @@ No HTTP/2 support just yet :(
 
 ### AWS (ELB & S3)
 
-No HTTP/2 support just yet :(
-
-Workaround: Set up your own loadbalancer on EC2 using nginx.
+AWS added support for HTTP/2 to CloudFront. [Source][CloudFront blogpost]
 
 ### Google Cloud Storage
 
-If you use a non-custom domain you will get HTTP/2 automatically. For non-custom domains, there is no HTTP/2 support just yet :(
+If you use a non-custom domain you will get HTTP/2 automatically. For custom domains, there is no HTTP/2 support just yet :(
 
 Workaround: Set up your own loadbalancer on GCE using nginx.
 
@@ -280,10 +305,16 @@ If you find mistakes, insufficient information or are missing a software package
 [Apache]: https://httpd.apache.org/
 [nginx]: https://www.nginx.com/
 [Jetty]: http://www.eclipse.org/jetty/
-[tomcat source]: http://stackoverflow.com/questions/30855281/tomcat-support-for-http-2-0
+[Tomcat]: http://tomcat.apache.org/
+[tomcat source]: https://readlearncode.com/configure-tomcat-9-for-http2/
 [IIS source]: http://blogs.iis.net/davidso/http2
 [haproxy source]: http://www.haproxy.org/news.html
 [blacklisting weak ciphers]: https://cipherli.st/
 [Nginx installation guide]: http://nginx.org/en/linux_packages.html#mainline
 [node-http2]: https://www.npmjs.com/package/http2
 [hit me up on Twitter]: https://twitter.com/surmair
+[Totally Tooling Minitip]: https://www.youtube.com/watch?v=qx9tHwhjkHs
+[simplehttp2 release]: https://github.com/GoogleChrome/simplehttp2server/releases
+[simplehttp2 repo]: https://github.com/GoogleChrome/simplehttp2server
+[CloudFront blogpost]: https://aws.amazon.com/blogs/aws/new-http2-support-for-cloudfront/
+[http2-push-detect]: https://github.com/surma/http2-push-detect
