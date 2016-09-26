@@ -12,9 +12,9 @@ A few months have passed since that talk and the landscape keeps maturing and de
 
 ## Generic Solution
 
-Before I go into detail with all the different webservers, you can opt to give HTTP/2 somewhat of a testdrive by using [CloudFlare], who have enabled support for HTTP/2 a while ago. Since CloudFlare works as a caching proxy *in front* of your infrastructure, it doesn’t care about your actual server technology, complexity or topology. In my opinion, this is currently the easiest way to get HTTP/2 while still reaping *most* of the benefits.
+Before I go into detail with all the different webservers, you can opt to give HTTP/2 somewhat of a testdrive by using [CloudFlare], who have enabled support for HTTP/2 a while ago. Since CloudFlare works as a caching proxy *in front* of your infrastructure, it doesn’t care about your actual server technology, complexity or topology. In my opinion, this is currently the easiest way to get HTTP/2 while still reaping *most* of the benefits. In April 2016, CloudFlare even [added support for HTTP/2 push][Cloudflare Push].
 
-The downside of enabling HTTP/2 via CloudFlare and not on your servers themselves means that data reduction and reduced number of connections won’t make it to your server, but only to CloudFlare’s proxy. Additionally, you won’t be able to use HTTP/2 push.
+The downside of enabling HTTP/2 via CloudFlare and not on your servers themselves means that data reduction and reduced number of connections won’t make it to your server, but only to CloudFlare’s proxy.
 
 ## Getting a SSL certificate
 
@@ -318,3 +318,4 @@ If you find mistakes, insufficient information or are missing a software package
 [simplehttp2 repo]: https://github.com/GoogleChrome/simplehttp2server
 [CloudFront blogpost]: https://aws.amazon.com/blogs/aws/new-http2-support-for-cloudfront/
 [http2-push-detect]: https://github.com/surma/http2-push-detect
+[CloudFlare push]: https://blog.cloudflare.com/announcing-support-for-http-2-server-push-2/
