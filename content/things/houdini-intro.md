@@ -14,9 +14,7 @@ Have you ever thought about the amount of work CSS does? You change a single att
 
 The Houdini task force consists of engineers from Mozilla, Apple, Opera, Microsoft, HP, Intel and Google working together to expose certain parts of the CSS engine to the web developer. The task force is working on a *collection of drafts* with the goal to get them accepted by the W3C to become actual web standards. They set themselves a few high-level goals, turned them into specification drafts which in turn gave birth to a set of supporting, lower-level specification drafts. The combination of these drafts is what is usually meant when someone is talking about “Houdini”. At the time of writing, the [list of drafts][Houdini Drafts] is still incomplete and most of the drafts are mere placeholders. That’s how early in development of Houdini we are. There is no bleeding edge to cut yourself on, yet.
 
-<noscript class="lazyload">
-    <iframe width="100%" height="315" src="https://www.youtube.com/embed/EUlIxr8mk7s" frameborder="0" allowfullscreen></iframe>
-</noscript>
+<iframe width="100%" height="315" src="https://www.youtube.com/embed/EUlIxr8mk7s" frameborder="0" allowfullscreen></iframe>
 
 *Disclaimer:* I want to give a quick overview of the Houdini drafts so you have an idea of what kind of problems Houdini tries to tackle. As far as the current state of the specs allow, I’ll try to give code examples, as well. Keeping that in mind, please be aware that all of these specs are *drafts* and very volatile. There’s no guarantee that these code samples are even remotely correct in the future or that any of these drafts become reality at all.
 
