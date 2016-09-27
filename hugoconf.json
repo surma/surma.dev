@@ -4,9 +4,12 @@
   "title": "Surma.link",
   "publishdir": "app",
   "theme": "surma",
+  "author": {
+    "name": "Surma"
+  },
   "relativeURLs": true,
   "disableSitemap": true,
-  "disableRSS": true,
+  "disableRSS": false,
   "params": {
     "themecolor": "#FDD835",
     "twitterhandle": "DasSurma"
