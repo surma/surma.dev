@@ -18,9 +18,9 @@ To reiterate: Compositor Worklet allows developers to write code that runs on th
 
 ### Journey
 
-The original design of Compositor Worklet is more of a placeholder to get a discussion started in the Houdini task force. Compositor Worklet never had an official spec but just a back-of-napkin API. This allowed everyone in the task force to talk about it without setting anything in stone. These discussions revealed some concerns the browser vendors had, among other things: running user code sychronously on the “compositor” thread. Subsequently, the task force gave Compositor Worklet a massive face-lift and presented a new API at TPAC 2016. With that new API, code doesn’t run on the compositor thread anymore and to make that obvious, the API got a new name: *Animation Worklet*.
+The original design of Compositor Worklet is more of a placeholder to get a discussion started in the Houdini task force. Compositor Worklet never had an official spec but just a back-of-napkin API. This allowed everyone in the task force to talk about it without setting anything in stone. These discussions revealed some concerns the browser vendors had, among other things: running user code synchronously on the “compositor” thread. Subsequently, the task force gave Compositor Worklet a massive face-lift and presented a new API at TPAC 2016. With that new API, code doesn’t run on the compositor thread anymore and to make that obvious, the API got a new name: *Animation Worklet*.
 
-Generally speaking, the Houdini task force liked the new API and decided to move the proposal to the [WICG]. To move a proposal to the WICG it is required that at least 1 other brower vendor expresses interest in the API. In this particular case, all of [Apple, Google, Microsoft _and_ Mozilla expressed their interest][WICG interest comment].
+Generally speaking, the Houdini task force liked the new API and decided to move the proposal to the [WICG]. To move a proposal to the WICG it is required that at least 1 other broswer vendor expresses interest in the API. In this particular case, all of [Apple, Google, Microsoft _and_ Mozilla expressed their interest][WICG interest comment].
 
 ### WICG
 
