@@ -1,7 +1,8 @@
 {
   "title": "Compositor Worklet evolves into Animation Worklet!",
   "date": "2016-09-26",
-  "socialmediaimage": "animworklet.png"
+  "socialmediaimage": "animworklet.png",
+  "live": "true"
 }
 
 Did you see that Pokémon Go reference? Gotta get down with the kidz.

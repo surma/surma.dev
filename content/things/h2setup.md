@@ -1,7 +1,8 @@
 {
   "title": "Setting up HTTP/2",
   "date": "2016-01-15",
-  "socialmediaimage": "h2setup.jpg"
+  "socialmediaimage": "h2setup.jpg",
+  "live": "true"
 }
 
 At [Chrome Dev Summit 2015] I gave [a talk about HTTP/2]. I am genuinely excited about the benefits HTTP/2 brings to the web, to its developers and its users alike. If you don’t know about those, I’ll cheekily recommend my own talk – this post is more of a follow-up to the talk.

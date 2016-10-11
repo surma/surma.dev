@@ -44,5 +44,8 @@ export default {
       progressive: true,
       interlaced: true
     })
+  ],
+  '{webm,mp4}': () => [
+    // copy is implicit
   ]
 };
