@@ -7,10 +7,7 @@ export default {
     $.sourcemaps.init(),
     // Exclude files in `app/nobabel`
     $.if(file => !/^nobabel\//.test(file.relative),
-      $.babel({
-        // Use AMD for RequireJS
-        modules: 'amd'
-      })
+      $.babel()
     ),
     $.uglify({
       mangle: {
