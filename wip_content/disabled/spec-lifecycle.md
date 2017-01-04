@@ -1,7 +1,7 @@
 {
   "title": "How to read web specs Part II – Or: The spec’s lifecycle",
   "date": "2016-10-11",
-  "socialmediaimage": ""
+  "socialmediaimage": "",
   "live": "false"
 }
 
