@@ -71,7 +71,7 @@ No such line is in WebVR’s definition of `VRDisplay`, though.
 
 ### Interface extensions and partial interfaces
 
-Another way to expose types and/or their constructors to the developer’s runtime is by extending existing interfaces. For example, [ServiceWorker defines a partial `navigator` interface](https://w3c.github.io/ServiceWorker/#navigator-service-worker) to expose a [ServiceWorkerContainer](https://w3c.github.io/ServiceWorker/#service-worker-container) to the developer.
+Another way to expose types and/or their constructors to the developer’s runtime is by extending existing interfaces. For example, [ServiceWorker defines a partial `navigator` interface](https://w3c.github.io/ServiceWorker/#navigator-serviceworker) to expose a [ServiceWorkerContainer](https://w3c.github.io/ServiceWorker/#service-worker-container) to the developer.
 
 Looking at the ToC of the WebVR spec, there’s a section called [“Navigator Interface extension”](WebVR.html#interface-navigator) and [“Window Interface extension”](WebVR.html#interface-window). The latter only defines a few new events, while the former is exactly what we were looking for!
 
