@@ -2,7 +2,7 @@
   "title": "DIY Web Animations: Promises + rAF + Transitions",
   "date": "2017-02-14",
   "socialmediaimage": "title.jpg",
-  "live": "false"
+  "live": "true"
 }
 
 The Web Animations API is great. Except that support is mediocre at best. I keep finding myself re-creating them using Promises, rAF and CSS Transitions, which turned out to be pretty ergonomic.
