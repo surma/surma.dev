@@ -92,6 +92,24 @@ function animate(element, stylz) {
 
 And that’s it! That’s all that’s going on behind the scenes to make my code snippet above work. I think this extremely lightweight abstraction yields _a lot_ of developer convenience when working with animations and transitions. Don’t forget that all the tooling around Promises like [`Promise.all()`] is available to you to do things like running multiple animations in parallel. The concept can easily be applied to all other kinds of event-emiting constructs in the JavaScript ecosystem, as well.
 
+## Trip wires
+
+Apparently, [I needed to be reminded](https://twitter.com/kdzwinel/status/831888961320734724) that events bubble. Come on, Surma!
+
+This means that if you use this technique on two elements while one element is an ancestor of the other, the `transitionend` event from the successor will make the animation chain of predecessor advance forward. Luckily, this can easily be accommodated for by checking `event.target` like this:
+
+{{< highlight JavaScript >}}
+function transitionEndPromise(element) {
+  return new Promise(resolve => {
+    element.addEventListener('transitionend', function f(event) {
+      if (event.target !== element) return;
+      element.removeEventListener('transitionend', f);
+      resolve();
+    });
+  });
+}
+{{< /highlight >}}
+
 [sequences of animations]: http://jsbin.com/zadibes/4/edit?js,output
 [works in all browsers]: http://jsbin.com/lazetol/7/edit?js,output
 [Web Animations Spec]: http://w3c.github.io/web-animations/#the-animatable-interface
