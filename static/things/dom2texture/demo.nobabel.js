@@ -117,8 +117,10 @@
 
   const cameraUniformLocation = gl.getUniformLocation(program, 'u_camera');
   const viewUniformLocation = gl.getUniformLocation(program, 'u_view');
-  gl.uniformMatrix4fv(viewUniformLocation, false, mat4.perspective(mat4.create(), 30, 1, 0.1, 1000));
-  gl.uniformMatrix4fv(cameraUniformLocation, false, mat4.lookAt(mat4.create(), [0, -0.5, 1.5], [0, 0, 0], [0, 1, 0]));
+  const view = mat4.perspective(mat4.create(), 30, 1, 0.1, 1000);
+  gl.uniformMatrix4fv(viewUniformLocation, false, view);
+  let camera = mat4.lookAt(mat4.create(), [0, 0.5, 1.5], [0, 0, 0], [0, 1, 0]);
+  gl.uniformMatrix4fv(cameraUniformLocation, false, camera);
 
   const samplerUniformLocation = gl.getUniformLocation(program, 'u_sampler');
   const texture = gl.createTexture();
