@@ -1,0 +1,75 @@
+<!doctype>
+<script src="base64.js"></script>
+<style>
+  #container {
+    width: 100%;
+    height: 100%;
+    background-color: bisque;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: red;
+    font-family: monospace;
+    font-size: 12px;
+  }
+</style>
+<svg xmlns="http://www.w3.org/2000/svg" width=128 height=128>
+  <foreignObject width=128 height=128>
+    <div id="container">
+      Ohai DOM! ❤️
+      <img src="uvgrid_small.jpg" width=50>
+    </div>
+  </foreignObject>
+</svg>
+
+<canvas width=128 height=128></canvas>
+<script>
+
+
+const svg = document.querySelector('svg');
+const styleTag = document.createElement('style');
+Array.from(document.querySelectorAll('style, link[rel=stylesheet]'))
+  .forEach(linkTag => {
+    styleTag.innerText = Array.from(linkTag.sheet.cssRules).reduce((str, rule) => str + rule.cssText, '');
+  });
+svg.appendChild(styleTag);
+
+function img2dataURI(imgTag) {
+  // Wait for image to be loaded
+  return new Promise(resolve => {
+    if(imgTag.complete) resolve(imgTag);
+    imgTag.onload = _ => resolve(imgTag);
+  })
+  .then(imgTag => {
+    // Paint it to a canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = imgTag.naturalWidth;
+    canvas.height = imgTag.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imgTag, 0, 0);
+    // and convert that canvas to a data URI and, once again,
+    // wait for it to be decoded and loaded.
+    return new Promise(resolve => {
+      imgTag.onload = _ => resolve();
+      imgTag.src = canvas.toDataURL();
+    });
+  });
+}
+
+const dataUriImages = Array.from(document.querySelectorAll('img'))
+  .map(imgTag => img2dataURI(imgTag));
+
+Promise.all(dataUriImages)
+  .then(_ => {
+    const s = new XMLSerializer().serializeToString(svg);
+    const datauri = 'data:image/svg+xml;base64,' + base64js.fromByteArray(new TextEncoder().encode(s));
+    const img = document.createElement('img');
+    img.src = datauri;
+    img.onload = _ => {
+      const c = document.querySelector('canvas');
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+    }
+  });
+</script>

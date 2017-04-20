@@ -7,10 +7,6 @@
     <title>DasSur.ma – {{.Title}}</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     <link href="https://fonts.googleapis.com/css?family=Roboto+Slab|Titillium+Web|Ubuntu+Mono" rel="stylesheet">
-    {{ if .RSSlink }}
-      <link href="{{ .RSSlink }}" rel="alternate" type="application/rss+xml" title="{{ .Site.Title }}" />
-      <link href="{{ .RSSlink }}" rel="feed" type="application/rss+xml" title="{{ .Site.Title }}" />
-    {{ end }}
     <meta name="theme-color" content="#90c5f9">
     <meta property="og:title" content="{{.Title}} - DasSur.ma" />
     <meta name="twitter:title" content="{{.Title}} – DasSur.ma" />

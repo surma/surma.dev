@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+</style>
+<svg xmlns="http://www.w3.org/2000/svg" width=256 height=256>
+  <style>
+    #container {
+      width: 256px;
+      height: 256px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: stretch;
+    }
+    span {
+      font-size: 28px;
+      font-family: Helvetica;
+      text-align: center;
+    }
+  </style>
+  <foreignObject width=256 height=256>
+    <div id="container">
+      <input type="range">
+      <span>Move the slider!</span>
+    </div>
+  </foreignObject>
+</svg>
+<canvas width=256 height=256></canvas>
+<div>
+<script src="gl-matrix-min.js" defer></script>
+<script src="base64.js" defer></script>
+<script src="demo.js" defer></script>
