@@ -33,7 +33,7 @@ export default {
   ],
   'html': () => [
     $.replace('{%_!_version_!_%}', pkg.version),
-    $.minifyInline(),
+    $.minifyInline({js: false}),
     $.minifyHtml()
   ],
   '{png,jpeg,jpg}': () => [
