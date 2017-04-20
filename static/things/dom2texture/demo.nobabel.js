@@ -1,11 +1,10 @@
 (function() {
-  const canvas = document.querySelector('canvas');
+  const canvas = document.querySelector('#gl');
+  const textureCanvas = document.querySelector('#texture');
   const svg = document.querySelector('svg');
   const gl = canvas.getContext('webgl');
   if(!gl) fatalError('No WebGL support :(');
 
-  const textureCanvas = document.createElement('canvas');
-  [textureCanvas.width, textureCanvas.height] = [canvas.width, canvas.height];
   function dom2canvas(svg) {
     svg = svg.cloneNode(true);
 
@@ -29,7 +28,7 @@
         const ctx = textureCanvas.getContext('2d');
         ctx.clearRect(0, 0, textureCanvas.width, textureCanvas.height);
         ctx.drawImage(img, 0, 0);
-        resolve(img);
+        resolve(textureCanvas);
       }
     });
   }
@@ -153,8 +152,10 @@
   (function textureUpdate() {
     dom2canvas(svg)
       .then(img => {
-        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, img);
-        gl.generateMipmap(gl.TEXTURE_2D);
+        try {
+          gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, img);
+          gl.generateMipmap(gl.TEXTURE_2D);
+        } catch(e){}
         setTimeout(textureUpdate, 100);
       });
   })();
