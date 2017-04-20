@@ -13,7 +13,7 @@ When using OpenGL (or WebGL), you have to do _everything_ yourself, including fo
 
 When you want to render strings to screen in OpenGL, it’s not uncommon to use [a texture font and distance field] (https://github.com/libgdx/libgdx/wiki/Distance-field-fonts) to place each individual symbol on a quad. You have to do font sizing and smoothing yourself, you have to calculate the coordinates of each of these queads, when to line wrap and how to handle the baseline. If you want them, you will also need to implement support for ligatures yourself. Most of the time, being able to render text is only a precursor to having a 2D UI within your 3D OpenGL world, so you start implementing layout algorithms too. That seems not only unfun to me, but highly redunant.
 
-As you can tell by the [demo]() (and the presence of a TL;DR), there *is* a way to render DOM elements to a canvas  – if you don’t mind bending over backwards. And once we have something on canvas, we can use it as a texture in WebGL and it would allow us to make use of all the things the browser has already implemented: Loading different fonts, rendering them, coloring them, text shadows, text decorations, weights, RTL, word-wrapping, etc etc etc. But be warned: The TL;DR makes this blog look much shorter than it is.
+As you can tell by the [demo] (and the presence of a TL;DR), there *is* a way to render DOM elements to a canvas  – if you don’t mind bending over backwards. And once we have something on canvas, we can use it as a texture in WebGL and it would allow us to make use of all the things the browser has already implemented: Loading different fonts, rendering them, coloring them, text shadows, text decorations, weights, RTL, word-wrapping, etc etc etc. But be warned: The TL;DR makes this blog look much shorter than it is.
 
 ## Step 1: Foreign Objects
 
@@ -273,3 +273,5 @@ Array.from(svg.querySelectorAll('input'))
 ## Recap
 
 So there you have it. This is far from perfect and the number of hoops you have to jump through to render some of your own DOM to a canvas is somewhat shocking. It’s cool that it works so I don’t have to reimplement font rendering and layouting for WebGL, but the platform could definitely do better here.
+
+[demo]: demo.html

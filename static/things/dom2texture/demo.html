@@ -2,32 +2,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+  html, body {
+    height: 100%;
+  }
   body {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: space-around;
     background: url('wallpaper.png');
   }
-  canvas, svg {
-    border: 1px solid red
+  svg, canvas {
+    margin: 10px;
   }
 </style>
 <svg xmlns="http://www.w3.org/2000/svg" width=256 height=256>
   <style>
     #container {
+      box-sizing: border-box;
       width: 100%;
       height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: space-around;
       align-items: stretch;
-      background-color: rgba(0, 0, 0, 0.23);
+      background-color: rgba(255, 0, 0, 0.23);
+      padding: 10px
     }
     span {
       font-size: 20px;
       font-family: Helvetica;
       text-align: center;
-      color: #ffd217;
     }
   </style>
   <foreignObject width=256 height=256>
@@ -35,7 +40,7 @@
       <input type="range">
       <span>⚠️ Move the slider 👆</span>
       <input type="text">
-      <span>💌 Type some text 📝️</span>
+      <span contenteditable=true>💌 Content editable 📝️</span>
     </div>
   </foreignObject>
 </svg>
