@@ -7,6 +7,9 @@
     flex-wrap: wrap;
     justify-content: space-around;
   }
+  canvas, svg {
+    border: 1px solid red
+  }
 </style>
 <svg xmlns="http://www.w3.org/2000/svg" width=256 height=256>
   <style>
@@ -19,7 +22,7 @@
       align-items: stretch;
     }
     span {
-      font-size: 28px;
+      font-size: 20px;
       font-family: Helvetica;
       text-align: center;
     }
@@ -27,12 +30,11 @@
   <foreignObject width=256 height=256>
     <div id="container">
       <input type="range">
-      <span>Move the slider!</span>
+      <span>⚠️ Move the slider ⚠️</span>
     </div>
   </foreignObject>
 </svg>
 <canvas width=256 height=256></canvas>
-<div>
-<script src="gl-matrix-min.js" defer></script>
-<script src="base64.js" defer></script>
-<script src="demo.js" defer></script>
+<script src="gl-matrix.nobabel.js"></script>
+<script src="base64.nobabel.js"></script>
+<script src="demo.nobabel.js"></script>

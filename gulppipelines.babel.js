@@ -6,14 +6,10 @@ export default {
   'js': () => [
     $.sourcemaps.init(),
     // Exclude files in `app/nobabel`
-    $.if(file => !/^nobabel\//.test(file.relative),
+    $.if(file => !/^nobabel\//.test(file.relative) || /\.nobabel\.[^.]+$/.test(file.relative),
       $.babel()
     ),
-    $.uglify({
-      mangle: {
-        except: ['$', 'require', 'exports']
-      }
-    }),
+    $.babili(),
     $.sourcemaps.write('.')
   ],
   '{sass,scss}': () => [
