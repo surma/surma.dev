@@ -6,6 +6,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
+    background: url('wallpaper.png');
   }
   canvas, svg {
     border: 1px solid red
@@ -20,17 +21,21 @@
       flex-direction: column;
       justify-content: space-around;
       align-items: stretch;
+      background-color: rgba(0, 0, 0, 0.23);
     }
     span {
       font-size: 20px;
       font-family: Helvetica;
       text-align: center;
+      color: #ffd217;
     }
   </style>
   <foreignObject width=256 height=256>
     <div id="container">
       <input type="range">
-      <span>⚠️ Move the slider ⚠️</span>
+      <span>⚠️ Move the slider 👆</span>
+      <input type="text">
+      <span>💌 Type some text 📝️</span>
     </div>
   </foreignObject>
 </svg>

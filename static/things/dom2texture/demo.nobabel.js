@@ -6,8 +6,8 @@
 
   const textureCanvas = document.createElement('canvas');
   [textureCanvas.width, textureCanvas.height] = [canvas.width, canvas.height];
-  function dom2canvas() {
-    const svg = svg.cloneNode(true);
+  function dom2canvas(svg) {
+    svg = svg.cloneNode(true);
 
     Array.from(svg.querySelectorAll('input'))
       .forEach(inputElem => {
@@ -20,18 +20,30 @@
         });
       });
 
-    return Promise.all(dataUriImages)
-      .then(_ => {
-        const s = new XMLSerializer().serializeToString(svg);
-        const datauri = 'data:image/svg+xml;base64,' + base64js.fromByteArray(new TextEncoder().encode(s));
-        const img = document.createElement('img');
-        img.src = datauri;
-        img.onload = _ => {
-          const ctx = textureCanvas.getContext('2d');
-          ctx.clearRect(0, 0, textureCanvas.width, textureCanvas.height);
-          ctx.drawImage(img, 0, 0);
-        }
-      });
+    return new Promise(resolve => {
+      const s = new XMLSerializer().serializeToString(svg);
+      const datauri = 'data:image/svg+xml;base64,' + base64js.fromByteArray(new TextEncoder().encode(s));
+      const img = document.createElement('img');
+      img.src = datauri;
+      img.onload = _ => {
+        const ctx = textureCanvas.getContext('2d');
+        ctx.clearRect(0, 0, textureCanvas.width, textureCanvas.height);
+        ctx.drawImage(img, 0, 0);
+        resolve(img);
+      }
+    });
+  }
+
+  function generateTempTexture(w, h) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+    for(let d = 0; d < h; d++) {
+      ctx.fillStyle = `hsl(${d/h*120}, 100%, 50%)`;
+      ctx.fillRect(0, d, w, 1);
+    }
+    return c;
   }
 
   function fatalError(str) {
@@ -46,7 +58,7 @@
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
     if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-      fatalError('Could not compile shader');
+      fatalError(`Could not compile shader: ${gl.getShaderInfoLog(shader)}`);
     return shader;
   }
 
@@ -72,23 +84,27 @@
   }
 
   const vertexShader = compileShader(gl, gl.VERTEX_SHADER, `
-  attribute vec2 a_vertex;
-  uniform float u_time;
-  uniform mat4 u_camera;
-  uniform mat4 u_view;
+    attribute vec2 a_vertex;
+    uniform float u_time;
+    uniform mat4 u_camera;
+    uniform mat4 u_view;
+    varying vec2 v_uv;
 
-  void main() {
-    float r = length(a_vertex.xy);
-    gl_Position = u_view * u_camera * vec4(a_vertex.x, a_vertex.y, sin(3.0*u_time + 6.0*r)*0.1 , 1.0);
-  }
+    void main() {
+      float r = length(a_vertex.xy);
+      gl_Position = u_view * u_camera * vec4(a_vertex.x + sin(4.0*u_time + a_vertex.y*9.0)*0.03, a_vertex.y, sin(3.0*u_time + 6.0*r)*0.1, 1.0);
+      v_uv = vec2(3.0-a_vertex.x, 1.0 + a_vertex.y)*0.5;
+    }
   `);
 
   const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, `
-  precision mediump float;
+    precision mediump float;
+    varying vec2 v_uv;
+    uniform sampler2D u_sampler;
 
-  void main() {
-    gl_FragColor = vec4(1.0, 0.0, 0, 1.0);
-  }
+    void main() {
+      gl_FragColor = texture2D(u_sampler, v_uv);
+    }
   `);
 
   const program = gl.createProgram();
@@ -96,7 +112,7 @@
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
   if(!gl.getProgramParameter(program, gl.LINK_STATUS))
-    fatalError('Could not not compile program');
+    fatalError(`Could not not compile program: ${gl.getProgramInfoLog(this._program)}`);
   gl.useProgram(program);
 
   const cameraUniformLocation = gl.getUniformLocation(program, 'u_camera');
@@ -104,28 +120,40 @@
   gl.uniformMatrix4fv(viewUniformLocation, false, mat4.perspective(mat4.create(), 30, 1, 0.1, 1000));
   gl.uniformMatrix4fv(cameraUniformLocation, false, mat4.lookAt(mat4.create(), [0, -0.5, 1.5], [0, 0, 0], [0, 1, 0]));
 
-  // gl.uniformMatrix4fv(viewUniformLocation, false, mat4.create());
-  // gl.uniformMatrix4fv(cameraUniformLocation, false, mat4.create());
-  // console.log(mat4.perspective(mat4.create(), 30, 1, 0.1, 1000))
-  // console.log(mat4.lookAt(mat4.create(), [0, -5, 5], [0, 0, 0], [0, 1, 0]))
+  const samplerUniformLocation = gl.getUniformLocation(program, 'u_sampler');
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, generateTempTexture(gl.canvas.width, gl.canvas.height));
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.activeTexture(gl.TEXTURE0)
+  gl.uniform1i(samplerUniformLocation, 0);
 
   const vertexAttribLocation = gl.getAttribLocation(program, 'a_vertex');
-  const mesh = generateMesh(10, 10);
+  const mesh = generateMesh(100, 100);
   const buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, mesh, gl.STATIC_DRAW);
 
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.clearColor(0, 0, 0, 0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.enableVertexAttribArray(vertexAttribLocation);
   gl.vertexAttribPointer(vertexAttribLocation, 2, gl.FLOAT, false, 0, 0);
   const timeUniformLocation = gl.getUniformLocation(program, 'u_time');
   const startTime = performance.now();
   requestAnimationFrame(function f(currentTime) {
+    gl.clear(gl.COLOR_BUFFER_BIT);
     gl.uniform1f(timeUniformLocation, (currentTime - startTime)/1000);
     gl.drawArrays(gl.TRIANGLES, 0, mesh.length / 2);
     requestAnimationFrame(f);
   });
+
+  (function textureUpdate() {
+    dom2canvas(svg)
+      .then(img => {
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        setTimeout(textureUpdate, 100);
+      });
+  })();
 })();
