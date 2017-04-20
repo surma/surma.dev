@@ -74,10 +74,12 @@
   const vertexShader = compileShader(gl, gl.VERTEX_SHADER, `
   attribute vec2 a_vertex;
   uniform float u_time;
+  uniform mat4 u_camera;
+  uniform mat4 u_view;
 
   void main() {
     float r = length(a_vertex.xy);
-    gl_Position = vec4(a_vertex.x, a_vertex.y, sin(3.0*u_time + 6.0*r) , 1.0);
+    gl_Position = u_view * u_camera * vec4(a_vertex.x, a_vertex.y, sin(3.0*u_time + 6.0*r)*0.1 , 1.0);
   }
   `);
 
@@ -85,7 +87,7 @@
   precision mediump float;
 
   void main() {
-    gl_FragColor = vec4(1.0, 0.0, (gl_FragCoord.z+1.0)/2.0, 1.0);
+    gl_FragColor = vec4(1.0, 0.0, 0, 1.0);
   }
   `);
 
@@ -95,9 +97,19 @@
   gl.linkProgram(program);
   if(!gl.getProgramParameter(program, gl.LINK_STATUS))
     fatalError('Could not not compile program');
+  gl.useProgram(program);
+
+  const cameraUniformLocation = gl.getUniformLocation(program, 'u_camera');
+  const viewUniformLocation = gl.getUniformLocation(program, 'u_view');
+  gl.uniformMatrix4fv(viewUniformLocation, false, mat4.perspective(mat4.create(), 30, 1, 0.1, 1000));
+  gl.uniformMatrix4fv(cameraUniformLocation, false, mat4.lookAt(mat4.create(), [0, -0.5, 1.5], [0, 0, 0], [0, 1, 0]));
+
+  // gl.uniformMatrix4fv(viewUniformLocation, false, mat4.create());
+  // gl.uniformMatrix4fv(cameraUniformLocation, false, mat4.create());
+  // console.log(mat4.perspective(mat4.create(), 30, 1, 0.1, 1000))
+  // console.log(mat4.lookAt(mat4.create(), [0, -5, 5], [0, 0, 0], [0, 1, 0]))
 
   const vertexAttribLocation = gl.getAttribLocation(program, 'a_vertex');
-  const timeUniformLocation = gl.getUniformLocation(program, 'u_time');
   const mesh = generateMesh(10, 10);
   const buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -106,10 +118,10 @@
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.useProgram(program);
 
   gl.enableVertexAttribArray(vertexAttribLocation);
   gl.vertexAttribPointer(vertexAttribLocation, 2, gl.FLOAT, false, 0, 0);
+  const timeUniformLocation = gl.getUniformLocation(program, 'u_time');
   const startTime = performance.now();
   requestAnimationFrame(function f(currentTime) {
     gl.uniform1f(timeUniformLocation, (currentTime - startTime)/1000);
