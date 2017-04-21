@@ -11,6 +11,9 @@
     color: red;
     font-family: monospace;
   }
+  canvas {
+    margin-left: 10px;
+  }
 </style>
 <svg xmlns="http://www.w3.org/2000/svg" width=128 height=128>
   <foreignObject width=128 height=128>
@@ -23,7 +26,12 @@
 
 <canvas width=128 height=128></canvas>
 <script>
-const s = new XMLSerializer().serializeToString(document.querySelector('svg'));
+const svg = document.querySelector('svg');
+Array.from(document.querySelectorAll('style'))
+  .forEach(styleTag => {
+    svg.appendChild(styleTag.cloneNode(true));
+  })
+const s = new XMLSerializer().serializeToString(svg);
 const datauri = 'data:image/svg+xml;base64,' + btoa(s);
 const img = document.createElement('img');
 img.src = datauri;
