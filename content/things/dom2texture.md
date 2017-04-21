@@ -22,7 +22,7 @@ As you can tell by the [demo][] (and the presence of a TL;DR), there *is* a way 
 
 ## Step 1: Foreign Objects
 
-As far as I am aware, [Foreign Objects](https://developer.mozilla.org/en/docs/Web/SVG/Element/foreignObject) are seldomly used. They allow you to include a different XML namespace into an SVG and the SVG renderer will hand of the rendering to the renderer responsible for that namespace. (Danger: This is probably a gross oversimplification.) So by using `<foreignObject>` we can mix SVG graphics with, let’s say, a `<button>` and it will not only render, it will function and be interactive. Amazing!
+Let’s start with Arcane API #1: As far as I am aware, [Foreign Objects](https://developer.mozilla.org/en/docs/Web/SVG/Element/foreignObject) are seldomly used. They allow you to include a different XML namespace into an SVG and the SVG renderer will hand of the rendering to the renderer responsible for that namespace. (Danger: This is probably a gross oversimplification.) So by using `<foreignObject>` we can mix SVG graphics with, let’s say, a `<button>` and it will not only render, it will function and be interactive. Amazing!
 
 {{< highlight HTML >}}
 <!doctype html>
@@ -64,7 +64,7 @@ document.querySelector('svg').parentElement.innerHTML
 </svg>`
 {{< /highlight >}}
 
-For most use-cases, that is good enough, but when trying to serialize SVGs with multiple XML namespaces, it’s not. Try it: The button won’t appear if you [load](broken.svg) the above markup as an SVG image. Enter Arcane API #1: [`XMLSerializer`](https://developer.mozilla.org/en-US/docs/Web/API/XMLSerializer):
+For most use-cases, that is good enough, but when trying to serialize SVGs with multiple XML namespaces, it’s not. Try it: The button won’t appear if you [load](broken.svg) the above markup as an SVG image. Enter Arcane API #2: [`XMLSerializer`](https://developer.mozilla.org/en-US/docs/Web/API/XMLSerializer):
 
 {{< highlight JavaScript >}}
 new XMLSerializer().serializeToString(document.querySelector('svg’))
@@ -80,7 +80,7 @@ As you can see, this serializer took care of adding the XHTML namespace of the c
 
 ### Step 2.2: Base64 encoding
 #### Step 2.2 Option a: atob
-We have our SVG as a string. But for our data URI we need it in base64. Enter Arcane API #2: `atob` and `btoa`. I think these are some of the weirdest (and probably oldest) functions the platform has to offer. They are cryptically named and even after deciphering the names they don’t make a lot of sense. Additionally their accepted input data isn’t really sufficient nowadays: `btoa` stands for “binary to ascii” and encodes any binary strings (because back in the day, there were no [`ArrayBuffer`]s and strings didn’t have to worry about Unicode) into safe ASCII by using base64. I don’t know why they didn’t call the function `base64encode()` or anything more descriptive, but now it’s burnt into the platform. Forever. But apart from that naming: The second you have any code points in your string above the 255 mark, this happens:
+We have our SVG as a string. But for our data URI we need it in base64. Enter Arcane API #3: `atob` and `btoa`. I think these are some of the weirdest (and probably oldest) functions the platform has to offer. They are cryptically named and even after deciphering the names they don’t make a lot of sense. Additionally their accepted input data isn’t really sufficient nowadays: `btoa` stands for “binary to ascii” and encodes any binary strings (because back in the day, there were no [`ArrayBuffer`]s and strings didn’t have to worry about Unicode) into safe ASCII by using base64. I don’t know why they didn’t call the function `base64encode()` or anything more descriptive, but now it’s burnt into the platform. Forever. But apart from that naming: The second you have any code points in your string above the 255 mark, this happens:
 
 ![A screenshot of DevTools showing a string containing an emoji being passed to btoa. An error is thrown: "The string to be encoded contains characters outside of the Latin1 range."](latin1.png)
 
@@ -254,6 +254,8 @@ Keep in mind that this approach won’t work if you link to cross-origin stylesh
 
 This is left as an exercise for the reader :P
 
+<small>(It’s probably possible. Likely annoying. I was too lazy.)</small>
+
 ## Bonus round: State
 
 We are looking pretty good! We have all we need to solve my original WebGL problem. But here’s an additional tripwire: All internal state of the DOM elements that is not reflected to DOM will be lost. So if you have input elements like sliders or text fields you have to do some extra work to make them render in the same state they were in. In the context of input fields you could do something like the following.
@@ -284,7 +286,12 @@ This is quite fun to [play with](withstate.html).
 
 ## Performance
 
-**This approach is not cheap.** The simple markup above takes around 12ms until the image is drawn to the canvas. If you want to use it right now, I’d suggest wrapping the individual steps in `requestIdleCallback()` to make sure the main thread is not blocked. Luckily, there is a spec for canvas in workers called [`OffscreenCanvas`](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas), that’d allow you to do that work in a different thread. It is available in Firefox and [being worked on in Chrome](https://crbug.com/563816).
+**This approach is not cheap. At all.** For the last demo, going from SVG to rendered canvas takes 10ms on the new 2017 MacBook Pro, and **62ms** on a Pixel. Considering the frame budget for 60fps is 16ms, you need to be extremely careful. If you want to use it right now, I’d suggest breaking it up into smaller chunks of work using  `requestIdleCallback()` to make sure the main thread is not blocked for too long. Luckily, there is a spec to expose `<canvas>` in workers called [`OffscreenCanvas`](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas), that’d allow you to do all that expensive work in a different thread, keeping your main thread nice and responsive. `OffscreenCanvas` is available in Firefox and [being worked on in Chrome](https://crbug.com/563816).
+
+<picture>
+  <source srcset="timeline_pixel.webp" type="image/webp">
+  <img src="timeline_pixel.png" alt="Timeline recording of the last demo on a pixel phone.">
+</picture>
 
 ## Recap
 
