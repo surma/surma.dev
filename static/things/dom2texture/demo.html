@@ -4,6 +4,7 @@
 <style>
   html, body {
     height: 100%;
+    font-family: sans-serif;
   }
   body {
     display: flex;
@@ -16,7 +17,16 @@
   svg, canvas {
     margin: 10px;
   }
+  div {
+    display: flex;
+    flex-direction: column;
+  }
+  h1 {
+    text-align: center;
+  }
 </style>
+<div>
+<h1>DOM</h1>
 <svg xmlns="http://www.w3.org/2000/svg" width=256 height=256>
   <style>
     #container {
@@ -45,8 +55,15 @@
     </div>
   </foreignObject>
 </svg>
+</div>
+<div>
+<h1>Canvas</h1>
 <canvas width=256 height=256 id="texture"></canvas>
+</div>
+<div>
+<h1>WebGL</h1>
 <canvas width=256 height=256 id="gl"></canvas>
+</div>
 <script src="gl-matrix.nobabel.js"></script>
 <script src="base64.nobabel.js"></script>
 <script src="demo.nobabel.js"></script>
