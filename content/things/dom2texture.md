@@ -11,7 +11,12 @@ When using OpenGL (or WebGL), you have to do _everything_ yourself, including fo
 
 > **TL;DR:** You can use `<foreignObject>` to embed normal HTML content in an SVG, encode that SVG as a data URL and draw it to a canvas using `Canvas2DRenderinContext.drawImage()`. You need to inline all the styles, images and other resources as the canvas cannot make any network requests. Check out the [demo] here!
 
-When you want to render strings to screen in OpenGL, it’s not uncommon to use [a texture font and distance field] (https://github.com/libgdx/libgdx/wiki/Distance-field-fonts) to place each individual symbol on a quad. You have to do font sizing and smoothing yourself, you have to calculate the coordinates of each of these quads, when to line wrap and how to handle the baseline. If you want them, you will also need to implement support for ligatures yourself. Most of the time, being able to render text is only a precursor to having a 2D UI within your 3D OpenGL world, so you start implementing layout algorithms too. That seems not only unfun to me, but highly redunant.
+<video controls autoplay loop muted>
+  <source src="dom2texture_vp8.webm" type="video/webm; codecs=vp8">
+  <source src="dom2texture_x264.mp4" type="video/mp4; codecs=h264">
+</video>
+
+When you want to render strings to screen in OpenGL, it’s not uncommon to use [a bitmap font and distance field] (https://github.com/libgdx/libgdx/wiki/Distance-field-fonts) to place each individual symbol on a quad. You have to do font sizing and smoothing yourself, you have to calculate the coordinates of each of these quads, when to line wrap and how to handle the baseline. If you want them, you will also need to implement support for ligatures yourself. Most of the time, being able to render text is only a precursor to having a 2D UI within your 3D OpenGL world, so you start implementing layout algorithms too. That seems not only unfun to me, but highly redunant.
 
 As you can tell by the [demo][] (and the presence of a TL;DR), there *is* a way to render DOM elements to a canvas  – if you don’t mind bending over backwards. And once we have something on canvas, we can use it as a texture in WebGL and it would allow us to make use of all the things the browser has already implemented: Loading different fonts, rendering them, coloring them, text shadows, text decorations, weights, RTL, word-wrapping, etc etc etc. But be warned: The TL;DR makes this blog look much shorter than it is.
 
@@ -270,7 +275,10 @@ Array.from(svg.querySelectorAll('input'))
 });
 {{< /highlight >}}
 
-** PICTURE **
+<video controls autoplay loop muted>
+  <source src="withstate_vp8.webm" type="video/webm; codecs=vp8">
+  <source src="withstate_x264.mp4" type="video/mp4; codecs=h264">
+</video>
 
 This is quite fun to [play with](withstate.html).
 
