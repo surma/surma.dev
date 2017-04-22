@@ -100,6 +100,8 @@ Sadly, `bota` doesn’t handle `ArrayBuffer`, so we need to find another way of 
 const base64encodedSVG = base64js.fromByteArray(new TextEncoder().encode(serializedXML));
 {{< /highlight >}}
 
+> Note: Edge doesn’t have support for `TextEncoder` yet, but since Edge also doesn’t have any support for WebGL, I didn’t really care. If you want to get this running in Edge, there’s a good [polyfill](https://github.com/inexorabletash/text-encoding) for `TextEncoder` you can use.
+
 We are almost done. Don’t be alarmed, the last two steps are actually a rather short!
 
 ### 2.3: Putting it in an image
