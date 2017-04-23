@@ -16,7 +16,7 @@ When using OpenGL (or WebGL), you have to do _everything_ yourself, including fo
   <source src="dom2texture_x264.mp4" type="video/mp4; codecs=h264">
 </video>
 
-When you want to render strings to screen in OpenGL, it’s not uncommon to use [a bitmap font and distance field] (https://github.com/libgdx/libgdx/wiki/Distance-field-fonts) to place each individual symbol on a quad. You have to do font sizing and smoothing yourself, you have to calculate the coordinates of each of these quads, when to line wrap and how to handle the baseline. If you want them, you will also need to implement support for ligatures yourself. Most of the time, being able to render text is only a precursor to having a 2D UI within your 3D OpenGL world, so you start implementing layout algorithms too. That seems not only unfun to me, but highly redunant.
+When you want to render strings to screen in OpenGL, it’s not uncommon to use [a bitmap font and distance field] (https://github.com/libgdx/libgdx/wiki/Distance-field-fonts) to place each individual symbol on a quad. You have to do everything yourself: Font sizing and smoothing, calculating the coordinates of each of these quads, when to line wrap and how to handle the baseline. If you want them, you will also need to implement support for ligatures yourself. Most of the time, being able to render text is only a precursor to having a 2D UI within your 3D OpenGL world, so you start implementing layout algorithms too. That seems not only unfun to me, but highly redunant.
 
 As you can tell by the [demo][] (and the presence of a TL;DR), there *is* a way to render DOM elements to a canvas  – if you don’t mind bending over backwards. And once we have something on canvas, we can use it as a texture in WebGL and it would allow us to make use of all the things the browser has already implemented: Loading different fonts, rendering them, coloring them, text shadows, text decorations, weights, RTL, word-wrapping, etc etc etc. But be warned: The TL;DR makes this blog look much shorter than it is.
 
@@ -102,7 +102,7 @@ const base64encodedSVG = base64js.fromByteArray(new TextEncoder().encode(seriali
 
 > Note: Edge doesn’t have support for `TextEncoder` yet, but since Edge also doesn’t have any support for WebGL, I didn’t really care. If you want to get this running in Edge, there’s a good [polyfill](https://github.com/inexorabletash/text-encoding) for `TextEncoder` you can use.
 
-We are almost done. Don’t be alarmed, the last two steps are actually a rather short!
+We are almost done. Don’t be alarmed, the last two steps are actually rather short!
 
 ### 2.3: Putting it in an image
 {{< highlight JavaScript >}}
@@ -129,7 +129,7 @@ ctx.drawImage(img, 0, 0);
 
 > Note: Don’t mind the blurriness. The blur stems from the fact that I have zoomed in and SVGs handle zooming much better and rasterized images (duh?). Additionally, my canvas is not taking `window.devicePixelRatio` into consideration, which is necessary for Retina displays. Since we are working towards a WebGL texture here, we will be working with fixed dimensions anyways.
 
-We got ourselves a way to render DOM elements to canvas! Hooray. This technique works in Chrome, Edge, Firefox and Safari! In contrast to Chrome and Firefox, however, Safari [taints](https://html.spec.whatwg.org/#loading-the-media-resource:the-canvas-element) the canvas if you draw an SVG containing a `<foreignObject>` to it. That means that – at the time of writing – it is _not_ usable as a WebGL texture in Safari.
+We got ourselves a way to render DOM elements to canvas. Hooray! This technique works in Chrome, Edge, Firefox and Safari! In contrast to Chrome and Firefox, however, Safari [taints](https://html.spec.whatwg.org/#loading-the-media-resource:the-canvas-element) the canvas if you draw an SVG containing a `<foreignObject>` to it. That means that – at the time of writing – it is _not_ usable as a WebGL texture in Safari.
 
 We are done here. Off you go. … except, not quite:
 
@@ -161,7 +161,7 @@ Thinking I was done, I went ahead and tried using this technique to render some 
 </svg>
 {{< /highlight >}}
 
-Turns I didn’t grasp the isolated nature of our SVG in its entirety. Take a [look](styleddom.html):
+Turns out I didn’t grasp the isolated nature of our SVG in its entirety. Take a [look](styleddom.html):
 
 ![A colored square with colord text and an image inside. Next to it a completely unstyled version of the text and no image.](styleddom.png)
 
