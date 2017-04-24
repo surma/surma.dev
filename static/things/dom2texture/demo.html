@@ -2,24 +2,46 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+  html, body {
+    min-height: 100vh;
+    font-family: sans-serif;
+  }
   body {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
+      align-content: center;
     justify-content: space-around;
+    background: url('wallpaper.png');
+  }
+  svg, canvas {
+    margin: 10px;
+  }
+  div {
+    display: flex;
+    flex-direction: column;
+  }
+  h1 {
+    text-align: center;
   }
 </style>
+<div>
+<h1>DOM</h1>
 <svg xmlns="http://www.w3.org/2000/svg" width=256 height=256>
   <style>
     #container {
-      width: 256px;
-      height: 256px;
+      box-sizing: border-box;
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: space-around;
       align-items: stretch;
+      background-color: rgba(255, 0, 0, 0.23);
+      padding: 10px
     }
     span {
-      font-size: 28px;
+      font-size: 20px;
       font-family: Helvetica;
       text-align: center;
     }
@@ -27,12 +49,21 @@
   <foreignObject width=256 height=256>
     <div id="container">
       <input type="range">
-      <span>Move the slider!</span>
+      <span>⚠️ Move the slider 👆</span>
+      <input type="text">
+      <span contenteditable=true>💌 Content editable 📝️</span>
     </div>
   </foreignObject>
 </svg>
-<canvas width=256 height=256></canvas>
+</div>
 <div>
-<script src="gl-matrix-min.js" defer></script>
-<script src="base64.js" defer></script>
-<script src="demo.js" defer></script>
+<h1>Canvas</h1>
+<canvas width=256 height=256 id="texture"></canvas>
+</div>
+<div>
+<h1>WebGL</h1>
+<canvas width=256 height=256 id="gl"></canvas>
+</div>
+<script src="gl-matrix.nobabel.js"></script>
+<script src="base64.nobabel.js"></script>
+<script src="demo.nobabel.js"></script>
