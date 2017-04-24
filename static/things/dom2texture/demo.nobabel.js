@@ -2,7 +2,7 @@
   const canvas = document.querySelector('#gl');
   const textureCanvas = document.querySelector('#texture');
   const svg = document.querySelector('svg');
-  const gl = canvas.getContext('webgl');
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
   if(!gl) fatalError('No WebGL support :(');
 
   function dom2canvas(svg) {
