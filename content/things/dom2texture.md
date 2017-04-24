@@ -71,7 +71,7 @@ new XMLSerializer().serializeToString(document.querySelector('svg’))
 `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
   <circle cx="64" cy="64" r="64" style="stroke: blue; fill: none"/>
   <foreignObject width="512" height="512">
-    <button>Ohai</button>
+    <button xmlns="http://www.w3.org/1999/xhtml">Ohai</button>
   </foreignObject>
 </svg>`
 {{< /highlight >}}
