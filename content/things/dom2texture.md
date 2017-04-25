@@ -9,7 +9,7 @@ When using OpenGL (or WebGL), you have to do _everything_ yourself, including fo
 
 <!--more-->
 
-> **TL;DR:** You can use `<foreignObject>` to embed normal HTML content in an SVG, encode that SVG as a data URL and draw it to a canvas using `Canvas2DRenderinContext.drawImage()`. You need to inline all the styles, images and other resources as the canvas cannot make any network requests. Check out the [demo] here!
+> **TL;DR:** You can use `<foreignObject>` to embed normal HTML content in an SVG, encode that SVG as a data URL and draw it to a canvas using `drawImage()`. You need to inline all the styles, images and other resources as the canvas cannot make any network requests. Check out the [demo] here!
 
 <video controls autoplay loop muted>
   <source src="dom2texture_vp8.webm" type="video/webm; codecs=vp8">
@@ -45,7 +45,7 @@ WebGL doesn’t accept SVG objects as textures. It only takes canvases and image
 1. Serialize our SVG as markup in a string
 2. base64 encode that string to build a [data URI](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs) (these `data:image/png;base64,XXXXX…` things)
 3. Use that data URI as a `src` for a `<img>` element
-4. Draw that `<img>` element to the canvas using [`CanvasRenderingContext2D.drawImage()`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage)
+4. Draw that `<img>` element to the canvas using [`drawImage()`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage)
 
 Let’s take these steps one by one.
 
