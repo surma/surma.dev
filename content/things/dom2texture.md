@@ -43,8 +43,8 @@ Foreign objects, just like all other SVG elements, need a size. Think of it as a
 WebGL doesn’t accept SVG objects as textures. It only takes canvases and image elements of raster images. But SVGs are kiiinda images, so there must be a way to do a conversion here, right? Yes, but it’s not as simple as you might expect. Here’s what we have to do:
 
 1. Serialize our SVG as markup in a string
-2. base64 encode that string to build a [data URI](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs) (these `data:image/png;base64,XXXXX…` things)
-3. Use that data URI as a `src` for a `<img>` element
+2. base64 encode that string to build a [data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs) (these `data:image/png;base64,XXXXX…` things)
+3. Use that data URL as a `src` for a `<img>` element
 4. Draw that `<img>` element to the canvas using [`drawImage()`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage)
 
 Let’s take these steps one by one.
@@ -80,11 +80,11 @@ As you can see, this serializer took care of adding the XHTML namespace of the c
 
 ### Step 2.2: Base64 encoding
 #### Step 2.2 Option a: atob
-We have our SVG as a string. But for our data URI we need it in base64. Enter Arcane API #3: `atob` and `btoa`. I think these are some of the weirdest (and probably oldest) functions the platform has to offer. They are cryptically named and even after deciphering the names they don’t make a lot of sense. Additionally their accepted input data isn’t really sufficient nowadays: `btoa` stands for “binary to ascii” and encodes any binary strings (because back in the day, there were no [`ArrayBuffer`]s and strings didn’t have to worry about Unicode) into safe ASCII by using base64. I don’t know why they didn’t call the function `base64encode()` or anything more descriptive, but now it’s burnt into the platform. Forever. But apart from that naming: The second you have any code points in your string above the 255 mark, this happens:
+We have our SVG as a string. But for our data URL we need it in base64. Enter Arcane API #3: `atob` and `btoa`. I think these are some of the weirdest (and probably oldest) functions the platform has to offer. They are cryptically named and even after deciphering the names they don’t make a lot of sense. Additionally their accepted input data isn’t really sufficient nowadays: `btoa` stands for “binary to ascii” and encodes any binary strings (because back in the day, there were no [`ArrayBuffer`]s and strings didn’t have to worry about Unicode) into safe ASCII by using base64. I don’t know why they didn’t call the function `base64encode()` or anything more descriptive, but now it’s burnt into the platform. Forever. But apart from that naming: The second you have any code points in your string above the 255 mark, this happens:
 
 ![A screenshot of DevTools showing a string containing an emoji being passed to btoa. An error is thrown: "The string to be encoded contains characters outside of the Latin1 range."](latin1.png)
 
-Aaaah, yes, my old friend [Latin1](https://en.wikipedia.org/wiki/ISO/IEC_8859-1). It’s been a while. For our undertaking that means: As long as our document is purely ASCII, we’ll be fine. The second we leave the ASCII range, things will probably stop working. And let’s be honest: We want emoji in our WebGL UIs!
+Aaaah, yes, my old friend [Latin1](https://en.wikipedia.org/wiki/ISO/IEC_8859-1) (actually, [technically it’s Windows-1252](https://twitter.com/domenic/status/857322934620348417)). It’s been a while. For our undertaking that means: As long as our document is purely ASCII, we’ll be fine. The second we leave the ASCII range, things will probably stop working. And let’s be honest: We want emoji in our WebGL UIs!
 
 #### Step 2.2 Option b: TextEncoder + base64js
 Since the introduction of UTF-8 and [`ArrayBuffer`]s, the platform also offers [`TextEncoder`](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder) and [`TextDecoder`](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder). We only need the `TextEncoder` as we want to _encode_ a string into a [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) using UTF-8:
@@ -168,7 +168,7 @@ Turns out I didn’t grasp the isolated nature of our SVG in its entirety. Take 
 Not only is all styling gone, but the image is a no-show. What’s going on here?
 
 ### Step 3.1: Styles
-Once you think about it, it makes sense that there’s no styling. We are basically creating a separate SVG document (in form of a data URI) and our styling is well outside that document. So let’s make it available by cloning all our styles and moving them into the SVG element.
+Once you think about it, it makes sense that there’s no styling. We are basically creating a separate SVG document (in form of a data URL) and our styling is well outside that document. So let’s make it available by cloning all our styles and moving them into the SVG element.
 
 {{< highlight JavaScript >}}
 Array.from(document.querySelectorAll('style'))
@@ -190,7 +190,7 @@ Safari’s default font size in an SVG context seems to be much smaller than for
 But let’s talk about the elephant in the room: The image is still missing. What’s up with that?
 
 ### Step 3.2: Resources
-It turns out that for security reasons, the SVG renderer the [`CanvasRenderingContext2D`](https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D) uses has no access to the network. So while the `<img>` element is actually there, it’s just empty as the URL could not be resolved to a resource. But we can do something about this and it involves, you might have guess it, data URIs! As long as the image is either from the same origin or from another origin with CORS headers set, we can take the image and draw it to a canvas to convert it to a brand new data URI.
+It turns out that for security reasons, the SVG renderer the [`CanvasRenderingContext2D`](https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D) uses has no access to the network. So while the `<img>` element is actually there, it’s just empty as the URL could not be resolved to a resource. But we can do something about this and it involves, you might have guess it, data URLs! As long as the image is either from the same origin or from another origin with CORS headers set, we can take the image and draw it to a canvas to convert it to a brand new data URL.
 
 {{< highlight JavaScript >}}
 function waitForLoad(img) {
@@ -200,7 +200,7 @@ function waitForLoad(img) {
   });
 }
 
-function img2dataURI(img) {
+function img2dataURL(img) {
   // Wait for image to be loaded
   return waitForLoad(img)
     .then(img => {
@@ -210,24 +210,24 @@ function img2dataURI(img) {
       canvas.height = img.naturalHeight;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-      // and convert that canvas to a data URI and, once again,
+      // and convert that canvas to a data URL and, once again,
       // wait for it to be decoded and loaded.
       img.src = canvas.toDataURL();
       return waitForLoad(img);
     });
 }
 
-const dataUriImages =
+const dataUrlImages =
   Array.from(svg.querySelectorAll('img'))
-    .map(imgTag => img2dataURI(imgTag));
+    .map(imgTag => img2dataURL(imgTag));
 
-Promise.all(dataUriImages)
+Promise.all(dataUrlImages)
 .then(_ => {
   // remainder of code
 });
 {{< /highlight >}}
 
-This is probably the biggest chunk of code in this blog post, and yet it doesn’t really introduce any new concepts. We grab all the `<img>` in our SVG and pass them to `img2dataURI()`, which replace the current `src` of the `<img>` with a data URI. The function returns a promise that resolves when all the work is done.
+This is probably the biggest chunk of code in this blog post, and yet it doesn’t really introduce any new concepts. We grab all the `<img>` in our SVG and pass them to `img2dataURL()`, which replace the current `src` of the `<img>` with a data URL. The function returns a promise that resolves when all the work is done.
 
 ![The same as before, but now the image also shows up on the right-hand side.](styledwdatauri.png)
 
