@@ -142,6 +142,10 @@ etag:"56684a14-264"
 accept-ranges:bytes
 ```
 
+### Caddy
+
+[Caddy’s][Caddy] whole purpose is to have HTTP/2 support from the very start. Let’s Encrypt-support is built in so you don‘t need to worry about anything. Their landing-page contains an up-to-date setup guide.
+
 ### Jetty
 
 You need [Jetty] >= 9.3.
@@ -321,3 +325,4 @@ If you find mistakes, insufficient information or are missing a software package
 [CertBot]: https://certbot.eff.org/
 [Heroku source]: https://kb.heroku.com/does-heroku-have-plans-to-support-http-2
 [CertManager announcement]: https://aws.amazon.com/blogs/security/now-available-aws-certificate-manager/
+[Caddy]: https://caddyserver.com/
