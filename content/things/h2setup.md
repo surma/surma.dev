@@ -5,56 +5,48 @@
   "live": "true"
 }
 
+> **Last Update**: 2017-07-12
+
 At [Chrome Dev Summit 2015] I gave [a talk about HTTP/2]. I am genuinely excited about the benefits HTTP/2 brings to the web, to its developers and its users alike. If you don’t know about those, I’ll cheekily recommend my own talk – this post is more of a follow-up to the talk.
 
 <!--more-->
 
 A few months have passed since that talk and the landscape keeps maturing and developing. The biggest perceived barriers to getting HTTP/2 set up are obtaining a HTTPS certificate and the lacking server-side support. This blog post is supposed to give you an overview of how to overcome these barriers categorized by the server technology you use. Keep in mind that the steps provided here cover the bare minimum to get HTTP/2 working. I will not cover [blacklisting weak ciphers] or anything else that I consider out of scope. If you need a kickstart on HTTPS, let me recommend [@addyosmani]’s and [@gauntface]’s [episode of “Totally Tooling Tips”][https-ttt].
 
-## Generic Solution
+## Generic Solution – CloudFlare
 
-Before I go into detail with all the different webservers, you can opt to give HTTP/2 somewhat of a testdrive by using [CloudFlare], who have enabled support for HTTP/2 a while ago. Since CloudFlare works as a caching proxy *in front* of your infrastructure, it doesn’t care about your actual server technology, complexity or topology. In my opinion, this is currently the easiest way to get HTTP/2 while still reaping *most* of the benefits. In April 2016, CloudFlare even [added support for HTTP/2 push][Cloudflare Push].
+Before I go into detail with all the different webservers, you can use [CloudFlare] to get HTTP/2 which out touching your backend at all. CloudFlare have enabled support for HTTP/2 a while ago. Since CloudFlare works as a caching proxy *in front* of your infrastructure, it doesn’t care about your actual server technology, complexity or topology. In my opinion, this is currently the easiest way to get HTTP/2 while still reaping *most* of the benefits. In April 2016, CloudFlare even [added support for HTTP/2 push][Cloudflare Push].
 
-The downside of enabling HTTP/2 via CloudFlare and not on your servers themselves means that data reduction and reduced number of connections won’t make it to your server, but only to CloudFlare’s proxy.
+The downside of enabling HTTP/2 via CloudFlare and not on your servers themselves means data saved due to things like HPACK won’t make it to your server, but only to CloudFlare’s proxy.
 
-## Getting a SSL certificate
+## Getting a SSL certificate – CertBot
+
+### Actual certificate with CertBot
+
+[LetsEncrypt] is now public so everyone can get a valid SSL certificate for free that is valid for 3 months and can be renewed indefinitely. The EFF wrote a tool call [CertBot] that integrates with a lot of common webserver like Apache or Nginx and takes care of everything for you. Both re-configuring the webserver as well as obtaining the actual certificate is done automatically and periodically.
 
 ### Quickstart
 
-If you just want to get to HTTP/2 as fast as possible, you can generate a self-signed certificate as follows:
+If you just want to test HTTP/2 with any server, you can generate a self-signed certificate as follows:
 
 ```
 $ openssl req  -nodes -new -x509  -keyout server.key -out server.cert
 ```
 
-Make sure to use your [FQDN] for “Common Name”.
+Make sure to use your [FQDN] for “Common Name”. Using a self-signed certificate will cause the browser to give you a warning that you can usually ignore by clicking through a dialog. This is obviously not fit for production.
 
 If you are extraordinarily lazy (as any developer should be), I have uploaded a [certificate] and its [private key] for `localhost`.
-
-### Actual certificate
-
-At the time of writing, [LetsEncrypt] is in public beta so everyone can get a valid SSL certificate for free that is valid for 3 months and can be renewed indefinitely. So, I guess, we’ve got that covered. Moving on!
 
 ## Tools
 ### SimpleHTTP2Server
 
 For **local development**, setting up a webserver and generating a certificate with OpenSSL is quite tedious. For that purpose (and that purpose only) I wrote a small tool called `simplehttp2server`. It’s a binary that serves the currenty directory using HTTP/2 and even has support for push. You can also use this tool as a shorthand to generate a certificate for `localhost`.
 
-You can grab the binaries from the [release section][simplehttp2 release] of the [GitHub repository][simplehttp2 repo], where you’ll also find the README with more details. For the lazy, there’s even a “[Totally Tooling Minitip]” I did.
-
-### http2-push-detect
-
-Before Chrome’s DevTools showed pushes, there’s was no good way to figure out if HTTP/2 push was actually working as you intended. Enter [http2-push-detect], which lists all the resources that a server pushes for a given request URL.
-
-```
-$ npm install -g http2-push-detect
-$ http2-push-detect https://nghttp2.org/
-Receiving pushed resource: /stylesheets/screen.css
-```
+You can grab the binaries from the [release section][simplehttp2 release] of the [GitHub repository][simplehttp2 repo], where you’ll also find the README with more details.
 
 ### Curl
 
-I used [curl] to check that all experiments were successful. Make sure your version of `curl` actually supports HTTP/2, as the version that comes with Ubuntu 14.04 does not.
+I used [curl] to check that all experiments were successful. Make sure your version of `curl` actually supports HTTP/2, as the version that comes with Ubuntu 16.04 does not.
 
 ```
 $ ~/pkg/curl/bin/curl -V
@@ -75,7 +67,7 @@ Alternatively, you can use KeyCDN’s [HTTP/2 test][keycdn h2 test] tool, that v
 
 According to [w3techs.com], [Apache] is still the most used webserver today with over 55% of the websites using it.
 
-For HTTP/2, you need Apache `>= 2.4`. If you are running Ubuntu LTS (14.04), the default APT sources won’t bring you very far. There is a PPA:
+For HTTP/2, you need Apache `>= 2.4`. If you are running Ubuntu LTS (16.04), the default apt sources won’t bring you very far. There is a PPA:
 ```
 $ sudo add-apt-repository ppa:ondrej/apache2
 $ sudo apt-get update
@@ -121,7 +113,7 @@ content-type:text/html
 
 ### nginx
 
-You need [nginx] `>= 1.9.5`. At the time of writing, that is not a “stable” but a “mainline” version. Luckily, [Nginx installation guide] is very simple and covers multiple distributions (including multiple versions of Ubuntu).
+You need [nginx] `>= 1.9.5`. Luckily, `1.9.15` is distributed with Ubuntu 16.04 LTS.
 
 Open your website’s configuration and either add or modify the section for HTTPS.
 
@@ -193,11 +185,13 @@ maxThreads="150" SSLEnabled="true">
 
 No HTTP/2 support just yet :(
 
-> We expect to support it by the end of the year [2015], during the 1.7 development cycle. [Source][haproxy source]
+> *Update from Novemeber 2016*:  I thought I would have H2 in 1.6 if you remember :-) So let's say that we'll put a lot of efforts into getting H2 in 1.8. [Source][haproxy source]
 
-### AWS (ELB & S3)
+### AWS
 
 AWS added support for HTTP/2 to CloudFront. [Source][CloudFront blogpost]
+
+AWS also launched the Certificate Manager that is capable of generating certificates for free. These certificates can be used with CloudFront. [Source][CertManager announcement]
 
 ### Google Cloud Storage
 
@@ -211,11 +205,15 @@ No stable HTTP/2 support just yet :(
 
 > Windows 10 is now available, and HTTP/2 support is present in Windows 10 and the Server 2016 Technical Preview. [Source][IIS source]
 
+I haven’t found any updates since.
+
 ## PaaS
 
 ### Heroku
 
 No HTTP/2 support just yet :(
+
+> *Update from June 2017*: HTTP/2 is not currently supported on Heroku although this may change in future. [Source][Heroku source]
 
 ### AppEngine
 
@@ -261,7 +259,7 @@ date:Fri, 15 Jan 2016 13:28:50 GMT
 
 ### Go
 
-You need Go >= 1.6 (in beta, soon to be released). From that point on, the standard library’s `net/http` package will automatically use HTTP/2 for TLS-enabled servers.
+You need Go >= 1.6. From that point on, the standard library’s `net/http` package will automatically use HTTP/2 for TLS-enabled servers.
 
 ``` Go
 package main
@@ -309,7 +307,7 @@ If you find mistakes, insufficient information or are missing a software package
 [Tomcat]: http://tomcat.apache.org/
 [tomcat source]: https://readlearncode.com/configure-tomcat-9-for-http2/
 [IIS source]: http://blogs.iis.net/davidso/http2
-[haproxy source]: http://www.haproxy.org/news.html
+[haproxy source]: http://haproxy.formilux.narkive.com/DICXg7vW/announce-haproxy-1-7-dev6#post2
 [blacklisting weak ciphers]: https://cipherli.st/
 [Nginx installation guide]: http://nginx.org/en/linux_packages.html#mainline
 [node-http2]: https://www.npmjs.com/package/http2
@@ -320,3 +318,6 @@ If you find mistakes, insufficient information or are missing a software package
 [CloudFront blogpost]: https://aws.amazon.com/blogs/aws/new-http2-support-for-cloudfront/
 [http2-push-detect]: https://github.com/surma/http2-push-detect
 [CloudFlare push]: https://blog.cloudflare.com/announcing-support-for-http-2-server-push-2/
+[CertBot]: https://certbot.eff.org/
+[Heroku source]: https://kb.heroku.com/does-heroku-have-plans-to-support-http-2
+[CertManager announcement]: https://aws.amazon.com/blogs/security/now-available-aws-certificate-manager/
