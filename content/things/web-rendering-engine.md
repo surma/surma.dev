@@ -89,6 +89,17 @@ class Node {
 The parser’s job is to take a string and turn it into a tree of `Node`s. Since HTML5, the [DOM parser has been standardized](https://html.spec.whatwg.org/multipage/parsing.html#parsing), meaning will that all browsers will generate the same DOM tree for ambiguous or malformed HTML input. Screw that, we’re keeping it simple! I am not going to write a proper LR(1) parser either – a simple recursive descent parser is more than sufficient here:
 
 {{< highlight TypeScript >}}
+  // parser here
 {{< /highlight >}}
+
+## CSS
+### Data Structures
+
+Looking at the [original grammar](https://www.w3.org/TR/CSS22/syndata.html#tokenization), we have the following structure:
+
+The top-level stdructure is a stylesheet. A stylesheet consists of rulesets, each ruleset has a selector and a declarationlist constiting of declarations. Each declaration is a pair of a property name and a value.
+
+We all know CSS has like a shitload of selectors, I am going to limit this to a few: tag names, '*' and the descandant selector, 'space'.
+
 
 

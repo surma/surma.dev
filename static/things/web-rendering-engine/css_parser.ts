@@ -18,20 +18,38 @@ export class Ruleset {
 }
 
 export class Selector {
-  tag: string;
+  tags: Array<string>;
 
-  constructor(tag: string) {
-    this.tag = tag;
+  constructor(selector: string) {
+    this.tags =
+      selector.split(' ')
+        .map(e => e.trim())
+        .filter(e => e.length > 0);
   }
 
   matches(node: Node): boolean {
-    alert
-    return node.name === this.tag;
+    return this.tags.reverse().reduce((ok, tag) => {
+      // If the selector is already not matching anymore, it stays non-matching.
+      if(!ok) return false;
+
+      // * always matches. Advance to the parent and continue.
+      if(tag === '*') {
+        node = node.parentNode;
+        return true;
+      }
+      // Go up the tree until we run out of nodes or the next tag matches.
+      while(node && tag !== node.name) {
+        node = node.parentNode;
+      }
+      // If we ran out of nodes, no match.
+      if(!node) return false;
+      // Otherwise continue matching.
+      return true;
+    }, true);
   }
 
   get specificity() {
-    if(this.tag === '*') return 0;
-    return 1;
+    return this.tags.reduce((spec, tag) => spec + tag === '*' ? 0 : 1, 0);
   }
 }
 

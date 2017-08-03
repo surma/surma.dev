@@ -34,6 +34,7 @@
       <h2>I am Web</h2>
     </header>
     <main>
+      <h1>Article</h1>
       <p>Lorem ipsum?</p>
     </main>
   </body>
@@ -49,8 +50,14 @@ html {
 body {
   background-color: red;
 }
+header h1 {
+  color: red;
+}
 main {
   background-color: green;
+}
+main h1 {
+  color: green;
 }`;
     document.querySelector('button').addEventListener('click', _ => Engine.render(context, markup.value, styles.value));
   });
