@@ -1,6 +1,22 @@
 <!doctype html>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+  textarea {
+    height: 200px;
+    font-family: monospace;
+  }
+  canvas {
+    border: 1px solid black;
+    margin: 0 auto;
+  }
+</style>
 <canvas width=800 height=600></canvas>
-
+<textarea id="html"></textarea>
+<textarea id="css"></textarea>
+<button>Render</button>
 <script src="https://cdn.rawgit.com/systemjs/systemjs/fa9e7b18/dist/system-production.js"></script>
 <script src="node.js"></script>
 <script src="html_parser.js"></script>
@@ -9,24 +25,33 @@
   System.import('./engine.js').then(Engine => {
     const canvas = document.querySelector('canvas');
     const context = canvas.getContext('2d');
-    const markup = `
-      <html>
-        <body>
-          <header>
-            <h1>Ohai</h1>
-            <h2>I am Web</h2>
-          </header>
-          <main>
-            <p>Lorem ipsum?</p>
-          </main>
-        </body>
-      </html>
-    `;
-    const styles = `
-      body {
-        background: red;
-      }
-    `;
-    Engine.render(context, markup, styles);
+    const markup = document.querySelector('#html');
+    markup.value =
+`<html>
+  <body>
+    <header>
+      <h1>Ohai</h1>
+      <h2>I am Web</h2>
+    </header>
+    <main>
+      <p>Lorem ipsum?</p>
+    </main>
+  </body>
+</html>`;
+    const styles = document.querySelector('#css');
+    styles.value =
+`* {
+  display: block;
+}
+html {
+  background-color: blue;
+}
+body {
+  background-color: red;
+}
+main {
+  background-color: green;
+}`;
+    document.querySelector('button').addEventListener('click', _ => Engine.render(context, markup.value, styles.value));
   });
 </script>

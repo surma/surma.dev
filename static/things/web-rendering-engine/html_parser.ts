@@ -1,10 +1,10 @@
 import {Node, NodeType} from './node.js';
 
 export class Parser {
-  private _markup: string;
+  private _input: string;
 
-  constructor(markup: string) {
-    this._markup = markup;
+  constructor(input: string) {
+    this._input = input;
   }
 
   /**
@@ -22,7 +22,7 @@ export class Parser {
    * given parent node.
    */
   private parseNodes(parent: Node) {
-    while(this._markup.length > 0 && !this._markup.startsWith('</')) {
+    while(this._input.length > 0 && !this._input.startsWith('</')) {
       const node = this.parseNode();
       // Dont store text nodes with only whitespace
       if(node.type === NodeType.TEXT_NODE && node.value.trim().length === 0)
@@ -35,7 +35,7 @@ export class Parser {
    * `parseNode` parses the next node
    */
   private parseNode(): Node {
-    if(this._markup[0] === '<') {
+    if(this._input[0] === '<') {
       return this.parseElementNode();
     } else {
       return this.parseTextNode();
@@ -48,34 +48,34 @@ export class Parser {
    */
   private parseElementNode(): Node {
     // Parse opening tag
-    const idx = this._markup.indexOf('>');
+    const idx = this._input.indexOf('>');
     if(idx === -1)
       throw new Error('Unclosed tag');
-    const name = this._markup.slice(1, idx);
+    const name = this._input.slice(1, idx);
     const node = new Node(NodeType.ELEMENT_NODE, name);
-    this._markup = this._markup.slice(idx + 1);
+    this._input = this._input.slice(idx + 1);
 
     // Parse children
     this.parseNodes(node);
 
     // Parse closing tag
     const expectedTag = `</${node.name}>`;
-    if(!this._markup.startsWith(expectedTag))
+    if(!this._input.startsWith(expectedTag))
       throw new Error(`Unmatched <${node.name}> tag`);
-    this._markup = this._markup.slice(expectedTag.length);
+    this._input = this._input.slice(expectedTag.length);
 
     return node;
   }
 
   private parseTextNode(): Node {
     // Everything until the next `<` has to be text
-    let idx = this._markup.indexOf('<');
+    let idx = this._input.indexOf('<');
     // If there is no `<`, there’s only text till the end of the document.
     if(idx === -1) {
-      idx = this._markup.length;
+      idx = this._input.length;
     }
-    const node = new Node(NodeType.TEXT_NODE, this._markup.slice(0, idx));
-    this._markup = this._markup.slice(idx + 1);
+    const node = new Node(NodeType.TEXT_NODE, this._input.slice(0, idx));
+    this._input = this._input.slice(idx);
     return node;
   }
 }

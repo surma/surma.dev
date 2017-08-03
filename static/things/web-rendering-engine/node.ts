@@ -5,24 +5,24 @@ export enum NodeType {
 }
 
 export class Node {
-  private _type: NodeType;
+  type: NodeType;
+  childNodes: Array<Node>;
   private _data: string;
-  private _childNodes: Array<Node>;
 
   constructor(type: NodeType, data: string = '') {
-    this._type = type;
+    this.type = type;
     this._data = data;
-    this._childNodes = [];
+    this.childNodes = [];
   }
 
   get value(): string {
-    if(this._type !== NodeType.TEXT_NODE)
+    if(this.type !== NodeType.TEXT_NODE)
       return null;
     return this._data;
   }
 
   get name(): string {
-    switch(this._type) {
+    switch(this.type) {
       case NodeType.DOCUMENT_NODE:
         return '#document';
       case NodeType.TEXT_NODE:
@@ -32,15 +32,7 @@ export class Node {
     }
   }
 
-  get type(): NodeType {
-    return this._type;
-  }
-
-  get childNodes(): Array<Node> {
-    return [...this._childNodes]; // Copy
-  }
-
   appendChild(child: Node) {
-    this._childNodes.push(child);
+    this.childNodes.push(child);
   }
 }
