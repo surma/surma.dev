@@ -53,22 +53,7 @@ export class Node {
     }
   }
 
-  applyStyles(sheet: Stylesheet) {
-    // This is “the cascade”
-    this.specifiedStyles =
-      sheet.matchingRules(this)
-        .sort((a, b) => a.selector.specificity - b.selector.specificity)
-        .reduce((styles, rule) => {
-          for(const declaration of rule.declarations) {
-            styles.set(declaration.propertyName, declaration.value);
-          }
-          return styles;
-        }, new Map<string, string>());
-
-    this.inheritStyles();
-  }
-
-  private inheritStyles() {
+  inheritStyles() {
     for(const [propertyName, value] of this.specifiedStyles) {
       if(value !== 'inherit')
         continue;
@@ -78,6 +63,11 @@ export class Node {
       if(!node)
         continue;
       this.specifiedStyles.set(propertyName, node.specifiedStyles.get(propertyName));
+    }
+    // Delete properties that couldn’t inherit their value
+    for(const [propertyName, value] of this.specifiedStyles) {
+      if(value === 'inherit')
+        this.specifiedStyles.delete(propertyName);
     }
   }
 }

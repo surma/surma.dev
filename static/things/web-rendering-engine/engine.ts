@@ -9,7 +9,8 @@ export function render(context: CanvasRenderingContext2D, markup: string, styles
   const stylesheet = cssParser.parseStylesheet();
 
   for(const node of dom.nodes()) {
-    node.applyStyles(stylesheet);
+    stylesheet.applyTo(node);
+    node.inheritStyles();
   }
 
   console.log('done');

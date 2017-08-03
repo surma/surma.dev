@@ -7,8 +7,21 @@ export class Stylesheet {
     this.rules = [];
   }
 
-  matchingRules(n: Node): Array<Ruleset> {
+  private matchingRules(n: Node): Array<Ruleset> {
     return this.rules.filter(rule => rule.selector.matches(n));
+  }
+
+  applyTo(node: Node) {
+    // This is “the cascade”
+    node.specifiedStyles =
+      this.matchingRules(node)
+        .sort((a, b) => a.selector.specificity - b.selector.specificity)
+        .reduce((styles, rule) => {
+          for(const declaration of rule.declarations) {
+            styles.set(declaration.propertyName, declaration.value);
+          }
+          return styles;
+        }, new Map<string, string>());
   }
 }
 

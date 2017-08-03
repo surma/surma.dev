@@ -63,9 +63,15 @@ The top-level stdructure is a stylesheet. A stylesheet consists of rulesets, eac
 
 We all know CSS has like a shitload of selectors, I am going to limit this to a few: tag names, '*' and the descandant selector, 'space'.
 
-The code for `matches` on Selector is interesting. Reverse the tag name list, match the first selector. Walk up teh tree. Keep doing that until the next one matches.
 
-## Parser
+### Parser
 
 Whitespace can be trimmed. No nesting, just a series of rules. Pretty easy.
 
+### Matching rules
+
+The code for `matches` on Selector is interesting. Reverse the tag name list, match the first selector. Walk up teh tree. Keep doing that until the next one matches.
+
+### The cascade
+
+See [spec](https://www.w3.org/TR/CSS22/cascade.html#cascading-order):
