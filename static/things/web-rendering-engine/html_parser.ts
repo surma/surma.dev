@@ -8,6 +8,15 @@ export class Parser {
   }
 
   /**
+   * `advance` slices off the next n characters and saves the remainder
+   */
+  private advance(n: number): string {
+    const r = this._input.slice(0, n);
+    this._input = this._input.slice(n);
+    return r;
+  }
+
+  /**
    * `parseDocument` is the entry point to the parser. It returns a document
    * node.
    */
@@ -24,6 +33,7 @@ export class Parser {
   private parseNodes(parent: Node) {
     while(this._input.length > 0 && !this._input.startsWith('</')) {
       const node = this.parseNode();
+      node.parentNode = parent;
       // Dont store text nodes with only whitespace
       if(node.type === NodeType.TEXT_NODE && node.value.trim().length === 0)
         continue;
@@ -47,13 +57,15 @@ export class Parser {
    * everything as children until it finds the corresponding closing tag.
    */
   private parseElementNode(): Node {
-    // Parse opening tag
+    // Consume '<'
+    this.advance(1);
+    // Parse tag name
     const idx = this._input.indexOf('>');
     if(idx === -1)
       throw new Error('Unclosed tag');
-    const name = this._input.slice(1, idx);
-    const node = new Node(NodeType.ELEMENT_NODE, name);
-    this._input = this._input.slice(idx + 1);
+    const node = new Node(NodeType.ELEMENT_NODE, null, this.advance(idx));
+    // Consume '>'
+    this.advance(1);
 
     // Parse children
     this.parseNodes(node);
@@ -62,7 +74,7 @@ export class Parser {
     const expectedTag = `</${node.name}>`;
     if(!this._input.startsWith(expectedTag))
       throw new Error(`Unmatched <${node.name}> tag`);
-    this._input = this._input.slice(expectedTag.length);
+    this.advance(expectedTag.length);
 
     return node;
   }
@@ -74,8 +86,7 @@ export class Parser {
     if(idx === -1) {
       idx = this._input.length;
     }
-    const node = new Node(NodeType.TEXT_NODE, this._input.slice(0, idx));
-    this._input = this._input.slice(idx);
+    const node = new Node(NodeType.TEXT_NODE, null, this.advance(idx));
     return node;
   }
 }

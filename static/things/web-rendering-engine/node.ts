@@ -7,10 +7,12 @@ export enum NodeType {
 export class Node {
   type: NodeType;
   childNodes: Array<Node>;
+  parentNode: Node;
   private _data: string;
 
-  constructor(type: NodeType, data: string = '') {
+  constructor(type: NodeType, parentNode: Node|null = null, data: string = '') {
     this.type = type;
+    this.parentNode = parentNode;
     this._data = data;
     this.childNodes = [];
   }

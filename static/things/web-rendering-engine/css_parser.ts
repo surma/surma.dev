@@ -54,7 +54,7 @@ export class Parser {
 
   private advanceAndTrim(n: number): string {
     const r = this._input.slice(0, n).trim();
-    this._input = this._input.slice(n+1).trimLeft();
+    this._input = this._input.slice(n).trimLeft();
     return r;
   }
 
@@ -72,10 +72,12 @@ export class Parser {
       throw new Error('Invalid Ruleset');
     const ruleset = new Ruleset();
     ruleset.selector = new Selector(this.advanceAndTrim(idx));
+    // Consume '{'
+    this.advanceAndTrim(1);
     while(this._input[0] !== '}') {
       ruleset.declarations.push(this.parseDeclaration());
     }
-    // Slice off '{'
+    // Slice off '}'
     this.advanceAndTrim(1);
     return ruleset;
   }
@@ -85,10 +87,14 @@ export class Parser {
     if(idx === -1)
       throw new Error('Invalid property definition');
     const propertyName = this.advanceAndTrim(idx);
+    // Consume ':'
+    this.advanceAndTrim(1);
     idx = this._input.indexOf(';');
     if(idx === -1)
       throw new Error('Invalid value definition');
     const value = this.advanceAndTrim(idx);
+    // Consume ';'
+    this.advanceAndTrim(1);
     return new Declaration(propertyName, value);
   }
 }
