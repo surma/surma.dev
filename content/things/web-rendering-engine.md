@@ -43,45 +43,7 @@ To not waste too much time on parsing, we are going to implement a tiny HTML sub
 I am gonna skip most of the DOM spec and just focus on their [`Node` type](https://dom.spec.whatwg.org/).DOM spec has a couple of [node types](https://dom.spec.whatwg.org/#dom-node-nodetype), we are going to limit ourselves to `ELEMENT_NODE`, `TEXT_NODE` and `DOCUMENT_NODE`.
 
 {{< highlight TypeScript >}}
-enum NodeType {
-  ELEMENT_NODE,
-  TEXT_NODE
-}
-
-class Node {
-  private _type: NodeType;
-  private _value: string;
-  private _childNodes: Array<Node>;
-
-  constructor(type: NodeType) {
-    this._type = type;
-    this._childNodes = [];
-  }
-
-  get value(): string {
-    if(this._type === NodeType.ELEMENT_NODE)
-      return null;
-    return this._value;
-  }
-
-  set value(value: string) {
-    if(this._type === NodeType.ELEMENT_NODE)
-      return;
-    this._value = value;
-  }
-
-  get type(): NodeType {
-    return this._type;
-  }
-
-  get childNodes(): Array<Node> {
-    return [...this._childNodes]; // Copy
-  }
-
-  appendChild(child: Node) {
-    this._childNodes.push(child);
-  }
-}
+// Node
 {{< /highlight >}}
 
 ### Parser
@@ -101,5 +63,9 @@ The top-level stdructure is a stylesheet. A stylesheet consists of rulesets, eac
 
 We all know CSS has like a shitload of selectors, I am going to limit this to a few: tag names, '*' and the descandant selector, 'space'.
 
+The code for `matches` on Selector is interesting. Reverse the tag name list, match the first selector. Walk up teh tree. Keep doing that until the next one matches.
 
+## Parser
+
+Whitespace can be trimmed. No nesting, just a series of rules. Pretty easy.
 

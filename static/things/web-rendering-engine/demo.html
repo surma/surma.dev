@@ -43,12 +43,17 @@
     styles.value =
 `* {
   display: block;
+  color: inherit;
 }
 html {
   background-color: blue;
 }
 body {
   background-color: red;
+  color: white;
+}
+header {
+  color: blue;
 }
 header h1 {
   color: red;
@@ -57,7 +62,7 @@ main {
   background-color: green;
 }
 main h1 {
-  color: green;
+  background-color: yellow;
 }`;
     document.querySelector('button').addEventListener('click', _ => Engine.render(context, markup.value, styles.value));
   });
