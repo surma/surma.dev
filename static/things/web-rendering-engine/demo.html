@@ -1,0 +1,32 @@
+<!doctype html>
+<canvas width=800 height=600></canvas>
+
+<script src="https://cdn.rawgit.com/systemjs/systemjs/fa9e7b18/dist/system-production.js"></script>
+<script src="node.js"></script>
+<script src="html_parser.js"></script>
+<script src="engine.js"></script>
+<script>
+  System.import('./engine.js').then(Engine => {
+    const canvas = document.querySelector('canvas');
+    const context = canvas.getContext('2d');
+    const markup = `
+      <html>
+        <body>
+          <header>
+            <h1>Ohai</h1>
+            <h2>I am Web</h2>
+          </header>
+          <main>
+            <p>Lorem ipsum?</p>
+          </main>
+        </body>
+      </html>
+    `;
+    const styles = `
+      body {
+        background: red;
+      }
+    `;
+    Engine.render(context, markup, styles);
+  });
+</script>
