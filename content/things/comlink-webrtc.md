@@ -2,7 +2,7 @@
   "title": "Comlink + WebRTC — An Intro to WebRTC",
   "date": "2017-10-06",
   "socialmediaimage": "social.jpg",
-  "live": "false"
+  "live": "true"
 }
 
 WebRTC is cool. WebRTC is hard. WebRTC is painful, actually. Partly due to how alien the API feels, partly due to many tutorials skipping a lot of the details. Here’s my attempt at describing WebRTC and how I used it for some fun [Comlink] experiments.
