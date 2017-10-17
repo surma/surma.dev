@@ -1,0 +1,15 @@
+o=- 2999408815439129295 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE data
+a=msid-semantic: WMS
+m=application 9 DTLS/SCTP 5000
+c=IN IP4 0.0.0.0
+a=ice-ufrag:KG2N
+a=ice-pwd:xiDSjhZrz75iy1/4NcxH9xsA
+a=ice-options:trickle
+a=fingerprint:sha-256 52:D4:63:C0:CC:49:D6:A3:B9:C0:14:8D:39:3D:4D:31:48:F4:DD:77:C7:9B:BD:A8:B6:E3:9E:AF:30:E5:62:3C
+a=setup:actpass
+a=mid:data
+a=sctpmap:5000 webrtc-datachannel 1024
+
