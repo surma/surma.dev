@@ -1,7 +1,7 @@
 {
   "title": "Comlink + WebRTC — An Intro to WebRTC",
   "date": "2017-10-06",
-  "socialmediaimage": "logo.jpg",
+  "socialmediaimage": "social.jpg",
   "live": "false"
 }
 
@@ -46,7 +46,7 @@ It’s the WebRTC version of “How to draw an owl”:
 
 ![How to draw an owl. Draw some circles. Draw the rest of the fucking owl.](owl.jpg)
 
-In my opinion, there’s a multitude of drawbacks with this approach to teaching WebRTC. First of all: WebRTC is about creating peer-to-peer connections on the web. There’s no reason to consistently conflate WebRTC with the Media API — It adds a lot of cognitive load if you are not initmately familiar with `getUserMedia()` and makes it harder for the reader to see where WebRTC’s responsibilities end and Media API’s responsibilities start. On top of that I have to say that WebRTC is one of the weirder APIs; one of those APIs that stand out because they are not very intuitive to a web developer. I takes energy not to get mad, but it’s what we got. So buckle in, let’s make it work.
+In my opinion, there’s a multitude of drawbacks with this approach to teaching WebRTC. First of all: WebRTC is about creating peer-to-peer connections on the web. There’s no reason to consistently conflate WebRTC with the Media API. While I do understand that one of the main motivations behind WebRTC was telecommunications/teleconferencing on the web, only presenting WebRTC and Media API in tandem adds a lot of cognitive load if you are not initmately familiar with `getUserMedia()`. It makes it harder for the reader to see where WebRTC’s responsibilities end and Media API’s responsibilities start. And you need all the cognitive capacity you can muster because I have to say that WebRTC is one of the weirder APIs; one of those APIs that stand out because they are not very intuitive to a web developer. I takes energy not to get mad, but it’s what we got. So buckle in, let’s make it work.
 
 > **Note:** I will skip some details in my code snippets on this blog post. The full length code can be found in my [demo][demo code].
 
@@ -75,9 +75,9 @@ const channel = new Promise(resolve => {
 
 This is a little pattern I started using to make it easy to `await` values. It creates a promise that resolves once the data channel has been successfully opened.
 
-> **Note:** WebRTC has lots of more features and events you should usually consider for a production-level app like handling reconnects, handling more than one remote peer and more. I am ignoring all that here.
+> **Note:** WebRTC has lots of more features and events you should usually consider for a production-level app like handling reconnects, handling more than one remote peer and more. I am ignoring all that here. lolz.
 
-WebRTC now knows what _kind_ of connection we want, but to whom? To connect to another peer we need to tell them who and where we are, what we can do and what we expect. Additionally, we need to know the same from our remote peer. In WebRTC, part of this data is encapsulated in the [`RTCSessionDescription`][RTCSessionDescription]. Session descriptions come in two flavors: “Offers” and “Answers”. Both flavors contain mostly the same data: codecs, a password and other metadata. They seem to only differ in who gets to be the connection initiator (that’s the answer) and who is the passive listener (that’s the offer). As the the name implies we can’t start with creating an “answer”, so we start with an “offer”:
+WebRTC now knows what _kind_ of connection we want, but to whom? To connect to another peer we need to tell them who and where we are, what we can do and what we expect. Additionally, we need to know the same from our remote peer. In WebRTC, part of this data is encapsulated in the [`RTCSessionDescription`][RTCSessionDescription]. Session descriptions come in two flavors: “Offers” and “Answers”. Both flavors contain mostly the same data like codecs, a password and other metadata. They seem to only differ in who gets to be the connection initiator (that’s the answer) and who is the passive listener (that’s the offer). As the the name implies we can’t start with creating an “answer”, so we start with an “offer”:
 
 {{< highlight JavaScript >}}
 const offer =
@@ -96,15 +96,15 @@ connection.onicecandidate = ({candidate}) => {
 };
 {{< /highlight >}}
 
-Once we set our local description, we will be given one or more [`RTCIceCandidate`][RTCIceCandidate] objects. [ICE] or ”Interactive Connectivity Establishment” is a protocol to establish a connection to a peer in the most efficient way possible. Each `RTCIceCandidate` is contains a network identity of the host machine along with port, transport protocol and other network details. Using those additional details the ICE protocol can figure out what the most efficient path to our remote peer will be.
+Once we set our local description, we will be given one or more [`RTCIceCandidate`][RTCIceCandidate] objects. [ICE] or ”Interactive Connectivity Establishment” is a protocol to establish a connection to a peer in the most efficient way possible. Each `RTCIceCandidate` contains a network identity of the host machine along with port, transport protocol and other network details. Using those additional details the ICE protocol can figure out what the most efficient path to our remote peer will be.
 
-> **Note:** Most of the time a machine is not aware of it’s public IP address. For that you would need a STUN server whose only purpose is to report back your public IP in a WebRTC-compatible way. In my [demo] I did not set up a STUN server which is why it only works for peers on the same computer or the same home network.
+> **Note:** Most of the time a machine is not aware of it’s public IP address. For that you would need a STUN server (more [below](#firewalls-nat)).
 
-You will never know when you are done receiving candidates. There could always be a new one during the lifetime of your page: Think of someone opening your app and _then_ dialing into the airport WiFi. You should always be ready to incorporate a new candidate. In my [demo] I cheated a bit: I just wait until there hasn’t been a new candidate for more then a second and declared that “good enough”.
+You will never know when you are done receiving candidates. There could always be a new one during the lifetime of your page: Think of someone opening your app and _then_ dialing into the airport WiFi. You should always be ready to incorporate a new candidate. In my [demo] I cheated a bit: I just wait until there hasn’t been a new candidate for more than a second and declared that “good enough”.
 
 ### A backend appears (aka. “signalling”)
 
-So what do we do with these ICE candidates? Well this is where I got really frustrated with WebRTC: It is _your_ job to get both the offer as well as all the candidates to your remote peer so they can configure their `RTCPeerConnection` appropriately. This process is called “signalling”.
+So what do we do with these ICE candidates? Well this is where I got really frustrated with the design of WebRTC: It is _your_ job to get both the offer as well as all the candidates to your remote peer so they can configure their `RTCPeerConnection` appropriately. This process is called “signalling”.
 
 > **Idea:** I’d love for the Web to have a Peer Discovery API (or something) that allows me to find peers using local network broadcasting. Maybe it could even support Bluetooth networks. I think a game like [SpaceTeam] should be possible to be built on the web.
 
@@ -114,7 +114,7 @@ With this backend in place, the first peer creates a room with a user-given name
 
 ### The other end of the connection
 
-On the other side we start the exact same way as with peer number one: By creating a `RTCPeerConnection` and creating the data channel. But this time we want to create an answer, for which we first need to get ahold of the offer! So we need to hit the backend, check the room’s first slot to get the the peer’s data and apply it to the connection:
+On the other side we start the exact same way as with peer number one: By creating a `RTCPeerConnection`. But this time we want to _wait_ for a data channel to appear. Additionally we want to create an answer, for which we first need to get ahold of the offer! So we need to hit the backend, check the room’s first slot to get the the peer’s data and apply it to the connection:
 
 {{< highlight JavaScript >}}
 const connection = new RTCPeerConnection();
@@ -159,11 +159,11 @@ At this point our `RTCPeerConnection` is exactly that, a proper connection! 🎉
 
 ### Firewalls? NAT?
 
-What if the peers _can’t_ connect? If the peers are not on the same network, they won’t be able to connect without some extra help. The first measure is a so-called STUN server. A STUN server’s only job is to tell you what your public IP is in a WebRTC-compatible manner. Provided you don’t have a firewall or any NAT’ing in-between you and your other peer, this will allow you to create a connection.
+What if the peers _can’t_ connect? If the peers are not on the same network, they won’t be able to connect without some extra help. The first measure is a so-called STUN server. A STUN server’s only job is to tell you what your public IP is in a WebRTC-compatible manner. In 99% of cases that will solve the connection issues. STUN servers are cheap to run and as a result there’s a [good amount of free STUN servers][STUN server list] for you to use.
 
-However, if there is a firewall or NAT in place, you need more heavy machinery: A TURN server. The “R” in TURN stands for “Relay”, because it relays your data in your stead. This way WebRTC can work even with firewalled or NAT’d networks at the cost of having to tunnel the entire session’s traffic.
+However, if there is a firewall in place, you need more heavy machinery: A TURN server. The “R” in TURN stands for “Relay”, because it relays your data in your stead. This way WebRTC can work even with firewalled networks at the cost of having to tunnel the entire session’s traffic through this relay server. Because most WebRTC applications are built to do some sort of teleconferencing with video streaming, running a TURN server can become quite expensive due to the amount of traffic.
 
-I didn’t set up a STUN or TURN server for my experiments so I have no experience to offer (ha!) on this end. There is an old but still valid [guide][WebRTC Infrastructure] by my colleague [Sam Dutton].
+I didn’t set up a TURN server for my experiments so I have no experience to offer (ha!) on this end. There is an old but still valid [guide][WebRTC Infrastructure] by my colleague [Sam Dutton].
 
 ## WebRTC: Recap
 
@@ -284,3 +284,4 @@ At this point I’m gonna call it a day. The reason why I went on this journey i
 [Presentation API]: https://developer.mozilla.org/en-US/docs/Web/API/Presentation_API
 [video]: https://www.youtube.com/watch?v=_oqk2JygMi8
 [Twitter]: https://twitter.com/dassurma
+[STUN server list]: https://gist.github.com/mondain/b0ec1cf5f60ae726202e
