@@ -5,6 +5,8 @@
   "live": "true"
 }
 
+> **Update 2017-11-06**: I updated the section about gathering ICE candidates.
+
 WebRTC is cool. WebRTC is hard. WebRTC is painful, actually. Partly due to how alien the API feels, partly due to many tutorials skipping a lot of the details. Here’s my attempt at describing WebRTC and how I used it for some fun [Comlink] experiments.
 <!--more-->
 
@@ -92,15 +94,22 @@ Now we need to tell the connection instance that we are using this end of the co
 connection.setLocalDescription(offer);
 connection.onicecandidate = ({candidate}) => {
   if (!candidate) return;
-  // do something with `candidate`
+  // collect `candidate` somewhere
 };
+connection.onicegatheringstatechange = _ => {
+  if (connection.iceGatheringState === 'complete') {
+    // We are done collecting candidates
+  }
+}
 {{< /highlight >}}
 
 Once we set our local description, we will be given one or more [`RTCIceCandidate`][RTCIceCandidate] objects. [ICE] or ”Interactive Connectivity Establishment” is a protocol to establish a connection to a peer in the most efficient way possible. Each `RTCIceCandidate` contains a network identity of the host machine along with port, transport protocol and other network details. Using those additional details the ICE protocol can figure out what the most efficient path to our remote peer will be.
 
 > **Note:** Most of the time a machine is not aware of it’s public IP address. For that you would need a STUN server (more [below](#firewalls-nat)).
 
-You will never know when you are done receiving candidates. There could always be a new one during the lifetime of your page: Think of someone opening your app and _then_ dialing into the airport WiFi. You should always be ready to incorporate a new candidate. In my [demo] I cheated a bit: I just wait until there hasn’t been a new candidate for more than a second and declared that “good enough”.
+~~You will never know when you are done receiving candidates. There could always be a new one during the lifetime of your page: Think of someone opening your app and _then_ dialing into the airport WiFi. You should always be ready to incorporate a new candidate. In my [demo] I cheated a bit: I just wait until there hasn’t been a new candidate for more than a second and declared that “good enough”.~~
+
+You know you have received all the `RTCIceCandidates` when the connection’s `iceGatheringState` is set to `"complete"`. Did I mention that WebRTC is weird? (Thanks to [Philipp Hancke] for correcting me on this.)
 
 ### A backend appears (aka. “signalling”)
 
@@ -139,7 +148,11 @@ connection.onicecandidate = ({candidate}) => {
   if (!candidate) return;
   // collect all `candidate`s in an array
 };
-// wait for all candidates…
+connection.onicegatheringstatechange = _ => {
+  if (connection.iceGatheringState === 'complete') {
+    // done collecting candidates
+  }
+}
 await putDataIntoRoomSlot([answer, allIceCandidates], roomName, 2);
 {{< /highlight >}}
 
@@ -285,3 +298,4 @@ At this point I’m gonna call it a day. The reason why I went on this journey i
 [video]: https://www.youtube.com/watch?v=_oqk2JygMi8
 [Twitter]: https://twitter.com/dassurma
 [STUN server list]: https://gist.github.com/mondain/b0ec1cf5f60ae726202e
+[Philipp Hancke]: https://twitter.com/HCornflower
