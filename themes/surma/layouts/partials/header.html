@@ -80,10 +80,10 @@
         width: calc(100% + 2*(0px + 5vw));
         padding: 20px calc(0px + 5vw);
       }
-      div.highlight {
+      div.highlight pre {
         margin: 1.5rem 0;
       }
-      div.highlight pre {
+      div.highlight pre code {
         padding: 0;
       }
       pre {
@@ -120,19 +120,20 @@
       #TableOfContents li {
         list-style: none;
       }
-      div.highlight {
+      div.highlight pre code {
         overflow: auto;
         width: 100%;
-        padding: 0 1.5rem;
-        /*border-left: 1.5rem solid transparent;*/
-        /*border-right: 1.5rem solid transparent;*/
+        /* padding: 0 1.5rem; */
+        /* border-left: 1.5rem solid transparent; */
+        /* border-right: 1.5rem solid transparent; */
       }
-      div.highlight pre {
+      div.highlight pre code {
         background-color: transparent;
+
       }
       pre, code {
         font-family: 'Ubuntu Mono';
-        white-space: pre-wrap;
+        /* white-space: pre-wrap; */
       }
       pre {
         background-color: rgba(0, 0, 0, 0.12);
