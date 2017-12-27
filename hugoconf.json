@@ -7,9 +7,9 @@
   "author": {
     "name": "Surma"
   },
+  "pygmentsCodeFences": true,
   "relativeURLs": true,
-  "disableSitemap": true,
-  "disableRSS": false,
+  "disableKinds": ["RSS", "sitemap"],
   "params": {
     "themecolor": "#FDD835",
     "twitterhandle": "DasSurma"
