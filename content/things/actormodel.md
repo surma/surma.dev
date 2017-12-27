@@ -21,16 +21,16 @@ The Actor Model is a mathematical model for concurrent systems in computer scien
 - An actor has local state (“variables”)
 - An actor is a computational entity (“process”) that runs sequentially (“single-threaded”)
 - An actor has an address (in the sense of mailbox, not memory)
-- An actor can receive messages and react to them with:
+- An actor can receive messages and react to them by:
   - Mutating its local state
   - Creating new actors
-  - Sending messages to other actors asynchronously using their address
+  - Sending messages to other actors asynchronously using their addresses
 
 While each actor runs sequentially, i.e. only one message is processed by an actor at a time, two actors _can_ very well run in parallel.
 
 Now that’s neither a lot of rules nor a lot of tools to have at your disposal, but it’s enough to build incredibly complex systems. Get this: [Erlang], built by Joe Armstrong at Erricson, [is still used today][Erlang story] for extremely scalable and fault-tolerant systems. For example, the backbones of your LTE connection are written in Erlang, and it’s also used for products like WhatsApp or used by companies like Facebook and Amazon.
 
-The interesting thing about the Actor Model is that **it doesn’t need any synchronization primitives like mutexes or semaphores**. No actor can modify another actors local state and each actor in itself is single-threaded. Any resource that is required by multiple actors should get its own designated actor that _manages_ access to this resource. All the other actors can request operations to be performed by sending a message to the managing actor.
+The interesting thing about the Actor Model is that **it doesn’t need any synchronization primitives like mutexes or semaphores**. No actor can modify another actor’s local state and each actor in itself is single-threaded. Any resource that is required by multiple actors should get its own designated actor that _manages_ access to this resource. All the other actors can request operations to be performed by sending a message to the managing actor.
 
 ## … on the web?
 
@@ -147,6 +147,8 @@ As I said in my [talk at Chrome Dev Summit 2017][WordPress CDS]: We can learn a 
 
 ![Image from my CDS talk](gamedev.png)
 
+> **Note:** My colleague [Paul Bakaus] informed that it was in fact [his blog post][pbakaus post] I must have read a while ago.
+
 This attitude does not only work in the context of the game industry, though. Any other industry with strong architectural requirements can be a source of inspiration and knowledge for us and help us write better code on the web. Just try to avoid absolutisms: Just because you now have a hammer called “Actor Model” does not mean everything is a nail.
 
 [Pony]: https://www.ponylang.org/
@@ -164,3 +166,5 @@ This attitude does not only work in the context of the game industry, though. An
 [actor.js]: https://github.com/nucleartide/actor.js
 [Learn You Some Erlang]: http://learnyousomeerlang.com/
 [SharedArrayBuffer]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+[pbakaus post]: https://paulbakaus.com/2009/10/06/why-i-would-hire-game-developers-for-my-startup/
+[Paul Bakaus]: https://twitter.com/pbakaus/status/946146826440269824
