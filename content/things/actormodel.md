@@ -1,15 +1,15 @@
 {
   "title": "“An Actor, a model and an architect walk onto the web...”",
-  "date": "2017-11-01",
-  "socialmediaimage": "jank.gif",
-  "live": "false"
+  "date": "2017-12-27",
+  "socialmediaimage": "gamedev.png",
+  "live": "true"
 }
 Everything old is new again. Let’s take a concurrency model from the 70s and apply it to the web in 2017. Why? Well, read on, will ya?
 <!--more-->
 
 > **Note**: Yes, my syntax highlighting is broken. Sorry.
 
-The whole reason I started to think about actors was because I was playing around with [Erlang]. Erlang is not the only language to use the Actor Model, of course, bur arguably the most popular one. There’s also it’s more modern reincarnation [Elixir], the JVM-langauge [Scala], or the systems programming language [Pony].
+The whole reason I started to think about actors was because I was playing around with [Erlang]. Erlang is not the only language to use the Actor Model, of course, but arguably the most popular one. There’s also it’s more modern reincarnation [Elixir], the JVM langauge [Scala], or the systems programming language [Pony].
 
 It struck me that the Actor Model could work on the web. The more I thought about it, the more it seems like a natural fit.
 
@@ -19,7 +19,7 @@ The Actor Model is a mathematical model for concurrent systems in computer scien
 
 - Everything (non-primitive) is an actor
 - An actor has local state (“variables”)
-- An actor is a computational entity (“thing”) that runs sequentially (“single-threaded”)
+- An actor is a computational entity (“process”) that runs sequentially (“single-threaded”)
 - An actor has an address (in the sense of mailbox, not memory)
 - An actor can receive messages and react to them with:
   - Mutating its local state
@@ -42,11 +42,11 @@ Cool? Cool.
 
 ## Erlang’s Actors
 
-> **Note:** Dear Erlang friends, while I am by no means an expert in Erlang, I am the code I am listing is not fully functional, not 100% syntactically correct and that I am even misrepresenting the standard library. I am doing this because I do not know how familiar my audience is with Erlang. I do know, however, that they know JavaScript so I am trying to meet them half-way. Please don’t burn me at the stake. Kthxbai.
+> **Note:** Dear Erlang friends, while I am by no means an expert in Erlang, I am aware that the code I am listing is neither technically functional nor syntactically correct. I am even misrepresenting the standard library. I am doing this because I do not know how familiar my audience is with Erlang. I do know, however, that they know JavaScript so I am trying to meet them half-way. Please don’t burn me at the stake. Kthxbai.
 
-> **Note:** Dear JavaScript friends, if you are interested in _actually_ learning Erlang, I heartily recommend reading [Learn You Some Erlang], which is a free e-book.
+> **Note:** Dear JavaScript friends, if you are interested in learning _the real_ Erlang, I heartily recommend reading [Learn You Some Erlang], which is a free e-book.
 
-Let’s take a look at some Erlang code with a quick, superficial introduction to Erlang’s syntax and semantics.
+Let’s take a look at some Erlang code as a quick, superficial introduction to Erlang’s syntax and semantics.
 
 ### Example 1
 
@@ -66,7 +66,7 @@ main() ->
 Assuming you are a JavaScript developer, there’s a couple of things you need to know do understand this program:
 
 - Functions are defined as `function_name(parameters) -> body.`.
-- Variables start with a uppercase letter, atoms (similar to symbols) start with a lowercase letter.
+- Variables start with an uppercase letter, atoms (similar to symbols) start with a lowercase letter.
 - `{...}` is used to construct tuples, which are kind of an immutable Array.
 - `!` sends a message (the right-hand side) to an actor’s mailbox (the lefthand side).
 - `self()` returns the current actor’s mailbox address.
@@ -82,7 +82,7 @@ math_worker() ->
   math_worker().
 {{< /highlight >}}
 
-With `receive` you can wait for the next message in the actor’s mailbox and match it against a list of patterns. As we want to be able to handle more than just one message with our math actor, we can use recursion to “loop” infinitely.
+With `receive` you can wait for the next message to arrive in the current actor’s mailbox and match it against a list of patterns. As we want to be able to handle more than just one message with our math actor, we can use recursion to “loop” and handle more messages.
 
 As you can see, we have to put the sender’s mailbox address into the messages ourselves. Otherwise, our math worker wouldn’t be able to respond with the result.
 
@@ -99,7 +99,7 @@ This is looks incredibly simple, doesn’t it? Synchronous even. But something w
 
 {{< highlight Erlang >}}
 open_file(path) ->
-  spawn(fn -> file_actor(path) end).
+  spawn(file_actor).
 
 
 read_from_file(FileHandle) ->
@@ -109,7 +109,7 @@ read_from_file(FileHandle) ->
   end;
 {{< /highlight >}}
 
-It turns out that the `FileHandle` we used is actually an actor’s mailbox address! This means that the file handle can be shared and be used my multiple threads (or actors) without more than one actor reading or writing at any given time.
+It turns out that the `FileHandle` we used is actually an actor’s mailbox address! Access to the file itself is managed by an actor. This means that the file handle can be shared and be used my multiple actors (or threads) without more than one actor reading or writing at any given time.
 
 What really blew my mind was the fact that Erlang can run in a cluster where actors are scattered across multiple machines on a network. Mailbox addresses are unique within the cluster and the Erlang runtime takes care of dispatching a messgage across the network if necessary. So an actor running on one server is capable of _directly_ working with a file on another server without being aware of it.
 
@@ -117,9 +117,9 @@ What really blew my mind was the fact that Erlang can run in a cluster where act
 
 ## The Actor Mindset
 
-Right. Let’s get back to the Web: I think there’s a lot Web developers can learn from the years of experience that Erlang (and now Elixir, Scala and Pony) developers have. It’s probably not feasible to go full Erlang on the web just yet and try to spawn thousands of actors at a time. At the time of writing creating a WebWorker is still quite expensive. However, the architectural patterns that have evolved over time in the Erlang-esque ecosystem might help us structure our web apps, separate concerns and write more maintainable and potentially scalable code.
+Right. Let’s get back to the Web: I think there’s a lot Web developers can learn from the years of experience that Erlang (and now Elixir, Scala and Pony) developers have. It’s probably not a good idea to go full Erlang on the web and try to spawn thousands of actor workers (something that is normal in Erlang). However, the architectural patterns that have evolved over time in the Erlang-esque ecosystem might help us structure our web apps, separate concerns and write more maintainable and potentially scalable code.
 
-Once I had adopted the mindset of an actor model driven environment, I became a bit more skeptical about two recent proposal in Web development:
+Once I had gotten more comfortable with the mindset of an actor model driven environment, I became a bit more skeptical about two recent proposal in Web development:
 
 ### DOM-in-Worker
 
@@ -135,13 +135,13 @@ The actor model doesn’t require any locks as there is no mutable shared memory
 
 Additionally, the actor model only works if you can spawn as many actors as required. If you were to give each actor its own WebWorker, even desktop machines would reach their limits.
 
-> **Note:** Firefox’s WebWorkers are currently much cheaper than Chrome’s. There’s a lot of low-hanging fruit that Chrome can reap, but haven’t done so far as WebWorkers are very rarely used to justify the work necessary.
+> **Note:** Firefox’s WebWorkers are currently much cheaper than Chrome’s. There’s a lot of low-hanging fruit that Chromies could reap, but haven’t done so far as WebWorkers are very not popular enough to justify the work necessary.
 
 There’s a couple of libraries (like [actor.js]) out there that bring the actor model to JavaScript and _don’t_ spin up a worker for every actor but put multiple actors on the same thread. I haven’t played around with them, but the support distributing actors across multiple WebWorkers seems to be lacking.
 
 ## What are you trying to tell me?
 
-Amongst all the architectural models out there, it seems the actor model fits into the web rather well.  With all the years of experience out there of how to structure Erlang apps, it’s worth for us — the web developers — to try and learn, adapt and adopt some of those patterns for the web to help us move more work off the main thread and make our apps more performant, robust and elegant.
+Look at me waffling on and on again. **Here’s the bottom line: Amongst all the architectural models out there, it seems the actor model fits the web more naturally than others. With all the years of experience Erlang (and other) developers have, I wonder if they have useful tips and tricks for us — the web developers — on how to structure our apps. It might help us move more work off the main thread and make our apps more performant, robust and elegant.**
 
 As I said in my [talk at Chrome Dev Summit 2017][WordPress CDS]: We can learn a lot from game developers and the architectures they use. Game developers have to balance their extreme performance demands against their incredibly big teams that all have to work in parallel towards the same goal.
 
@@ -163,3 +163,4 @@ This attitude does not only work in the context of the game industry, though. An
 [Atomics]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics
 [actor.js]: https://github.com/nucleartide/actor.js
 [Learn You Some Erlang]: http://learnyousomeerlang.com/
+[SharedArrayBuffer]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
