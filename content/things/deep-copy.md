@@ -128,7 +128,7 @@ Short, concise. I liked it! However, it basically kicks of the permission machin
 I wanted to measure which of these ways is the most performant. In my first (naïve) attempt, I took a small JSON object and piped it through these different ways of cloning an object a thousand times. Luckily, [Mathias Bynens] told me that [V8 has a cache][Fast properties] for when you add properties to an object. I was benchmarking the cache more than anything else. To ensure I never hit the cache, I wrote [a function that generates objects of given depth and width using random key names][randomObject] and re-ran [the test][deep-copy-median].
 
 ### Graphs!
-Here’s how the different techniques perform in Chrome, Firefox and Safari. Lower is better.
+Here’s how the different techniques perform in Chrome, Firefox and Edge. Lower is better.
 
 ![Performance in Chrome 63](chrome.png)
 
