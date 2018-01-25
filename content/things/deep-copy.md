@@ -1,8 +1,8 @@
 {
   "title": "Deep-copying in JavaScript",
-  "date": "2018-01-24",
+  "date": "2018-01-25",
   "socialmediaimage": "social.png",
-  "live": "false"
+  "live": "true"
 }
 How do I _copy_ an object in JavaScript? It’s a simple question, without a simple answer.
 <!--more-->
@@ -20,13 +20,13 @@ mutate(obj)
 console.log(obj.a); // prints true
 ```
 
-The function `mutate` changes the object it gets passed as a parameter. In a “call by value” environment, that mutation would not be visible outside that function. But in a “call by reference” environment like JavaScript, the function gets a — you guessed it — _reference_, and will mutate the actual object itself. The `console.log` at the end will therefore print `true`.
+The function `mutate` changes the object it gets passed as a parameter. In a “call by value” environment, the function would get passed the value — so a copy — that the function coul work with. Any changes the function makes to the object would not be visible outside of that function. But in a “call by reference” environment like JavaScript, the function gets a — you guessed it — _reference_, and will mutate the actual object itself. The `console.log` at the end will therefore print `true`.
 
-Sometimes, however, you might want to keep your original object and create a copy for other functions to&nbsp;&nbsp;~~mutilate~~&nbsp;&nbsp;work with.
+Sometimes, however, you might want to keep your original object and create a copy for other functions to work with.
 
 ## Shallow copy: Object.assign()
 
-One way to copy an object is to use `Object.assign(target, sources...)`. It takes an arbitrary number of soruce objects, enumerating all of their own properties and assigning them to `target`. If we use a fresh, empty object as `target`, we are basically copying.
+One way to copy an object is to use `Object.assign(target, sources...)`. It takes an arbitrary number of source objects, enumerating all of their own properties and assigning them to `target`. If we use a fresh, empty object as `target`, we are basically copying.
 
 ```js
 const obj = /* ... */;
@@ -57,7 +57,7 @@ const obj = /* ... */;
 const copy = JSON.parse(JSON.stringify(obj));
 ```
 
-The downside here is that you create a temporary, potentially big string just to pipe it back into a parser. Another downside is that this approach cannot deal with cyclic objects. And despite of what you might think, those can happen quite easily. For example when you are building tree-like data structures where a node references its parent, and the parent in turn references its own children.
+The downside here is that you create a temporary, potentially big string just to pipe it back into a parser. Another downside is that this approach cannot deal with cyclic objects. And despite what you might think, those can happen quite easily. For example when you are building tree-like data structures where a node references its parent, and the parent in turn references its own children.
 
 ```js
 const x = {};
@@ -70,10 +70,10 @@ Additionally, things like Maps, Sets, RegExps, Dates, ArrayBuffers and other bui
 
 ## Structured Clone
 
-[Structured cloning][Structured clone] is an existing algorithm that is used to transfer values from one realm into another. For example, this is used whenever you `postMessage` another window or a [WebWorker]. The nice thing about structured cloning that it handles cyclic objects and [supports a wide set of built-in types][Structured clone supported types]. The problem is that at the time of writing the algorithm is not exposed directly, only as a part of other APIs. I guess we’ll have to look at those then, won‘t we…
+[Structured cloning][Structured clone] is an existing algorithm that is used to transfer values from one realm into another. For example, this is used whenever you call `postMessage` to send a message to another window or a [WebWorker]. The nice thing about structured cloning is that it handles cyclic objects and [supports a wide set of built-in types][Structured clone supported types]. The problem is that at the time of writing the algorithm is not exposed directly, only as a part of other APIs. I guess we’ll have to look at those then, won‘t we…
 
 ### MessageChannel
-As I said, one API where the structured clone algorithm is used is whenever you call `postMessage`. We can create a [MessageChannel] and send ourselves a message. On the receiving end the message contains a structural clone of our original data object.
+As I said, whenever you call `postMessage` the structured clone algorithm is used. We can create a [MessageChannel] and send ourselves a message. On the receiving end the message contains a structural clone of our original data object.
 
 ```js
 function structuralClone(obj) {
@@ -122,8 +122,8 @@ const clone = await structuralClone(obj);
 
 Short, concise. I liked it! However, it basically kicks of the permission machinery within the browser, so I suspected it to be quite slow. Safari, for some reason, always returns `undefined` for the data object.
 
-## Performance extravaganze
-I wanted to measure which of these ways is the most performant. In my first (naïve) attempt, I took a small JSON object and piped it through these different ways of cloning an object a thousand times. Luckily, [Mathias Bynens] told me that [V8 has a cache][Fast properties] for when you add properties to an object. I was benchmarking the cache more than anything else. To ensure I never hit the cache, I wrote [a function that generates objects of given depth and width using random key names][randomObject] and re-ran all [the test][deep-copy-median].
+## Performance extravaganza
+I wanted to measure which of these ways is the most performant. In my first (naïve) attempt, I took a small JSON object and piped it through these different ways of cloning an object a thousand times. Luckily, [Mathias Bynens] told me that [V8 has a cache][Fast properties] for when you add properties to an object. I was benchmarking the cache more than anything else. To ensure I never hit the cache, I wrote [a function that generates objects of given depth and width using random key names][randomObject] and re-ran [the test][deep-copy-median].
 
 ### Graphs!
 Here’s how the different techniques perform in Chrome, Firefox and Safari. Lower is better.
