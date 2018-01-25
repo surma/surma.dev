@@ -46,6 +46,8 @@ mutateDeepObject(copy)
 console.log(obj.a.thing); // prints true
 ```
 
+Another thing to potentially trip over is that `Object.assign()` turns getters into simple properties.
+
 So what now? Turns out, there is a couple of ways to create a _deep_ copy of an object.
 
 ## JSON.parse
