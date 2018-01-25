@@ -20,7 +20,7 @@ mutate(obj)
 console.log(obj.a); // prints true
 ```
 
-The function `mutate` changes the object it gets passed as a parameter. In a “call by value” environment, the function would get passed the value — so a copy — that the function coul work with. Any changes the function makes to the object would not be visible outside of that function. But in a “call by reference” environment like JavaScript, the function gets a — you guessed it — _reference_, and will mutate the actual object itself. The `console.log` at the end will therefore print `true`.
+The function `mutate` changes the object it gets passed as a parameter. In a “call by value” environment, the function would get passed the value — so a copy — that the function could work with. Any changes the function makes to the object would not be visible outside of that function. But in a “call by reference” environment like JavaScript, the function gets a — you guessed it — _reference_, and will mutate the actual object itself. The `console.log` at the end will therefore print `true`.
 
 Sometimes, however, you might want to keep your original object and create a copy for other functions to work with.
 
