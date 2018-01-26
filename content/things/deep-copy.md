@@ -100,9 +100,9 @@ If you’ve ever used `history.pushState()` to build an SPA you know that you ca
 ```js
 function structuralClone(obj) {
   const oldState = history.state;
-  history.replaceState(obj);
+  history.replaceState(obj, document.title);
   const copy = history.state;
-  history.replaceState(oldState);
+  history.replaceState(oldState, document.title);
   return copy;
 }
 
