@@ -107,7 +107,7 @@ function structuralClone(obj) {
 }
 
 const obj = /* ... */;
-const clone = await structuralClone(obj);
+const clone = structuralClone(obj);
 ```
 
 Once again, it feels a bit heavy-handed to tap into the browser’s engine just to copy an object, but you gotta do what’cha gotta do. Also, Safari limits the amount of calls to `replaceState` to 100 within a 30 second window.
@@ -121,7 +121,7 @@ function structuralClone(obj) {
 }
 
 const obj = /* ... */;
-const clone = await structuralClone(obj);
+const clone = structuralClone(obj);
 ```
 
 Short, concise. I liked it! However, it basically kicks of the permission machinery within the browser, so I suspected it to be quite slow. Safari, for some reason, always returns `undefined` for the data object.
