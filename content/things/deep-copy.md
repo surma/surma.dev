@@ -50,6 +50,8 @@ Another thing to potentially trip over is that `Object.assign()` turns getters i
 
 So what now? Turns out, there is a couple of ways to create a _deep_ copy of an object.
 
+> Note: Some people have asked about the [object spread] operator. Object spread will also create a shallow copy.
+
 ## JSON.parse
 
 One of the oldest way to create copies of an object is to turn the object into its JSON string representation and then parse it back to an object. It feels a bit heavy-handed, but it _does_ work:
@@ -157,3 +159,4 @@ Wouldn’t it be better if we just had `structuredClone()` as a function on the 
 [deep-copy-median]: https://deep-copy-median.glitch.me/
 [Fremy tweet]: https://twitter.com/FremyCompany/status/955597721037164549
 [HTML spec issue]: https://github.com/whatwg/html/issues/793
+[object spread]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator
