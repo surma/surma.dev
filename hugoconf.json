@@ -9,7 +9,7 @@
   },
   "pygmentsCodeFences": true,
   "relativeURLs": true,
-  "disableKinds": ["RSS", "sitemap"],
+  "disableKinds": ["sitemap"],
   "params": {
     "themecolor": "#FDD835",
     "twitterhandle": "DasSurma"
