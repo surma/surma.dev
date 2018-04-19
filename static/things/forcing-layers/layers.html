@@ -1,0 +1,36 @@
+<!doctype html>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    width: 100vw;
+  }
+  body {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+  }
+  .box {
+    width: 200px;
+    height: 200px;
+    margin: 10px;
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+</style>
+
+<div class="box" style="transform: translateX(10px)">
+  transform: translateX(10px);
+</div>
+<div class="box" style="transform: translateZ(10px)">
+  transform: translateZ(10px);
+</div>
+<div class="box" style="transform: translateX(0px)">
+  transform: translateX(0px);
+</div>
+<div class="box" style="transform: translateZ(0px)">
+  transform: translateZ(0px);
+</div>

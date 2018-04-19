@@ -1,0 +1,74 @@
+<!doctype html>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    width: 100vw;
+  }
+  body {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+  }
+  .scroller {
+    width: 200px;
+    height: 200px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 10px;
+    outline: 2px solid black;
+    background-color: white;
+  }
+  .content {
+    height: 10000px;
+  }
+  .marker {
+    width: 50px;
+    height: 50px;
+    background-color: hotpink;
+    position: fixed;
+    top: 0;
+    font-radius: 50%;
+  }
+  .flip .scroller {
+    transform: rotateY(180deg);
+  }
+</style>
+
+<div class="scroller" style="outline-color: red; will-change: transform">
+  Test content
+</div>
+<div class="scroller" style="outline-color: green; will-change: opacity">
+  Test content
+</div>
+<div class="scroller" style="outline-color: turquoise; transform: translateZ(0)">
+  Test content
+</div>
+<div class="scroller" style="outline-color: blue; backface-visibility: hidden">
+  Test content
+</div>
+
+<div>
+<p>
+  <font color="red">Red</font> box has <code>will-change: transform</code>.
+</p>
+<p>
+  <font color="green">Green</font> box has <code>will-change: opacity</code>.
+</p>
+<p>
+  <font color="turquoise">turquoise</font> box has <code>transform: translateZ(0)</code>.
+</p>
+<p>
+  <font color="blue">Blue</font> box has <code>backface-visibility: hidden</code>.
+</p>
+<button>
+  Flip boxes
+</button>
+</div>
+<script>
+  document.querySelector('button').onclick = _ => document.body.classList.toggle('flip');
+</script>
