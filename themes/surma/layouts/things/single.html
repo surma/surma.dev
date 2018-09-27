@@ -65,7 +65,12 @@
 {{.Content}}
 
 <footer>
-  <a href="https://twitter.com/{{.Site.Params.Twitterhandle}}">Surma</a>, {{.Date.Format "2006-01-02"}}
+  {{ if isset .Params "authorname" }}
+    <a href="{{ .Params.authorlink }}">{{ .Params.authorname }}</a>,
+  {{ else }}
+    <a href="https://twitter.com/{{.Site.Params.Twitterhandle}}">Surma</a>,
+  {{ end }}
+  {{.Date.Format "2006-01-02"}}
 </footer>
 
 <script src="/codefragments.js" async defer></script>
