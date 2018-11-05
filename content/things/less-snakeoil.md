@@ -20,7 +20,7 @@ Examples:
 * Use bundling to make your site load faster.
 * Don't use the `*` selector. It is slow.
 
-All of these are true _in a specific context._ The thing to realize is that slowness or a janky animation is a_ symptom, not an illness._ What is needed here is a differential diagnosis procedure. A janky animation can have any number of causes, but it's likely that only _one_ is present. For example, if the jankiness is caused by garbage collection of big chunks of data every frame, `will-change: transform` will do you no good. If anything, it will increase the memory pressure and might make things even worse.
+All of these are true _in a specific context._ The thing to realize is that slowness or a janky animation is a _symptom, not an illness._ What is needed here is a differential diagnosis procedure. A janky animation can have any number of causes, but it's likely that only _one_ is present. For example, if the jankiness is caused by garbage collection of big chunks of data every frame, `will-change: transform` will do you no good. If anything, it will increase the memory pressure and might make things even worse.
 
 I don't remember who said it, but the phrase **"If you didn't measure it, it's not slow"** really stuck with me. However, focusing on just measuring can lead to Microbenchmark Frenzy™️.
 
