@@ -38,7 +38,7 @@ So let's assume you have either written or found a _significant and meaningful _
 
 This is where I see microbenchmarks getting abused. Just because there is a way to make a certain operation faster, doesn't mean it's worth taking the trade-off on expressiveness. People often only publish the numbers of their microbenchmark and others will think they have hard evidence that A is better than B and so you should always use A. This is how snake oil is made. Part of the problem is that it's hard to quantify expressiveness. How much faster does a piece of code have to get to make up for the loss in readability? 10%? 20%?
 
-There is an argument to be made for static analysis and transpilers. You get to write readable and idiomatic code but can ship less readable but more performant code to production. Something like [@babel/present-env](https://www.npmjs.com/package/@babel/preset-env) allows you to write modern, idiomatic JavaScript without having to worry about browser support and performance implications. The trade-off here is the cost in file size. Some features can only be transpiled with a significant increase in code size which impacts download and parsing time. One of the more extreme examples is the way [generators are transpiled](https://babeljs.io/docs/en/babel-plugin-transform-regenerator). You need to load a generator runtime object as well as making your generator function significantly larger. Again: This doesn't mean that you shouldn't use generators or not transpile them. But you need to be aware of this trade-off to be able to make an informed decision. **It's trade-offs all the way down.**
+There is an argument to be made for static analysis and transpilers. You get to write readable and idiomatic code but can ship less readable but more performant code to production. Something like [@babel/present-env](https://www.npmjs.com/package/@babel/preset-env) allows you to write modern, idiomatic JavaScript without having to worry about browser support and performance implications. The trade-off here is the cost in file size and inscrutability of the output. Some features can only be transpiled with a significant increase in code size which impacts download and parsing time. One of the more extreme examples is the way [generators are transpiled](https://babeljs.io/docs/en/babel-plugin-transform-regenerator). You need to load a generator runtime object as well as making your generator function significantly larger. Again: This doesn't mean that you shouldn't use generators or not transpile them. But you need to be aware of this trade-off to be able to make an informed decision. **It's trade-offs all the way down.**
 
 ![Babel documentation how generators are transpiler](generators.png)
 
@@ -52,20 +52,20 @@ If you were to make the decision with a microbenchmarking mindest — by just lo
 
 ![SixBench performance comparison of for-loops](sixbench.png)
 
-Another example: Until about a year ago, using [a for-of-loop to iterate over an array was 17x slower than using a normal for-loop](http://incaseofstairs.com/six-speed/) (Note: six-bench was run in April 2017. Lots of things have changed since then in v8 and babel). I still see people swearing off of for-of loops because of this finding.
+Another example: Until about a year ago, using [a for-of-loop to iterate over an array was 17x slower than using a normal for-loop](http://incaseofstairs.com/six-speed/) (Note: six-bench was run in April 2017. Lots of things have changed since then in v8 and babel). I still see people avoiding for-of loops because of this finding.
 
 Let's look at concrete numbers: I iterated over an array with 100 elements in Chrome 55 (released in December 2016, before six-speed was run). Once with a for-of and once with a normal for-loop:
 
 * **for-of-loop:** 134µs
 * **vanilla for-loop: **65µs
 
-Clearly, the vanilla for-loop is faster (in Chrome 55), but the for-of loop gives you implicit boundary checks and makes the body of your loop more readable as you don't have to use index notation. Is that worth saving ~60µs? Well, _it depends_. If you were using for-of loops in a hot path (like code that runs every frame of a WebGL app), you might have point. However, if you were just iterating over a couple dozens of elements once the user clicks a button, I wouldn't bother thinking about performance.** I always err on the side of readability. **And for what it's worth, in today's Chrome 70, both loops are _exactly_ the same speed. Thanks, V8 team!
+Clearly, the vanilla for-loop is faster (in Chrome 55), but the for-of loop gives you implicit boundary checks and makes the body of your loop more readable as you don't have to use index notation. Is that worth saving ~60µs? Well, _it depends_. Almost always the answer is no. If you were using for-of loops in a hot path (like code that runs every frame of a WebGL app), you might have a point. However, if you were just iterating over a couple dozen elements once the user clicks a button, I wouldn't bother thinking about performance.** I always err on the side of readability. **And for what it's worth, in today's Chrome 70, both loops are _exactly_ the same speed. Thanks, V8 team!
 
 ![Code for benchmarking for-loops](forbench.png)
 
 ## It depends (on the context).
 
-With all that said: There is no performance advices that is _always_ good. Heck, there's barely any performance advice that is _mostly_ good*. Technical requirements, target audiences, target devices and company priorities just differ too much from case to case. _It depends._ If you want my advice, here's how I try to do tackle optimizations:
+With all that said: There is no performance advice that is _always_ good. Heck, there's barely any performance advice that is _mostly_ good*. Technical requirements, target audiences, target devices and company priorities just differ too much from case to case. _It depends._ If you want my advice, here's how I try to do tackle optimizations:
 
 1. **Set yourself a budget.**
 2. **Measure.**
