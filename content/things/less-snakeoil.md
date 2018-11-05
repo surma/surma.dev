@@ -1,5 +1,5 @@
 {
-  "title": "Less Snakeoil, More Context",
+  "title": "Less Snake Oil, More Context",
   "date": "2018-11-05",
   "socialmediaimage": "forbench.png",
   "live": "true"
