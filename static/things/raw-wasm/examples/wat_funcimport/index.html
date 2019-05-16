@@ -1,0 +1,16 @@
+<script>
+  async function run() {
+    function log() {
+      console.log("This is the log() function");
+    }
+
+    const {instance} = await WebAssembly.instantiateStreaming(
+      fetch("./funcimport.wasm"),
+      {
+        funcs: {log}
+      }
+    )
+    instance.exports.doLog();
+  }
+  run();
+</script>

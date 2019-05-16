@@ -1,0 +1,10 @@
+<script>
+  async function run() {
+    const {instance} = await WebAssembly.instantiateStreaming(
+      fetch("./add.wasm")
+    );
+    const r = instance.exports.add(1, 2);
+    console.log(r);
+  }
+  run();
+</script>
