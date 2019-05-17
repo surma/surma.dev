@@ -58,7 +58,7 @@ After assembling our `.wat` file with `wat2wasm`, we can disassemble it again (f
 
 As you can see, the named identifiers have disappeared and have been replaced with (somewhat) helpful comments by the disassembler. You can also see a `type` declaration that is generated for you by `wat2wasm`. It seems a bit redundant to define a type when it’s fully inferrable from the declaration, but declaring function types will become more useful when we talk about function imports later.
 
-> **Pro tip**: Did you know that the “Source” panel in DevTools will automatically disassembly .wasm files for you?
+> **Pro tip**: Did you know that the “Source” panel in DevTools will automatically disassemble .wasm files for you?
 
 A function declaration starts with `func` keyword, followed by the (optional) identifer, a list of parameters with their types, the return type and the body. The body is itself a list of [instructions] for the VM’s stack. Using these instructions you can push values onto the stack, pop values off the stack and replace them with the result of an operation or load and store values to memory (more about that later). A function _must_ leave exactly one value on the stack as the function’s return value.
 
@@ -144,7 +144,7 @@ A WebAssembly module can have multiple functions, but not all of them need to be
 
 > [Live demo](examples/wat_contrived/)
 
-Notice how `add2` and `add3` are exported, but `add` is not. Ss such `add()` will not be callable from JavaScript. It’s only used in the bodies of our other functions.
+Notice how `add2` and `add3` are exported, but `add` is not. As such `add()` will not be callable from JavaScript. It’s only used in the bodies of our other functions.
 
 WebAssembly modules can not only export functions but also _expect_ a function to be passed _to_ the WebAssembly module at instantiation time by specifying an `import`:
 
@@ -194,6 +194,8 @@ Importing functions from JavaScript is a big puzzle piece on how Rust makes DOM 
 
 There’s only so much you can do when all you have is a stack. After all, the very definition of a stack is that you can only ever reach the value that is on top. So most WebAssembly modules export a chunk of _linear memory_ to work on. It’s worth noting that you can also expect to be given a memory from the host environment instead of exporting it yourself. However, you can only have exactly one memory unit overall (at the time of writing).
 
+This example is a bit contrived, so bear with me. The function `add2()` loads the first integer from memory, adds 2 to it and stores it in the next position in memory.
+
 {{< highlight wat >}}
 ;; Filename: memory.wat
 (module
@@ -202,25 +204,26 @@ There’s only so much you can do when all you have is a stack. After all, the v
   (memory $mem 1 100)
   ;; Export that memory
   (export "memory" (memory $mem))
-  ;; Our function with no parameters and no return value.
-  (func $add (param $p1 i32) (result)
+  ;; Our function with no parameters and no return value,
+  ;; but with a local variable for temporary storage.
+  (func $add2 (param) (result) (local $tmp i32)
     ;; Load an i32 from address 0 and put it on the stack
     i32.const 0
     i32.load
 
     ;; Put the parameter on the stack and add the values
-    local.get $p1
+    i32.const 2
     i32.add
 
     ;; Temporarily store the result in the parameter
-    local.set $p1
+    local.set $tmp
 
     ;; Store that value at address 4
     i32.const 4
-    local.get $p1
+    local.get $tmp
     i32.store
   )
-  (export "add" (func $add))
+  (export "add2" (func $add2))
 )
 {{< /highlight >}}
 

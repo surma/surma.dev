@@ -80,7 +80,7 @@ Object.keys(pipelines).forEach(extension => {
     var stream = gulp.src([
       'app/**/*.' + extension
     ]);
-    stream = pipeline.reduce((stream, step) => 
+    stream = pipeline.reduce((stream, step) =>
       stream.pipe($.if(file => !/_static\./.test(file.relative), step)), stream);
     return stream.pipe(gulp.dest('dist'));
   });
@@ -94,7 +94,19 @@ gulp.task('unhandled-files', () => {
   .pipe(gulp.dest('dist'));
 });
 
-gulp.task('deploy', () => {
+gulp.task('deploy:all', () => {
   return gulp.src('dist/**/*')
+  .pipe($.filter(['**', '!**/*.wasm']))
   .pipe($.s3(s3conf));
+});
+
+gulp.task('deploy:wasm', () => {
+  return gulp.src('dist/**/*.wasm')
+    .pipe($.s3(s3conf, {headers: {
+      "Content-Type": "application/wasm"
+    }}));
+});
+
+gulp.task('deploy', () => {
+  return runSequence('deploy:all', 'deploy:wasm');
 });

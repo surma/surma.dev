@@ -5,7 +5,7 @@
     );
     const mem = new Int32Array(instance.exports.memory.buffer);
     mem[0] = 40;
-    instance.exports.add(2);
+    instance.exports.add2();
     console.log(mem[0], mem[1]);
   }
   run();
