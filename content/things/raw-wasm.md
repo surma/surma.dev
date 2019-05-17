@@ -56,13 +56,14 @@ After assembling our `.wat` file with `wat2wasm`, we can disassemble it again (f
 )
 {{< /highlight >}}
 
-As you can see, the named identifiers have disappeared and have been replaced with (somewhat) helpful comments by the disassembler. You can also see a `type` declaration that is generated for you by `wat2wasm`. It seems a bit redundant to define a type when it’s fully inferrable from the declaration, but declaring function types will become more useful when we talk about function imports later.
+As you can see, the named identifiers have disappeared and have been replaced with (somewhat) helpful comments by the disassembler. You can also see a `type` declaration that was generated for you by `wat2wasm`. It’s technically always necessary to declare a function’s type before declaring the function itself, but because the type is fully inferrable from the declaration, `wat2wasm` injects the type declaration for us. Within this context, function type declarations will seem a bit redundant, but they will become more useful when we talk about function imports later.
 
 > **Pro tip**: Did you know that the “Source” panel in DevTools will automatically disassemble .wasm files for you?
+> ![Screenshot of DevTools disassembling a WebAssembly module](devtools.png)
 
-A function declaration starts with `func` keyword, followed by the (optional) identifer, a list of parameters with their types, the return type and the body. The body is itself a list of [instructions] for the VM’s stack. Using these instructions you can push values onto the stack, pop values off the stack and replace them with the result of an operation or load and store values to memory (more about that later). A function _must_ leave exactly one value on the stack as the function’s return value.
+A function declaration consists of a couple of items, starting with `func` keyword, followed by the (optional) identifer. We also need to specify a list of parameters with their types, the return type and an optional list of local variables. The function body is itself a list of [instructions] for the VM’s stack. Using these instructions you can push values onto the stack, pop values off the stack and replace them with the result of an operation or load and store values in local variables, global variables or even memory (more about that later). A function _must_ leave exactly one value on the stack as the function’s return value.
 
-Writing code for a stack-based machine can sometimes feel a bit weird. Wat also offers “folded” instructions, which look more like functional programming. The following two function declarations are equivalent:
+Writing code for a stack-based machine can sometimes feel a bit weird. Wat also offers “folded” instructions, which look a bit like functional programming. The following two function declarations are equivalent:
 
 {{< highlight wat >}}
 (func $add (param $p1 i32) (param $p2 i32) (result i32)
@@ -76,7 +77,11 @@ Writing code for a stack-based machine can sometimes feel a bit weird. Wat also 
 )
 {{< /highlight >}}
 
-The `export` declaration can assign a name to an item from the module declaration and make it available externally. In our example above we exported the `$add` function with the name `add`. If we compile our `add.wat` file to a `add.wasm` file and load it in the browser (or in node, if you fancy), you should see an `add()` function on the `exports` property of your module instance.
+The `export` declaration can assign a name to an item from the module declaration and make it available externally. In our example above we exported the `$add` function with the name `add`. 
+
+## Loading a raw WebAssembly module
+
+If we compile our `add.wat` file to a `add.wasm` file and load it in the browser (or in node, if you fancy), you should see an `add()` function on the `exports` property of your module instance.
 
 {{< highlight html >}}
 <script>
@@ -118,6 +123,8 @@ The compilation of a WebAssembly module can start even when the module is still 
   }
 </script>
 {{< /highlight >}}
+
+This is similar to [what Emscripten does][emscripten-instantiate] and has worked well in the past.
 
 ## Functions
 
@@ -186,13 +193,13 @@ If we load this module with our previous loader code, it will error. It is expec
 
 > [Live demo](examples/wat_funcimport/)
 
-Running this will cause a log to appear in the console. We just called a WebAssembly function from JavaScript, and then we called a JavaScript function from WebAssembly. Of course both these function calls could have passed some parameters and have return values. It’s important to keep in mind that JavaScript only has IEEE754 32-bit floats, while WebAssembly has way more types, so conversions can be lossy.
+Running this will cause a log to appear in the console. We just called a WebAssembly function from JavaScript, and then we called a JavaScript function from WebAssembly. Of course both these function calls could have passed some parameters and have return values. But when doing that it’s important to keep in mind that JavaScript only has IEEE754 64-bit floats (“double”). Some types, like 64-bit integers, cannot be passed to JavaScript without loss in precision.
 
-Importing functions from JavaScript is a big puzzle piece on how Rust makes DOM operations possible from within Rust code with [wasm-bindgen]. This is an oversimplification and I’ll talk about more details in a different blog post.
+Importing functions from JavaScript is a big puzzle piece on how Rust makes DOM operations possible from within Rust code with [wasm-bindgen]. This is of course glossing over some important and clever details and I’ll talk about those in a different blog post.
 
 ## Memory
 
-There’s only so much you can do when all you have is a stack. After all, the very definition of a stack is that you can only ever reach the value that is on top. So most WebAssembly modules export a chunk of _linear memory_ to work on. It’s worth noting that you can also expect to be given a memory from the host environment instead of exporting it yourself. However, you can only have exactly one memory unit overall (at the time of writing).
+There’s only so much you can do when all you have is a stack. After all, the very definition of a stack is that you can only ever reach the value that is on top. So most WebAssembly modules export a chunk of _linear memory_ to work on. It’s worth noting that you can also _import_ a memory from the host environment instead of exporting it yourself. Whatever you prefer, you can only have exactly one memory unit overall (at the time of writing).
 
 This example is a bit contrived, so bear with me. The function `add2()` loads the first integer from memory, adds 2 to it and stores it in the next position in memory.
 
@@ -291,3 +298,4 @@ Is Wat useful for your daily life as a web developer? Probably not. I have found
 [AssemblyScript]: https://github.com/AssemblyScript
 [Globals]: https://webassembly.github.io/spec/core/bikeshed/index.html#globals%E2%91%A7
 [Emscripten]: https://emscripten.org
+[emscripten-instantiate]: https://github.com/emscripten-core/emscripten/blob/941bbc6b9b35d3124f17d2503d7a32cc81032dac/src/preamble.js#L2295-L2309

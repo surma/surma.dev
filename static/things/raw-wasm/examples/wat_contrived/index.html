@@ -1,7 +1,22 @@
 <script>
+  async function maybeInstantiateStreaming(path, ...opts) {
+    const f = fetch(path);
+    try {
+      return WebAssembly.instantiateStreaming(
+        f,
+        ...opts
+      );
+    } catch(_e) {
+      return WebAssembly.instantiate(
+        await f.then(f => f.arrayBuffer()),
+        ...opts
+       );
+    }
+  }  
+  
   async function run() {
-    const {instance} = await WebAssembly.instantiateStreaming(
-      fetch("./contrived.wasm")
+    const {instance} = await maybeInstantiateStreaming(
+      "./contrived.wasm"
     );
     console.log(instance.exports.add2(1));
     console.log(instance.exports.add3(1));

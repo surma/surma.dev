@@ -1,11 +1,26 @@
 <script>
+  async function maybeInstantiateStreaming(path, ...opts) {
+    const f = fetch(path);
+    try {
+      return WebAssembly.instantiateStreaming(
+        f,
+        ...opts
+      );
+    } catch(_e) {
+      return WebAssembly.instantiate(
+        await f.then(f => f.arrayBuffer()),
+        ...opts
+       );
+    }
+  }  
+  
   async function run() {
     function log() {
       console.log("This is the log() function");
     }
 
-    const {instance} = await WebAssembly.instantiateStreaming(
-      fetch("./funcimport.wasm"),
+    const {instance} = await maybeInstantiateStreaming(
+      "./funcimport.wasm",
       {
         funcs: {log}
       }
