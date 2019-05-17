@@ -277,7 +277,7 @@ Writing Wat by hand can feel a bit awkward and is probably not the most producti
 
 ## Conclusion
 
-Is Wat useful for your daily life as a web developer? Probably not. I have found it useful in the past to be able to inspect a Wasm file to understand why something was going wrong. It also helped me understand more easily how [Emscripten] is able emulate a filesystem or how Rust’s [wasm-bindgen] is able to expose DOM APIs.
+Is Wat useful for your daily life as a web developer? Probably not. I have found it useful in the past to be able to inspect a Wasm file to understand why something was going wrong. It also helped me understand more easily how [Emscripten] is able emulate a filesystem or how Rust’s [wasm-bindgen] is able to expose DOM APIs even though WebAssembly has no access to them (by default). As I said before: This post is _not_ required reading for any web developer. But it can be handy to know your way around `wasm2wat` and Wat if you are messing around with WebAssembly.
 
 [WebAssembly.org]: https://webassembly.org
 [jsjanuary]: https://www.javascriptjanuary.com/blog/webassembly-neither-web-nor-assembly-but-revolutionary
