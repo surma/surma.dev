@@ -20,11 +20,9 @@ While WebAssembly is famously [“Neither Web, Nor Assembly”][jsjanuary], it d
 
 ## A small WebAssembly module
 
-I am not going to explain all the details of the WebAssembly virtual machine, but just going to list a couple of short examples here that should help you understand how to read Wat. If you want to know more details, I recommend browsing MDN or even the [spec].
+I am not going to explain all the details of the WebAssembly virtual machine, but just going through list a couple of short examples here that should help you understand how to read Wat. If you want to know more details, I recommend browsing [MDN][wat] or even the [spec].
 
-You can follow along locally with the tools mentioned above, open the hosted version of the demos or use [WebAssembly.studio], which also has support for Wat, C, Rust and AssemblyScript.
-
-> **Pro tip**: Did you know that the “Source” panel in DevTools will automatically disassembly .wasm files for you?
+You can follow along on your own machine with the tools mentioned above, open the hosted version of the demos (linked under each example) or use [WebAssembly.studio], which has support for Wat but also C, Rust and AssemblyScript.
 
 {{< highlight wat >}}
 (;
@@ -58,11 +56,13 @@ After assembling our `.wat` file with `wat2wasm`, we can disassemble it again (f
 )
 {{< /highlight >}}
 
-As you can see, the named identifiers have disappeared and have been replaced with helpful comments by the disassembler. You can also see a `type` declaration that is generated for you by `wat2wasm`. It seems a bit redundant to define a type when it’s fully inferrable from the declaration, but declaring types will become more useful when we talk about function imports later.
+As you can see, the named identifiers have disappeared and have been replaced with (somewhat) helpful comments by the disassembler. You can also see a `type` declaration that is generated for you by `wat2wasm`. It seems a bit redundant to define a type when it’s fully inferrable from the declaration, but declaring function types will become more useful when we talk about function imports later.
 
-A function declaration starts with `func` keyword, followed by the (optional) identifer, a list of parameters with their types, the return type and the body. The body is itself a list of [instructions] for the VM’s stack. You can push values onto the stack, pop values off the stack and replace them with the result of an operation or load and store values to memory (more about that later). A function _must_ leave exactly one value on the stack as the function’s return value.
+> **Pro tip**: Did you know that the “Source” panel in DevTools will automatically disassembly .wasm files for you?
 
-Writing code for a stack-based machine can sometimes feel a bit weird. Wat also offers “folded” instructions, which borrow their look from functional programming. The following two function declarations are equivalent:
+A function declaration starts with `func` keyword, followed by the (optional) identifer, a list of parameters with their types, the return type and the body. The body is itself a list of [instructions] for the VM’s stack. Using these instructions you can push values onto the stack, pop values off the stack and replace them with the result of an operation or load and store values to memory (more about that later). A function _must_ leave exactly one value on the stack as the function’s return value.
+
+Writing code for a stack-based machine can sometimes feel a bit weird. Wat also offers “folded” instructions, which look more like functional programming. The following two function declarations are equivalent:
 
 {{< highlight wat >}}
 (func $add (param $p1 i32) (param $p2 i32) (result i32)
@@ -93,7 +93,7 @@ The `export` declaration can assign a name to an item from the module declaratio
 
 > [Live demo](examples/wat_add/)
 
-The compilation of a WebAssembly module can start even when the module is still downloading. The bigger the wasm module, the more important it is to parallelize downloading and compilation using `instantiateStreaming`. Just make sure you set the right `Content-Type` header on your `.wasm` files as the compilation will fail otherwise. Safari doesn’t support `instantiateStreaming` at all yet, so I tend to use a pattern like this:
+The compilation of a WebAssembly module can start even when the module is still downloading. The bigger the wasm module, the more important it is to parallelize downloading and compilation using `instantiateStreaming`. There is two pitfalls with this functions, though: Firstly, it will throw if you don’t have the right `Content-Type` header, so make sure you set it to `application/wasm` for all `.wasm` files. Secondly, Safari doesn’t support `instantiateStreaming` at all yet, so I tend to use this drop-in replacement:
 
 {{< highlight html >}}
 <script>
