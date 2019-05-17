@@ -7,8 +7,9 @@
 How do I _copy_ an object in JavaScript? It’s a simple question, without a simple answer.
 <!--more-->
 
-> **Chinese translation:** <a href="http://justjavac.com/javascript/2018/02/02/deep-copy.html">中文版</a>
-> **Russian translation:** <a href="http://howtorecover.me/glubokoe-kopirovanie-v-javascript">русском</a>
+> **Chinese translation:** <a href="http://justjavac.com/javascript/2018/02/02/deep-copy.html">中文版</a><br>
+> **Russian translation:** <a href="http://howtorecover.me/glubokoe-kopirovanie-v-javascript">русском</a><br>
+> **Uzbek translation:** <a href="https://paintingvalley.com/uz-deep-copy-javascript">O'zbek</a><br>
 
 ## Call by reference
 JavaScript passes everything by reference. In case you don’t know what that means, here’s an example:

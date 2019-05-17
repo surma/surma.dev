@@ -1,0 +1,27 @@
+<script>
+  async function maybeInstantiateStreaming(path, ...opts) {
+    const f = fetch(path);
+    try {
+      return WebAssembly.instantiateStreaming(
+        f,
+        ...opts
+      );
+    } catch(_e) {
+      return WebAssembly.instantiate(
+        await f.then(f => f.arrayBuffer()),
+        ...opts
+       );
+    }
+  }  
+  
+  async function run() {
+    const {instance} = await maybeInstantiateStreaming(
+      "./memory.wasm"
+    );
+    const mem = new Int32Array(instance.exports.memory.buffer);
+    mem[0] = 40;
+    instance.exports.add2();
+    console.log(mem[0], mem[1]);
+  }
+  run();
+</script>

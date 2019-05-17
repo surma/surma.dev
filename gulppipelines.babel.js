@@ -33,12 +33,12 @@ export default {
     $.minifyHtml()
   ],
   '{png,jpeg,jpg}': () => [
-    $.imagemin({
-      progressive: true,
-      interlaced: true
-    })
+    // $.imagemin({
+    //   progressive: true,
+    //   interlaced: true
+    // })
   ],
-  '{webm,mp4}': () => [
+  '{webm,mp4,wat,wasm}': () => [
     // copy is implicit
   ]
 };
