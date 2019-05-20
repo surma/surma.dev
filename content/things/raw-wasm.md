@@ -1,9 +1,11 @@
+---json
 {
   "title": "Raw WebAssembly",
   "date": "2019-05-17",
   "socialmediaimage": "social.png",
   "live": "true"
 }
+---
 
 Can you use the DOM in WebAssembly? Rust says yes, other people say no. Before we can resolve that disonnance, I need to shine some light on what _raw_ WebAssembly can do.
 <!--more-->
@@ -77,7 +79,7 @@ Writing code for a stack-based machine can sometimes feel a bit weird. Wat also 
 )
 {{< /highlight >}}
 
-The `export` declaration can assign a name to an item from the module declaration and make it available externally. In our example above we exported the `$add` function with the name `add`. 
+The `export` declaration can assign a name to an item from the module declaration and make it available externally. In our example above we exported the `$add` function with the name `add`.
 
 ## Loading a raw WebAssembly module
 

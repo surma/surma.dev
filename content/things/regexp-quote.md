@@ -1,9 +1,11 @@
+---json
 {
   "title": "My most useful RegExp trick",
   "date": "2018-05-02",
   "socialmediaimage": "layers.png",
   "live": "true"
 }
+---
 
 I don’t often use RegExp. But when I do, it’s a variation of this pattern.
 
@@ -70,7 +72,7 @@ The first realization to have is that while `/".*?"/gus` kinda works, it doesn�
 - `[a-z]` — Expect any letter between `a` and `z`
 - `[^abc]` — Expect any character _but_ `a`, `b` or `c`.
 
-With this in mind, we can write our original RegExp without a non-greedy matcher: 
+With this in mind, we can write our original RegExp without a non-greedy matcher:
 
 ```text
 /"[^"]*"/gus

@@ -1,9 +1,11 @@
+---json
 {
   "title": "Layers and how to force them",
   "date": "2018-04-19",
   "socialmediaimage": "layers.png",
   "live": "true"
 }
+---
 
 The answer is `will-change: transform`. _Or is it?_
 

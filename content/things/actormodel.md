@@ -1,9 +1,11 @@
+---json
 {
   "title": "“An Actor, a model and an architect walk onto the web...”",
   "date": "2017-12-27",
   "socialmediaimage": "gamedev.png",
   "live": "true"
 }
+---
 Everything old is new again. Let’s take a concurrency model from the 70s and apply it to the web in 2017. Why? Well, read on, will ya?
 <!--more-->
 
@@ -52,7 +54,7 @@ Let’s take a look at some Erlang code as a quick, superficial introduction to 
 
 I want to do some _incredibly_ expensive mathematical operations like adding and multiplying the numbers 4 and 9. These operations, as we all know, are so expensive that it’s sensible te move them into their own actor to potentially run in a different thread. In the Erlang world, my main program could look like this:
 
-```Erlang
+```erlang
 main() ->
   Math = spawn(math_worker),
   % Send messages to actor

@@ -1,9 +1,11 @@
+---json
 {
   "title": "Setting up HTTP/2",
   "date": "2016-01-15",
   "socialmediaimage": "h2setup.jpg",
   "live": "true"
 }
+---
 
 > **Last Update**: 2017-07-12
 
@@ -241,7 +243,7 @@ alt-svc:quic=":443"; ma=604800; v="30,29,28,27,26,25"
 ### Node
 [http2][node-http2] provides an API similar to Node’s standard HTTP server.
 
-```JavaScript
+```js
 var fs = require('fs');
 var http2 = require('http2');
 var options = {
@@ -265,7 +267,7 @@ date:Fri, 15 Jan 2016 13:28:50 GMT
 
 You need Go >= 1.6. From that point on, the standard library’s `net/http` package will automatically use HTTP/2 for TLS-enabled servers.
 
-``` Go
+``` go
 package main
 import (
     "net/http"

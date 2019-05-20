@@ -1,9 +1,11 @@
+---json
 {
   "title": "New ways to make your web app jank with Houdini – An introduction",
   "date": "2016-02-01",
   "socialmediaimage": "houdini.png",
   "live": "true"
 }
+---
 
 Clickbait blog post titles. Gotta love ’em. And this post doesn’t mention jank. You have been lied to!
 

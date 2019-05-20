@@ -1,15 +1,17 @@
+---json
 {
   "title": "How to read web specs Part IIa – Or: ECMAScript Symbols",
   "date": "2016-11-22",
   "socialmediaimage": "esnext.png",
   "live": "true"
 }
+---
 
 Two browsers behave differently when given the same code. Which one is the buggy one? The spec is almost guaranteed to contain the answer, but it’s notoriously hard to read. Maybe this will help.
 
 <!--more-->
 
-> __Note:__ Before we start: The spec is not the only or maybe not even the best source to get this kind of information. Specs are hard to read, the ECMAScript spec especially so. While there is ongoing work on making specs more digestible for developers, more approachable articles can be found on third-party sites like [MDN][MDN Symbol]. You don’t _need_ to be comfortable with the spec to be a good web developer! 
+> __Note:__ Before we start: The spec is not the only or maybe not even the best source to get this kind of information. Specs are hard to read, the ECMAScript spec especially so. While there is ongoing work on making specs more digestible for developers, more approachable articles can be found on third-party sites like [MDN][MDN Symbol]. You don’t _need_ to be comfortable with the spec to be a good web developer!
 
 The [ECMAScript 6 Standard][] (⚠️ 4MB!) – often abbreviated ES6, or now ES2015 – is a weird and big document. Originally, I wanted to write about Iterators, Generator and their respective asynchronous counterparts. While reading about one of the building block – “Iterables” – I was already lost:
 
@@ -62,20 +64,20 @@ There’s _a lot_ in here, so let’s go through it bit by bit.
 
 ### Symbol Constructor
 
-The first thing I did was to play around with the constructor a bit. According to [19.4.1][Symbol 19.4.1] “the Symbol constructor is [...] the [...] `Symbol` property of the global object.”. As defined in [19.4.1.1][Symbol 19.4.1.1], it takes an optional _description_ as argument and said argument will be turned into a string with `ToString()`. Furthermore, according to [6.1.5][Symbol 6.1.5], each Symbol is unique: 
+The first thing I did was to play around with the constructor a bit. According to [19.4.1][Symbol 19.4.1] “the Symbol constructor is [...] the [...] `Symbol` property of the global object.”. As defined in [19.4.1.1][Symbol 19.4.1.1], it takes an optional _description_ as argument and said argument will be turned into a string with `ToString()`. Furthermore, according to [6.1.5][Symbol 6.1.5], each Symbol is unique:
 
 {{< highlight JavaScript >}}
 // So you can just create symbols. They look a little
 // out of place in logs.
 const sym = Symbol();
 
-console.logAndEval('sym'); 
+console.logAndEval('sym');
 //!Step
 // You can give them descriptions which show up
 // in logs, too.
 const sym = Symbol('some description');
 
-console.logAndEval('sym'); 
+console.logAndEval('sym');
 //!Step
 // They are meant to be unique, so no two symbols
 // should ever return true when compared, even
@@ -103,7 +105,7 @@ const sym = Symbol(nonStringDescription);
 console.logAndEval('sym');
 //!Step
 // As per spec, `toString()` should be called
-// in the constructor. 
+// in the constructor.
 const nonStringDescription = {
   toString() {
     throw new Error('lol')
@@ -125,10 +127,10 @@ I was a little confused by step one of the implementation spec of the `Symbol` c
 
 > 1. If NewTarget is not `undefined`, throw a `TypeError` exception.
 
-What is _NewTarget_? After Cmd+F’ing through the spec (and, admittedly, googling it), I found something `new` I didn’t know about JavaScript (can you see what I did there?): The _NewTarget_ tells you what the target of the `new` keyword was. That means inside functions `new.target` is a way to figure out if the function has been called with `new` keyword or not. 
+What is _NewTarget_? After Cmd+F’ing through the spec (and, admittedly, googling it), I found something `new` I didn’t know about JavaScript (can you see what I did there?): The _NewTarget_ tells you what the target of the `new` keyword was. That means inside functions `new.target` is a way to figure out if the function has been called with `new` keyword or not.
 
 {{< highlight JavaScript >}}
-// In A normal function call, `new.target` 
+// In A normal function call, `new.target`
 // will be undefined.
 // As a constructor, it will be a reference to the
 // function you are currently in.
@@ -157,7 +159,7 @@ new B();
 
 So step 1 in the `Symbol()` implementation prevents it from being called as a constructor (i.e. with `new`).
 
-But now back to Symbols. 
+But now back to Symbols.
 
 ### Objects as property keys
 
@@ -187,7 +189,7 @@ const myObject = {
 console.logAndEval('myObject[keyA]');
 console.logAndEval('myObject[keyB]');
 //!Step
-// Wait... 
+// Wait...
 const keyA = {a: 1};
 const keyB = {b: 2};
 const myObject = {
@@ -199,7 +201,7 @@ console.logAndEval('myObject[keyA]');
 console.logAndEval('myObject[keyB]');
 console.logAndEval('Object.keys(myObject).length');
 //!Step
-// They call `toString()`, don’t they...  
+// They call `toString()`, don’t they...
 const keyA = {a: 1};
 const keyB = {b: 2};
 const myObject = {
@@ -212,7 +214,7 @@ console.logAndEval('Object.keys(myObject)');
 //!Step
 // But seriously, what about arrays?
 const myArray = [1, 2, 3, 4];
-const keyTypes = 
+const keyTypes =
   Object.keys(myArray)
     .map(key => typeof(key));
 
@@ -296,7 +298,7 @@ const myObject =  {
   [mySymbol]: 'hai'
 };
 
-// And share it by attaching it to 
+// And share it by attaching it to
 // the global `Symbol` object
 Symbol.mySymbol = mySymbol;
 
@@ -316,7 +318,7 @@ iframe.contentDocument.write(`
       console.log(Symbol.mySymbol);
     })();
   </script>`);
-// I honestly did never expect this to 
+// I honestly did never expect this to
 // work in the first place.
 document.body.removeChild(iframe);
 //!Step
@@ -340,7 +342,7 @@ document.body.removeChild(iframe);
 
 ## Iterables
 
-So coming back to my original question: `@@iterator` is a well-known symbol I can use to make my object iterable. 
+So coming back to my original question: `@@iterator` is a well-known symbol I can use to make my object iterable.
 
 ![The definition of an interable](new-iterables.png)
 

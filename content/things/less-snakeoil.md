@@ -1,9 +1,11 @@
+---json
 {
   "title": "Less Snake Oil, More Context",
   "date": "2018-11-05",
   "socialmediaimage": "forbench.png",
   "live": "true"
 }
+---
 
 Performance on the web can be a problem. Developers will always try to push the boundaries of what they can get away with and that's a good thing. I don't want to change that.
 

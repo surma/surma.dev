@@ -1,9 +1,11 @@
+---json
 {
   "title": "DOM2Texture: Abusing Arcane APIs",
   "date": "2017-04-24",
   "socialmediaimage": "logo.jpg",
   "live": "true"
 }
+---
 
 When using OpenGL (or WebGL), you have to do _everything_ yourself, including font rendering and layouting. I thought: “Wouldn’t it be great if you could just reuse the browser’s layouting and font-rendering engine instead of heaving to reinvent the wheel?”. Yes, but there’s no API for that. *Or is there?*
 

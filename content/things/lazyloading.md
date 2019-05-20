@@ -1,9 +1,11 @@
+---json
 {
   "title": "Lazyloading",
   "date": "2016-04-08",
   "socialmediaimage": "oldscript.png",
   "live": "true"
 }
+---
 ## Progressive enhancement
 At the PWA Roadshow event in London, [Stuart Langridge][Stuart Langridge] [pointed out a mistake][@sil tweet] in my talk. I was showing a piece of code that would lazyload iFrames. If JavaScript was not running, the iFrames would just be empty. Turns out, that is not how you do progressive enhancement!  And as Stuart rightly points out [in his blog post][@sil blog post]: It’s not about people who have JavaScript disabled, but also about people whose browser just forgot to start its JavaScript engine. Yeah, that happens. And apparently, it happens 1% of the time. So how do you do lazyloading, then?
 

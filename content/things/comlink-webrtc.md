@@ -1,9 +1,11 @@
+---json
 {
   "title": "Comlink + WebRTC — An Intro to WebRTC",
   "date": "2017-10-06",
   "socialmediaimage": "social.jpg",
   "live": "true"
 }
+---
 
 > **Update 2017-11-06**: I updated the section about gathering ICE candidates.
 

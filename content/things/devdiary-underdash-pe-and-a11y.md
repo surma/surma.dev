@@ -1,9 +1,11 @@
+---json
 {
   "title": "DevDiary Underdash: Progressive Enhancement, Graceful Degradation and Accessibility",
   "date": "2017-01-04",
   "socialmediaimage": "keyboard.jpg",
   "live": "true"
 }
+---
 
 I wrote a thing, made everything keyboard controllable and yet Rob Dodson said its accessibility sucked. WHY?!!
 
@@ -15,7 +17,7 @@ A short while ago I wrote and published [Underdash]. It’s a collection of snip
 
 ![One of the functions of Underdash](underdash.png)
 
-I thought I’d be smart by using the good old “invisible checkbox + label + CSS adjacent selector styling” trick to implement the tab panel. #usetheplatform and stuff. It would be keyboard controllable and because of the label screen readers would know what to do, too, right? 
+I thought I’d be smart by using the good old “invisible checkbox + label + CSS adjacent selector styling” trick to implement the tab panel. #usetheplatform and stuff. It would be keyboard controllable and because of the label screen readers would know what to do, too, right?
 
 {{< highlight HTML >}}
 <style>
@@ -40,13 +42,13 @@ I thought I’d be smart by using the good old “invisible checkbox + label + C
   }
 </style>
 <section class="snippet">
-  <input type="radio" name="takeWhile" 
+  <input type="radio" name="takeWhile"
     id="takeWhile_arraycode" class="arraycode" checked>
-  <input type="radio" name="takeWhile" 
+  <input type="radio" name="takeWhile"
     id="takeWhile_itercode" class="itercode">
-  <input type="radio" name="takeWhile" 
+  <input type="radio" name="takeWhile"
     id="takeWhile_aitercode" class="aitercode">
-  
+
   <label for="takeWhile_arraycode" class="arraycode" tabindex="0">
     Arrays
   </label>
@@ -56,7 +58,7 @@ I thought I’d be smart by using the good old “invisible checkbox + label + C
   <label for="takeWhile_aitercode" class="aitercode" tabindex="0">
     Async Iter
   </label>
-  
+
   <pre class="arraycode">
     ... code ...
   </pre>
@@ -69,14 +71,14 @@ I thought I’d be smart by using the good old “invisible checkbox + label + C
 </section>
 {{< /highlight >}}
 
-Even though the `<input>` is hidden, it can still be checked by clicking on the corresponding `<label>`. Using the CSS’ `:checked` selector, the visual representation changes accordingly. Here’s a live version of an [old snapshot of Underdash][old Underdash]. If you want, try out tabbing and switching panels with space. It totally works. But you already know what’s coming (because I said it in the first paragraph). This is _not_ accessible. But why exactly? 
+Even though the `<input>` is hidden, it can still be checked by clicking on the corresponding `<label>`. Using the CSS’ `:checked` selector, the visual representation changes accordingly. Here’s a live version of an [old snapshot of Underdash][old Underdash]. If you want, try out tabbing and switching panels with space. It totally works. But you already know what’s coming (because I said it in the first paragraph). This is _not_ accessible. But why exactly?
 
 ## Semantics!
 While, yes, my implementation was controllable with the keyboard, it had wrong or no semantics. If you throw a screen reader at that snapshot, it will say “Arrays, group”, “Sync Iter, group”, “Async Iter, group” when tabbing through the tabs. As Rob told me, that is the most generic word there is for screen readers. If you make a `<div>` focusable, the screen reader will call it a “group”. So if someone cannot see the visual representation, there’s no way for them to know that these are in fact tabs. To correct that  we’ll have to use ARIA attributes to assign roles to the elements. Additionally, a11y best practices demand that you tab through _components_, while the individual components consume keys like the arrow keys, home, end etc. to change state. So, let’s fix it!
 
 Rob pointed me to the [OpenAjax Alliance’s Accessibility Task Force]. They offer a vast number of accessible reference implementations of common UI patterns on the web – also among them: [a tab panel][OAA tab panel]. The reference implementation shows how to juggle all the ARIA attributes. However, the code relies on jQuery, uses old JS APIs (or doesn’t use the new ones for that matter) and imposes quite a bit of markup and styling. So I grabbed their code, ported it line by line and then condensed it down to what I needed. In the end, I had under 100 lines of JavaScript code achieving the same functionality as the implementation by OAA. [Take a look, if you dare][My tab panel].
 
-A11y? Check! But now we have another problem. We are relying on JavaScript. 
+A11y? Check! But now we have another problem. We are relying on JavaScript.
 
 ## Progressive Enhancement? Graceful degradation?
 I feel like developers try very hard to do as much as possible without JavaScript. JavaScript is part of the platform. #usetheplatform. The accessibility community specifically seems to have accepted that – provided you can’t use native web elements  – you might need JavaScript to add and maintain the semantics of your element. I do, however, also agree with notion of the progressive enhancement crowd that just because JavaScript is disabled your content shouldn’t get disabled, too. So where to draw the line?

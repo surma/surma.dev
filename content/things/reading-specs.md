@@ -1,9 +1,11 @@
+---json
 {
   "title": "How to read web specs Part I – Or: WebVR, how do you work?",
   "date": "2016-10-10",
   "socialmediaimage": "spec-head.png",
   "live": "true"
 }
+---
 
 If you are like me and you like to live on the bleeding edge, you will probably have encountered the lack of tutorials, introductions or HowTos for new web APIs. _If_ a new “thing” has actually made it into a browser, like Firefox Nightly or Chrome Canary, the only thing you might have at your disposal is probably the API spec and those tend to be hard to navigate and – fair warning – can turn out to be pretty unreliable.
 

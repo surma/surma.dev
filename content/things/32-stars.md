@@ -1,9 +1,11 @@
+---json
 {
   "title": "Chromium Bug Tracker: All bugs with >32 stars get fixed?",
   "date": "2017-02-13",
   "socialmediaimage": "tomdale.jpg",
   "live": "true"
 }
+---
 
 Ah, [Betteridge's law of headlines](https://en.wikipedia.org/wiki/Betteridge%27s_law_of_headlines) strikes again. The answer to the headline is “No”. Sorry.
 

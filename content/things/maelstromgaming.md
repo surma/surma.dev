@@ -1,9 +1,11 @@
+---json
 {
   "title": "Maelstrom Gaming and 12 fps",
   "date": "2015-11-11",
   "socialmediaimage": "12fps.png",
   "live": "true"
 }
+---
 
 [Maelstrom Gaming] is a team competing in [League of Legends]. But that’s not
 what this is about. This is about their homepage and parallax scrolling.

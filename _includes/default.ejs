@@ -1,0 +1,607 @@
+<!doctype html>
+<title>Blog redesign</title>
+<meta name="viewport" content="minimum-scale=1, width=device-width">
+<style>
+/*
+ Solarized Color Schemes originally by Ethan Schoonover
+ http://ethanschoonover.com/solarized
+
+ Ported for PrismJS by Michael Deeb
+ Website: https://michaeljdeeb.com
+ Twitter Handle: https://twitter.com/michaeljdeeb)
+*/
+
+/*
+SOLARIZED HEX
+--------- -------
+base03    #002b36
+base02    #073642
+base01    #586e75
+base00    #657b83
+base0     #839496
+base1     #93a1a1
+base2     #eee8d5
+base3     #fdf6e3
+yellow    #b58900
+orange    #cb4b16
+red       #dc322f
+magenta   #d33682
+violet    #6c71c4
+blue      #268bd2
+cyan      #2aa198
+green     #859900
+*/
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #839496; /* base0 */
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+.token.attr-name,
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #93a1a1; /* base1 */
+}
+
+.token.punctuation {
+  color: #657b83; /* base00 */
+}
+
+.namespace {
+  opacity: .7;
+}
+
+.token.property,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #d33682; /* magenta */
+}
+
+.token.attr-value,
+.token.selector,
+.token.string,
+.token.char,
+.token.builtin,
+.token.url,
+.token.inserted {
+  color: #2aa198; /* cyan */
+}
+
+.token.entity {
+  color: #2aa198; /* cyan */
+}
+
+.token.atrule,
+.token.keyword {
+  color: #859900; /* yellow */
+}
+
+.token.tag,
+.token.function {
+  color: #268bd2; /* blue */
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #cb4b16; /* orange */
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+</style>
+<style>
+  @font-face {
+    font-display: swap;
+    font-family: "Lab 2";
+    src: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FLab-DJR_2.0.eot?1558345971354");
+    src: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FLab-DJR_2.0.eot?1558345971354&#iefix") format("embedded-opentype"),url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FLab-DJR_2.0.woff2?1558345971098") format("woff2"),url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FLab-DJR_2.0.woff?1558345971002") format("woff");
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-display: swap;
+    font-family: "Vinila";
+    src: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FVinila%20Variable.woff2?1558351609082");
+    font-style: normal;
+    font-weight: 100 900;
+  }
+
+  :root {
+    --base: 16px;
+    --darkblue: rgb(10, 49, 68);
+    --blue: rgb(3, 83, 99);
+    --lightblue: rgb(12, 105, 121);
+    --purple: rgb(142, 96, 117);
+    --pink: rgb(191, 85, 105);
+    --red: rgb(218, 59, 59);
+    --orange: rgb(207, 121, 100);
+    --yellow: rgb(247, 240, 194);
+
+    --width: 960px;
+    --arrow-height: calc(2 * var(--base));
+
+    --body-font-width: 300;
+    --body-font-weight: 300;
+    --body-font-slant: 0;
+
+    --heading-lineheight: 1;
+    --heading-size: 500;
+    --heading-quad: 0;
+    --heading-bevl: 0;
+    --heading-oval: 1000;
+
+    --title-size: 0;
+    --title-quad: 0;
+    --title-bevl: 0;
+    --title-oval: 0;
+
+    --subheading-size: 0;
+    --subheading-quad: 0;
+    --subheading-bevl: 0;
+    --subheading-oval: 0;
+
+
+    --grid-gutter: var(--base);
+    --grid-height: calc(2 * var(--base));
+    --avatar-size: calc(12 * var(--base));
+    --social-icon: var(--grid-height);
+    --noise-size: 64;
+  }
+  @media (max-width: 720px) {
+    :root {
+      --base: 8px;
+    }
+  }
+  @media (max-width: 960px) {
+    :root {
+      --width: calc(100vw - 2 * var(--grid-gutter));
+    }
+
+  }
+  html, body {
+    margin: 0;
+    border: 0;
+    padding: 0;
+  }
+  html {
+    background-color: var(--darkblue);
+  }
+  body {
+    position: relative;
+    background-color: var(--yellow);
+    color: var(--darkblue);
+    font-family: "Vinila";
+    font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
+    font-size: var(--grid-height);
+    line-height: calc(var(--grid-height) + var(--grid-gutter));
+    min-height: 100vh;
+    overflow-x: hidden;
+
+  }
+  * {
+    font-variation-settings: inherit;
+  }
+  main {
+    max-width: var(--width);
+    margin: 0 auto;
+    padding: var(--grid-gutter);
+  }
+  a {
+    color: var(--red);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  strong {
+    --body-font-weight: 700;
+    font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
+  }
+  em {
+    --body-font-slant: 10;
+    font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
+  }
+  p {
+    margin: calc(var(--grid-height) + 2 * var(--grid-gutter)) 0;
+  }
+  :not(pre) > code {
+    color: var(--blue);
+  }
+  h1, h2, h3 {
+    margin: 0;
+    font-family: "Lab 2";
+    font-variation-settings: 'size' var(--heading-size), 'quad' var(--heading-quad), 'bevl' var(--heading-bevl), 'oval' var(--heading-oval);
+    line-height: 1.2em;
+  }
+  h2 {
+    --color: var(--darkblue);
+    --font-size: calc(1.5 * var(--grid-height));
+
+    position: relative;
+    margin-top: calc(3 * (var(--grid-height) + var(--grid-gutter)));
+    margin-bottom: calc(2 * (var(--grid-height) + var(--grid-gutter)));
+    margin-left: calc((100vw - var(--width)) / -2);
+    margin-right: calc((100vw - var(--width)) / -2);
+    padding: var(--grid-height);
+    padding-left: calc(50vw - var(--width)/2);
+    padding-right: calc(var(--width)/2 + 50vw - var(--width)/2);
+
+    color: var(--yellow);
+    font-size: var(--font-size);
+    background: var(--color);
+
+    filter: drop-shadow(0px 3px 2px var(--color));
+  }
+
+  h2:before, h2:after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: var(--arrow-height);
+    background: var(--color);
+    mask: var(--mask);
+    -webkit-mask: var(--mask);
+  }
+  h2:before {
+    top: calc(var(--arrow-height) * -1);
+    --mask: url(arrow.svg) 0% 0%/100% 200%;
+  }
+  h2:after {
+    top: 100%;
+    --mask: url(arrow.svg) 0% 100%/100% 200%;
+  }
+
+  h3 {
+    font-size: inherit;
+    margin: 0;
+    font-variation-settings: 'size' var(--subheading-size), 'quad' var(--subheading-quad), 'bevl' var(--subheading-bevl), 'oval' var(--subheading-oval);
+  }
+  h3 + p {
+    margin-top: 0;
+  }
+  pre {
+    --color: var(--darkblue);
+    position: relative;
+    display: block;
+    margin-left: calc((100vw - var(--width)) / -2);
+    margin-right: calc((100vw - var(--width)) / -2);
+    background-color: var(--color);
+    padding: var(--grid-height) 0;
+
+    filter: drop-shadow(0px 3px 2px var(--color));
+  }
+  pre:before, pre:after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: var(--arrow-height);
+    background: inherit;
+    mask: var(--mask);
+    -webkit-mask: var(--mask);
+
+  }
+  pre:before {
+    top: calc(var(--arrow-height) * -1);
+    --mask: url(arrow.svg) 0% 0%/100% 200%;
+  }
+  pre:after {
+    top: 100%;
+    --mask: url(arrow.svg) 0% 100%/100% 200%;
+  }
+
+  pre > code {
+    display: inline-block;
+    margin: 0 auto;
+    color: #839496;
+    box-sizing: border-box;
+    padding: var(--grid-gutter);
+    width: 100%;
+    overflow-x: auto;
+    padding-left: calc(50vw - var(--width)/2);
+    padding-right: calc(50vw - var(--width)/2);
+  }
+  blockquote {
+    --color: var(--blue);
+    --font-size: calc(1 * var(--grid-height));
+    position: relative;
+    background-color: var(--color);
+    margin-left: calc((100vw - var(--width)) / -2);
+    padding: var(--grid-height);
+    padding-left: calc((100vw - var(--width)) / 2);
+    padding-right: var(--grid-gutter);
+    color: var(--yellow);
+    margin-right: var(--arrow-height);
+
+    filter: drop-shadow(0px 3px 2px var(--color));
+  }
+  blockquote:before {
+    content: "";
+    position: absolute;
+    display: block;
+    left: 100%;
+    top: 0;
+    width: var(--arrow-height);
+    height: 100%;
+    background: inherit;
+    mask: var(--mask);
+    --mask: url(arrow-right.svg) 100% 0%/200% 100%;
+    -webkit-mask: var(--mask);
+  }
+  blockquote > p:first-child {
+    margin-top: 0;
+  }
+  blockquote > p:last-child {
+    margin-bottom: 0;
+  }
+  aside.warning {
+    --color: var(--red);
+  }
+  header, footer {
+    --spacing: var(--grid-height);
+    background: var(--darkblue);
+    color: var(--yellow);
+    padding-top: 1px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    align-items: flex-end;
+    padding: var(--spacing);
+  }
+  header > h1 {
+    margin: 0;
+    padding: 0;
+    flex-basis: 50%;
+    transform-origin: 0% 100%;
+    transform: rotate(2deg);
+    font-variation-settings: 'size' var(--title-size), 'quad' var(--title-quad), 'bevl' var(--title-bevl), 'oval' var(--title-oval);
+  }
+  header > h1:before, header > h1:after {
+    content: none;
+  }
+  header > time {
+    font-family: "Lab 2";
+    font-variation-settings: 'size' var(--heading-size), 'quad' var(--heading-quad), 'bevl' var(--heading-bevl), 'oval' var(--heading-oval);
+    color: var(--lightblue);
+    transform-origin: 100% 100%;
+    transform: rotate(-2deg);
+    flex-grow: 1;
+    text-align: right;
+    margin-top: calc(1 * var(--grid-height));
+  }
+  header > .arrows, footer > .arrows {
+    flex-basis: calc(100% + 2 * var(--spacing));
+    margin: calc(-1 * var(--spacing));
+  }
+  header > .arrows {
+    margin-top: calc(1 * var(--grid-height));
+  }
+  footer > .arrows {
+    margin-bottom: calc(1 * var(--grid-height));
+  }
+  footer > .arrows .arrow:last-of-type {
+    filter: none;
+  }
+  .me {
+    width: var(--width);
+    margin: calc(3 * var(--grid-height)) auto;
+    display: grid;
+    grid-gap: var(--grid-gutter);
+    grid-template-columns: var(--avatar-size) 1fr [social-col] repeat(4, var(--social-icon));
+    grid-template-rows: var(--avatar-size) 1fr;
+    place-items: stretch;
+    grid-auto-flow: row sparse;
+  }
+  .name, .info {
+    margin: 0;
+    padding: 0;
+  }
+  .me .name {
+    font-family: "Lab 2";
+    font-variation-settings: 'size' var(--heading-size), 'quad' var(--heading-quad), 'bevl' var(--heading-bevl), 'oval' var(--heading-oval);
+    font-size: calc(1.5 * var(--grid-height));
+    margin-bottom: var(--grid-gutter);
+  }
+  .me > .bio {
+    align-self: center;
+    grid-column: 2 / end;
+  }
+  .me .icon:first-of-type {
+    grid-column-start: social-col;
+  }
+
+  .avatar {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    border-radius: 50%;
+    grid-row-span: 2;
+    grid-column-span: 2;
+  }
+  .arrow {
+    position: relative;
+    height: var(--grid-height);
+    background: var(--color);
+  }
+  .arrow:after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: var(--arrow-height);
+    background: var(--color);
+    mask: var(--mask);
+    -webkit-mask: var(--mask);
+    top: 100%;
+    --mask: url(arrow.svg) 0% 100%/100% 200%;
+  }
+  .arrow:nth-of-type(1) {
+    z-index: calc(10 - 1);
+  }
+  .arrow:nth-of-type(2) {
+    z-index:  calc(10 - 2);
+  }
+  .arrow:nth-of-type(3) {
+    z-index:  calc(10 - 3);
+  }
+  .arrow:nth-of-type(4) {
+    z-index:  calc(10 - 4);
+  }
+  .arrow:nth-of-type(5) {
+    z-index:  calc(10 - 5);
+  }
+  .arrow:nth-of-type(6) {
+    z-index:  calc(10 - 6);
+  }
+  .arrow:nth-of-type(7) {
+    z-index:  calc(10 - 7);
+  }
+  .arrow:last-of-type {
+    filter: drop-shadow(0px 3px 2px var(--color));
+  }
+  .arrow.darkblue {
+    --color: var(--darkblue);
+  }
+  .arrow.blue {
+    --color: var(--blue);
+  }
+  .arrow.lightblue {
+    --color: var(--lightblue);
+  }
+  .arrow.purple {
+    --color: var(--purple);
+  }
+  .arrow.pink {
+    --color: var(--pink);
+  }
+  .arrow.red {
+    --color: var(--red);
+  }
+  .arrow.orange {
+    --color: var(--orange);
+  }
+  .arrow.yellow {
+    --color: var(--yellow);
+  }
+
+  .icon {
+    display: block;
+    width: var(--social-icon);
+    height: var(--social-icon);
+    background: var(--yellow);
+    mask: var(--mask) var(--social-icon);
+    -webkit-mask: var(--mask) var(--social-icon);
+  }
+  .icon.github {
+    --mask: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2Fgithub.svg?1558303874162");
+  }
+  .icon.twitter {
+    --mask: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2Ftwitter.svg?1558303874059");
+  }
+  .icon.rss {
+    --mask: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2Frss.svg?1558303874081");
+  }
+  .icon.podcast {
+    --mask: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2Fpodcasts.svg?1558303887324");
+  }
+  .noise {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: calc(2px * var(--noise-size));
+    pointer-events: none;
+    opacity: 0.012;
+    z-index: 999;
+    animation: fade-in 4s;
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+</style>
+<header>
+  <h1>
+    <%= title %>
+  </h1>
+  <time datetime="<%= date %>">
+    <%= date %>
+  </time>
+  <div class="arrows">
+    <div class="arrow darkblue"></div>
+    <div class="arrow blue"></div>
+    <div class="arrow lightblue"></div>
+    <div class="arrow purple"></div>
+    <div class="arrow pink"></div>
+    <div class="arrow red"></div>
+    <div class="arrow orange"></div>
+  </div>
+</header>
+<main>
+  <%- content %>
+</main>
+<footer>
+   <div class="arrows">
+     <div class="arrow yellow"></div>
+     <div class="arrow orange"></div>
+     <div class="arrow red"></div>
+     <div class="arrow pink"></div>
+     <div class="arrow purple"></div>
+     <div class="arrow lightblue"></div>
+     <div class="arrow blue"></div>
+  </div>
+  <section class="me">
+    <img src="http://f.surma.link/profile.jpg" class="avatar">
+    <div class="bio">
+      <h3 class="name">
+        Surma
+      </h3>
+      <p class="info">
+        Web Advocate @Google. Internetrovert 🏳️‍🌈  Craving simplicity, finding it nowhere.
+      </p>
+    </div>
+    <a href="https://twitter.com/dassurma" class="icon twitter" aria-label="Twitter"></a>
+    <a href="https://github.com/surma" class="icon github" aria-label="GitHub"></a>
+    <a href="https://player.fm/series/http-203-podcast-88674" class="icon podcast" aria-label="Podcast"></a>
+    <a href="https://dassur.ma" class="icon rss" aria-label="RSS feed"></a>
+  </section>
+</footer>
+<script src="/noise.js" type="module"></script>

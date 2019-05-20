@@ -1,9 +1,11 @@
+---json
 {
   "title": "Deep-copying in JavaScript",
   "date": "2018-01-25",
   "socialmediaimage": "social.png",
   "live": "true"
 }
+---
 How do I _copy_ an object in JavaScript? It’s a simple question, without a simple answer.
 <!--more-->
 

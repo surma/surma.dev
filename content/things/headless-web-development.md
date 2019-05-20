@@ -1,3 +1,4 @@
+---json
 {
   "title": "Headless Web Development",
   "date": "2018-10-05",
@@ -5,7 +6,7 @@
   "live": "true",
   "authorname": "Paul Lewis",
   "authorlink": "https://twitter.com/aerotwist"
-}
+---
 
 I love photography. I love checking out what people are snapping on Instagram, I watch YouTube videos on how to take and edit my own photos, and above all I love capturing a special moment in time of a person, a place, or a thing.
 
@@ -34,6 +35,7 @@ What’s the downside here? Compared to today there’s some thinking to do to �
 
 So when you think of cameras and lenses, you’re really seeing something like [The Actor Model](/things/lights-camera-action). The Actor Model is a particularly good fit for the web, and it unlocks a very exciting future!
 
+}
 ---
 
 While I have written this article, ideas and thoughts don’t happen in a vacuum. Specifically, in this case, [Surma](https://twitter.com/DasSurma) can be thought of as the co-author of this series, since most of it has come from our many conversations together.

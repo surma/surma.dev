@@ -1,5 +1,3 @@
 /node_modules
-/dist
-/app
-config.json
+/_site
 .DS_Store
