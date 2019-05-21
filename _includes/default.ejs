@@ -1,126 +1,10 @@
 <!doctype html>
 <title>Blog redesign</title>
 <meta name="viewport" content="minimum-scale=1, width=device-width">
-<style>
-/*
- Solarized Color Schemes originally by Ethan Schoonover
- http://ethanschoonover.com/solarized
-
- Ported for PrismJS by Michael Deeb
- Website: https://michaeljdeeb.com
- Twitter Handle: https://twitter.com/michaeljdeeb)
-*/
-
-/*
-SOLARIZED HEX
---------- -------
-base03    #002b36
-base02    #073642
-base01    #586e75
-base00    #657b83
-base0     #839496
-base1     #93a1a1
-base2     #eee8d5
-base3     #fdf6e3
-yellow    #b58900
-orange    #cb4b16
-red       #dc322f
-magenta   #d33682
-violet    #6c71c4
-blue      #268bd2
-cyan      #2aa198
-green     #859900
-*/
-
-code[class*="language-"],
-pre[class*="language-"] {
-	color: #839496; /* base0 */
-	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	text-align: left;
-	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
-	word-wrap: normal;
-
-	line-height: 1.5;
-
-	-moz-tab-size: 4;
-	-o-tab-size: 4;
-	tab-size: 4;
-
-	-webkit-hyphens: none;
-	-moz-hyphens: none;
-	-ms-hyphens: none;
-	hyphens: none;
-}
-
-.token.attr-name,
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata {
-  color: #93a1a1; /* base1 */
-}
-
-.token.punctuation {
-  color: #657b83; /* base00 */
-}
-
-.namespace {
-  opacity: .7;
-}
-
-.token.property,
-.token.boolean,
-.token.number,
-.token.constant,
-.token.symbol,
-.token.deleted {
-  color: #d33682; /* magenta */
-}
-
-.token.attr-value,
-.token.selector,
-.token.string,
-.token.char,
-.token.builtin,
-.token.url,
-.token.inserted {
-  color: #2aa198; /* cyan */
-}
-
-.token.entity {
-  color: #2aa198; /* cyan */
-}
-
-.token.atrule,
-.token.keyword {
-  color: #859900; /* yellow */
-}
-
-.token.tag,
-.token.function {
-  color: #268bd2; /* blue */
-}
-
-.token.regex,
-.token.important,
-.token.variable {
-  color: #cb4b16; /* orange */
-}
-
-.token.important,
-.token.bold {
-  font-weight: bold;
-}
-.token.italic {
-  font-style: italic;
-}
-
-.token.entity {
-  cursor: help;
-}
-</style>
+<link rel="prefetch" href="/static/syntax.css" onload="this.rel = 'stylesheet'">
+<noscript>
+    <link rel="stylesheet" href="/static/syntax.css">
+</noscript>
 <style>
   @font-face {
     font-display: swap;
@@ -217,6 +101,7 @@ pre[class*="language-"] {
   main {
     max-width: var(--width);
     margin: 0 auto;
+    margin-top: calc(3 * var(--grid-height));
     padding: var(--grid-gutter);
   }
   a {
@@ -279,11 +164,11 @@ pre[class*="language-"] {
   }
   h2:before {
     top: calc(var(--arrow-height) * -1);
-    --mask: url(arrow.svg) 0% 0%/100% 200%;
+    --mask: url("/static/arrow.svg") 0% 0%/100% 200%;
   }
   h2:after {
     top: 100%;
-    --mask: url(arrow.svg) 0% 100%/100% 200%;
+    --mask: url("/static/arrow.svg") 0% 100%/100% 200%;
   }
 
   h3 {
@@ -319,11 +204,11 @@ pre[class*="language-"] {
   }
   pre:before {
     top: calc(var(--arrow-height) * -1);
-    --mask: url(arrow.svg) 0% 0%/100% 200%;
+    --mask: url("/static/arrow.svg") 0% 0%/100% 200%;
   }
   pre:after {
     top: 100%;
-    --mask: url(arrow.svg) 0% 100%/100% 200%;
+    --mask: url("/static/arrow.svg") 0% 100%/100% 200%;
   }
 
   pre > code {
@@ -336,6 +221,7 @@ pre[class*="language-"] {
     overflow-x: auto;
     padding-left: calc(50vw - var(--width)/2);
     padding-right: calc(50vw - var(--width)/2);
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
   }
   blockquote {
     --color: var(--blue);
@@ -361,7 +247,7 @@ pre[class*="language-"] {
     height: 100%;
     background: inherit;
     mask: var(--mask);
-    --mask: url(arrow-right.svg) 100% 0%/200% 100%;
+    --mask: url("/static/arrow-right.svg") 100% 0%/200% 100%;
     -webkit-mask: var(--mask);
   }
   blockquote > p:first-child {
@@ -450,8 +336,6 @@ pre[class*="language-"] {
     width: var(--avatar-size);
     height: var(--avatar-size);
     border-radius: 50%;
-    grid-row-span: 2;
-    grid-column-span: 2;
   }
   .arrow {
     position: relative;
@@ -469,7 +353,7 @@ pre[class*="language-"] {
     mask: var(--mask);
     -webkit-mask: var(--mask);
     top: 100%;
-    --mask: url(arrow.svg) 0% 100%/100% 200%;
+    --mask: url("/static/arrow.svg") 0% 100%/100% 200%;
   }
   .arrow:nth-of-type(1) {
     z-index: calc(10 - 1);
@@ -529,16 +413,16 @@ pre[class*="language-"] {
     -webkit-mask: var(--mask) var(--social-icon);
   }
   .icon.github {
-    --mask: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2Fgithub.svg?1558303874162");
+    --mask: url("/static/github.svg");
   }
   .icon.twitter {
-    --mask: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2Ftwitter.svg?1558303874059");
+    --mask: url("/static/twitter.svg");
   }
   .icon.rss {
-    --mask: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2Frss.svg?1558303874081");
+    --mask: url("/static/rss.svg");
   }
   .icon.podcast {
-    --mask: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2Fpodcasts.svg?1558303887324");
+    --mask: url("/static/podcast.svg");
   }
   .noise {
     position: absolute;
@@ -589,7 +473,7 @@ pre[class*="language-"] {
      <div class="arrow blue"></div>
   </div>
   <section class="me">
-    <img src="http://f.surma.link/profile.jpg" class="avatar">
+    <img src="/static/surma.jpg" class="avatar">
     <div class="bio">
       <h3 class="name">
         Surma
@@ -604,4 +488,4 @@ pre[class*="language-"] {
     <a href="https://dassur.ma" class="icon rss" aria-label="RSS feed"></a>
   </section>
 </footer>
-<script src="/noise.js" type="module"></script>
+<script src="/static/noise.js" type="module"></script>
