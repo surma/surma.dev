@@ -312,7 +312,7 @@
     margin: calc(3 * var(--grid-height)) auto;
     display: grid;
     grid-gap: var(--grid-gutter);
-    grid-template-columns: var(--avatar-size) 1fr [social-col] repeat(4, var(--social-icon));
+    grid-template-columns: var(--avatar-size) 1fr [social-col] repeat(6, var(--social-icon));
     grid-template-rows: var(--avatar-size) 1fr;
     place-items: stretch;
     grid-auto-flow: row sparse;
@@ -409,23 +409,23 @@
 
   .icon {
     display: block;
+    position: relative;
     width: var(--social-icon);
     height: var(--social-icon);
     background: var(--yellow);
     mask: var(--mask) var(--social-icon);
     -webkit-mask: var(--mask) var(--social-icon);
   }
-  .icon.github {
-    --mask: url("/static/github.svg");
+  .icon:empty {
+    opacity: 0;
   }
-  .icon.twitter {
-    --mask: url("/static/twitter.svg");
-  }
-  .icon.rss {
-    --mask: url("/static/rss.svg");
-  }
-  .icon.podcast {
-    --mask: url("/static/podcast.svg");
+  .icon a {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
   }
   .noise {
     position: absolute;
@@ -476,19 +476,33 @@
      <div class="arrow blue"></div>
   </div>
   <section class="me">
-    <img src="/static/surma.jpg" class="avatar">
+    <img src="/static/avatars/<%= author.avatar %>" class="avatar">
     <div class="bio">
       <h3 class="name">
-        Surma
+        <%= author.name %>
       </h3>
       <p class="info">
-        Web Advocate @Google. Internetrovert 🏳️‍🌈 Craving simplicity, finding it nowhere.
+        <%= author.bio %>
       </p>
     </div>
-    <a href="https://twitter.com/dassurma" class="icon twitter" aria-label="Twitter"></a>
-    <a href="https://github.com/surma" class="icon github" aria-label="GitHub"></a>
-    <a href="https://player.fm/series/http-203-podcast-88674" class="icon podcast" aria-label="Podcast"></a>
-    <a href="https://dassur.ma" class="icon rss" aria-label="RSS feed"></a>
+    <%
+      const numSocialCols = 6;
+      const socials = [
+        ...new Array(6 - Object.keys(author.socials).length).fill(["", ""]),
+        ...Object.entries(author.socials)
+      ]; 
+      for(const [social, link] of socials) { 
+        if(!social) {
+          %><span class="icon"></span><%
+          continue;
+        }
+    %>
+      <span class="icon" style="--mask: url(/static/icons/<%= social %>.svg);">
+        <a href="<%= link %>">
+          <%= social %>
+        </a>
+      </span>
+    <% } %>
   </section>
 </footer>
 <script src="/static/noise.js" type="module"></script>

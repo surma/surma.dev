@@ -4,8 +4,16 @@
   "date": "2018-10-05",
   "socialmediaimage": "camera1.jpg",
   "live": "true",
-  "authorname": "Paul Lewis",
-  "authorlink": "https://twitter.com/aerotwist"
+  "author": {
+    "name": "Paul Lewis",
+    "bio": "Googler. Host of a channel on YouTube. Talks web and stuff.",
+    "avatar": "paullewis.jpg",
+    "socials": {
+      "twitter": "https://twitter.com/aerotwist",
+      "github": "https://github.com/paullewis",
+      "website": "https://aerotwist.com"
+    }
+  }
 }
 ---
 
