@@ -4,6 +4,7 @@
   "date": "2018-09-27",
   "socialmediaimage": "3manteam.jpg",
   "live": "true"
+}
 ---
 
 

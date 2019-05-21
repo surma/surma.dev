@@ -11,7 +11,7 @@ The answer is `will-change: transform`. _Or is it?_
 
 <!-- more -->
 
-> **TL;DR**: Unless you _will change_ `transform` , don’t use `will-change: transform`. Use `will-change: opacity` or `backface-visibility: hidden`, as their side-effects are less disturbing on average.
+> **TL;DR**: Unless you _will change_ `transform`, don’t use `will-change: transform`. Use `will-change: opacity` or `backface-visibility: hidden`, as their side-effects are less disturbing on average.
 
 ## A primer to layers
 A very simplified rendering engine of a browser works as follows:

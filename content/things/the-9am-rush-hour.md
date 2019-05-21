@@ -6,6 +6,7 @@
   "live": "true",
   "authorname": "Paul Lewis",
   "authorlink": "https://twitter.com/aerotwist"
+}
 ---
 
 One of the great joys of working at Google is seeing the big trends in web development. It’s genuinely awesome to see all the innovation and excitement around new ways of crafting experiences. Though, if I’m honest, there are other trends I see, too: developers still feel overwhelmed at the vast array of approaches and tooling, struggle with performance, and fight almost daily to create compelling apps & sites that work across devices and browsers.

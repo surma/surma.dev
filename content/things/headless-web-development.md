@@ -6,6 +6,7 @@
   "live": "true",
   "authorname": "Paul Lewis",
   "authorlink": "https://twitter.com/aerotwist"
+}
 ---
 
 I love photography. I love checking out what people are snapping on Instagram, I watch YouTube videos on how to take and edit my own photos, and above all I love capturing a special moment in time of a person, a place, or a thing.
