@@ -53,7 +53,7 @@ considering that the individual visuals haven’t changed, they just changed
 position. Since these repaints are triggered on every frame when scrolling, the
 frame rate plummets.
 
-{{< highlight HTML >}}
+```html
 <script type="text/javascript" src="./Team Imagine_files/jquery.min.js"></script>
 <script type="text/javascript" src="./Team Imagine_files/jquery.parallax-1.1.3.js"></script>
 <script type="text/javascript" src="./Team Imagine_files/jquery.localscroll-1.2.7-min.js"></script>
@@ -69,7 +69,7 @@ frame rate plummets.
     $('#third').parallax("50%", 0.3);
   })
 </script>
-{{< /highlight >}}
+```
 
 Looking at the code, I found that the site was using a jQuery plugin to do it’s
 parallaxin’. I removed that plugin and its invocation, and indeed, the background
@@ -102,19 +102,19 @@ background image. The parallax effect will be achieved by applying a
 and get a `z-index` so it can be “under” the content of the section. Like a
 real, grown-up background image.
 
-{{< highlight HTML >}}
+```html
 <div id="second">
   <div class="background"></div>
   <!-- ... -->
 </div>
-{{< /highlight >}}
+```
 
 There’s two more parallax-ly scrolling images and they got the same treatment,
 but for brevity’s sake I won’t show their in the code excerpts as it is exactly
 the same. Take a look at the [repository][surma-dump/maelstromgaming] for the
 full code (in nice, bite-sized commits).
 
-{{< highlight CSS >}}
+```css
 #second {
   position: relative;
   /* ... */
@@ -137,7 +137,7 @@ full code (in nice, bite-sized commits).
   background-position: 50% 0;
   background-repeat: no-repeat;
 }
-{{< /highlight >}}
+```
 
 I am not necessarily proud of the `*:not(.background)` selector, but it was the
 easiest way to ensure that all other content had a higher `z-index` than the
@@ -157,7 +157,7 @@ We can’t use the original jQuery plugin as it relies on `background-position`
 and is therefore bad. Parallax isn’t too complicated so let’s just write our
 own piece of JavaScript.
 
-{{< highlight JS >}}
+```js
 var parallax = {
   '#second': {
     factor: 0.1
@@ -173,20 +173,20 @@ var parallax = {
 var windowHeight = window.innerHeight;
 var scrollY = window.scrollY;
 var rAFScheduled = false;
-{{< /highlight >}}
+```
 
 `parallax` is just the configuration object which defines the parallax scrolling speed.
 A factor of 0 would attach the image to the background, exactly like
 `background-attachment: fixed`. A factor of 1 means normal behavior, as in the
 background image is attached to the element.
 
-{{< highlight JS >}}
+```js
 // Gather offset data
 Object.keys(parallax).forEach(function(id) {
   parallax[id].element = document.querySelector(id).querySelector('.background');
   parallax[id].initialTop = parallax[id].element.getBoundingClientRect().top + window.scrollY;
 });
-{{< /highlight >}}
+```
 
 Here we are fetching the actual background element as well as its distance to
 the top of the page. We need this data for the parallax effect, but we only need
@@ -200,7 +200,7 @@ Additionally, `scroll` issues a `requestAnimationFrame`, where the translation
 of the background images will be calculated and applied. This debounces the
 calculation of the new image positions, as it only needs to happen once per frame.
 
-{{< highlight JS >}}
+```js
 window.addEventListener('scroll', function() {
   scrollY = window.scrollY;
   if(!rAFScheduled) {
@@ -212,7 +212,7 @@ window.addEventListener('scroll', function() {
 window.addEventListener('resize', function() {
   windowHeight = window.innerHeight;
 });
-{{< /highlight >}}
+```
 
 There’s some arithmetic going on in `updateParallaxImages`, but to make it more
 intuitive think about
@@ -220,7 +220,7 @@ parallax scrolling this way: Parallax scrolling are images behaving like
 `background-attachment: fixed`, but additionally move by a small fraction of
 the distance you actually scrolled.
 
-{{< highlight JS >}}
+```js
 function updateParallaxImages() {
   Object.keys(parallax).forEach(function(id) {
     // This offset alone would emulate fixed positioning
@@ -234,7 +234,7 @@ function updateParallaxImages() {
     offset -= (1-scroll)*windowHeight*parallax[id].factor;
     parallax[id].element.style.transform = 'translateY(' + Math.round(offset) + 'px)';
   });
-}{{< /highlight >}}
+}```
 
 And with that, we have implemented our own parallax scrolling effect that works
 at a buttery-smooth 60fps.

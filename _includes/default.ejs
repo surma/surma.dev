@@ -119,11 +119,14 @@
     --body-font-slant: 10;
     font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
   }
-  p {
+  p, pre {
     margin: calc(var(--grid-height) + 2 * var(--grid-gutter)) 0;
   }
   :not(pre) > code {
     color: var(--blue);
+  }
+  blockquote code {
+    color: var(--orange);
   }
   h1, h2, h3 {
     margin: 0;

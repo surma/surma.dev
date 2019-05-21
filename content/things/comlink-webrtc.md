@@ -60,13 +60,13 @@ In my opinion, there’s a multitude of drawbacks with this approach to teaching
 
 Everything starts with an [`RTCPeerConnection`][RTCPeerConnection].
 
-{{< highlight JavaScript >}}
+```javascript
 const connection = new RTCPeerConnection();
-{{< /highlight >}}
+```
 
 This is already a bit weird. We don’t have a connection to anyone, but we do have a connection instance. The next weird thing is that we need to create the channels we want to use later, so we create our data and video channels before an actual connection has been established. This is necessary so WebRTC can properly negotiate what kind of connection to set up. In our case we are looking to create an [`RTCDataChannel`][RTCDataChannel] so we can exchange simple text messages between peers:
 
-{{< highlight JavaScript >}}
+```javascript
 const channel = new Promise(resolve => {
   const c =
     connection.createDataChannel('somename');
@@ -75,7 +75,7 @@ const channel = new Promise(resolve => {
       resolve(c);
   };
 });
-{{< /highlight >}}
+```
 
 This is a little pattern I started using to make it easy to `await` values. It creates a promise that resolves once the data channel has been successfully opened.
 
@@ -83,16 +83,16 @@ This is a little pattern I started using to make it easy to `await` values. It c
 
 WebRTC now knows what _kind_ of connection we want, but to whom? To connect to another peer we need to tell them who and where we are, what we can do and what we expect. Additionally, we need to know the same from our remote peer. In WebRTC, part of this data is encapsulated in the [`RTCSessionDescription`][RTCSessionDescription]. Session descriptions come in two flavors: “Offers” and “Answers”. Both flavors contain mostly the same data like codecs, a password and other metadata. They seem to only differ in who gets to be the connection initiator (that’s the answer) and who is the passive listener (that’s the offer). As the the name implies we can’t start with creating an “answer”, so we start with an “offer”:
 
-{{< highlight JavaScript >}}
+```javascript
 const offer =
   new RTCSessionDescription(await connection.createOffer());
-{{< /highlight >}}
+```
 
 > **Note:** In Chrome both `createOffer()` and `createAnswer()` returns a promise that resolves to an `RTCSessionDescription`. In Safari Tech Preview and Firefox it resolves to a JSON object that needs to be passed to the `RTCSessionDescription` constructor.
 
 Now we need to tell the connection instance that we are using this end of the connection. Why? I don’t know, who else would own this end of the connection? Oh well, here goes:
 
-{{< highlight JavaScript >}}
+```javascript
 connection.setLocalDescription(offer);
 connection.onicecandidate = ({candidate}) => {
   if (!candidate) return;
@@ -103,7 +103,7 @@ connection.onicegatheringstatechange = _ => {
     // We are done collecting candidates
   }
 }
-{{< /highlight >}}
+```
 
 Once we set our local description, we will be given one or more [`RTCIceCandidate`][RTCIceCandidate] objects. [ICE] or ”Interactive Connectivity Establishment” is a protocol to establish a connection to a peer in the most efficient way possible. Each `RTCIceCandidate` contains a network identity of the host machine along with port, transport protocol and other network details. Using those additional details the ICE protocol can figure out what the most efficient path to our remote peer will be.
 
@@ -127,7 +127,7 @@ With this backend in place, the first peer creates a room with a user-given name
 
 On the other side we start the exact same way as with peer number one: By creating a `RTCPeerConnection`. But this time we want to _wait_ for a data channel to appear. Additionally we want to create an answer, for which we first need to get ahold of the offer! So we need to hit the backend, check the room’s first slot to get the the peer’s data and apply it to the connection:
 
-{{< highlight JavaScript >}}
+```javascript
 const connection = new RTCPeerConnection();
 const channel = new Promise(resolve => {
   connection.ondatachannel =
@@ -138,11 +138,11 @@ const {offer, remoteIceCandidates} =
 connection.setRemoteDescription(offer);
 for(const candidate of remoteIceCandidates)
   connection.addIceCandidate(candidate);
-{{< /highlight >}}
+```
 
 At this point this end of the connection knows how to connect to the first peer (provided there _is_ a way to connect). You’d think we could go ahead and just send our data to the other peer using this knowledge, but WebRTC wouldn‘t be WebRTC if didn’t have to do the entire dance in the other direction as well. So here goes: We have to create an answer and collect this end’s `RTCIceCandidate`s as well and send them back to our first peer — again using our signalling backend.
 
-{{< highlight JavaScript >}}
+```javascript
 const answer =
   new RTCSessionDescription(await connection.createAnswer());
 connection.setLocalDescription(answer);
@@ -156,19 +156,19 @@ connection.onicegatheringstatechange = _ => {
   }
 }
 await putDataIntoRoomSlot([answer, allIceCandidates], roomName, 2);
-{{< /highlight >}}
+```
 
 ### Back to the first peer
 
 Meanwhile the first peer has been patiently polling for data to appear in the second slot of our room. Once it does, we do the same as our second peer:
 
-{{< highlight JavaScript >}}
+```javascript
 const {offer, remoteIceCandidates} =
   await getDataFromBackend(roomName);
 connection.setRemoteDescription(offer);
 for(const candidate of remoteIceCandidates)
   connection.addIceCandidate(candidate);
-{{< /highlight >}}
+```
 
 At this point our `RTCPeerConnection` is exactly that, a proper connection! 🎉 You can see why most tutorials start with creating a connection within the same page as it allows them to skip the backend and just pass the offer and the answer directly to both ends of the connection. But we want the real deal, and we felt the pain, didn’t we? Now that our connection is established, we don‘t need our backend anymore(!!). Our channel promise should resolve and we can actually start transfering data. We can send buffers or strings using `send()` and listen to incoming messages using `onmessage` on that channel object.
 
@@ -190,7 +190,7 @@ The WebRTC bit of this blog post is done. We have have a data channel that allow
 
 [Comlink] is my most recent pet project. At it‘s core it’s an RPC library. It’s was extracted from the polyfill I wrote for my [tasklets] proposal. It’s purpose is to expose JavaScript values to remote JavaScript environments as if they were local values. The canonical example is a website that creates a worker. Comlink allows you to use the values of the “remote” worker environment as if they were part of your main thread JavaScript scope. Here’s a code snippet that will hopefully make it clear:
 
-{{< highlight HTML >}}
+```html
 <-- index.html -->
 <!doctype html>
 <script src="../../dist/comlink.global.js"></script>
@@ -210,9 +210,9 @@ The WebRTC bit of this blog post is done. We have have a data channel that allow
 
   init();
 </script>
-{{< /highlight >}}
+```
 
-{{< highlight JavaScript >}}
+```javascript
 // worker.js
 importScripts('../dist/comlink.global.js');
 
@@ -231,7 +231,7 @@ class App {
 }
 
 Comlink.expose({App}, self);
-{{< /highlight >}}
+```
 
 As you can see, even though the `App` class is defined in a different scope (and in a different thread, even!), I can access it from my website’s JavaScript environment through Comlink. That instance I create is also in the worker context, which is why all operations are implicitly async-ified (yes, that’s a word).
 
@@ -256,7 +256,7 @@ Here’s the bit where I started to go a bit a crazy and push the limits. I expo
 - `log`: The `console.log` function
 - `getWindow`: A function that will return a proxy to the `window` object. With this, you have access to _everything_. `document`? Check. Globals? Check. `eval()`? Check.
 
-{{< highlight JavaScript >}}
+```javascript
   const exposedThing = {
     changeBackgroundColor: (r, g, b) => {
       document.body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
@@ -267,7 +267,7 @@ Here’s the bit where I started to go a bit a crazy and push the limits. I expo
   const channel = await createChannelUsingWebRTC(roomname);
   const comlinkChannel = MessageChannelAdapter.wrap(channel);
   Comlink.expose(exposedThing, comlinkChannel);
-{{< /highlight >}}
+```
 
 The other end can now use `exposedThing` as if it was a local value. They can change the pages background color by calling `changeBackgroundColor`, they can call `log` and make things appear in the other browser’s DevTools. They can even change the pages title using `(await getWindow()).document.title` and many other variants. See the [video] at the start of the blogpost above for a demonstration.
 

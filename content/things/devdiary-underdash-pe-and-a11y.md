@@ -19,7 +19,7 @@ A short while ago I wrote and published [Underdash]. It’s a collection of snip
 
 I thought I’d be smart by using the good old “invisible checkbox + label + CSS adjacent selector styling” trick to implement the tab panel. #usetheplatform and stuff. It would be keyboard controllable and because of the label screen readers would know what to do, too, right?
 
-{{< highlight HTML >}}
+```html
 <style>
   .snippet input {
     display: none;
@@ -69,7 +69,7 @@ I thought I’d be smart by using the good old “invisible checkbox + label + C
     ... code ...
   </pre>
 </section>
-{{< /highlight >}}
+```
 
 Even though the `<input>` is hidden, it can still be checked by clicking on the corresponding `<label>`. Using the CSS’ `:checked` selector, the visual representation changes accordingly. Here’s a live version of an [old snapshot of Underdash][old Underdash]. If you want, try out tabbing and switching panels with space. It totally works. But you already know what’s coming (because I said it in the first paragraph). This is _not_ accessible. But why exactly?
 

@@ -45,7 +45,7 @@ Let’s look at some code. The example shown here links up two scrolling element
 
 ### Animators
 
-{{< highlight JS >}}
+```js
 registerAnimator('sync-scroller', class SyncScrollerAnimator {
   static get inputProperties = ['--scroller-type'];
   static get inputScroll = true;
@@ -66,13 +66,13 @@ registerAnimator('sync-scroller', class SyncScrollerAnimator {
     });
   }
 });
-{{< /highlight >}}
+```
 
 Animators are classes that are run in the worklet and get to control certain attributes of DOM elements. Input properties are properties the animator needs to read to compute the animation. Output properties are properties that the animator might mutate. Both sets of properties have to be declared ahead of time. This will allow browsers to skip running an animatior if none of the input attributes changed since last frame.
 
 For v1 of the Animation Worklet spec, the set of mutable attributes is limited to “fast” attributes like `opacity`, `transform` and scroll offsets. Scrolling has a special role which is why they get their own attributes called `inputScroll` and `outputScroll`.
 
-{{< highlight HTML >}}
+```html
 <style>
   .scroller {
     overflow-y: scroll;
@@ -95,7 +95,7 @@ For v1 of the Animation Worklet spec, the set of mutable attributes is limited t
 <div id="alt_scroller" class="scroller">
   <div>some other content that scroll in sync.</div>
 </div>
-{{< /highlight >}}
+```
 
 Using the CSS `animator` directive, we can link up elements to an animator instance.
 

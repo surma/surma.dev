@@ -54,7 +54,6 @@ What does this all point to? For me, a yet-to-exist scheduler that I think we ne
 
 We need better defaults. We need more organized traffic.
 
-}
 ---
 
 While I have written this article, ideas and thoughts don’t happen in a vacuum. Specifically, in this case, [Surma](https://twitter.com/DasSurma) can be thought of as the co-author of this series, since most of it has come from our many conversations together.

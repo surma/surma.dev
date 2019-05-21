@@ -36,7 +36,6 @@ What’s the downside here? Compared to today there’s some thinking to do to �
 
 So when you think of cameras and lenses, you’re really seeing something like [The Actor Model](/things/lights-camera-action). The Actor Model is a particularly good fit for the web, and it unlocks a very exciting future!
 
-}
 ---
 
 While I have written this article, ideas and thoughts don’t happen in a vacuum. Specifically, in this case, [Surma](https://twitter.com/DasSurma) can be thought of as the co-author of this series, since most of it has come from our many conversations together.

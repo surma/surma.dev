@@ -26,7 +26,7 @@ I am not going to explain all the details of the WebAssembly virtual machine, bu
 
 You can follow along on your own machine with the tools mentioned above, open the hosted version of the demos (linked under each example) or use [WebAssembly.studio], which has support for Wat but also C, Rust and AssemblyScript.
 
-{{< highlight wat >}}
+```
 (;
   Filename: add.wat
   This is a block comment.
@@ -40,13 +40,13 @@ You can follow along on your own machine with the tools mentioned above, open th
   )
   (export "add" (func $add))
 )
-{{< /highlight >}}
+```
 
 The file starts with a module expression, which is a list of declarations what the module contains. This can be a multitude of things, but in this case it’s just the declaration of a function and an export statement. Everthing that starts with `$` is a named identifier and is turned into a unique number during compilation. These identifiers can be omitted (and the compiler will take care of the numbering), but the named identifiers make Wat code much easier to follow.
 
 After assembling our `.wat` file with `wat2wasm`, we can disassemble it again (for lols) with `wasm2wat`. The result is below.
 
-{{< highlight wat >}}
+```
 (module
   (type (;0;) (func (param i32 i32) (result i32)))
   (func (;0;) (type 0) (param i32 i32) (result i32)
@@ -56,7 +56,7 @@ After assembling our `.wat` file with `wat2wasm`, we can disassemble it again (f
    )
   (export "add" (func 0))
 )
-{{< /highlight >}}
+```
 
 As you can see, the named identifiers have disappeared and have been replaced with (somewhat) helpful comments by the disassembler. You can also see a `type` declaration that was generated for you by `wat2wasm`. It’s technically always necessary to declare a function’s type before declaring the function itself, but because the type is fully inferrable from the declaration, `wat2wasm` injects the type declaration for us. Within this context, function type declarations will seem a bit redundant, but they will become more useful when we talk about function imports later.
 
@@ -67,7 +67,7 @@ A function declaration consists of a couple of items, starting with `func` keywo
 
 Writing code for a stack-based machine can sometimes feel a bit weird. Wat also offers “folded” instructions, which look a bit like functional programming. The following two function declarations are equivalent:
 
-{{< highlight wat >}}
+```
 (func $add (param $p1 i32) (param $p2 i32) (result i32)
   local.get $p1
   local.get $p2
@@ -77,7 +77,7 @@ Writing code for a stack-based machine can sometimes feel a bit weird. Wat also 
 (func $add (param $p1 i32) (param $p2 i32) (result i32)
   (i32.add (local.get $p1) (local.get $p2))
 )
-{{< /highlight >}}
+```
 
 The `export` declaration can assign a name to an item from the module declaration and make it available externally. In our example above we exported the `$add` function with the name `add`.
 
@@ -85,7 +85,7 @@ The `export` declaration can assign a name to an item from the module declaratio
 
 If we compile our `add.wat` file to a `add.wasm` file and load it in the browser (or in node, if you fancy), you should see an `add()` function on the `exports` property of your module instance.
 
-{{< highlight html >}}
+```html
 <script>
   async function run() {
     const {instance} = await WebAssembly.instantiateStreaming(
@@ -96,13 +96,13 @@ If we compile our `add.wat` file to a `add.wasm` file and load it in the browser
   }
   run();
 </script>
-{{< /highlight >}}
+```
 
 > [Live demo](examples/wat_add/)
 
 The compilation of a WebAssembly module can start even when the module is still downloading. The bigger the wasm module, the more important it is to parallelize downloading and compilation using `instantiateStreaming`. There is two pitfalls with this functions, though: Firstly, it will throw if you don’t have the right `Content-Type` header, so make sure you set it to `application/wasm` for all `.wasm` files. Secondly, Safari doesn’t support `instantiateStreaming` at all yet, so I tend to use this drop-in replacement:
 
-{{< highlight html >}}
+```html
 <script>
   async function maybeInstantiateStreaming(path, ...opts) {
     // Start the download asap.
@@ -124,7 +124,7 @@ The compilation of a WebAssembly module can start even when the module is still 
     }
   }
 </script>
-{{< /highlight >}}
+```
 
 This is similar to [what Emscripten does][emscripten-instantiate] and has worked well in the past.
 
@@ -132,7 +132,7 @@ This is similar to [what Emscripten does][emscripten-instantiate] and has worked
 
 A WebAssembly module can have multiple functions, but not all of them need to be exported:
 
-{{< highlight wat >}}
+```
 ;; Filename: contrived.wat
 (module
   (func $add (; …same as before… ;))
@@ -149,7 +149,7 @@ A WebAssembly module can have multiple functions, but not all of them need to be
   (export "add2" (func $add2))
   (export "add3" (func $add3))
 )
-{{< /highlight >}}
+```
 
 > [Live demo](examples/wat_contrived/)
 
@@ -157,7 +157,7 @@ Notice how `add2` and `add3` are exported, but `add` is not. As such `add()` wil
 
 WebAssembly modules can not only export functions but also _expect_ a function to be passed _to_ the WebAssembly module at instantiation time by specifying an `import`:
 
-{{< highlight wat >}}
+```
 ;; Filename: funcimport.wat
 (module
   ;; A function with no parameters and no return value.
@@ -170,11 +170,11 @@ WebAssembly modules can not only export functions but also _expect_ a function t
   )
   (export "doLog" (func $doLog))
 )
-{{< /highlight >}}
+```
 
 If we load this module with our previous loader code, it will error. It is expecting a function in its _imports object_ and we have provided none. Let’s fix that:
 
-{{< highlight html >}}
+```html
 <script>
   async function run() {
     function log() {
@@ -191,7 +191,7 @@ If we load this module with our previous loader code, it will error. It is expec
   }
   run();
 </script>
-{{< /highlight >}}
+```
 
 > [Live demo](examples/wat_funcimport/)
 
@@ -205,7 +205,7 @@ There’s only so much you can do when all you have is a stack. After all, the v
 
 This example is a bit contrived, so bear with me. The function `add2()` loads the first integer from memory, adds 2 to it and stores it in the next position in memory.
 
-{{< highlight wat >}}
+```
 ;; Filename: memory.wat
 (module
   ;; Create memory with a size of 1 page (= 64KiB)
@@ -234,7 +234,7 @@ This example is a bit contrived, so bear with me. The function `add2()` loads th
   )
   (export "add2" (func $add2))
 )
-{{< /highlight >}}
+```
 
 > **Note:** We could avoid the temporary store in `$p1` by moving the `i32.const 4` to the very start of the function. Many people will see that as a simplification and most compilers will actually do that for you. But for educational purposes I chose the more imperative but longer version.
 
@@ -242,7 +242,7 @@ This example is a bit contrived, so bear with me. The function `add2()` loads th
 
 To inspect the memory from JavaScript, we need to grab `memory` from our `exports` object. From that point on, it behaves like any [`ArrayBuffer`][ArrayBuffer].
 
-{{< highlight html >}}
+```html
 <script>
   async function run() {
     const {instance} = await WebAssembly.instantiateStreaming(
@@ -255,7 +255,7 @@ To inspect the memory from JavaScript, we need to grab `memory` from our `export
   }
   run();
 </script>
-{{< /highlight >}}
+```
 
 > [Live demo](examples/wat_memory/)
 

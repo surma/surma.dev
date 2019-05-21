@@ -40,7 +40,6 @@ We can learn a lot about patterns and ergonomics in an actor-driven architecture
 
 In my opinion, this is something the web urgently needs. An architecture that distributes critical resources to other actors way to structure your code for performance, modularity and maintainability.
 
-}
 ---
 
 While I have written this article, ideas and thoughts don’t happen in a vacuum. Specifically, in this case, [Paul Lewis](https://twitter.com/aerotwist) can be thought of as the co-author of this series, since most of it has come from our many conversations together.

@@ -48,7 +48,7 @@ I think of elements in the DOM tree as boxes that are laid out by the CSS engine
 
 Back to the Paint Worklet: Effectively, your code will get called for each fragment and will be given access to a stripped down canvas-like API as well as the styles applied to the element, which allows you to draw (but not visually inspect) the fragment. You can even request an “overflow” margin to allow you to draw effects *around* the element’s boundaries, just like `box-shadow`.
 
-{{< highlight JS >}}
+```js
 class {
   static get inputProperties() {
     return ['border-color', 'border-size'];
@@ -98,7 +98,7 @@ class {
     };
   }
 };
-{{< /highlight >}}
+```
 
 ### Compositor Worklet
 
@@ -106,7 +106,7 @@ At the time of writing, the compositor worklet doesn’t even have a proper draf
 
 As the name suggests, the compositor worklet lets you hook into the compositor and influence the way an element’s layer, which has already been painted, is positioned and layered on top of the other layers. To get a little more specific: You can tell the browser that you want to hook into the compositing process for a certain DOM node and can request access to certain attributes like scroll position, transform or opacity. This will force this element on its own layer and *on each frame* your code gets called. You can move your layer around by manipulating the layers transform and change its attributes (like opacity) allowing you to do fancy-schmancy things at a whopping 60 fps. Here’s a *full* implementation for parallax scrolling using the compositor worklet.
 
-{{< highlight JS >}}
+```js
 // main.js
 var worklet = new CompositorWorker('worklet.js');
 var scrollerProxy =
@@ -114,8 +114,8 @@ var scrollerProxy =
 var parallaxProxy =
   new CompositorProxy($('#image'), ['transform']);
 worklet.postMessage([scrollerProxy, parallaxProxy]);
-{{< /highlight >}}
-{{< highlight JS >}}
+```
+```js
 // worklet.js
 function tick(timestamp) {
   var t = self.parallax.transform;
@@ -129,13 +129,13 @@ self.onmessage = function(e) {
   self.parallax = e.data[1];
   self.requestAnimationFrame(tick);
 };
-{{< /highlight >}}
+```
 
 ### Layout Worklet ([spec][Layout Worklet spec])
 
 Again, a specification that is far from finished, but the concept is intriguing: Write your own layout! The layout worklet is supposed to enable you to do `display: layout('myLayout')` and run your JavaScript to arrange a node’s children in the node’s box . Of course, running a full JavaScript implementation of CSS’s `flex-box` layout will be slower than running an equivalent native implementation – but it’s easy to imagine a scenario where cutting corners can yield a performance gain. Imagine a website consisting of nothing but tiles á la Windows 10 or a [Masonry]-style layout. Absolute/fixed positioning is not used, neither is `z-index` nor do elements ever overlap or have any kind of border or overflow. Being able to skip all these checks on re-layout could yield a performance gain.
 
-{{< highlight JS >}}
+```js
 registerLayout('random-layout', class {
     static get inputProperties() {
       return [];
@@ -168,27 +168,27 @@ registerLayout('random-layout', class {
         };
     }
 });
-{{< /highlight >}}
+```
 
 ### Typed CSSOM ([spec][Typed CSSOM spec])
 That’s enough worklets for now, let’s get back to some good ol’ APIs. Typed CSSOM (CSS Object Model (Cascading Style Sheets Object Model)) addresses a problem we probably all have encountered and just learned to just put up with. Let me illustrate with a line of JavaScript:
 
-{{< highlight JS >}}
+```js
 $('#someDiv').style.height = getRandomInt() + 'px';
-{{< /highlight >}}
+```
 
 We are doing math, converting a number to a string to append a unit just to have the browser parse that string and convert it back to a number for the CSS engine to use. This gets even uglier when you [manipulate transforms with JavaScript][Aerotwist FLIP]. No more! CSS is about to get some typing, yo! This draft is one of the more mature ones and a [polyfill][Typed CSSOM polyfill] is actually already being worked on (Disclaimer: Using the polyfill will obviously add *even more* computational overhead. The point is to show how convenient the API is).
 
 Instead of strings you will be working on an element’s `StylePropertyMap`, where each CSS attribute has it’s own key and corresponding value type. Attributes like `width` have `LengthValue` as their value type. A `LengthValue` is a dictionary of all CSS units like `em`, `rem`, `px`, `percent`, etc. Setting `height: calc(5px + 5%)` would yield a `LengthValue{px: 5, percent: 5}`. Some properties like `box-sizing` just accept certain keywords and therefore have a `KeywordValue`. The validity of those attributes could now be checked at runtime.
 
-{{< highlight JS >}}
+```js
 var w1 = $('#div1').styleMap.get('width');
 var w2 = $('#div2').styleMap.get('width');
 $('#div3').styleMap.set('background-size',
   [new SimpleLength(200, 'px'), w1.add(w2)])
 $('#div4')).styleMap.get('margin-left')
   // => {em: 5, percent: 50}
-{{< /highlight >}}
+```
 
 ### Font Metrics
 
@@ -198,7 +198,7 @@ Font metrics is exactly what it sounds like. What is the bounding box (or the bo
 
 Do you know CSS Custom Properties (or their unofficial alias “CSS Variables”)? This is them but with types! So far, variables could only have string values and used a simple search-and-replace approach. This draft would allow you to not only specify a type for your variables, but also define a default value and influence the inheritance behavior using a JavaScript API. Technically, this would also allow custom properties to get animated with standard CSS transitions and animations, which is being considered.
 
-{{< highlight JS >}}
+```js
 ["--scale-x", "--scale-y"].forEach(function(name) {
 document.registerProperty({
     name: name,
@@ -207,7 +207,7 @@ document.registerProperty({
     initialValue: "1"
   });
 });
-{{< /highlight >}}
+```
 
 ### But wait, there’s more!
 

@@ -15,7 +15,7 @@ I came up with a lazyloading mechanism that respects progressive enhancement, wh
 
 Lazyloading in this context means that loading certain resources is deferred until the page’s `load` event has fired. This way I know my markup has been parsed and my critical CSS and JS is already running. I am exploiting the `<noscript>` tag to achieve proper progressive enhancement.
 
-{{< highlight HTML >}}
+```html
 <head>
     <!-- ... -->
     <noscript class="lazyload">
@@ -31,14 +31,14 @@ Lazyloading in this context means that loading certain resources is deferred unt
             src="https://youtube.com/...">
     </noscript>
 </body>
-{{< /highlight >}}
+```
 
 `<noscript>` tags will be skipped and end up being invisible and ignored if the browser’s JavaScript engine is running. If the browser does not run JavaScript (whatever the reason), the contents of the tags will be evaluated by the parser. So we have the “no JavaScript scenario” covered.
 
 ## The script
 The script will progressively enhance the website, if JavaScript *is* enabled. It will query for all `<noscript>` tags that have the `lazyload` class, put their contents through the HTML parser by using `innerHTML` and append the resulting DOM nodes directly before the corresponding `<noscript>` tag.
 
-{{< highlight JS >}}
+```js
 document.addEventListener('load', _ => {
     const lazyloads =
         document.querySelectorAll('noscript.lazyload');
@@ -53,7 +53,7 @@ document.addEventListener('load', _ => {
             );
     });
 });
-{{< /highlight >}}
+```
 
 I like it! If you don’t, let me know why.
 

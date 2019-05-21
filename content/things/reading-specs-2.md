@@ -66,7 +66,7 @@ There’s _a lot_ in here, so let’s go through it bit by bit.
 
 The first thing I did was to play around with the constructor a bit. According to [19.4.1][Symbol 19.4.1] “the Symbol constructor is [...] the [...] `Symbol` property of the global object.”. As defined in [19.4.1.1][Symbol 19.4.1.1], it takes an optional _description_ as argument and said argument will be turned into a string with `ToString()`. Furthermore, according to [6.1.5][Symbol 6.1.5], each Symbol is unique:
 
-{{< highlight JavaScript >}}
+```javascript
 // So you can just create symbols. They look a little
 // out of place in logs.
 const sym = Symbol();
@@ -117,7 +117,7 @@ console.log('After constructor');
 console.log('Before logging');
 console.logAndEval('sym');
 console.log('After logging');
-{{< /highlight >}}
+```
 
 Seems like Chrome is behaving to spec. Shocking.
 
@@ -129,7 +129,7 @@ I was a little confused by step one of the implementation spec of the `Symbol` c
 
 What is _NewTarget_? After Cmd+F’ing through the spec (and, admittedly, googling it), I found something `new` I didn’t know about JavaScript (can you see what I did there?): The _NewTarget_ tells you what the target of the `new` keyword was. That means inside functions `new.target` is a way to figure out if the function has been called with `new` keyword or not.
 
-{{< highlight JavaScript >}}
+```javascript
 // In A normal function call, `new.target`
 // will be undefined.
 // As a constructor, it will be a reference to the
@@ -155,7 +155,7 @@ class B extends A {
 }
 new A();
 new B();
-{{< /highlight >}}
+```
 
 So step 1 in the `Symbol()` implementation prevents it from being called as a constructor (i.e. with `new`).
 
@@ -169,7 +169,7 @@ But now back to Symbols.
 
 This is something I never really thought about. It is implied here that up to this point objects can _only_ have strings as property keys. Again, I had to verify this in DevTools because I thought: What about arrays?!
 
-{{< highlight JavaScript >}}
+```javascript
 // I CAN USE WHATEVER I WANT AS KEY!
 const myKey = {};
 const myObject = {
@@ -220,7 +220,7 @@ const keyTypes =
 
 // ... also strings
 console.logAndEval('keyTypes');
-{{< /highlight >}}
+```
 
 Alright, so all property keys in objects are strings. And now there’s symbols, which are the exception to this rule.
 
@@ -228,7 +228,7 @@ Alright, so all property keys in objects are strings. And now there’s symbols,
 
 Let’s play with this!
 
-{{< highlight JavaScript >}}
+```javascript
 // The old access method still works
 const mySymbol = Symbol('ohai');
 const myObject = {
@@ -260,13 +260,13 @@ const myObject = {
 }
 console.logAndEval('Object.getOwnPropertySymbols(myObject)');
 console.logAndEval('Reflect.ownKeys(myObject)');
-{{< /highlight >}}
+```
 
 The fact that `JSON.stringify()` makes sense as Symbols are unique and can’t be serialized, but why does `Object.keys()` not list them? The main use-case for Symbols is to have a way to specify properties and methods that are guaranteed to not name-clash with anything else in the scope. They are also supposed to give you a way to hook into existing algorithms. [Section 6.1.5.1][Symbol 6.1.5.1] lists “well-known Symbols” that you can set on an object to make existing algorithms treat your object appropriately.
 
 These well-known Symbols are exposed as properties on the global `Symbol` object.
 
-{{< highlight JavaScript >}}
+```javascript
 // We can make our object become a “replacer”
 // for `String.replace()`
 const x = {};
@@ -281,7 +281,7 @@ const x = {
 }
 
 console.logAndEval('x');
-{{< /highlight >}}
+```
 
 One consequence of using Symbols is that we need some way to distribute our symbols so we (or others) can use them. Well-known symbols attach themselves to the global `Symbol` object, `Symbol` also offers a registry. The only way I know about this is because [section 19.4][Symbol 19.4] lists all properties of the `Symbol` object. In-between all those well-known symbols are two convenince methods: `Symbol.for()` and `Symbol.keyFor()`. `Symbol.for()` is like a factory. If a symbol for the given key exists it will be returned, if not it will be created, appended to the registry and then returned.
 
@@ -291,7 +291,7 @@ You might be asking why to use the provided registry over just attaching Symbols
 
 Let’s try that out!
 
-{{< highlight JavaScript >}}
+```javascript
 // Let’s try not using the registry.
 const mySymbol = Symbol('mySymbol');
 const myObject =  {
@@ -338,7 +338,7 @@ iframe.contentDocument.write(`
 iframe.contentWindow.compareSymbols(mySymbol);
 document.body.removeChild(iframe);
 
-{{< /highlight >}}
+```
 
 ## Iterables
 
@@ -348,7 +348,7 @@ So coming back to my original question: `@@iterator` is a well-known symbol I ca
 
 [Section 25.1.1.1] to 25.1.1.3 explain that an “Iterable” has function under `@@iterator` that returns an object implementing the “Iterator” interface. The “Iterator” interface only has a `next()` method returning an “IteratorResult”. The “IteratorResult” interface has two properties `done` and `value`.
 
-{{< highlight JavaScript >}}
+```javascript
 const myIterable = {
   [Symbol.iterator]: _ => {
     let counter = 0;
@@ -365,7 +365,7 @@ for (let i of myIterable) {
   console.log(i);
 }
 //!Step
-{{< /highlight >}}
+```
 
 We made our object iterable using Symbols. Wohooo! Honestly, I am just scratching the surface of Iterables & Co here and will talk about this in more detail when I am done with Part IIb of this series. I _think_ I should be able to cover Generators and their asynchronous version in the next post now.
 

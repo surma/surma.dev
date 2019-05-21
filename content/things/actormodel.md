@@ -9,8 +9,6 @@
 Everything old is new again. Let’s take a concurrency model from the 70s and apply it to the web in 2017. Why? Well, read on, will ya?
 <!--more-->
 
-> **Note**: Yes, my syntax highlighting is broken. Sorry.
-
 The whole reason I started to think about actors was because I was playing around with [Erlang]. Erlang is not the only language to use the Actor Model, of course, but arguably the most popular one. There’s also it’s more modern reincarnation [Elixir], the JVM langauge [Scala], or the systems programming language [Pony].
 
 It struck me that the Actor Model could work on the web. The more I thought about it, the more it seems like a natural fit.
@@ -75,14 +73,14 @@ Assuming you are a JavaScript developer, there’s a couple of things you need t
 
 An actor is just a function. Let’s take a look at the implementation of `math_worker`:
 
-{{< highlight Erlang >}}
+```erlang
 math_worker() ->
   receive
     {Sender, add, A, B} -> Sender ! A + B;
     {Sender, multiply, A, B} -> Sender ! A * B
   end,
   math_worker().
-{{< /highlight >}}
+```
 
 With `receive` you can wait for the next message to arrive in the current actor’s mailbox and match it against a list of patterns. As we want to be able to handle more than just one message with our math actor, we can use recursion to “loop” and handle more messages.
 
@@ -91,15 +89,15 @@ As you can see, we have to put the sender’s mailbox address into the messages 
 ### Example 2
 As a next example I want to read a string from a file. It’s a very simple example, but I like it as it very cleary involves a resources that is not thread-safe:
 
-{{< highlight Erlang >}}
+```erlang
 FileHandle = open_file("/myResource.txt"),
 Contents = read_from_file(FileHandle),
 % ...
-{{< /highlight >}}
+```
 
 This is looks incredibly simple, doesn’t it? Synchronous even. But something way more sophisticated is happening under the hood. Things will become clearer if we look at the (pseudo-)implementation of these two functions:
 
-{{< highlight Erlang >}}
+```erlang
 open_file(path) ->
   spawn(file_actor).
 
@@ -109,7 +107,7 @@ read_from_file(FileHandle) ->
   receive
     {read_result, Content} -> Content
   end;
-{{< /highlight >}}
+```
 
 It turns out that the `FileHandle` we used is actually an actor’s mailbox address! Access to the file itself is managed by an actor. This means that the file handle can be shared and be used my multiple actors (or threads) without more than one actor reading or writing at any given time.
 

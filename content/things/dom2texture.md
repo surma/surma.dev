@@ -26,7 +26,7 @@ As you can tell by the [demo][] (and the presence of a TL;DR), there *is* a way 
 
 Let’s start with Arcane API #1: As far as I am aware, [Foreign Objects](https://developer.mozilla.org/en/docs/Web/SVG/Element/foreignObject) are seldomly used. They allow you to include a different XML namespace into an SVG and the SVG renderer will hand of the rendering to the renderer responsible for that namespace. (Danger: This is probably a gross oversimplification.) So by using `<foreignObject>` we can mix SVG graphics with, let’s say, a `<button>` and it will not only render, it will function and be interactive. Amazing!
 
-{{< highlight HTML >}}
+```html
 <!doctype html>
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
   <circle cx="64" cy="64" r="64" style="stroke: blue; fill: none"></circle>
@@ -34,7 +34,7 @@ Let’s start with Arcane API #1: As far as I am aware, [Foreign Objects](https:
     <button>Ohai</button>
   </foreignObject>
 </svg>
-{{< /highlight >}}
+```
 
 Foreign objects, just like all other SVG elements, need a size. Think of it as a canvas within a canvas. The dimensions you specify will be used similarly to what the viewport is for an HTML document. Since I am trying to generate textures consisting of DOM elements, I made both the SVG and Foreign Object have the same dimensions. If you open the markup above as an [HTML file](simplesvg.html) and open it in your browser, you’ll see an SVG circle with a button:
 
@@ -55,7 +55,7 @@ Let’s take these steps one by one.
 
 When turning the DOM into a string, most people go and grab [`innerHTML`](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML) on the parent element:
 
-{{< highlight JavaScript >}}
+```javascript
 document.querySelector('svg').parentElement.innerHTML
 
 `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
@@ -64,11 +64,11 @@ document.querySelector('svg').parentElement.innerHTML
     <button>Ohai</button>
   </foreignObject>
 </svg>`
-{{< /highlight >}}
+```
 
 For most use-cases, that is good enough, but when trying to serialize SVGs with multiple XML namespaces, it’s not. Try it: The button won’t appear if you [load](broken.svg) the above markup as an SVG image. Enter Arcane API #2: [`XMLSerializer`](https://developer.mozilla.org/en-US/docs/Web/API/XMLSerializer):
 
-{{< highlight JavaScript >}}
+```javascript
 new XMLSerializer().serializeToString(document.querySelector('svg’))
 `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
   <circle cx="64" cy="64" r="64" style="stroke: blue; fill: none"/>
@@ -76,7 +76,7 @@ new XMLSerializer().serializeToString(document.querySelector('svg’))
     <button xmlns="http://www.w3.org/1999/xhtml">Ohai</button>
   </foreignObject>
 </svg>`
-{{< /highlight >}}
+```
 
 As you can see, this serializer took care of adding the XHTML namespace of the children inside the  `<foreignObject>`, and turns it into valid XML by turning `<circle></circle>` into a self-closing tag (i.e. `<circle/>`). And now, [the button shows up](fixed.svg).
 
@@ -91,39 +91,39 @@ Aaaah, yes, my old friend [Latin1](https://en.wikipedia.org/wiki/ISO/IEC_8859-1)
 #### Step 2.2 Option b: TextEncoder + base64js
 Since the introduction of UTF-8 and [`ArrayBuffer`]s, the platform also offers [`TextEncoder`](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder) and [`TextDecoder`](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder). We only need the `TextEncoder` as we want to _encode_ a string into a [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) using UTF-8:
 
-{{< highlight JavaScript >}}
+```javascript
 new TextEncoder().encode('Ohai UTF-8 🤡')
 Uint8Array(15) [79, 104, 97, 105, 32, 85, 84, 70, 45, 56, 32, 240, 159, 164, 161]
-{{< /highlight >}}
+```
 
 Sadly, `bota` doesn’t handle `ArrayBuffer`, so we need to find another way of base64 encoding an array of bytes. Honestly, I was shocked to find that there’s _nothing_ on the platform – for now I’ll resort to Jameson Little’s [base64js](https://github.com/beatgammit/base64-js), which polyfills that functionality.
 
-{{< highlight JavaScript >}}
+```javascript
 const base64encodedSVG = base64js.fromByteArray(new TextEncoder().encode(serializedXML));
-{{< /highlight >}}
+```
 
 > Note: Edge doesn’t have support for `TextEncoder` yet. So for the main demo I included a [polyfill](https://github.com/inexorabletash/text-encoding) for `TextEncoder`. The other demos _don’t_ include that polyfill and won’t work in Edge.
 
 We are almost done. Don’t be alarmed, the last two steps are actually rather short!
 
 ### 2.3: Putting it in an image
-{{< highlight JavaScript >}}
+```javascript
 const img = document.createElement('img');
 img.src = 'data:image/svg+xml;base64,' + base64encodedSVG;
 img.onload = _ => {
   // Continue here…
 }
-{{< /highlight >}}
+```
 
 Note the `onload` function we are registering. Images are decoded asynchronously, so if we didn’t put our code in the `unload` handler, it would probably try to use an image that has not have been decoded yet.
 
 ### 2.4 Drawing it to canvas
 Drawing an image to canvas is surprisingly easy and works the same with any image, even our weird base64-encoded SVG:
-{{< highlight JavaScript >}}
+```javascript
 const c = document.querySelector('canvas');
 const ctx = c.getContext('2d');
 ctx.drawImage(img, 0, 0);
-{{< /highlight >}}
+```
 
 ![A HTML button in an SVG circle and a duplicated version on a canvas](simplecanvas.png)
 
@@ -139,7 +139,7 @@ We are done here. Off you go. … except, not quite:
 
 Thinking I was done, I went ahead and tried using this technique to render some styled text as a texture for a WebGL experiment:
 
-{{< highlight HTML >}}
+```html
 <style>
   #container {
     width: 100%;
@@ -161,7 +161,7 @@ Thinking I was done, I went ahead and tried using this technique to render some 
     </div>
   </foreignObject>
 </svg>
-{{< /highlight >}}
+```
 
 Turns out I didn’t grasp the isolated nature of our SVG in its entirety. Take a [look](styleddom.html):
 
@@ -172,12 +172,12 @@ Not only is all styling gone, but the image is a no-show. What’s going on here
 ### Step 3.1: Styles
 Once you think about it, it makes sense that there’s no styling. We are basically creating a separate SVG document (in form of a data URL) and our styling is well outside that document. So let’s make it available by cloning all our styles and moving them into the SVG element.
 
-{{< highlight JavaScript >}}
+```javascript
 Array.from(document.querySelectorAll('style'))
   .forEach(styleTag => {
     fo.appendChild(styleTag.cloneNode(true));
   });
-{{< /highlight >}}
+```
 
 [Much better!](styledsvg.html)
 
@@ -194,7 +194,7 @@ But let’s talk about the elephant in the room: The image is still missing. Wha
 ### Step 3.2: Resources
 It turns out that for security reasons, the SVG renderer the [`CanvasRenderingContext2D`](https://developer.mozilla.org/en/docs/Web/API/CanvasRenderingContext2D) uses has no access to the network. So while the `<img>` element is actually there, it’s just empty as the URL could not be resolved to a resource. But we can do something about this and it involves, you might have guess it, data URLs! As long as the image is either from the same origin or from another origin with CORS headers set, we can take the image and draw it to a canvas to convert it to a brand new data URL.
 
-{{< highlight JavaScript >}}
+```javascript
 function waitForLoad(img) {
   return new Promise(resolve => {
     if(img.complete) resolve(img);
@@ -227,7 +227,7 @@ Promise.all(dataUrlImages)
 .then(_ => {
   // remainder of code
 });
-{{< /highlight >}}
+```
 
 This is probably the biggest chunk of code in this blog post, and yet it doesn’t really introduce any new concepts. We grab all the `<img>` in our SVG and pass them to `img2dataURL()`, which replace the current `src` of the `<img>` with a data URL. The function returns a promise that resolves when all the work is done.
 
@@ -239,7 +239,7 @@ Got ’em! Live version [here](styledwdatauri.html).
 
 Now that we know that we don’t have any network access when rendering our SVG, we should also take a look at `<link>` tags that reference stylesheets. In contrast to `<style>` tags we can’t just clone them. The obvious solution is to just `fetch()` the stylesheet and to inline it. But there is another way – time for arcane API #4: The `sheet` property. Admittedly, it’s not really arcane, but it’s probably a lesser known feature: Both `<style>` tags and `<link rel="stylesheet">` tags have a `sheet` property with which you can iterate over parsed versions of all the rules in the stylesheet. So we can just grab all our `<style>` and `<link>` tags and put them into one big `<style>` element without doing another network request:
 
-{{< highlight JavaScript >}}
+```javascript
 const styleTag = document.createElement('style');
 Array.from(
   document.querySelectorAll('style, link[rel=stylesheet]')
@@ -250,7 +250,7 @@ Array.from(
         .reduce((str, rule) => str + rule.cssText, '');
   });
 svg.appendChild(styleTag);
-{{< /highlight >}}
+```
 
 Keep in mind that this approach won’t work if you link to cross-origin stylesheets (like web fonts!).
 
@@ -264,7 +264,7 @@ This is left as an exercise for the reader :P
 
 We are looking pretty good! We have all we need to solve my original WebGL problem. But here’s an additional tripwire: All internal state of the DOM elements that is not reflected to DOM will be lost. So if you have input elements like sliders or text fields you have to do some extra work to make them render in the same state they were in. In the context of input fields you could do something like the following.
 
-{{< highlight JavaScript >}}
+```javascript
 Array.from(svg.querySelectorAll('input'))
   .forEach(inputElem => {
     // Boolean attributes
@@ -279,7 +279,7 @@ Array.from(svg.querySelectorAll('input'))
         inputElem.setAttribute(attrName, inputElem[attrName]);
       });
 });
-{{< /highlight >}}
+```
 
 <video controls autoplay loop muted>
   <source src="withstate_vp8.webm" type="video/webm; codecs=vp8">
