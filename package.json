@@ -5,6 +5,7 @@
   "dependencies": {
     "@11ty/eleventy": "github:MadeByMike/eleventy",
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3",
+    "css-tree": "^1.0.0-alpha.29",
     "parse5": "^5.1.0",
     "rollup": "^1.12.3",
     "rollup-pluginutils": "^2.7.1"

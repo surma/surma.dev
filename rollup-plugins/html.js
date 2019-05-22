@@ -2,7 +2,6 @@ import * as fs from "fs";
 import { join } from "path";
 import { createFilter } from "rollup-pluginutils";
 import { parse as parseHTML, serialize as serializeHTML } from "parse5";
-import { stringLiteral } from "babel-types";
 
 const defaultOpts = {
   include: "**/*.html",
@@ -46,7 +45,6 @@ async function findScriptTags(doc, importee) {
     }
     const { id: importId } = await this.resolve(path, importee);
     const chunkId = this.emitChunk(importId);
-    // attr.value = `${placeholderPrefix}${chunkId}${placeholderSuffix}`;
     attr.value = chunkId;
     return attr;
   }));
@@ -64,10 +62,8 @@ async function findStylesheets(doc, importee) {
       );
     }
     const { id: importId } = await this.resolve(path, importee);
-    const contents = await fs.promises.readFile(importId, "utf-8");
-    const assetId = this.emitAsset(attr.value.substr(1), contents);
-    // attr.value = `${placeholderPrefix}${assetId}${placeholderSuffix}`;
-    attr.value = assetId;
+    const chunkId = this.emitChunk(importId);
+    attr.value = chunkId;
     return attr;
   }));
 }
@@ -87,18 +83,14 @@ export default function htmlPlugin(opts) {
       const contents = await fs.promises.readFile(id, { encoding: "utf-8" });
       const doc = parseHTML(contents);
 
-      const [scriptChunks, styleChunks] = await Promise.all([
-        findScriptTags.call(this, doc, id),
-        findStylesheets.call(this, doc, id)
-      ]);
+      const references = [
+        ... await findScriptTags.call(this, doc, id),
+        ... await findStylesheets.call(this, doc, id)
+      ];
       
-      contentMap.set(id, [doc, scriptChunks, styleChunks]);
-      // Generate some dummy imports in case rollup needs those
+      contentMap.set(id, {doc, references});
       return {
-        code: ""/*[
-          ...scriptChunks.map((attr, i) => `import(import.meta.ROLLUP_CHUNK_URL_${attr.value});`),
-          ...styleChunks.map((attr, i) => `// import.meta.ROLLUP_ASSET_URL_${attr.value}`),
-        ].join("\n")*/
+        code: ""
       };
     },
     generateBundle(outputOptions, bundles) {
@@ -110,12 +102,9 @@ export default function htmlPlugin(opts) {
         if(!contentMap.has(bundle.facadeModuleId)) {
           continue;
         }
-        const [doc, scriptChunks, styleChunks] = contentMap.get(bundle.facadeModuleId);
-        for(const scriptChunk of scriptChunks) {
-          scriptChunk.value = this.getChunkFileName(scriptChunk.value);
-        } 
-        for(const styleChunk of styleChunks) {
-          styleChunk.value = this.getAssetFileName(styleChunk.value);
+        const {doc, references} = contentMap.get(bundle.facadeModuleId);
+        for(const reference of references) {
+          reference.value = this.getChunkFileName(reference.value);
         } 
         bundle.code = serializeHTML(doc);
       }
