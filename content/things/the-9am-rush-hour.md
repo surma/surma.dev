@@ -3,7 +3,6 @@
   "title": "The 9am rush hour",
   "date": "2018-09-21",
   "socialmediaimage": "taxis.jpg",
-  "live": "true",
   "author": {
     "name": "Paul Lewis",
     "bio": "Googler. Host of a channel on YouTube. Talks web and stuff.",

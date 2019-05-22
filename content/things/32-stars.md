@@ -2,8 +2,7 @@
 {
   "title": "Chromium Bug Tracker: All bugs with >32 stars get fixed?",
   "date": "2017-02-13",
-  "socialmediaimage": "tomdale.jpg",
-  "live": "true"
+  "socialmediaimage": "tomdale.jpg"
 }
 ---
 

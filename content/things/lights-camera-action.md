@@ -2,8 +2,7 @@
 {
   "title": "Lights, Camera, Action!",
   "date": "2018-09-27",
-  "socialmediaimage": "3manteam.jpg",
-  "live": "true"
+  "socialmediaimage": "3manteam.jpg"
 }
 ---
 

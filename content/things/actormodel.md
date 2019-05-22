@@ -2,8 +2,7 @@
 {
   "title": "“An Actor, a model and an architect walk onto the web...”",
   "date": "2017-12-27",
-  "socialmediaimage": "gamedev.png",
-  "live": "true"
+  "socialmediaimage": "gamedev.png"
 }
 ---
 Everything old is new again. Let’s take a concurrency model from the 70s and apply it to the web in 2017. Why? Well, read on, will ya?

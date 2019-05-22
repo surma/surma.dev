@@ -2,8 +2,7 @@
 {
   "title": "Raw WebAssembly",
   "date": "2019-05-17",
-  "socialmediaimage": "social.png",
-  "live": "true"
+  "socialmediaimage": "social.png"
 }
 ---
 

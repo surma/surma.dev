@@ -2,8 +2,7 @@
 {
   "title": "DevDiary Underdash: Progressive Enhancement, Graceful Degradation and Accessibility",
   "date": "2017-01-04",
-  "socialmediaimage": "keyboard.jpg",
-  "live": "true"
+  "socialmediaimage": "keyboard.jpg"
 }
 ---
 

@@ -2,8 +2,7 @@
 {
   "title": "Setting up HTTP/2",
   "date": "2016-01-15",
-  "socialmediaimage": "h2setup.jpg",
-  "live": "true"
+  "socialmediaimage": "h2setup.jpg"
 }
 ---
 

@@ -2,8 +2,7 @@
 {
   "title": "DOM2Texture: Abusing Arcane APIs",
   "date": "2017-04-24",
-  "socialmediaimage": "logo.jpg",
-  "live": "true"
+  "socialmediaimage": "logo.jpg"
 }
 ---
 

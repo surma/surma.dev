@@ -2,8 +2,7 @@
 {
   "title": "My most useful RegExp trick",
   "date": "2018-05-02",
-  "socialmediaimage": "layers.png",
-  "live": "true"
+  "socialmediaimage": "layers.png"
 }
 ---
 

@@ -2,8 +2,7 @@
 {
   "title": "Layers and how to force them",
   "date": "2018-04-19",
-  "socialmediaimage": "layers.png",
-  "live": "true"
+  "socialmediaimage": "layers.png"
 }
 ---
 

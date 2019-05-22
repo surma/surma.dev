@@ -2,8 +2,7 @@
 {
   "title": "Maelstrom Gaming and 12 fps",
   "date": "2015-11-11",
-  "socialmediaimage": "12fps.png",
-  "live": "true"
+  "socialmediaimage": "12fps.png"
 }
 ---
 
@@ -234,7 +233,8 @@ function updateParallaxImages() {
     offset -= (1-scroll)*windowHeight*parallax[id].factor;
     parallax[id].element.style.transform = 'translateY(' + Math.round(offset) + 'px)';
   });
-}```
+}
+```
 
 And with that, we have implemented our own parallax scrolling effect that works
 at a buttery-smooth 60fps.

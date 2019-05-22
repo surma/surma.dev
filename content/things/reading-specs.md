@@ -2,8 +2,7 @@
 {
   "title": "How to read web specs Part I – Or: WebVR, how do you work?",
   "date": "2016-10-10",
-  "socialmediaimage": "spec-head.png",
-  "live": "true"
+  "socialmediaimage": "spec-head.png"
 }
 ---
 

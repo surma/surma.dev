@@ -2,8 +2,7 @@
 {
   "title": "Comlink + WebRTC — An Intro to WebRTC",
   "date": "2017-10-06",
-  "socialmediaimage": "social.jpg",
-  "live": "true"
+  "socialmediaimage": "social.jpg"
 }
 ---
 

@@ -2,8 +2,7 @@
 {
   "title": "New ways to make your web app jank with Houdini – An introduction",
   "date": "2016-02-01",
-  "socialmediaimage": "houdini.png",
-  "live": "true"
+  "socialmediaimage": "houdini.png"
 }
 ---
 

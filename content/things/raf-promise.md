@@ -2,8 +2,7 @@
 {
   "title": "DIY Web Animations: Promises + rAF + Transitions",
   "date": "2017-02-14",
-  "socialmediaimage": "title.jpg",
-  "live": "true"
+  "socialmediaimage": "title.jpg"
 }
 ---
 

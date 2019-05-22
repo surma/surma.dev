@@ -2,8 +2,7 @@
 {
   "title": "Compositor Worklet evolves into Animation Worklet!",
   "date": "2016-09-26",
-  "socialmediaimage": "animworklet.png",
-  "live": "true"
+  "socialmediaimage": "animworklet.png"
 }
 ---
 

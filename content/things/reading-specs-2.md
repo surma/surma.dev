@@ -2,8 +2,7 @@
 {
   "title": "How to read web specs Part IIa – Or: ECMAScript Symbols",
   "date": "2016-11-22",
-  "socialmediaimage": "esnext.png",
-  "live": "true"
+  "socialmediaimage": "esnext.png"
 }
 ---
 

@@ -2,8 +2,7 @@
 {
   "title": "Lazyloading",
   "date": "2016-04-08",
-  "socialmediaimage": "oldscript.png",
-  "live": "true"
+  "socialmediaimage": "oldscript.png"
 }
 ---
 ## Progressive enhancement

@@ -3,7 +3,6 @@
   "title": "Headless Web Development",
   "date": "2018-10-05",
   "socialmediaimage": "camera1.jpg",
-  "live": "true",
   "author": {
     "name": "Paul Lewis",
     "bio": "Googler. Host of a channel on YouTube. Talks web and stuff.",
