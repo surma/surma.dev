@@ -60,6 +60,7 @@ After assembling our `.wat` file with `wat2wasm`, we can disassemble it again (f
 As you can see, the named identifiers have disappeared and have been replaced with (somewhat) helpful comments by the disassembler. You can also see a `type` declaration that was generated for you by `wat2wasm`. It’s technically always necessary to declare a function’s type before declaring the function itself, but because the type is fully inferrable from the declaration, `wat2wasm` injects the type declaration for us. Within this context, function type declarations will seem a bit redundant, but they will become more useful when we talk about function imports later.
 
 > **Pro tip**: Did you know that the “Source” panel in DevTools will automatically disassemble .wasm files for you?
+>
 > ![Screenshot of DevTools disassembling a WebAssembly module](devtools.png)
 
 A function declaration consists of a couple of items, starting with `func` keyword, followed by the (optional) identifer. We also need to specify a list of parameters with their types, the return type and an optional list of local variables. The function body is itself a list of [instructions] for the VM’s stack. Using these instructions you can push values onto the stack, pop values off the stack and replace them with the result of an operation or load and store values in local variables, global variables or even memory (more about that later). A function _must_ leave exactly one value on the stack as the function’s return value.

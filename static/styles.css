@@ -448,6 +448,13 @@ ul.things {
   list-style: none;
   padding: 0
 }
+.things .date {
+  display: block;
+  margin-left: var(--grid-height);
+  margin-bottom: var(--grid-gutter);
+  font-size: .5em;
+  line-height: 1em;
+}
 .back {
   display: block;
   font-size: .5em;
@@ -455,6 +462,7 @@ ul.things {
   top: var(--grid-gutter);
   bottom: initial;
   left: var(--grid-gutter);
+  line-height: 1em;
 }
 footer .back {
   top: initial;

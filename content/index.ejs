@@ -8,6 +8,6 @@
     });
   for(const thing of things) {
 %>
-  <li><a href="<%= thing.url %>"><%= thing.data.title %></a> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(new Date(thing.data.date)) %></li>
+  <li><a href="<%= thing.url %>"><%= thing.data.title %></a><span class="date"> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(new Date(thing.data.date)) %></span></li>
 <% } %>
 </ul>
