@@ -1,6 +1,25 @@
 <!doctype html>
-<title>Blog redesign</title>
 <meta name="viewport" content="minimum-scale=1, width=device-width">
+<meta name="theme-color" content="<%= colors.convertToHex(colors.palette.yellow) %>">
+<meta property="og:url" content="<%= meta.domain %><%= page.url %>" />
+<% if(typeof title === "string") { %>
+  <meta property="og:title" content="<%= title %> — DasSur.ma" />
+  <meta name="twitter:title" content="<%= title %> — DasSur.ma" />
+  <title><%= title %> — DasSur.ma</title>
+<% } else { %>
+  <meta property="og:title" content="DasSur.ma" />
+  <meta name="twitter:title" content="DasSur.ma" />
+  <title>DasSur.ma</title>
+<% } %>
+<meta property="og:type" content="article" />
+<% if(typeof socialmediaimage === "string") { %>
+  <meta property="og:image" content="<%= meta.domain %><%= page.url %><%= socialmediaimage %>" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="<%= meta.domain %><%= page.url %><%= socialmediaimage %>" />
+<% } else { %>
+  <meta name="twitter:card" content="summary" />
+<% } %>
+<meta name="twitter:site" content="@DasSurma" />
 <link rel="prefetch" href="/syntax.css" onload="this.rel = 'stylesheet'">
 <noscript>
     <link rel="stylesheet" href="/syntax.css">
@@ -9,8 +28,8 @@
   @font-face {
     font-display: swap;
     font-family: "Lab 2";
-    src: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FLab-DJR_2.0.eot?1558345971354");
-    src: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FLab-DJR_2.0.eot?1558345971354&#iefix") format("embedded-opentype"),url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FLab-DJR_2.0.woff2?1558345971098") format("woff2"),url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FLab-DJR_2.0.woff?1558345971002") format("woff");
+    src: url("/fonts/lab/lab.eot");
+    src: url("/fonts/lab/lab.eot#iefix") format("embedded-opentype"), url("/fonts/lab/lab.woff2") format("woff2"),url("/fonts/lab/lab.woff") format("woff");
     font-weight: normal;
     font-style: normal;
   }
@@ -18,21 +37,17 @@
   @font-face {
     font-display: swap;
     font-family: "Vinila";
-    src: url("https://cdn.glitch.com/97d7c524-2776-41a0-9cb1-ab8825cf39f4%2FVinila%20Variable.woff2?1558351609082");
+    src: url("/fonts/vinila/vinila.woff2") format("woff2");
     font-style: normal;
     font-weight: 100 900;
   }
 
   :root {
     --base: 16px;
-    --darkblue: rgb(10, 49, 68);
-    --blue: rgb(3, 83, 99);
-    --lightblue: rgb(12, 105, 121);
-    --purple: rgb(142, 96, 117);
-    --pink: rgb(191, 85, 105);
-    --red: rgb(218, 59, 59);
-    --orange: rgb(207, 121, 100);
-    --yellow: rgb(247, 240, 194);
+
+    <% for(const [name, color] of Object.entries(colors.palette)) { %>
+      --<%= name %>: <%= color %>;
+    <% } %>
 
     --width: 960px;
     --arrow-height: calc(2 * var(--base));
@@ -87,7 +102,7 @@
     position: relative;
     background-color: var(--yellow);
     color: var(--darkblue);
-    font-family: "Vinila";
+    font-family: "Vinila", "Helvetica", sans-serif;
     font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
     font-size: var(--grid-height);
     line-height: calc(var(--grid-height) + var(--grid-gutter));
@@ -112,10 +127,12 @@
     text-decoration: underline;
   }
   strong {
+    font-weight: 700;
     --body-font-weight: 700;
     font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
   }
   em {
+    font-style: italic;
     --body-font-slant: 10;
     font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
   }
@@ -143,7 +160,7 @@
   }
   h1, h2, h3 {
     margin: 0;
-    font-family: "Lab 2";
+    font-family: "Lab 2", "Helvetica", sans-serif;
     font-variation-settings: 'size' var(--heading-size), 'quad' var(--heading-quad), 'bevl' var(--heading-bevl), 'oval' var(--heading-oval);
     line-height: 1.2em;
   }
@@ -297,7 +314,7 @@
     content: none;
   }
   header > time {
-    font-family: "Lab 2";
+    font-family: "Lab 2", "Helvetica", sans-serif;
     font-variation-settings: 'size' var(--heading-size), 'quad' var(--heading-quad), 'bevl' var(--heading-bevl), 'oval' var(--heading-oval);
     color: var(--lightblue);
     transform-origin: 100% 100%;
@@ -334,7 +351,7 @@
     padding: 0;
   }
   .me .name {
-    font-family: "Lab 2";
+    font-family: "Lab 2", "Helvetica", sans-serif;
     font-variation-settings: 'size' var(--heading-size), 'quad' var(--heading-quad), 'bevl' var(--heading-bevl), 'oval' var(--heading-oval);
     font-size: calc(1.5 * var(--grid-height));
     margin-bottom: var(--grid-gutter);
@@ -459,11 +476,17 @@
 </style>
 <header>
   <h1>
-    <%= title %>
+    <% if(typeof title === "string") { %>
+      <%= title %>
+    <% } else { %>
+      DasSur.ma
+    <% } %>
   </h1>
-  <time datetime="<%= date %>">
-    <%= date %>
-  </time>
+  <% if(typeof date === "string") { %>
+    <time datetime="<%= date %>">
+      <%= date %>
+    </time>
+  <% } %>
   <div class="arrows">
     <div class="arrow darkblue"></div>
     <div class="arrow blue"></div>
