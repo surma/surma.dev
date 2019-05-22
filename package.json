@@ -5,5 +5,8 @@
   "dependencies": {
     "@11ty/eleventy": "github:MadeByMike/eleventy",
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3"
+  },
+  "scripts": {
+    "build": "eleventy"
   }
 }
