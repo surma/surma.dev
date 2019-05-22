@@ -1,3 +1,4 @@
 module.exports = {
-  tags: ["things"]
+  tags: ["things"],
+  hasBackButton: true
 };
