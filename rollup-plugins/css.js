@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { join } from "path";
+import { join, extname, basename } from "path";
 import { createFilter } from "rollup-pluginutils";
 import { parse as parseCSS, generate as serializeCSS, walk as walkCSS } from "css-tree";
 
@@ -70,11 +70,24 @@ export default function cssPlugin(opts) {
           continue;
         }
         const {doc, references} = contentMap.get(bundle.facadeModuleId);
-        debugger;
+        
         for(const referenceAttr of references) {
           referenceAttr.value = `"${this.getAssetFileName(referenceAttr.value)}"`;
         } 
         bundle.code = serializeCSS(doc);
+
+        /*
+        // This doesn’t work because if this file is imported as a chunk it will already
+        // have used the js extension
+          const inExt = extname(bundle.facadeModuleId);
+          const outExt = extname(bundleId);
+          if(inExt !== outExt) {
+            const base = basename(bundle.facadeModuleId, outExt);
+            delete bundles[bundleId];
+            bundles[base + inExt] = bundle;
+            bundle.fileName = bundle.fileName.slice(0, -outExt.length) + inExt;
+          }
+          */
       }
     }
   };
