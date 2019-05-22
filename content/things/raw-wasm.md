@@ -270,7 +270,7 @@ There are a couple of things that WebAssembly modules can do that I didn’t tal
 - [Memory initialization][meminit]: Memory can be initalized with data in the WebAssembly file. Take a look at `datastring` in the [memory initializers][meminit] and [data segments].
 - [Tables]: Tables are mostly useful to implement concepts like function points and consequently patterns like dynamic dispatch or dynamic linking.
 - [Globals]: Yes, you can have global variables.
-- [Many, many other operations on stack values][numberic instructions].
+- [Many, many other operations on stack values][numeric instructions].
 - and probably other stuff 🤷‍♂️
 
 ## AssemblyScript

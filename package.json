@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "private": true,
   "dependencies": {
-    "@11ty/eleventy": "^0.8.3",
+    "@11ty/eleventy": "github:MadeByMike/eleventy",
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3"
   }
 }

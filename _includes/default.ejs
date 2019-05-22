@@ -1,9 +1,9 @@
 <!doctype html>
 <title>Blog redesign</title>
 <meta name="viewport" content="minimum-scale=1, width=device-width">
-<link rel="prefetch" href="/static/syntax.css" onload="this.rel = 'stylesheet'">
+<link rel="prefetch" href="/syntax.css" onload="this.rel = 'stylesheet'">
 <noscript>
-    <link rel="stylesheet" href="/static/syntax.css">
+    <link rel="stylesheet" href="/syntax.css">
 </noscript>
 <style>
   @font-face {
@@ -122,11 +122,24 @@
   p, pre {
     margin: calc(var(--grid-height) + 2 * var(--grid-gutter)) 0;
   }
+  hr {
+    border: calc(var(--grid-gutter) / 2) solid var(--orange);
+    margin: var(--grid-height) 0;
+    border-radius: 2px;
+  }
+  img, video {
+    max-width: 100%;
+    margin: 0 auto;
+    display: block;
+  }
   :not(pre) > code {
     color: var(--blue);
   }
   blockquote code {
     color: var(--orange);
+  }
+  h2 code {
+    color: var(--yellow);
   }
   h1, h2, h3 {
     margin: 0;
@@ -167,14 +180,14 @@
   }
   h2:before {
     top: calc(var(--arrow-height) * -1);
-    --mask: url("/static/arrow.svg") 0% 0%/100% 200%;
+    --mask: url("/arrow.svg") 0% 0%/100% 200%;
   }
   h2:after {
     top: 100%;
-    --mask: url("/static/arrow.svg") 0% 100%/100% 200%;
+    --mask: url("/arrow.svg") 0% 100%/100% 200%;
   }
 
-  h3 {
+  h3, h4 {
     font-size: inherit;
     margin: 0;
     font-variation-settings: 'size' var(--subheading-size), 'quad' var(--subheading-quad), 'bevl' var(--subheading-bevl), 'oval' var(--subheading-oval);
@@ -207,11 +220,11 @@
   }
   pre:before {
     top: calc(var(--arrow-height) * -1);
-    --mask: url("/static/arrow.svg") 0% 0%/100% 200%;
+    --mask: url("/arrow.svg") 0% 0%/100% 200%;
   }
   pre:after {
     top: 100%;
-    --mask: url("/static/arrow.svg") 0% 100%/100% 200%;
+    --mask: url("/arrow.svg") 0% 100%/100% 200%;
   }
 
   pre > code {
@@ -234,7 +247,6 @@
     margin-left: calc((100vw - var(--width)) / -2);
     padding: var(--grid-height);
     padding-left: calc((100vw - var(--width)) / 2);
-    padding-right: var(--grid-gutter);
     color: var(--yellow);
     margin-right: var(--arrow-height);
 
@@ -250,7 +262,7 @@
     height: 100%;
     background: inherit;
     mask: var(--mask);
-    --mask: url("/static/arrow-right.svg") 100% 0%/200% 100%;
+    --mask: url("/arrow-right.svg") 100% 0%/200% 100%;
     -webkit-mask: var(--mask);
   }
   blockquote > p:first-child {
@@ -356,7 +368,7 @@
     mask: var(--mask);
     -webkit-mask: var(--mask);
     top: 100%;
-    --mask: url("/static/arrow.svg") 0% 100%/100% 200%;
+    --mask: url("/arrow.svg") 0% 100%/100% 200%;
   }
   .arrow:nth-of-type(1) {
     z-index: calc(10 - 1);
@@ -476,7 +488,7 @@
      <div class="arrow blue"></div>
   </div>
   <section class="me">
-    <img src="/static/avatars/<%= author.avatar %>" class="avatar">
+    <img src="/avatars/<%= author.avatar %>" class="avatar">
     <div class="bio">
       <h3 class="name">
         <%= author.name %>
@@ -490,14 +502,14 @@
       const socials = [
         ...new Array(6 - Object.keys(author.socials).length).fill(["", ""]),
         ...Object.entries(author.socials)
-      ]; 
-      for(const [social, link] of socials) { 
+      ];
+      for(const [social, link] of socials) {
         if(!social) {
           %><span class="icon"></span><%
           continue;
         }
     %>
-      <span class="icon" style="--mask: url(/static/icons/<%= social %>.svg);">
+      <span class="icon" style="--mask: url(/icons/<%= social %>.svg);">
         <a href="<%= link %>">
           <%= social %>
         </a>
@@ -505,4 +517,4 @@
     <% } %>
   </section>
 </footer>
-<script src="/static/noise.js" type="module"></script>
+<script src="/noise.js" type="module"></script>
