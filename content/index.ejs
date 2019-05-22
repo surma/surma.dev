@@ -1,13 +1,13 @@
 <h2>Posts</h2>
 <ul class="things">
 <%
-  const items = collections.things
+  const things = collections.things
     .filter(item => item.data.live !== false)
     .sort((a, b) => {
       return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
     });
-  for(const item of items) {
+  for(const thing of things) {
 %>
-  <li><a href="<%= item.url %>"><%= item.data.title %></a> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(new Date(item.data.date)) %></li>
+  <li><a href="<%= thing.url %>"><%= thing.data.title %></a> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(new Date(thing.data.date)) %></li>
 <% } %>
 </ul>

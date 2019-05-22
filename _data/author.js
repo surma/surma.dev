@@ -8,7 +8,7 @@ module.exports = {
     "instagram": "https://instagram.com/dassurma",
     "keybase": "https://keybase.io/surma",
     "podcast": "https://player.fm/series/http-203-podcast-88674",
-    "rss": "https://dassur.ma"
+    "rss": "https://dassur.ma/index.xml"
 
   }
 };

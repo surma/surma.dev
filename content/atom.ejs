@@ -1,0 +1,34 @@
+---json
+{
+  "layout": false,
+  "permalink": "index.xml"
+}
+---
+<%_
+  const things = collections.things
+    .filter(item => item.data.live !== false)
+    .sort((a, b) => {
+      return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+    });
+_%>
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>DasSur.ma</title>
+  <link href="<%= meta.domain %>/index.xml" rel="self"/>
+  <link href="<%= meta.domain %>"/>
+  <updated><%= things[0].date.toISOString() %></updated>
+  <id><%= meta.domain %></id>
+  <author>
+    <name>Das Surma</name>
+    <email>surma@surma.link</email>
+  </author>
+  <% for(const thing of things) { %>
+  <entry>
+    <title><%= thing.data.title %></title>
+    <link href="<%= meta.domain %><%= thing.url %>"/>
+    <updated><%= thing.date.toISOString() %></updated>
+    <id><%= meta.domain %><%= thing.url %></id>
+    <content type="html"><%= thing.templateContent %></content>
+  </entry>
+  <% } %>
+</feed>
