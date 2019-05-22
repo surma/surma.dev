@@ -1,13 +1,15 @@
-<h2>Posts</h2>
+<h2>Recent posts</h2>
 <ul class="things">
 <%
   const things = collections.things
     .filter(item => item.data.live !== false)
     .sort((a, b) => {
-      return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
-    });
+      return b.date.getTime() - a.date.getTime();
+    })
+    .slice(0, 10);
   for(const thing of things) {
 %>
-  <li><a href="<%= thing.url %>"><%= thing.data.title %></a><span class="date"> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(new Date(thing.data.date)) %></span></li>
+  <li><a href="<%= thing.url %>"><%= thing.data.title %></a><span class="date"> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(new Date(thing.date)) %></span></li>
 <% } %>
+  <li class="more"><a href="/things">… all posts</a></li>
 </ul>

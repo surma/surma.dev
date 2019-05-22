@@ -455,6 +455,9 @@ ul.things {
   font-size: .5em;
   line-height: 1em;
 }
+.things .more {
+  text-align: right;
+}
 .back {
   display: block;
   font-size: .5em;
