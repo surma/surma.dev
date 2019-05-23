@@ -1,13 +1,25 @@
 <%
-  let things = items
+  include("./tools");
+%>
+<%
+  var showExcerpt = showExcerpt || false;
+  items = items
     .filter(item => item.data.live !== false)
     .sort((a, b) => {
       return b.date.getTime() - a.date.getTime();
     });
   if(max > 0) {
-    things = things.slice(0, max);
+    items = items.slice(0, max);
   }
-  for(const thing of things) {
+  for(const item of items) {
 %>
-  <li><a href="<%= thing.url %>"><%= thing.data.title %></a><span class="date"> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(thing.date) %></span></li>
+  <li>
+    <a href="<%= item.url %>"><%= item.data.title %></a>
+    <% if(showExcerpt) { %>
+      <%- excerpt(item.templateContent) %>
+    <% } %>
+    <time class="date" datetime="<%= item.date.toUTCString() %>">
+       — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(item.date) %>
+    </time>
+  </li>
 <% } %>

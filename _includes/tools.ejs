@@ -1,0 +1,10 @@
+<%
+  const excerptRegexp = /<!--\s*more\s*-->/i;
+  excerpt = function(post) {
+    const [excerpt] = post.split(excerptRegexp);
+    return excerpt.replace(/<[^>]+>/g, "").trim();
+  }
+  hasExcerpt = function(post) {
+    return excerptRegexp.test(post);
+  }
+%>

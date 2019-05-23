@@ -1,3 +1,4 @@
+<% include("./tools") %>
 <!doctype html>
 <meta name="viewport" content="minimum-scale=1, width=device-width">
 <meta name="theme-color" content="<%= colors.convertToHex(colors.palette.yellow) %>">
@@ -19,6 +20,11 @@
 <% } else { %>
   <meta name="twitter:card" content="summary" />
 <% } %>
+<% if(hasExcerpt(content)) { %>
+  <meta property="og:description" content="<%= excerpt(content) %>" />
+  <meta name="twitter:description" content="<%= excerpt(content) %>" />
+<% } %>
+
 <meta name="twitter:site" content="@DasSurma" />
 <link href="index.xml" type="application/atom+xml" rel="alternate" title="Sitewide Atom feed" />
 <link rel="prefetch" href="/syntax.css" onload="this.rel = 'stylesheet'">

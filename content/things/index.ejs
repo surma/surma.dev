@@ -5,14 +5,5 @@
 ---
 <h2>All posts</h2>
 <ul class="things">
-  <%
-    const things = collections.things
-      .filter(item => item.data.live !== false)
-      .sort((a, b) => {
-        return b.date.getTime() - a.date.getTime();
-      });
-    for(const thing of things) {
-  %>
-    <li><a href="<%= thing.url %>"><%= thing.data.title %></a><span class="date"> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(thing.date) %></span></li>
-  <% } %>
+  <%- include("../../_includes/listing", {items: collections.things, max: -1}) %>
 </ul>

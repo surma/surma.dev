@@ -1,15 +1,5 @@
 <h2>Recent posts</h2>
 <ul class="things">
-<%
-  const things = collections.things
-    .filter(item => item.data.live !== false)
-    .sort((a, b) => {
-      return b.date.getTime() - a.date.getTime();
-    })
-    .slice(0, 10);
-  for(const thing of things) {
-%>
-  <li><a href="<%= thing.url %>"><%= thing.data.title %></a><span class="date"> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(new Date(thing.date)) %></span></li>
-<% } %>
+  <%- include("../_includes/listing", {items: collections.things, max: 10}) %>
   <li class="more"><a href="/things">… all posts</a></li>
 </ul>
