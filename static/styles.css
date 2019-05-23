@@ -105,7 +105,7 @@ em {
   --body-font-slant: 10;
   font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
 }
-p, pre {
+p, pre, .codestyle {
   margin: calc(var(--grid-height) + 2 * var(--grid-gutter)) 0;
 }
 hr {
@@ -181,7 +181,7 @@ h3, h4 {
 h3 + p {
   margin-top: 0;
 }
-pre {
+pre, .codestyle {
   --color: var(--darkblue);
   position: relative;
   display: block;
@@ -192,7 +192,7 @@ pre {
 
   filter: drop-shadow(0px 3px 2px var(--color));
 }
-pre:before, pre:after {
+pre:before, pre:after, .codestyle:before, .codestyle:after {
   content: "";
   display: block;
   position: absolute;
@@ -204,16 +204,16 @@ pre:before, pre:after {
   -webkit-mask: var(--mask);
 
 }
-pre:before {
+pre:before, .codestyle:before {
   top: calc(var(--arrow-height) * -1);
   --mask: url("/arrow.svg") 0% 0%/100% 200%;
 }
-pre:after {
+pre:after, .codestyle:after {
   top: 100%;
   --mask: url("/arrow.svg") 0% 100%/100% 200%;
 }
 
-pre > code {
+pre > code, .codestyle > code {
   display: inline-block;
   margin: 0 auto;
   color: #839496;
@@ -475,4 +475,8 @@ ul.things {
 footer .back {
   top: initial;
   bottom: var(--grid-gutter);
+}
+.lablaunch {
+  display: block;
+  text-align: center;
 }
