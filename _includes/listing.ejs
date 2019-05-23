@@ -1,0 +1,13 @@
+<%
+  let things = items
+    .filter(item => item.data.live !== false)
+    .sort((a, b) => {
+      return b.date.getTime() - a.date.getTime();
+    });
+  if(max > 0) {
+    things = things.slice(0, max);
+  }
+  for(const thing of things) {
+%>
+  <li><a href="<%= thing.url %>"><%= thing.data.title %></a><span class="date"> — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(thing.date) %></span></li>
+<% } %>
