@@ -12,7 +12,8 @@
       "github": "https://github.com/paullewis",
       "website": "https://aerotwist.com"
     }
-  }
+  },
+  "excerpt": "The neat thing about DSLRs is that you can swap lenses, but the body of the camera stays exactly the same. Different lenses for different jobs, but the business logic — the core action of photography taking pictures — is in the body, and between them is a standardized mount system. I want to show how this idea can apply to the web."
 }
 ---
 

@@ -12,7 +12,8 @@
       "github": "https://github.com/paullewis",
       "website": "https://aerotwist.com"
     }
-  }
+  },
+  "excerpt": "Rush hour is the worst time of day to travel. For many it’s not possible to travel at any other time of day because they need to get to work by 9am. This is exactly what a lot of web code looks like today: everything runs on a single thread, the main thread, and the traffic is bad."
 }
 ---
 

@@ -2,7 +2,7 @@
   include("./tools");
 %>
 <%
-  var showExcerpt = showExcerpt || false;
+  var showExcerpt = typeof showExcerpt === "boolean" ? showExcerpt : true;
   items = items
     .filter(item => item.data.live !== false)
     .sort((a, b) => {
@@ -13,13 +13,19 @@
   }
   for(const item of items) {
 %>
-  <li>
-    <a href="<%= item.url %>"><%= item.data.title %></a>
-    <% if(showExcerpt) { %>
-      <%- excerpt(item.templateContent) %>
-    <% } %>
+  <li class="item">
+    <a href="<%= item.url %>"><h3><%= item.data.title %></h3></a>
+    <p class="excerpt">
+      <% if(showExcerpt) { %>
+        <% if(item.data.excerpt) { %>
+          <%- item.data.excerpt %>
+          <% } else if (hasExcerpt(item.templateContent)) { %>
+            <%- excerpt(item.templateContent) %>
+        <% } %>
+      <% } %>
+    </p>
     <time class="date" datetime="<%= item.date.toUTCString() %>">
-       — <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(item.date) %>
+      <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(item.date) %>
     </time>
   </li>
 <% } %>

@@ -2,10 +2,10 @@
 {
   "title": "Lights, Camera, Action!",
   "date": "2018-09-27",
-  "socialmediaimage": "3manteam.jpg"
+  "socialmediaimage": "3manteam.jpg",
+  "excerpt": "Whenever Jake and I shoot a new episode of HTTP203, you see the two of us having an incessantly long conversation. What you don’t see is the crew of people that work quite literally behind the camera: lights have to be dimmed, as much voice with as little noise as possible has to be recorded, cameras have to be started and focused. What if we took a page from a professional video crew’s playbook?"
 }
 ---
-
 
 Whenever [Jake](https://twitter.com/jaffathecake) and I shoot a new episode of [HTTP203](https://www.youtube.com/watch?v=Nzokr6Boeaw), you see the two of us having an incessantly long conversation. What you _don’t_ see is the crew of people that work quite literally behind the camera: lights have to be dimmed, as much voice with as little noise as possible has to be recorded, cameras have to be started and focused. All of that material then gets cut, edited, graded, polished and subtitled. Each of these activities have a dedicated person, whose sole responsibility it is to make sure their assigned field is the highest possible quality.
 

@@ -450,13 +450,18 @@ ul.things {
 }
 .things .date {
   display: block;
-  margin-left: var(--grid-height);
-  margin-bottom: var(--grid-gutter);
+  text-align: right;
   font-size: .5em;
   line-height: 1em;
 }
+.things .excerpt {
+  margin: 0;
+}
 .things .more {
   text-align: right;
+}
+.things .item {
+  margin-bottom: calc(2 * var(--grid-height));
 }
 .back {
   display: block;

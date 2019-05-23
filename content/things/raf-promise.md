@@ -8,6 +8,8 @@
 
 The Web Animations API is great. Except that support is mediocre at best. I keep finding myself re-creating them using Promises, rAF and CSS Transitions, which turned out to be pretty ergonomic.
 
+<!-- more -->
+
 ## Web Animations
 With Web Animations, you can grab any element and have it play entire [sequences of animations]:
 

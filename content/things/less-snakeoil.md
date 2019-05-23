@@ -6,9 +6,11 @@
 }
 ---
 
-Performance on the web can be a problem. Developers will always try to push the boundaries of what they can get away with and that's a good thing. I don't want to change that.
+I want to change how we — as a community — approach, analyze, and understand performance problems. Often I see questions like "What's _the best_ way to do X?", "What is _the fastest_ library to do Y?". Superlatives are human nature, it seems. But for performance work, they can be counter-productive.
 
-What I do want to change is how we — as a community — approach, analyze, and understand performance problems. Often I see questions like "What's _the best_ way to do X?", "What is _the fastest_ library to do Y?". Superlatives are human nature, it seems. But for performance work, they can be counter-productive.
+<!-- more -->
+
+Performance on the web can be a problem. Developers will always try to push the boundaries of what they can get away with and that's a good thing. I don't want to change that.
 
 ## Apply snake oil generously to affected area.
 
