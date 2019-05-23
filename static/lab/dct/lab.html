@@ -1,0 +1,72 @@
+<!doctype html>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  a {
+    color: inherit;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+  canvas {
+    width: 256px;
+    image-rendering: pixelated;
+  }
+  body {
+    display: grid;
+    grid-template-columns: repeat(2, 50%);
+    gap: 10px;
+    font-family: Helvetica;
+    min-height: 100vh;
+  }
+  header {
+    background-color: #333;
+    color: #ccc;
+  }
+  header, main {
+    display: flex;
+    flex-direction: column;
+    max-height: 100vh;
+    padding: 10px;
+    overflow: auto;
+    align-items: center;
+  }
+  main > * {
+    flex-shrink: 0;
+  }
+  footer {
+    margin-top: 30px;
+  }
+</style>
+<header>
+  <input type="file" id="file">
+  <label>
+    Scale:
+    <input type="range" id="scale" min="0.01" max="1" step="0.01" value="1">
+  </label>
+  <crop-select id="crop"></crop-select>
+  <label>
+    Radius:
+    <input type="range" id="radius" min="0.01" max="1.414" step="0.01" value="1">
+  </label>
+  <label>
+    Clamping:
+    <input type="range" id="max" min="1" max="255" step="1" value="5">
+  </label>
+
+  <footer>
+    This is an experiment by <a href="https://twitter.com/dassurma" target="_blank">Surma</a>. I wanted to try:
+    <ul>
+      <li>Implementing my own <a href="https://en.wikipedia.org/wiki/Discrete_cosine_transform" target="_blank">DCT</a></li>
+      <li>Mangling the DCT of an image in different ways</li>
+      <li>Writing a reactive UI (using my <a href="https://github.com/GoogleChromeLabs/observables-with-streams" target="_blank">observables-with-stream</a> library). Currently Chrome-only because of <code>TransformStream</code>.</li>
+    </ul>
+    Code <a href="https://glitch.com/edit/#!/surma-dct?path=index.html" target="_blank">here</a>.
+  </footer>
+</header>
+<main id="main">
+
+</main>
+<script type="module" src="main.js"></script>

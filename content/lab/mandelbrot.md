@@ -13,8 +13,6 @@ The interesting thing about this experiment is that it only sends one initial `p
 
 On the main thread, a `requestAnimationFrame()` loop draws the SAB to screen every frame. This means you can watch the Worker do its work.
 
-<!-- more -->
-
 [SharedArrayBuffer]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
 [Atomics]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics
 [Web Worker]: https://developer.mozilla.org/en-US/docs/Web/API/Worker

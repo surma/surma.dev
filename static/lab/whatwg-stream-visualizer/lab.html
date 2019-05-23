@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<title>WHATWG Stream Visualizer</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --pipe-size: 30px;
+    font-family: Helvetica;
+  }
+  #log:before {
+    display: block;
+    content: "Log:";
+  }
+  body {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  button {
+    border: 1px solid black;
+    padding: 0.3em;
+    border-radius: 2px;
+    font-size: inherit;
+    font-family: inherit;
+    background-color: white;
+    line-height: 1em;
+    margin: 0.2em 0;
+  }
+  .codeblock {
+    display: block;
+    padding-left: 2em;
+  }
+  .codeblock.active {
+    background-color: hsl(50, 100%, 80%);
+  }
+  .codeblock.inactive button:before {
+    content: "🔴";
+    opacity: 0.5;
+  }
+  .codeblock.active button:before {
+    content: "▶";
+    color: hsl(240, 100%, 70%);
+  }
+  .code {
+    font-family: monospace;
+  }
+  fieldset p {
+    margin: 0;
+  }
+  .region {
+    border: 1px solid black;
+    background-color: hsl(157, 65%, 90%);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    margin: 8px 0;
+  }
+  .region > * {
+    flex-basis: 50%;
+    flex-grow: 1;
+  }
+  .message {
+    transition: transform 5s linear;
+    border-radius: 50%;
+    background-color: blue;
+    color: white;
+    height: var(--pipe-size);
+    width: var(--pipe-size);
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pipe {
+    height: var(--pipe-size);
+    position: relative;
+    transform: rotate(-13deg);
+    z-index: -1;
+    border: 1px dashed grey;
+  }
+</style>
+<p>A little toy to experiment with <a href="https://streams.spec.whatwg.org/">WHATWG stream</a>. Made with 💻 by <a href="https://twitter.com/dassurma">Surma</a>.</p>
+<main></main>
+<pre id="log"></pre>
+
+<script type="module" src="main.js"></script>
+
+<!-- include the Glitch button to show what the webpage is about and
+      to make it easier for folks to view source and remix -->
+<div class="glitchButton" style="position:fixed;top:20px;right:20px;"></div>
+<script src="https://button.glitch.me/button.js"></script>
