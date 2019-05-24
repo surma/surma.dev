@@ -153,7 +153,7 @@ h2 {
   font-size: var(--font-size);
   background: var(--color);
 
-  filter: drop-shadow(0px 3px 2px var(--color));
+  /* filter: drop-shadow(0px 3px 2px var(--color)); */
 }
 
 h2:before, h2:after {
@@ -193,7 +193,7 @@ pre, .codestyle {
   background-color: var(--color);
   padding: var(--grid-height) 0;
 
-  filter: drop-shadow(0px 3px 2px var(--color));
+  /* filter: drop-shadow(0px 3px 2px var(--color)); */
 }
 pre:before, pre:after, .codestyle:before, .codestyle:after {
   content: "";
@@ -205,8 +205,8 @@ pre:before, pre:after, .codestyle:before, .codestyle:after {
   background: inherit;
   mask: var(--mask);
   -webkit-mask: var(--mask);
-
 }
+
 pre:before, .codestyle:before {
   top: calc(var(--arrow-height) * -1);
   --mask: var(--arrow-file) 0% 0%/100% 200%;
@@ -239,7 +239,7 @@ blockquote {
   color: var(--yellow);
   margin-right: var(--arrow-height);
 
-  filter: drop-shadow(0px 3px 2px var(--color));
+  /* filter: drop-shadow(0px 3px 2px var(--color)); */
 }
 blockquote:before {
   content: "";
@@ -383,7 +383,7 @@ footer > .arrows .arrow:last-of-type {
   z-index:  calc(10 - 7);
 }
 .arrow:last-of-type {
-  filter: drop-shadow(0px 3px 2px var(--color));
+  /* filter: drop-shadow(0px 3px 2px var(--color)); */
 }
 .arrow.darkblue {
   --color: var(--darkblue);
@@ -451,13 +451,14 @@ ul.things {
   list-style: none;
   padding: 0
 }
-.things .date {
+.postdate {
+  clear: both;
   display: block;
   text-align: right;
   font-size: .5em;
   line-height: 1em;
 }
-.things .excerpt {
+.excerpt {
   margin: 0;
 }
 .things .more {
@@ -482,4 +483,26 @@ footer .back {
 .lablaunch {
   display: block;
   text-align: center;
+}
+.arrowcrop {
+  --offset: 50px;
+  --mask: 
+    var(--arrow-file) 0% 0%/100% var(--offset) no-repeat, 
+    linear-gradient(
+      to bottom, 
+      transparent 0, 
+      transparent calc(var(--offset) / 2),
+      white 0,
+      white calc(100% - var(--offset) / 2),
+      transparent 0
+    ),
+    var(--arrow-file) 0% 100%/100% var(--offset) no-repeat;
+  mask: var(--mask);
+  -webkit-mask: var(--mask);
+}
+.socialpreview {
+  width: 30%;
+  float: right;
+  margin-bottom: var(--grid-height);
+  margin-left: var(--grid-gutter);
 }

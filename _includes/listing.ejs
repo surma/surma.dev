@@ -2,29 +2,20 @@
   include("./tools");
 %>
 <%
+  var start = typeof start === "number" ? start : 0;
   var showExcerpt = typeof showExcerpt === "boolean" ? showExcerpt : true;
-  items = items
-    .filter(item => item.data.live !== false)
-    .sort((a, b) => {
-      return b.date.getTime() - a.date.getTime();
-    });
-  if(max > 0) {
-    items = items.slice(0, max);
-  }
+  var max = typeof max === "number" ? max : items.length;
+  items = sortByNew(items).slice(start, max);
   for(const item of items) {
 %>
   <li class="item">
-    <a href="<%= item.url %>"><h3><%= item.data.title %></h3></a>
+    <a class="posttitle" href="<%= item.url %>"><h3><%= item.data.title %></h3></a>
     <p class="excerpt">
       <% if(showExcerpt) { %>
-        <% if(item.data.excerpt) { %>
-          <%- item.data.excerpt %>
-          <% } else if (hasExcerpt(item.templateContent)) { %>
-            <%- excerpt(item.templateContent) %>
-        <% } %>
+        <%- findExcerpt(item) %>
       <% } %>
     </p>
-    <time class="date" datetime="<%= item.date.toUTCString() %>">
+    <time class="postdate" datetime="<%= item.date.toUTCString() %>">
       <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(item.date) %>
     </time>
   </li>

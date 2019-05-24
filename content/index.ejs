@@ -1,6 +1,21 @@
-<h2>Recent posts</h2>
+<%
+  include("../_includes/tools");
+  var latest = sortByNew(collections.things)[0];
+%>
+<section class="latest">
+  <a class="posttitle" href="<%= latest.url %>"><h3><%= latest.data.title %></h3></a>
+  <img class="arrowcrop socialpreview" src="<%= latest.url %><%= latest.data.socialmediaimage %>">
+  <p class="excerpt">
+    <%- findExcerpt(latest) %>
+  </p>
+  <a href="<%= latest.url %>">Read entire post</a>
+  <time class="postdate" datetime="<%= latest.date.toUTCString() %>">
+      <%= Intl.DateTimeFormat("en-US", meta.datefmt).format(latest.date) %>
+    </time>
+</section>
+<h2>Previous posts</h2>
 <ul class="things">
-  <%- include("../_includes/listing", {items: collections.things, max: 5}) %>
+  <%- include("../_includes/listing", {items: collections.things, start: 1, max: 5}) %>
   <li class="more"><a href="/things">… all posts</a></li>
 </ul>
 

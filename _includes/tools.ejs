@@ -7,4 +7,19 @@
   hasExcerpt = function(post) {
     return excerptRegexp.test(post);
   }
+  sortByNew = function(collection) {
+    return collection
+      .filter(item => item.data.live !== false)
+      .sort((a, b) => {
+        return b.date.getTime() - a.date.getTime();
+      });
+  }
+  findExcerpt = function(post) {
+    if(post.data.excerpt) {
+      return post.data.excerpt;
+    } else if (hasExcerpt(post.templateContent)) { 
+      return excerpt(post.templateContent)
+    }
+    return "";
+  }
 %>
