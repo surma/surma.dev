@@ -2,37 +2,35 @@
  Solarized Color Schemes originally by Ethan Schoonover
  http://ethanschoonover.com/solarized
 
- Ported for PrismJS by Michael Deeb
- Website: https://michaeljdeeb.com
- Twitter Handle: https://twitter.com/michaeljdeeb)
+ Ported for PrismJS by Hector Matos
+ Website: https://krakendev.io
+ Twitter Handle: https://twitter.com/allonsykraken)
 */
 
 /*
 SOLARIZED HEX
 --------- -------
+base03    #002b36
+base02    #073642
+base01    #586e75
+base00    #657b83
+base0     #839496
+base1     #93a1a1
+base2     #eee8d5
+base3     #fdf6e3
+yellow    #b58900
+orange    #cb4b16
+red       #dc322f
+magenta   #d33682
+violet    #6c71c4
+blue      #268bd2
+cyan      #2aa198
+green     #859900
 */
-.tmp {
-  --base03:    #002b36;
-  --base02:    #073642;
-  --base01:    #586e75;
-  --base00:    #657b83;
-  --base0:     #839496;
-  --base1:     #93a1a1;
-  --base2:     #eee8d5;
-  --base3:     #fdf6e3;
-  --yellow:    #b58900;
-  --orange:    #cb4b16;
-  --red:       #dc322f;
-  --magenta:   #d33682;
-  --violet:    #6c71c4;
-  --blue:      #268bd2;
-  --cyan:      #2aa198;
-  --green:     #859900;
-}
 
 code[class*="language-"],
 pre[class*="language-"] {
-  color: #839496; /* base0 */
+  color: #657b83; /* base00 */
   font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
   text-align: left;
   white-space: pre;
@@ -52,19 +50,19 @@ pre[class*="language-"] {
   hyphens: none;
 }
 
-.token.attr-name,
 .token.prolog,
 .token.doctype,
 .token.cdata {
   color: #93a1a1; /* base1 */
 }
 
+
 .token.comment {
-  color: #eee8d5;
+  color: #93a1a1;
 }
 
 .token.punctuation {
-  color: #657b83; /* base00 */
+  color: #586e75; /* base01 */
 }
 
 .namespace {
@@ -72,16 +70,17 @@ pre[class*="language-"] {
 }
 
 .token.property,
+.token.tag,
 .token.boolean,
 .token.number,
 .token.constant,
 .token.symbol,
 .token.deleted {
-  color: #d33682; /* magenta */
+  color: #268bd2; /* blue */
 }
 
-.token.attr-value,
 .token.selector,
+.token.attr-name,
 .token.string,
 .token.char,
 .token.builtin,
@@ -91,17 +90,19 @@ pre[class*="language-"] {
 }
 
 .token.entity {
-  color: #2aa198; /* cyan */
+  color: #657b83; /* base00 */
+  background: #eee8d5; /* base2 */
 }
 
 .token.atrule,
+.token.attr-value,
 .token.keyword {
-  color: #859900; /* yellow */
+  color: #859900; /* green */
 }
 
-.token.tag,
-.token.function {
-  color: #268bd2; /* blue */
+.token.function,
+.token.class-name {
+  color: #b58900; /* yellow */
 }
 
 .token.regex,
