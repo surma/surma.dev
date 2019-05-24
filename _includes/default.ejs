@@ -27,10 +27,6 @@
 
 <meta name="twitter:site" content="@DasSurma" />
 <link href="index.xml" type="application/atom+xml" rel="alternate" title="Sitewide Atom feed" />
-<link rel="prefetch" href="/syntax.css" onload="this.rel = 'stylesheet'">
-<noscript>
-    <link rel="stylesheet" href="/syntax.css">
-</noscript>
 <style>
   :root {
     <% for(const [name, color] of Object.entries(colors.palette)) { %>
@@ -39,6 +35,10 @@
   }
 </style>
 <link rel="stylesheet" href="/styles.css">
+<link rel="prefetch" href="/syntax.css" onload="this.rel = 'stylesheet'">
+<noscript>
+    <link rel="stylesheet" href="/syntax.css">
+</noscript>
 <header>
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
   <a href="/" class="back">← Back to home</a>

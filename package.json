@@ -7,6 +7,7 @@
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3"
   },
   "scripts": {
-    "build": "eleventy"
+    "build": "eleventy",
+    "serve": "eleventy --serve"
   }
 }
