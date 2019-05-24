@@ -52,7 +52,7 @@ int add(int a, int b) {
 
 What a mind-boggling feat of engineering! Especially because it’s called “add” but doesn’t actually add.
 
-> **Note**: We’ll be looking at raw WebAssembly here. If you are struggling, that is no problem. **This part is not really required reading!**. But I did write an intorduction to [Raw Webassembly][raw webassembly] and WAT previously!
+> **Note**: We’ll be looking at raw WebAssembly here. If you are struggling, that is no problem. **This part is not really required reading!** But if you are interested, I did write an introduction to [Raw Webassembly][raw webassembly] and WAT previously!
 
 ### Turning C into LLVM IR
 
@@ -67,7 +67,7 @@ clang \
   add.c
 ```
 
-And as a result we get `add.ll` containing the LLVM IR. **I’m only showing it here for completeness sake**. When working with WebAssembly, or even with `clang` when developing C, you _never_ get into contact with LLVM IR. 
+And as a result we get `add.ll` containing the LLVM IR. **I’m only showing this here for completeness sake**. When working with WebAssembly, or even with `clang` when developing C, you _never_ get into contact with LLVM IR. 
 
 ```
 ; ModuleID = 'add.c'
@@ -194,12 +194,11 @@ Of course, we still need to see that this _actually_ works. [As we did previousl
 </script>
 ```
 
-If nothing went wrong, you shoud see a `17` in your DevTool’s console (remember, the `add()` function does not just add numbers).
+If nothing went wrong, you shoud see a `17` in your DevTool’s console.
 
 ## Compiling C the slightly less hard way
 
-The amount of steps we currently have to do to get from C code to WebAssembly is a bit much — and as I said, it was artificially inflated for educational purposes.
-We can skip all the human-readable formats and use the C compiler as it was intended: To create object files from C code.
+The amount of steps we currently have to do to get from C code to WebAssembly is a bit much. As I said, I was bending over backwards for educational purposes. We can skip all the human-readable formats and use the C compiler as it was intended: Turn C files into object files.
 
 ```bash
 clang \
@@ -214,7 +213,7 @@ wasm-ld \
   add.o
 ```
 
-Much better. Now this will still generate a lot of WAT for this simple program. The biggest improvements you can get is by enabled the compiler’s and linker’s optimizer:
+Much better. Now this will still generate the rather big WAT shown above, which is a bit surprising considering the size of the input proram. The biggest improvement with respect to WAT size (and consequently Wasm size) is enabling the compiler’s and linker’s optimizer:
 
 ```bash
 clang \
@@ -231,7 +230,32 @@ wasm-ld \
   lol.o
 ```
 
-Our `.wasm` file i
+Our `.wasm` file is much smaller and so is the WAT:
+
+```wasm
+(module
+  (type (;0;) (func))
+  (type (;1;) (func (param i32 i32) (result i32)))
+  (func $__wasm_call_ctors (type 0))
+  (func $add (type 1) (param i32 i32) (result i32)
+    local.get 0
+    local.get 0
+    i32.mul
+    local.get 1
+    i32.add)
+  (table (;0;) 1 1 anyfunc)
+  (memory (;0;) 2)
+  (global (;0;) (mut i32) (i32.const 66560))
+  (global (;1;) i32 (i32.const 66560))
+  (global (;2;) i32 (i32.const 1024))
+  (global (;3;) i32 (i32.const 1024))
+  (export "memory" (memory 0))
+  (export "__wasm_call_ctors" (func $__wasm_call_ctors))
+  (export "__heap_base" (global 1))
+  (export "__data_end" (global 2))
+  (export "__dso_handle" (global 3))
+  (export "add" (func $add)))
+```
 
 [Emscripten]: https://emscripten.org
 [WebAssembly]: https://webassembly.org
