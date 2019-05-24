@@ -25,16 +25,23 @@ I am not going to explain all the details of the WebAssembly virtual machine, bu
 
 You can follow along on your own machine with the tools mentioned above, open the hosted version of the demos (linked under each example) or use [WebAssembly.studio], which has support for Wat but also C, Rust and AssemblyScript.
 
-```
+```wasm
 (;
   Filename: add.wat
   This is a block comment.
 ;)
 (module
   (func $add (param $p1 i32) (param $p2 i32) (result i32)
-    local.get $p1 ;; Push parameter $p1 onto the stack
-    local.get $p2 ;; Push parameter $p2 onto the stack
-    i32.add ;; Pop two values off the stack and push their sum
+    
+    ;; Push parameter $p1 onto the stack
+    local.get $p1 
+    
+    ;; Push parameter $p2 onto the stack
+    local.get $p2 
+    
+    ;; Pop two values off the stack and push their sum
+    i32.add 
+    
     ;; The top of the stack is the return value
   )
   (export "add" (func $add))
@@ -45,7 +52,7 @@ The file starts with a module expression, which is a list of declarations what t
 
 After assembling our `.wat` file with `wat2wasm`, we can disassemble it again (for lols) with `wasm2wat`. The result is below.
 
-```
+```wasm
 (module
   (type (;0;) (func (param i32 i32) (result i32)))
   (func (;0;) (type 0) (param i32 i32) (result i32)
@@ -67,7 +74,7 @@ A function declaration consists of a couple of items, starting with `func` keywo
 
 Writing code for a stack-based machine can sometimes feel a bit weird. Wat also offers “folded” instructions, which look a bit like functional programming. The following two function declarations are equivalent:
 
-```
+```wasm
 (func $add (param $p1 i32) (param $p2 i32) (result i32)
   local.get $p1
   local.get $p2
@@ -105,9 +112,11 @@ The compilation of a WebAssembly module can start even when the module is still 
 ```html
 <script>
   async function maybeInstantiateStreaming(path, ...opts) {
+
     // Start the download asap.
     const f = fetch(path);
     try {
+
       // This will throw either if `instantiateStreaming` is
       // undefined or the `Content-Type` header is wrong.
       return WebAssembly.instantiateStreaming(
@@ -115,6 +124,7 @@ The compilation of a WebAssembly module can start even when the module is still 
         ...opts
       );
     } catch(_e) {
+
       // If it fails for any reason, fall back to downloading
       // the entire module as an ArrayBuffer.
       return WebAssembly.instantiate(
@@ -132,19 +142,27 @@ This is similar to [what Emscripten does][emscripten-instantiate] and has worked
 
 A WebAssembly module can have multiple functions, but not all of them need to be exported:
 
-```
+```wasm
 ;; Filename: contrived.wat
 (module
   (func $add (; …same as before… ;))
   (func $add2 (param $p1 i32) (result i32)
+    
     local.get $p1
-    i32.const 2 ;; Push the constant 2 onto the stack
-    call $add ;; Call our old function
+    ;; Push the constant 2 onto the stack
+    i32.const 2 
+    
+    ;; Call our old function
+    call $add 
   )
   (func $add3 (param $p1 i32) (result i32)
     local.get $p1
-    i32.const 3 ;; Push the constant 3 onto the stack
-    call $add ;; Call our old function
+
+    ;; Push the constant 3 onto the stack
+    i32.const 3 
+
+    ;; Call our old function
+    call $add 
   )
   (export "add2" (func $add2))
   (export "add3" (func $add3))
@@ -157,16 +175,21 @@ Notice how `add2` and `add3` are exported, but `add` is not. As such `add()` wil
 
 WebAssembly modules can not only export functions but also _expect_ a function to be passed _to_ the WebAssembly module at instantiation time by specifying an `import`:
 
-```
+```wasm
 ;; Filename: funcimport.wat
 (module
+
   ;; A function with no parameters and no return value.
   (type $log (func (param) (result)))
+
   ;; Expect a function called `log` on the `funcs` module
   (import "funcs" "log" (func $log))
+
   ;; Our function with no parameters and no return value.
   (func $doLog (param) (result)
-    call $log ;; Call the imported function
+
+    ;; Call the imported function
+    call $log 
   )
   (export "doLog" (func $doLog))
 )
@@ -205,17 +228,21 @@ There’s only so much you can do when all you have is a stack. After all, the v
 
 This example is a bit contrived, so bear with me. The function `add2()` loads the first integer from memory, adds 2 to it and stores it in the next position in memory.
 
-```
+```wasm
 ;; Filename: memory.wat
 (module
+
   ;; Create memory with a size of 1 page (= 64KiB)
   ;; that is growable to up to 100 pages.
   (memory $mem 1 100)
+
   ;; Export that memory
   (export "memory" (memory $mem))
+
   ;; Our function with no parameters and no return value,
   ;; but with a local variable for temporary storage.
   (func $add2 (param) (result) (local $tmp i32)
+
     ;; Load an i32 from address 0 and put it on the stack
     i32.const 0
     i32.load
