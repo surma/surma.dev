@@ -6,7 +6,7 @@
 }
 ---
 
-Can you use the DOM in WebAssembly? Rust says yes, other people say no. Before we can resolve that disonnance, I need to shine some light on what _raw_ WebAssembly can do.
+Can you use the DOM in WebAssembly? Rust says yes, other people say no. Before we can resolve that dissonnance, I need to shine some light on what _raw_ WebAssembly can do.
 <!--more-->
 
 When you go to [WebAssembly.org], the very first thing you see is that it’s a “stack-based virtual machine”.
