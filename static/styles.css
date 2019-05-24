@@ -16,7 +16,7 @@
 }
 
 :root {
-  --base: 16px;
+  --base: 1rem;
 
   --width: 960px;
   --arrow-height: calc(2 * var(--base));
