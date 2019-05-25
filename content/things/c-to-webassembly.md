@@ -1,7 +1,7 @@
 ---json
 {
   "title": "Compiling C to WebAssembly without Emscripten",
-  "date": "2019-05-24",
+  "date": "2019-05-26",
   "socialmediaimage": "social.png"
 }
 ---
