@@ -117,9 +117,19 @@ hr {
   border-radius: 2px;
 }
 img, video {
-  max-width: 100%;
+  max-width: calc(100% - 2 * var(--grid-height));
   margin: 0 auto;
   display: block;
+}
+figure {
+  margin: 0;
+}
+figcaption {
+  margin-top: var(--grid-height);
+  max-width: calc(100% - 2 * var(--grid-height));
+  margin: var(--grid-height) auto;
+  --body-font-slant: 10;
+  font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
 }
 :not(pre) > code {
   color: var(--blue);
