@@ -9,9 +9,9 @@
 [Emscripten] contains much more than just a C compiler for [WebAssembly]. What if we stripped away all the bells and whistles and used _just_ the compiler?
 <!--more-->
 
-[Emscripten] is a compiler _toolchain_ for C/C++ targeting [WebAssembly]. But it does so much more than just compiling. Emscripten’s goal is to be a drop-in replacement for your off-the-shelf C/C++ compiler and make code that was _not_ written for the web run on the web. To achieve this, Emscripten emulates an entire POSIX operating system for you (or at least the parts that are used by your program). If your program uses [`fopen()`][fopen], Emscripten will bundle the code to emulate a filesystem. If you use OpenGL, Emscripten will bundle code that creates a C-compatible GL context backed by [WebGL]. Let’s strip that all away, shall we?
+[Emscripten] is a compiler _toolchain_ for C/C++ targeting [WebAssembly]. But it does so much more than just compiling. Emscripten’s goal is to be a drop-in replacement for your off-the-shelf C/C++ compiler and make code that was _not_ written for the web run on the web. To achieve this, Emscripten emulates an entire POSIX operating system for you (or at least the parts that are used by your program). If your program uses [`fopen()`][fopen], Emscripten will bundle the code to emulate a filesystem. If you use OpenGL, Emscripten will bundle code that creates a C-compatible GL context backed by [WebGL]. That’s a lot of work that also amounts to a lot of code that needs to be shipped. Let’s strip that all away, shall we?
 
-The _compiler_ in Emscripten’s toolchain, the program that translates C code to WebAssembly byte-code, is [LLVM]. LLVM is a modern, modular compiler framework. LLVM is modular in the sense that it never compiles one language straight to machine code. Instead, it has a _front-end compiler_ that compiles your language of choice to an _intermediate representation_ (IR) called — you might have guessed it — LLVM: Low-level Virtual Machine. The _back-end compiler_ then takes care of translating the IR to the host’s machine code. The advantage of this strict separation is that adding support for a new target “merely” requires adding a new back-end compiler. WebAssembly, in that sense, is just one of many targets that LLVM supports and has been available behind a flag for a while. Since version 8 of LLVM, the WebAssembly target is available by default. On MacOS using [homebrew], you can just install it:
+The _compiler_ in Emscripten’s toolchain, the program that translates C code to WebAssembly byte-code, is [LLVM]. LLVM is a modern, modular compiler framework. LLVM is modular in the sense that it never compiles one language straight to machine code. Instead, it has a _front-end compiler_ that compiles your code to an _intermediate representation_ (IR). This IR is called — you might have guessed it — LLVM: Low-level Virtual Machine. The _back-end compiler_ then takes care of translating the IR to the host’s machine code. The advantage of this strict separation is that adding support for a new architecture “merely” requires adding a new back-end compiler. WebAssembly, in that sense, is just one of many targets that LLVM supports and has been available behind a flag for a while. Since version 8 of LLVM the WebAssembly target is available by default. You can just install it on MacOS using [homebrew], :
 
 ```
 $ brew install llvm
@@ -20,7 +20,7 @@ $ brew link --force llvm
 
 To make sure you have WebAssembly support, we can go and check the back-end compiler:
 
-```
+```bash
 $ llc --version
 LLVM (http://llvm.org/):
   LLVM version 8.0.0
@@ -29,19 +29,22 @@ LLVM (http://llvm.org/):
   Host CPU: skylake
 
   Registered Targets:
-    … OMG so many architectures …
-    wasm32     - WebAssembly 32-bit
+    # … OMG so many architectures …
+    systemz    - SystemZ
+    thumb      - Thumb
+    thumbeb    - Thumb (big endian)
+    wasm32     - WebAssembly 32-bit # 🎉🎉🎉
     wasm64     - WebAssembly 64-bit
-    x86        - 32-bit X86: Pentium-Pro and above
+    x86        - 32-bit X86: Pentium-Pro and above 
     x86-64     - 64-bit X86: EM64T and AMD64
     xcore      - XCore
   ```
 
-We are good to go!
+Seems like we are good to go!
 
 ## Compiling C the hard way
 
-Fair warning: I’ll bend over backwards a bit to make this happen. We’ll try to use human-readable formats for every step of the way (as much as possible). Our program for journey is going to super simple to avoid edge cases and distractions. This C program makes no use of C’s standard library and only uses `int` as a type.
+Warning: I’ll bend over backwards here fore a bit and use human-readable formats for every step of the process (as much as possible). Our program for journey is going to be super simple to avoid edge cases and distractions. This program makes no use of C’s standard library and only uses `int` as a type.
 
 ```c
 // Filename: add.c
@@ -49,14 +52,11 @@ int add(int a, int b) {
   return a*a + b;
 }
 ```
-
-What a mind-boggling feat of engineering! Especially because it’s called “add” but doesn’t actually add.
-
-> **Note**: We’ll be looking at raw WebAssembly here. If you are struggling, that is no problem. **This part is not really required reading!** But if you are interested, I did write an introduction to [Raw Webassembly][raw webassembly] and WAT previously!
+<figcaption>What a mind-boggling feat of engineering! Especially because it’s called “add” but doesn’t actually add.</figcaption>
 
 ### Turning C into LLVM IR
 
-The first step is to turn our C program into LLVM IR. This is the job of the front-end compiler `clang`, that got installed with LLVM:
+The first step is to turn our C program into LLVM IR. This is the job of the front-end compiler `clang` that got installed with LLVM:
 
 ```bash
 clang \
@@ -90,10 +90,11 @@ attributes #0 = { norecurse nounwind readnone "correctly-rounded-divide-sqrt-fp-
 !0 = !{i32 1, !"wchar_size", i32 4}
 !1 = !{!"clang version 8.0.0 (tags/RELEASE_800/final)"}
 ```
+<figcaption>LLVM IR is full of additional meta data and annotations, allowing the back-end compiler to make more informed decisions when generating machine code.</figcaption>
 
 ### Turning LLVM IR into object files
 
-The next step is invoking LLVMs backend compiler `llc` to turn the LLVM IR into an _object file_ containing a mixture of WebAssembly byte-code and additional metadata:
+The next step is invoking LLVMs backend compiler `llc` to turn the LLVM IR into an _object file_ containing a mixture of WebAssembly byte-code and a subset of the metadata:
 
 ```bash
 llc \
@@ -102,13 +103,13 @@ llc \
   add.ll
 ```
 
-The object file called `add.o` is now ready for the final stage: Linking.
+The object file is called `add.o` and is now ready for the final stage: linking.
 
 > **Note**: If we omitted `-filetype=obj` we’d get LLVM’s S-Expression format for WebAssembly, which is human-readable and somewhat similar to WAT. However, the tool that can consume these files, `llvm-mc`, doesn’t not fully support this text format yet and often fails to consume the output of `llc`.
 
 ### Linking
 
-Each platform handles linking differently, so there is no one tool for linking in LLVM. For WebAssembly, there is `wasm-ld`. The linker assembles multiple object file into the _executable_:
+ The linker assembles multiple object file into the _executable_. Each platform handles linking differently, so there is no one tool for linking in LLVM. For WebAssembly there is `wasm-ld`.
 
 ```bash
 wasm-ld \
@@ -122,7 +123,7 @@ The output is 262 bytes WebAssembly module.
 
 ### Running it
 
-Of course, the most important part is to see that this _actually_ works. [As we did in the previous blog post][raw webassembly], we can use a couple lines of inline JavaScript to load and run these WebAssembly modules.
+Of course the most important part is to see that this _actually_ works. [As we did in the previous blog post][raw webassembly], we can use a couple lines of inline JavaScript to load and run this WebAssembly module.
 
 ```html
 <!DOCTYPE html>
@@ -140,11 +141,9 @@ Of course, the most important part is to see that this _actually_ works. [As we 
 
 If nothing went wrong, you shoud see a `17` in your DevTool’s console. **We just successfully compiled C to WebAssembly without touching Emscripten.** It’s also worth noting that we don’t have any glue code that is required to setup and load the WebAssembly module. 
 
-
-
 ## Compiling C the slightly less hard way
 
-The amount of steps we currently have to do to get from C code to WebAssembly are a bit much. As I said, I was bending over backwards for educational purposes. Let’s stop doing that and can skip all the human-readable, intermediate formats. Or to say it another way: let’s use the C compiler for what it was intended, turning C files into object files.
+The numbers of steps we currently have to do to get from C code to WebAssembly is a bit high. As I said, I was bending over backwards for educational purposes. Let’s stop doing that and can skip all the human-readable, intermediate formats. Or to say it another way: let’s use the C compiler for what it was intended, turning C files into object files.
 
 ```bash
 clang \
@@ -162,6 +161,8 @@ wasm-ld \
 This will produce the same output as before, but with fewer commands which makes it easier to understand and modify.
 
 ## Optimizing
+
+> **Note**: We’ll be looking at raw WebAssembly here. If you are struggling with that, that is ok. **You can skip to the _“Calling into the standard library”_ section.** But if you are interested, I wrote an introduction to [Raw Webassembly][raw webassembly] and WAT previously!
 
 Let’s take a look at the WAT of our WebAssembly module by running `wasm2wat`:
 
@@ -266,15 +267,19 @@ After running the commands above, our `.wasm` file went down from 262 bytes to 1
 
 ## Calling into the standard library.
 
-Now, C without the standard library (called “libc”) is pretty rough. So the logical thing to look at next is how to call into the standard library and I’m going to be honest: It’s _not_ going to be easy. **I actually won’t link against any libc in this blog post.**. There are a couple of libc implementations out there that we could just grab, most notably [glibc], [musl] and [dietlibc]. However, most of these library expect to run on a POSIX operating system, which implement a specific set of _syscalls_ (calls to the system’s kernel). Since we don’t have any of that in JavaScript, _we’d_ have to implement these POSIX syscalls probably by calling out to JavaScript. This is quite the task and I am not going to write about that here. But the good news is: **This is exactly what [Emscripten] does for you.**
+Now, C without the standard library (called “libc”) is pretty rough. It seems logical to look into adding a libc as a next step, but I’m going to be honest: It’s _not_ going to be easy. **I actually won’t link against any libc in this blog post.** There are a couple of libc implementations out there that we could grab, most notably [glibc], [musl] and [dietlibc]. However, most of these library expect to run on a POSIX operating system, which implement a specific set of _syscalls_ (calls to the system’s kernel). Since we don’t have a kernel interface in JavaScript, we’d have to implement these POSIX syscalls ourselves, probably by calling out to JavaScript. This is quite the task and I am not going to do that here. The good news is: **This is exactly what [Emscripten] does for you.**
+
+Not all functions in a libc rely on syscalls, of course. Functions like `strlen()`, `sin()` or even `memset()` often don’t rely on syscalls. These functions you could use or even just copy/paste their implementation from one of the libraries above.
 
 ## Dynamic memory
 
-With no libc at hand, fundamental C APIs like `malloc()` and `free()` are not available. In our unoptimized WAT above we have seen that the compiler will make use of the stack if necessary. So we can’t just use the WebAssembly memory however we like without risking corruption. We need to understand _how_ that memory is used.
+With no libc at hand, fundamental C APIs like `malloc()` and `free()` are not available. In our unoptimized WAT above we have seen that the compiler will make use of memory if necessary. That means we can’t just use the memory however we like without risking corruption. We need to understand _how_ that memory is used.
 
 ### LLVM’s memory model
 
-The way the WebAssembly memory is segmented is dictated by `wasm-ld` and might take C veterans a bit by surprise. Firstly, address `0` is absolutely valid in WebAssembly, but will often still be handled as an error case by a lot of C code. Secondly, _both_ the stack and the heap grow downwards (towards higher addresses). The reason for this is that WebAssembly memory can grow. As such there is no fixed end to place the stack or the heap at. The layout that `wasm-ld` uses is the following:
+The way the WebAssembly memory is segmented is dictated by `wasm-ld` and might take C veterans a bit by surprise. Firstly, address `0` is technically valid in WebAssembly, but will often still be handled as an error case by a lot of C code. Secondly, _both_ the stack and the heap grow downwards (towards higher addresses). The reason for this is that WebAssembly memory can grow at runtime. That means there is no fixed end to place the stack or the heap at.
+
+The layout that `wasm-ld` uses is the following:
 
 <figure>
   <img src="memlayout.svg" alt="A depiction of the wasm-ld’d memory layout.">
@@ -295,9 +300,9 @@ If we look back at the globals section in our WAT we can find these symbold defi
 
 ### Building an allocator
 
-We now know that the heap starts at `__heap_base`, and since we don’t a `malloc()` we know that the memory region from there own downwards is considered the heap and is ours to control. We can place data in there however we like and don’t feat corruption as the stack is in safe distance — provided your stack does indeed stay below 8MiB. But leaving the heap as a wild west can get hairly fairly quickly, so usually some sort of dynamic memory management is needed. One option is to pull in a full `malloc()` implementation like [Doug Lea’s `malloc` implementation][dlmalloc], which is used by Emscripten today. There is also a couple of smaller implementations with different tradeoffs. 
+We now know that the heap region starts at `__heap_base` and since there is no `malloc()` function, we know that the memory region from there own downwards ours to control. We can place data in there however we like and don’t have to fear corruption as the stack is in safe distance (provided your stack does indeed stay below 8MiB). Leaving the heap as a free-for-all can get hairy quickly, though, so usually some sort of dynamic memory management is needed. One option is to pull in a full `malloc()` implementation like [Doug Lea’s `malloc` implementation][dlmalloc], which is used by Emscripten today. There is also a couple of smaller implementations with different tradeoffs. 
 
-But why don’t we write our own `malloc()`? We are this deep in, we might as well. One of the simplest allocators is a bump allocator. The advantages: It’s super fast, extremely small and simple to implement. The downside: You can’t free memory. While this seems incredibly useless at first sight, I have encountered use-cases while working on [Squoosh] where this would have been an excellent choice (but I didn’t know enough about WebAssembly at the time). The concept of a bump allocator is that we store the address of the next unallocated byte as a global. If the program requests n bytes of memory, we advance that marker by n and return the previous value:
+But why don’t we write our own `malloc()`? We are in this deep, we might as well. One of the simplest allocators is a bump allocator. The advantages: It’s super fast, extremely small and simple to implement. The downside: You can’t free memory. While this seems incredibly useless at first sight, I have encountered use-cases while working on [Squoosh] where this would have been an excellent choice. The concept of a bump allocator is that we store the address of unused memory as a global. If the program requests n bytes of memory, we advance that marker by n and return the previous value:
 
 ```c
 extern unsigned char __heap_base;
@@ -344,13 +349,13 @@ The `sum()` function is hopefully straight forward. The more interesting questio
     const jsArray = [1, 2, 3, 4, 5];
     // Allocate memory for 5 32-bit integers
     //  and return get starting address.
-    const cArrayPointer = instance.exports.malloc(5 * 4);
+    const cArrayPointer = instance.exports.malloc(jsArray.length * 4);
     // Turn that sequence of 32-bit integers
-    // into a Uint32Array,  starting at that address.
+    // into a Uint32Array, starting at that address.
     const cArray = new Uint32Array(
       instance.exports.memory.buffer, 
-      cArrayPointer, // byte offset
-      5 // length
+      cArrayPointer, 
+      jsArray.length
      );
     // Copy the values from JS to C.
     cArray.set(jsArray);
@@ -365,7 +370,7 @@ Running this you should see a very happy `15` in the DevTools console, which is 
 
 ## Conclusion
 
-You made it to the end. Congratiualtions! I’ll say it again: **This is not required reading. You do not need to understand all of this to be a good web developer or even to make good use of WebAssembly.** But I did want to share this journey with you as it really makes you appreciate all the work that a project like [Emscripten] does for you. At the same time, it gave me an understanding of how small purely computational modules can be. The Wasm module for the array summing ended up at just 230 bytes, _including an allocator for dynamic memory_. It took a lot of work to get there, but there might be situations where it is worth it.
+You made it to the end. Congratiualtions! If you feel a bit overwhelmed, that’s okay: **This is not required reading. You do not need to understand all of this to be a good web developer or even to make good use of WebAssembly.** But I did want to share this journey with you as it really makes you appreciate all the work that a project like [Emscripten] does for you. At the same time, it gave me an understanding of how small purely computational modules can be. The Wasm module for the array summing ended up at just 230 bytes, _including an allocator for dynamic memory_. Compiling the same code with Emscritpen would yield 100 bytes of WebAssembly accompanies by 11K of JavaScript glue code. It took a lot of work to get there, but there might be situations where it is worth it.
 
 [Emscripten]: https://emscripten.org
 [WebAssembly]: https://webassembly.org

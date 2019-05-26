@@ -222,6 +222,37 @@ pre:after, .codestyle:after {
   top: 100%;
   --mask: var(--arrow-file) 0% 100%/100% 200%;
 }
+pre + figcaption {
+  position: relative;
+  display: block;
+  --color: var(--white);
+  background-color: var(--color);
+  margin-left: calc((100vw - var(--width)) / -2);
+  margin-right: calc((100vw - var(--width)) / -2);
+  margin-top: calc(-2 * var(--grid-height));
+  margin-bottom: calc(2* var(--grid-height));
+  max-width: initial;
+  padding: var(--grid-height) calc(50vw - var(--width)/2);
+}
+pre + figcaption:before, pre + figcaption:after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--arrow-height);
+  background: inherit;
+  mask: var(--mask);
+  -webkit-mask: var(--mask);
+} 
+pre + figcaption:before {
+  top: calc(var(--arrow-height) * -1);
+  --mask: var(--arrow-file) 0% 0%/100% 200%;
+}
+pre + figcaption:after {
+  top: 100%;
+  --mask: var(--arrow-file) 0% 100%/100% 200%;
+}
 
 pre > code, .codestyle > code {
   display: inline-block;
@@ -344,6 +375,7 @@ footer > .arrows {
   width: var(--avatar-size);
   height: var(--avatar-size);
   border-radius: 50%;
+  max-width: initial;
 }
 .arrow {
   position: relative;
