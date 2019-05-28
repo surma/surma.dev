@@ -1,7 +1,7 @@
 ---json
 {
 "title": "Compiling C to WebAssembly without Emscripten",
-"date": "2019-05-26",
+"date": "2019-05-28",
 "socialmediaimage": "social.png"
 }
 
@@ -186,7 +186,7 @@ The numbers of steps we currently have to do to get from C code to WebAssembly i
 clang \
   --target=wasm32 \
   -nostdlib \ # Don’t try and link against a standard library
-  -Wl,--no-entry \ # flags passed to the linker
+  -Wl,--no-entry \ # Flags passed to the linker
   -Wl,--export-all \
   -o add.wasm \
   add.c
@@ -254,17 +254,17 @@ Let’s take a look at the WAT of our WebAssembly module by running `wasm2wat`:
 
 Wowza that’s _a lot_ of WAT. To my suprise, the module uses memory (indicated by the `i32.load` and `i32.store` operations), 8 local variables and a couple of globals. If you think you’d be able to write a shorter version by hand, you’d probably be right. The reason this program is so big is because we didn’t have any optimizations enabled. Let’s change that:
 
-```bash
-clang \
-  --target=wasm32 \
-  -O3 \ # Agressive optimizations
-  -flto \ # Add metadata for link-time optimizations
-  -nostdlib \
-  -Wl,--no-entry \
-  -Wl,--export-all \
-  -Wl,--lto-O3 \ # Aggressive link-time optimizations
-  -o add.wasm \
-  add.c
+```diff
+ clang \
+   --target=wasm32 \
++  -O3 \ # Agressive optimizations
++  -flto \ # Add metadata for link-time optimizations
+   -nostdlib \
+   -Wl,--no-entry \
+   -Wl,--export-all \
++  -Wl,--lto-O3 \ # Aggressive link-time optimizations
+   -o add.wasm \
+   add.c
 ```
 
 > **Note:** Technically, link-time optimizations don’t bring us any gains here as we are only linking a single file. In bigger projects, LTO will help you keep your file size down.
@@ -320,13 +320,17 @@ The layout that `wasm-ld` uses is the following:
 If we look back at the globals section in our WAT we can find these symbols defined. `__heap_base` is 66560 and `__data_end` is 1024. This means that the stack can grow to a maximum of 64KiB, which is _not_ a lot. Luckily, `wasm-ld` allows us to configure this value:
 
 ```diff
- wasm-ld \
+ clang \
+   --target=wasm32 \
+   -O3 \ 
+   -flto \ 
+   -nostdlib \
+   -Wl,--no-entry \
+   -Wl,--export-all \
+   -Wl,--lto-O3 \
++  -W,-z,stack-size=$[8 * 1024 * 1024] \ # Set maximum stack size to 8MiB
    -o add.wasm \
-   --no-entry \
-   --export-all \
-   --lto-O3 \
-+  -z stack-size=$[8 * 1024 * 1024] \ # Set maximum stack size to 8MiB
-   add.o
+   add.c
 ```
 
 ### Building an allocator
