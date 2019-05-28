@@ -48,7 +48,7 @@ Seems like we are good to go!
 
 > **Note**: We’ll be looking at some low-level file formats like raw WebAssembly here. If you are struggling with that, that is ok. **You don’t need to understand this entire blog post to make good use of WebAssembly. If you are here for the copy-pastables, look at the compiler invocation in the _“Optimizing”_ section.** But if you are interested, keep going! I also wrote an introduction to [Raw Webassembly][raw webassembly] and WAT previously which covers the basics needed to understand this post.
 
-Warning: I’ll bend over backwards here fore a bit and use human-readable formats for every step of the process (as much as possible). Our program for this journey is going to be super simple to avoid edge cases and distractions:
+Warning: I’ll bend over backwards here for a bit and use human-readable formats for every step of the process (as much as possible). Our program for this journey is going to be super simple to avoid edge cases and distractions:
 
 ```c
 // Filename: add.c
@@ -111,7 +111,7 @@ llc \
 
 The output, `add.o`, is effectively a valid WebAssembly module and contains all the compiled code of our C file. However, most of the time you won’t be able to run object files as essential parts are still missing.
 
-If we omitted `-filetype=obj` we’d get LLVM’s S-Expression format for WebAssembly, which is human-readable and somewhat similar to WAT. However, the tool that can consume these files, `llvm-mc`, doesn’t not fully support this text format yet and often fails to consume the output of `llc`. So instead we’ll disassemble the object files after the fact. Object files are target-specific and therefore need target-specific tool to inspect them. In the case of WebAssembly, the tool is `wasm-objdump`, which is part of the [WebAssembly Binary Toolkit][wabt], or wabt for short.
+If we omitted `-filetype=obj` we’d get LLVM's assembly format for WebAssembly, which is human-readable and somewhat similar to WAT. However, the tool that can consume these files, `llvm-mc`, does not fully support this text format yet and often fails to consume the output of `llc`. So instead we’ll disassemble the object files after the fact. Object files are target-specific and therefore need target-specific tool to inspect them. In the case of WebAssembly, the tool is `wasm-objdump`, which is part of the [WebAssembly Binary Toolkit][wabt], or wabt for short.
 
 ```bash
 $ brew install wabt # in case you haven’t
@@ -355,6 +355,8 @@ void free(void* p) {
 ```
 
 The globals we saw in the WAT are actually defined by `wasm-ld` which means we can access them from our C code as normal variables if we declare them as `extern`. **We just wrote our own `malloc()` in, like, 5 lines of C 😱**
+
+> **Note:** Our bump allocator is not fully compatible with C’s `malloc()`. For example, we don’t make any alignment guarantees. But it’s good enough and it works, so 🤷‍♂️.
 
 ### Using dynamic memory
 
