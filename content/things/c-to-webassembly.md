@@ -146,7 +146,7 @@ The output shows that our `add()` function is in this module, but it also contai
 
 ### Linking
 
-Traditionally, the linker’s job is to assembles multiple object file into the _executable_. Each platform handles linking differently, so there is no one tool for linking in LLVM. For WebAssembly there is `wasm-ld`.
+Traditionally, the linker’s job is to assembles multiple object file into the _executable_. LLVM’s linker is called `lld`, but it has to be invoked with one of the target-specific symlinks. For WebAssembly there is `wasm-ld`.
 
 ```bash
 wasm-ld \
@@ -261,6 +261,7 @@ Wowza that’s _a lot_ of WAT. To my suprise, the module uses memory (indicated 
 clang \
   --target=wasm32 \
   -O3 \ # Agressive optimizations
+  -flto \ # Add metadata for link-time optimizations
   -c \
   add.c
 
