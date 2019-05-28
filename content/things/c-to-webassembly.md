@@ -185,7 +185,6 @@ The numbers of steps we currently have to do to get from C code to WebAssembly i
 ```bash
 clang \
   --target=wasm32 \
-  -c \
   -nostdlib \ # Don’t try and link against a standard library
   -Wl,--no-entry \ # flags passed to the linker
   -Wl,--export-all \
@@ -260,7 +259,7 @@ clang \
   --target=wasm32 \
   -O3 \ # Agressive optimizations
   -flto \ # Add metadata for link-time optimizations
-  -c \
+  -nostdlib \
   -Wl,--no-entry \
   -Wl,--export-all \
   -Wl,--lto-O3 \ # Aggressive link-time optimizations
