@@ -180,22 +180,19 @@ If nothing went wrong, you shoud see a `17` in your DevTool’s console. **We ju
 
 ## Compiling C the slightly less hard way
 
-The numbers of steps we currently have to do to get from C code to WebAssembly is a bit daunting. As I said, I was bending over backwards for educational purposes. Let’s stop doing that and skip all the human-readable, intermediate formats. Or to say it another way: let’s use the C compiler for what it was intended, turning C files into object files.
+The numbers of steps we currently have to do to get from C code to WebAssembly is a bit daunting. As I said, I was bending over backwards for educational purposes. Let’s stop doing that and skip all the human-readable, intermediate formats and use the C compile as the swiss-army knift it was designed to be:
 
 ```bash
 clang \
   --target=wasm32 \
   -c \
-  add.c
-
-wasm-ld \
+  -Wl,--no-entry \ # flags passed to the linker
+  -Wl,--export-all \
   -o add.wasm \
-  --no-entry \
-  --export-all \
-  add.o
+  add.c
 ```
 
-This will produce the same `.wasm` file as before, but with fewer commands which makes it easier to understand and modify.
+This will produce the same `.wasm` file as before, but with a single command.
 
 ## Optimizing
 
@@ -263,15 +260,14 @@ clang \
   -O3 \ # Agressive optimizations
   -flto \ # Add metadata for link-time optimizations
   -c \
-  add.c
-
-wasm-ld \
+  -Wl,--no-entry \
+  -Wl,--export-all \
+  -Wl,--lto-O3 \ # Aggressive link-time optimizations
   -o add.wasm \
-  --no-entry \
-  --export-all \
-  --lto-O3 \ # Aggressive link-time optimizations
-  add.o
+  add.c
 ```
+
+> **Note:** Technically, link-time optimizations don’t bring us any gains here as we are only linking a single file. In bigger projects, LTO will help you keep your file size down.
 
 After running the commands above, our `.wasm` file went down from 262 bytes to 197 bytes and the WAT is much easier on the eye, too:
 
@@ -407,7 +403,7 @@ When running this you should see a very happy `15` in the DevTools console, whic
 
 ## Conclusion
 
-You made it to the end. Congratulations! Again, if you feel a bit overwhelmed, that’s okay: **This is not required reading. You do not need to understand all of this to be a good web developer or even to make good use of WebAssembly.** But I did want to share this journey with you as it really makes you appreciate all the work that a project like [Emscripten] does for you. At the same time, it gave me an understanding of how small purely computational WebAssembly modules can be. The Wasm module for the array summing ended up at just 230 bytes, _including an allocator for dynamic memory_. Compiling the same code with Emscripten would yield 100 bytes of WebAssembly accompanies by 11K of JavaScript glue code. It took a lot of work to get there, but there might be situations where it is worth it.
+You made it to the end. Congratulations! Again, if you feel a bit overwhelmed, that’s okay: **This is not required reading. You do not need to understand all of this to be a good web developer or even to make good use of WebAssembly.** But I did want to share this journey with you as it really makes you appreciate all the work that a project like [Emscripten] does for you. At the same time, it gave me an understanding of how small purely computational WebAssembly modules can be. The Wasm module for the array summing ended up at just 230 bytes, _including an allocator for dynamic memory_. Compiling the same code with Emscripten would yield 100 bytes of WebAssembly accompanied by 11K of JavaScript glue code. It took a lot of work to get there, but there might be situations where it is worth it.
 
 [emscripten]: https://emscripten.org
 [webassembly]: https://webassembly.org
