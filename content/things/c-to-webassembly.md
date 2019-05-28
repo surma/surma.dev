@@ -186,6 +186,7 @@ The numbers of steps we currently have to do to get from C code to WebAssembly i
 clang \
   --target=wasm32 \
   -c \
+  -nostdlib \ # Don’t try and link against a standard library
   -Wl,--no-entry \ # flags passed to the linker
   -Wl,--export-all \
   -o add.wasm \
