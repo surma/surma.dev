@@ -91,8 +91,8 @@ main {
   margin-top: calc(3 * var(--grid-height));
   padding: var(--grid-gutter);
 }
-a {
-  color: var(--red);
+a, a > code {
+  color: var(--red) !important;
   text-decoration: none;
 }
 a:hover {
@@ -244,7 +244,7 @@ pre + figcaption:before, pre + figcaption:after {
   background: inherit;
   mask: var(--mask);
   -webkit-mask: var(--mask);
-} 
+}
 pre + figcaption:before {
   top: calc(var(--arrow-height) * -1);
   --mask: var(--arrow-file) 0% 0%/100% 200%;
