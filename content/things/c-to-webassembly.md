@@ -413,7 +413,7 @@ You made it to the end. Congratulations! Again, if you feel a bit overwhelmed, t
 [webgl]: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API
 [llvm]: https://llvm.org/
 [homebrew]: https://brew.sh/
-[raw webassembly]: /things/raw-webassembly
+[raw webassembly]: /things/raw-wasm
 [wabt]: https://github.com/WebAssembly/wabt
 [glibc]: https://www.gnu.org/software/libc/
 [musl]: https://www.musl-libc.org/
