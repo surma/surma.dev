@@ -318,7 +318,7 @@ The layout that `wasm-ld` uses is the following:
 
 <figure>
   <img src="memlayout.svg" alt="A depiction of the wasm-ld’d memory layout.">
-  <figcaption>Both the stack and the heap grow downwards. The stack starts at <code>__data_end</code>, the heap starts at <code>__heap_base</code>. Because the stack is placed first, it is limited to a maximum size set at compile time, which is <code>__heap_base - __data_end</code>.</figcaption>
+  <figcaption>The stack grows downwards and the heap grows upwards. The stack starts at <code>__data_end</code>, the heap starts at <code>__heap_base</code>. Because the stack is placed first, it is limited to a maximum size set at compile time, which is <code>__heap_base - __data_end</code>.</figcaption>
 </figure>
 
 If we look back at the globals section in our WAT we can find these symbols defined. `__heap_base` is 66560 and `__data_end` is 1024. This means that the stack can grow to a maximum of 64KiB, which is _not_ a lot. Luckily, `wasm-ld` allows us to configure this value:
