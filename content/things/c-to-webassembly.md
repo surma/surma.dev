@@ -322,13 +322,13 @@ If we look back at the globals section in our WAT we can find these symbols defi
 ```diff
  clang \
    --target=wasm32 \
-   -O3 \ 
-   -flto \ 
+   -O3 \
+   -flto \
    -nostdlib \
    -Wl,--no-entry \
    -Wl,--export-all \
    -Wl,--lto-O3 \
-+  -W,-z,stack-size=$[8 * 1024 * 1024] \ # Set maximum stack size to 8MiB
++  -Wl,-z,stack-size=$[8 * 1024 * 1024] \ # Set maximum stack size to 8MiB
    -o add.wasm \
    add.c
 ```
