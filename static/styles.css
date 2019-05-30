@@ -514,3 +514,7 @@ footer .back {
   display: block;
   text-align: center;
 }
+.flip-h {
+  display: inline-block;
+  transform: scaleX(-1);
+}
