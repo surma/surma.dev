@@ -247,7 +247,7 @@ This example is a bit contrived, so bear with me. The function `add2()` loads th
     i32.const 0
     i32.load
 
-    ;; Put the parameter on the stack and add the values
+    ;; Push 2 onto the stack and add the values
     i32.const 2
     i32.add
 
@@ -277,7 +277,7 @@ To inspect the memory from JavaScript, we need to grab `memory` from our `export
     );
     const mem = new Int32Array(instance.exports.memory.buffer);
     mem[0] = 40;
-    instance.exports.add(2);
+    instance.exports.add2();
     console.log(mem[0], mem[1]);
   }
   run();
