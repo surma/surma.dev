@@ -12,7 +12,7 @@
     i32.const 0
     i32.load
 
-    ;; Put the parameter on the stack and add the values
+    ;; Push 2 onto the stack and add the values
     i32.const 2
     i32.add
 
