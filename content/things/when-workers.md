@@ -1,8 +1,9 @@
 ---json
 {
 "title": "When should you be using Web Workers?",
-"date": "2019-05-30",
-"socialmediaimage": "social.png"
+"date": "2019-06-04",
+"socialmediaimage": "social.png",
+"live": false
 }
 
 ---
@@ -12,12 +13,6 @@ Always. You should always use Web Workers. It’s a matter of inclusivity.
 <!--more-->
 
 Did I get your attention with that? Good. Of course, as with any topic, there is 🌈nuance<span class="flip-h">🌈</span> and I will lay that all out. But I have opinions, and they are important. Buckle up.
-
-## What are workers, again?
-
-**The TL;DR on [Web Workers] is that they are JavaScript’s take on threads.** JavaScript engines have been built with the assumption that there is a single thread, and consequently there is no concurrent access JavaScript object memory, which absolves the need for any synchronization mechanism. If regular threads with their shared memory model got added to JavaScript it would be disastrous to say the least. Instead, we have been given [Web Workers], which are basically an entire JavaScript scope running on a separate thread, without any shared memory or shared values. To make these completely separated and isolated JavaScript scopes work _together_ you have access to [`postMessage()`][postmessage], which allows you to trigger a `message` event in the _other_ JavaScript scope together with the copy of a value you provide (copied using the [structured clone algorithm][structured clone]).
-
-So far, Workers have seen practically no adoption, apart from a few “slam dunk” use-cases, which usually involve long-running number crunching tasks. I think that should change. **We should start using workers.**
 
 ## The Performance Gap is widening
 
@@ -31,9 +26,9 @@ Bottom line: We are getting faster flagship phones every cycle, but the vast maj
 
 ## Performance budgets
 
-We often advocate for performance budgets that should be set to make sure you app keeps performing over time. One example ar the [RAIL] guidelines that are based on human perception and give you a time-based budget for different tasks.  For example, you have 100ms to react to a user interaction according to this model. **These numbers are fixed**, because human psychology doesn’t change depending on what device you are holding. 
+We often advocate for performance budgets that should be set to make sure you app keeps performing over time. One example ar the [RAIL] guidelines that are based on human perception and give you a time-based budget for different tasks.  For example, you have ~16ms until the next frame needs to get rendered to make animations feel smooth to the humand eye. **These numbers are fixed**, because human psychology doesn’t change depending on what device you are holding. 
 
-Looking at the widening performance gap, this spells trouble. You can build your app today, do your due diligence and do performance audits, hit all the marks. The next low-end phone might take _longer_ to complete the same task. **Tomorrow, your app might become unusable on the next-gen low-end phone anymore**. 
+Looking at The Widening Performance Gap™️, this spells trouble. You can build your app today, do your due diligence and do performance audits, hit all the marks. The next low-end phone might take _longer_ to complete the same task. **Tomorrow, your app might become unusable on the next-gen low-end phone anymore**. 
 
 That is the burden of the web with its unparalleled reach. You can’t predict what class of device your app will be running on. If you say “Surma, these underpowered devices are not relevant to me/my business!”, it is awfully similar to “People with impaired vision are not relevant to me/my business!”. **It’s a matter of inclusivity. I encourage you to _really_ think if you are excluding people by not supporting low-end phones.** We should strive to allow every person to have access to the same information.
 
@@ -41,17 +36,17 @@ A blog post like this can never give guidance that applies to everyone, because 
 
 ## JavaScript is blocking
 
-Maybe it’s worth spelling it out: The bad thing about long-running JavaScript is that it’s blocking. Nothing else can happen while JavaScript is running. The main thread has additional responsibilties to just running a web app’s JavaScript. It also has to do page layout, paint, ship all those pixels to the screen in a timely fashion and look out for user interactions like clicking or scrolling. All of these can’t happen while JavaScript is running. 
+Maybe it’s worth spelling it out: The bad thing about long-running JavaScript is that it’s blocking. Nothing else can happen while JavaScript is running. **The main thread has other responsibilties in addition to running a web app’s JavaScript.** It also has to do page layout, paint, ship all those pixels to the screen in a timely fashion and look out for user interactions like clicking or scrolling. All of these can’t happen while JavaScript is running. 
 
 Browsers have shipped some mitigations for this, for example by implementing scrolling on a different thread. In general, however, if you block the main thread, your user will have a bad time. 
 
-> **Pro tip:** Conversely, **blocking JavaScript is only bad on the main thread**. Blocking a different thread, like a Worker, is far less detrimental to the perceived quality of your app. 
-
 ## Being cooperative
 
-One technique to avoid blocking is “chunking your JavaScript” or “yielding to the browser”. What this means is writing JavaScript with _breakpoints_ which give the browser a chance to take control to ship a new frame or to process an input event. Once the browser is done, it will go back to running your code. The way to yield to the browser on the web platform is to schedule a task, which can be done in a variety of ways. Often I find people using `setTimeout` to create tasks, but the problem here is that browser clamp the timeout to a _minimun_ of 4ms. That’s why I often create a `MessageChannel` and use `postMessage()`, as it schedules a task _immediately_. If you are not familiar with tasks and/or the difference between a task and a microtask, I recommend [Jake Archibald]’s [Event Loop Talk].
+One technique to avoid blocking is “chunking your JavaScript” or “yielding to the browser”. What this means is writing JavaScript with _breakpoints_ which give the browser a chance to take control to ship a new frame or to process an input event. Once the browser is done, it will go back to running your code. The way to yield to the browser on the web platform is to schedule a task, which can be done in a variety of ways. Often I find people using `setTimeout` to create tasks, but the problem here is that browser clamp the timeout to a _minimun_ of 4ms. That’s why I often create a `MessageChannel` and use `postMessage()`, as it schedules a task _immediately_. 
 
-Code can be kept quite readable despite the breakpoints by using `async`/`await`. Here’s what we actually shipped in [PROXX], where we generate sprites in the background while the user is interacting with the home screen of the game. Any blockage of the main thread here would make the app appear janky or laggy.
+> **Required reading:** If you are not familiar with tasks and/or the difference between a task and a microtask, I recommend [Jake Archibald]’s [Event Loop Talk].
+
+To keep the code readable when adding breakpoints, I strongly recommend using `async`/`await`. Here’s what we actually shipped in [PROXX], where we generate sprites in the background while the user is interacting with the home screen of the game. Any blockage of the main thread here would make the app appear janky or laggy.
 
 ```js
 const { port1, port2 } = new MessageChannel();
@@ -71,14 +66,32 @@ export function task() {
   });
 }
 
-for (let frame = 0; frame < numSprites; frame++) {
-  drawTexture(frame, ctx);
-  await task(); // Breakpoint!
+export async function generateTextures() {
+  // ...
+  for (let frame = 0; frame < numSprites; frame++) {
+    drawTexture(frame, ctx);
+    await task(); // Breakpoint!
+  }
+  // ...
 }
 ```
 
-One thing I want to emphasize:
+But chunking still suffers from the influence of The Widening Performance Gap™️: The time a piece of code takes to reach the next break point is inherently device-dependent. What takes less than 16ms today, might take considerably more on the next low-end phone tomorrow. 
 
+## Off the main thread
+
+I said before that the main thread has other responsibilities in addition to running a web app’s JavaScript, and that’s the reason why we absolutely cannot write blocking JavaScript. But what if we moved most of our JavaScript that is _dedicated_ to run our JavaScript and nothing else. A thread with no other responsibilities. In such a setting we wouldn’t have to worry about our code being affect by The Widening Performance Gap™️ of time as the main thread is unaffected and still able to respond to user input and keep the frame rate stable. 
+
+### What are Web Workers again?
+**[Web Workers], also called “Dedicated Workers”, are JavaScript’s take on threads.** JavaScript engines have been built with the assumption that there is a single thread, and consequently there is no concurrent access JavaScript object memory, which absolves the need for any synchronization mechanism. If regular threads with their shared memory model got added to JavaScript it would be disastrous to say the least. Instead, we have been given [Web Workers], which are basically an entire JavaScript scope running on a separate thread, without any shared memory or shared values. To make these completely separated and isolated JavaScript scopes work _together_ you have access to [`postMessage()`][postmessage], which allows you to trigger a `message` event in the _other_ JavaScript scope together with the copy of a value you provide (copied using the [structured clone algorithm][structured clone]).
+
+So far, Workers have seen practically no adoption, apart from a few “slam dunk” use-cases, which usually involve long-running number crunching tasks. I think that should change. **We should start using workers.**
+
+### All the cool kids are doing it
+This is not novel idea. At all. Quite the opposite, actually. Most native platforms strongly encourage and help you run your code off the main thread (or “UI thread”) and have done so for a long time. On Android you have 
+
+
+Special thanks to [Jose Alcérreca][ppvi] and [Mortiz Lang][slashmodev] for helping me understand what native platforms are doing in this space.
 
 [Web Workers]: https://developer.mozilla.org/en-US/docs/Web/API/Worker
 [postmessage]: https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage
@@ -88,3 +101,5 @@ One thing I want to emphasize:
 [setimmediate]: https://developer.mozilla.org/en-US/docs/Web/API/Window/setImmediate
 [Jake Archibald]: https://twitter.com/jaffathecake
 [Event Loop Talk]: https://www.youtube.com/watch?v=cCOL7MC4Pl0
+[ppvi]: https://twitter.com/ppvi
+[slashmodev]: https://twitter.com/slashmodev
