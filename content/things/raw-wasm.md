@@ -119,7 +119,7 @@ The compilation of a WebAssembly module can start even when the module is still 
 
       // This will throw either if `instantiateStreaming` is
       // undefined or the `Content-Type` header is wrong.
-      return WebAssembly.instantiateStreaming(
+      return await WebAssembly.instantiateStreaming(
         f,
         ...opts
       );
