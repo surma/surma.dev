@@ -180,7 +180,7 @@ If nothing went wrong, you shoud see a `17` in your DevTool’s console. **We ju
 
 ## Compiling C the slightly less hard way
 
-The numbers of steps we currently have to do to get from C code to WebAssembly is a bit daunting. As I said, I was bending over backwards for educational purposes. Let’s stop doing that and skip all the human-readable, intermediate formats and use the C compile as the swiss-army knift it was designed to be:
+The numbers of steps we currently have to do to get from C code to WebAssembly is a bit daunting. As I said, I was bending over backwards for educational purposes. Let’s stop doing that and skip all the human-readable, intermediate formats and use the C compiler as the swiss-army knife it was designed to be:
 
 ```bash
 clang \
