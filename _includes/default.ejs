@@ -50,6 +50,9 @@
     <% } else { %>
       DasSur.ma
     <% } %>
+    <% if(typeof title === "string" && typeof live === "boolean" && live === false) { %>
+      <p>UNPUBLISHED / PREVIEW</p>
+    <% } %>
   </h1>
   <% if(typeof date === "string") { %>
     <time datetime="<%= date %>">

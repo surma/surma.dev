@@ -8,6 +8,6 @@
   },
   "scripts": {
     "build": "eleventy",
-    "serve": "eleventy --serve"
+    "serve": "LOCAL_DEV=true eleventy --serve"
   }
 }
