@@ -88,10 +88,27 @@ I said before that the main thread has other responsibilities in addition to run
 So far, Workers have seen practically no adoption, apart from a few “slam dunk” use-cases, which usually involve long-running number crunching tasks. I think that should change. **We should start using workers.**
 
 ### All the cool kids are doing it
-This is not novel idea. At all. Quite the opposite, actually. Most native platforms strongly encourage and help you run your code off the main thread (or “UI thread”) and have done so for a long time. On Android you have 
+This is not novel idea. At all. Quite the opposite, actually. **Most native platforms strongly encourage and help you run your code off the main thread (or “UI thread”)** and have done so for a long time. Android has had [`AsyncTask`][AsyncTask] since it’s earliest versions and has added more convenient APIs since then (most recently [Coroutines][coroutines]). If you opt-in to [“Strict mode”][strict mode], certain APIs (like file operations) will crash your app, helping you notice when you are doing non-UI work on the UI thread. 
+
+iOS had [Grand Central Dispatch][gcd] (“GCD”) from the very start to schedule work on different, system-provided thread pools, including the UI thread. This way they are enforcing a hybrid approach. You always have to chunk your work into tasks that can be put in a queue, allowing the UI thread to do UI work whenever necessary, but also allowing you to move non-UI work to a different thread and even assigning them a priority.
+
+The point is that these native platforms have had support for utilizing non-UI threads since their inception. It’s fair to say that, over time, they have proven that keeping work on the UI thread to a minimum helps keeping your app responsive and functional. So why hasn’t this pattern been adopted on the web?
+
+## Developer Experience as a hurdle
+
+When you start using Workers with their API, the `message` event handler becomes the center of your universe. That doesn’t feel great. Additionally, Workers are _like_ threads, but they are _not_ threads. You can’t have multiple threads access the same variable (like a state object). Everything needs to go via messages. 
+
+For this exact reason I wrote [Comlink], which not only hides `postMessage()` from you, but also the fact that you are working with Workers at all. It _feels_ like you have shared access to variables from other threads:
+
+```js
+
+```
+
+```js
+```
 
 
-Special thanks to [Jose Alcérreca][ppvi] and [Mortiz Lang][slashmodev] for helping me understand what native platforms are doing in this space.
+Special thanks to [Jose Alcérreca][ppvi] and [Mortiz Lang][slashmodev] for helping me understand how native platforms are handling this problem space.
 
 [Web Workers]: https://developer.mozilla.org/en-US/docs/Web/API/Worker
 [postmessage]: https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage
@@ -103,3 +120,8 @@ Special thanks to [Jose Alcérreca][ppvi] and [Mortiz Lang][slashmodev] for help
 [Event Loop Talk]: https://www.youtube.com/watch?v=cCOL7MC4Pl0
 [ppvi]: https://twitter.com/ppvi
 [slashmodev]: https://twitter.com/slashmodev
+[AsyncTask]: https://developer.android.com/reference/android/os/AsyncTask
+[coroutines]: https://kotlinlang.org/docs/reference/coroutines/basics.html
+[gcd]: https://developer.apple.com/documentation/dispatch
+[strict mode]: https://developer.android.com/reference/android/os/StrictMode
+[Comlink]: https://github.com/GoogleChromeLabs/comlink
