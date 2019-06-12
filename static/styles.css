@@ -112,7 +112,7 @@ p, pre, .codestyle {
   margin: calc(var(--grid-height) + 2 * var(--grid-gutter)) 0;
 }
 hr {
-  border: calc(var(--grid-gutter) / 2) solid var(--orange);
+  border: calc(var(--grid-gutter) / 4) solid var(--orange);
   margin: var(--grid-height) 0;
   border-radius: 2px;
 }
@@ -120,6 +120,7 @@ img, video {
   max-width: calc(100% - 2 * var(--grid-height));
   margin: 0 auto;
   display: block;
+  width: 100%;
 }
 figure {
   margin: 0;
@@ -513,4 +514,8 @@ footer .back {
 .lablaunch {
   display: block;
   text-align: center;
+}
+.flip-h {
+  display: inline-block;
+  transform: scaleX(-1);
 }

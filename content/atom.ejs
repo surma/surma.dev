@@ -6,6 +6,7 @@
 ---
 <%_
   const things = collections.things
+    .filter(item => item.data.title)
     .filter(item => item.data.live !== false)
     .sort((a, b) => {
       return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
