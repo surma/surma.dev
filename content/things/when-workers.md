@@ -182,7 +182,7 @@ Now for my juicy hot take: **Our current generation of frameworks makes off-main
 
 Let’s take VDOM diffing as an example: The purpose of a virtual DOM is to decouple costly updates to the real DOM from what the developers does. The virtual DOM is just a data structure mirroring the real DOM, where changes don’t have any costly side-effects. Only when the framework deems it appropriate, will the changes to the virtual DOM be replayed against the real DOM. This is often called “flushing”. Everything up until flushing has absolutely no requirement to run on the UI thread. Yet it is, wasting your precious UI thread budget. On [PROXX] we actually [opted out of VDOM diffing][proxx board] and implemented the DOM manipulations ourselves, because the phones at the lower end of the specture couldn’t cope with the amount of diffing work.
 
-VDOM diffing is just one of many examples of a framework choosing developer experience or simplicity of implementation over being frugal with their end-user’s resources. Unless a globally launched framework labels itself as exclusively targeting the users of the [Wealthy Western Web], **its has a responsibility to help developers target every phone on The Widening Performance Gap™️ spectrum.**
+VDOM diffing is just one of many examples of a framework choosing developer experience or simplicity of implementation over being frugal with their end-user’s resources. Unless a globally launched framework labels itself as exclusively targeting the users of the [Wealthy Western Web], **it has a responsibility to help developers target every phone on The Widening Performance Gap™️ spectrum.**
 
 ## Conclusion
 
