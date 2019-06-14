@@ -1,7 +1,7 @@
 ---json
 {
   "title": "When should you be using Web Workers?",
-  "date": "2019-06-12",
+  "date": "2019-06-14",
   "socialmediaimage": "trace-nonomt.png",
   "live": true
 }
