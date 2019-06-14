@@ -91,9 +91,12 @@ main {
   margin-top: calc(3 * var(--grid-height));
   padding: var(--grid-gutter);
 }
-a, a > code {
-  color: var(--red) !important;
+a {
+  color: var(--red);
   text-decoration: none;
+}
+a > code {
+  color: inherit !important;
 }
 a:hover {
   text-decoration: underline;
@@ -131,6 +134,7 @@ figcaption {
   margin: var(--grid-height) auto;
   --body-font-slant: 10;
   font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
+  text-align: center;
 }
 :not(pre) > code {
   color: var(--blue);
@@ -296,6 +300,9 @@ blockquote > p:first-child {
 }
 blockquote > p:last-child {
   margin-bottom: 0;
+}
+blockquote a {
+  color: var(--orange);
 }
 aside.warning {
   --color: var(--red);
@@ -515,7 +522,14 @@ footer .back {
   display: block;
   text-align: center;
 }
-.flip-h {
+.mirror {
+  word-break: keep-all;
+  white-space: nowrap;
+}
+.mirror:before, .mirror:after {
+  content: attr(data-symbol);
   display: inline-block;
+}
+.mirror:after {
   transform: scaleX(-1);
 }
