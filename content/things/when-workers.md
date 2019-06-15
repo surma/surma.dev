@@ -25,7 +25,7 @@ Phones are getting faster. I don’t think anyone will disagree with that. Stron
   <figcaption>Benchmark scores taken from <a href="https://browser.geekbench.com/ios-benchmarks">Geekbench</a> (single-core).</figcaption>
 </figure>
 
-However, that’s just one edge of the distribution. **_Slow_ phones are stuck in 2014.** The process to create the cips from half a decade ago has gotten so cheap that phones can now be sold for around $20, and cheaper phone will reach a wider audience. ~50% of the world are online, meaning that the other ~50% are not. However, these offliners are _coming_ online and are predominantly located in emerging markets, where people simply can’t afford any of the [Wealthy Western Web] flagship phones.
+However, that’s just one edge of the distribution. **_Slow_ phones are stuck in 2014.** The process to create the chips from half a decade ago has gotten so cheap that phones can now be sold for around $20, and cheaper phone will reach a wider audience. ~50% of the world are online, meaning that the other ~50% are not. However, these offliners are _coming_ online and are predominantly located in emerging markets, where people simply can’t afford any of the [Wealthy Western Web] flagship phones.
 
 At Google I/O 2019, [Elizabeth Sweeny] and [Barb Palser] handed out Nokia 2 phones at a partner meeting and encouraged them to use it for a week to _really_ get a feel for what class of device many people in the world use on a daily basis. The Nokia 2 is interesting because it looks and feels like a high-end phone but under the hood it is more like a smartphone from half a decade ago with a browser and an OS from today — and you can feel that mismatch.
 
