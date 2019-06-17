@@ -29,7 +29,7 @@ However, that’s just one edge of the distribution. **_Slow_ phones are stuck i
 
 At Google I/O 2019, [Elizabeth Sweeny] and [Barb Palser] handed out Nokia 2 phones at a partner meeting and encouraged them to use it for a week to _really_ get a feel for what class of device many people in the world use on a daily basis. The Nokia 2 is interesting because it looks and feels like a high-end phone but under the hood it is more like a smartphone from half a decade ago with a browser and an OS from today — and you can feel that mismatch.
 
-To make things even more extreme, feature phones are making a comeback. Remember the phones that didn’t have a touch screen but instead come with number keys and a D-Pad? Yeah, those are coming back and now they run a browser. These phones have even weaker hardware but, maybe somewhat surprisingly, somewhat better performance. That’s partly because they have considerably less pixels to control. Or to say it another way: relative to the Nokia 2, they have more CPU power per pixel.
+To make things even more extreme, feature phones are making a comeback. Remember the phones that didn’t have a touch screen but instead come with number keys and a D-Pad? Yeah, those are coming back and now they run a browser. These phones have even weaker hardware but, maybe somewhat surprisingly, better performance. That’s partly because they have considerably less pixels to control. Or to say it another way: relative to the Nokia 2, they have more CPU power per pixel.
 
 <figure>
   <img src="banana.jpg" alt="A picture of Paul playing PROXX on the Nokia 8110">
