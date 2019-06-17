@@ -61,7 +61,7 @@ That being said, a blog post like this can never give guidance that applies to e
 
 ## Fixing it
 
-Here we are, trying to build castles in the shifting sands. Trying to build and app that stays withing the RAIL time budgets, but a vast variety of devices where the duration a piece of code blocks is practically unpredictable.
+Here we are, trying to build castles in the shifting sands. Trying to build apps that stay within the RAIL time budgets, but for a vast variety of devices where the duration for a piece of code is practically unpredictable.
 
 ### Being cooperative
 
