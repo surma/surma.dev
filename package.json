@@ -4,7 +4,8 @@
   "private": true,
   "dependencies": {
     "@11ty/eleventy": "github:MadeByMike/eleventy",
-    "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3"
+    "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3",
+    "puppeteer": "^1.17.0"
   },
   "scripts": {
     "build": "eleventy",
