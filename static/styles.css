@@ -533,3 +533,17 @@ footer .back {
 .mirror:after {
   transform: scaleX(-1);
 }
+
+.carousell {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+  overflow-x: auto;
+  justify-items: center;
+  scroll-snap-type: x mandatory;
+}
+
+.carousell > * {
+  flex: 0 0 90%;
+  scroll-snap-align: center;
+}
