@@ -128,6 +128,9 @@ img, video {
 figure {
   margin: 0;
 }
+figure > img, figure > video {
+  max-height: 66vh;
+}
 figcaption {
   margin-top: var(--grid-height);
   max-width: calc(100% - 2 * var(--grid-height));
@@ -538,12 +541,22 @@ footer .back {
   display: flex;
   flex-wrap: nowrap;
   width: 100%;
+  max-height: 66vh;
   overflow-x: auto;
   justify-items: center;
   scroll-snap-type: x mandatory;
 }
 
 .carousell > * {
-  flex: 0 0 90%;
+  flex: 0 0 70%;
   scroll-snap-align: center;
+}
+
+.carousell img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  margin: 0 calc(2 * var(--grid-gutter));
+  max-width: initial;
 }
