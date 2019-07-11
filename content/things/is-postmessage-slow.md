@@ -72,11 +72,12 @@ Since the whole context of my [last blog post][when workers] was about low-end p
 
 > **Note:** You can find the benchmark data, to code to generate it and the code for the visualization in [this gist][viz gist].
 
-The benchmark data from the Pixel 3 and especially Safari looks a bit odd, doesn’t it? When Spectre & Meltdown was discovered, all browsers disabled [SharedArrayBuffers] and reduced the precision of timers like [`performance.now()`], which I am relying on here. Only Chrome was able to revert most these changes since they shipped [Site Isolation] to Chrome on desktop. More concretely, that means that browsers clamp the precision of `performance.now()` to the following values:
-    - Chrome (desktop): 5µs
-    - Chrome (Android): 100µs
-    - Firefox: 1ms (can be disabled with a flag, which I did)
-    - Safari: 1ms
+The benchmark data from the Pixel 3 and especially Safari looks a bit odd, doesn’t it? When Spectre & Meltdown was discovered, all browsers disabled [SharedArrayBuffers] and reduced the precision of timers like [`performance.now()`][performance.now], which I am relying on here. Only Chrome was able to revert most these changes since they shipped [Site Isolation] to Chrome on desktop. More concretely, that means that browsers clamp the precision of `performance.now()` to the following values:
+
+- Chrome (desktop): 5µs
+- Chrome (Android): 100µs
+- Firefox (desktop): 1ms (can be reverted with a flag, which I did)
+- Safari (desktop): 1ms
 
 ### Benchmark 2: What makes postMessage slow?
 
@@ -90,10 +91,6 @@ To verify, I modified the benchmark: I still generate all permutations of breadt
 </figure>
 
 Even more important to note, however is the fact that **this correlation only becomes relevant for big objects**, and by big I mean anything over 100KiB. While the correlation holds mathematically, the variance is much more impactful at smaller payloads.
-
-### Benchmark 3: Serialization vs Deserialization
-
-
 
 ## Evaluation: It’s about sending a message
 
@@ -163,15 +160,67 @@ interface Cell {
 
 That means the biggest possible grid of 40 by 40 cells adds up to ~134KiB of JSON. Sending an entire state object is out of the question. But even patchsets ended up being too big: In some situation about 80% of the game field get revealed at once, which adds up to a patchset of about ~70KiB. When targeting feature phones, that is too much, especially as we might have animations running.
 
-In these situations you can make an architectural decision: Can you reasonably do partial updates? Patchsets are often an array of single patches. What happens if you only apply patch 1-10 out of 100? This is what we do in PROXX. The worker iterates over the entire grid to figure out which fields need to be changed and collects them in a list. If that list grows over a certain threshold, we send that “chunk” to the main thread immediately and then continue iterating the game field. The patchsets are so small that the cost of `postMessage()` is negligible. If the main thread can process multiple message events within a single frame, the updates get coalesced. If the main thread can’t keep up (like on a Nokia 8110), the chunking disguises as a reveal animation.
+**In these situations you can ask yourself an architectural question: Can your app support partial updates?** Patchsets are often a collection of patches. Instead of sending all 100 patches from the patchset at once, you could “chunk” the patchset. Send patches 1-10 in the first message, 11-20 on the next, and so on. This can result in incomplete visuals when not done right, but you are in control of reordering the patches. So for example, you could make sure that the first message contains all changes for everything that is on screen, and then chunk the remaining patches to give the main thread room to breathe.
+
+This is what we do in PROXX. When the user taps a field and causes a big “ripple”, the worker iterates over the entire grid to figure out which fields need to be updated and collects them in a list. If that list grows over a certain threshold, we send that “chunk” to the main thread, empty the list and continue iterating the game field. These patchsets are so small that the cost of `postMessage()` is negligible and we have enough time to update our visuals using `<canvas>`. If we are on a powerful machine, the main thread can process multiple message events within a single frame and the updates will get coalesced just by nature JavaScript’s event loop. If the main thread can’t keep up (like on a Nokia 8110), the chunking disguises as a reveal animation.
 
 <figure>
   <video src="proxx-reveal.mp4" muted autoplay loop></video>
   <figcaption>By chunking the patchsets, PROXX reduces `postMessage()` cost per frame and hides it in a reveal animation.</figcaption>
 </figure>
 
----
+### Maybe JSON?
 
+`JSON.parse()` and `JSON.stringify()` have not only been heavily optimized, they only have to handle a small subset of JavaScript, making them incredibly fast. [Mathias recently pointed out][mathias json.parse], that you can sometimes reduce parse time if your JavaScript files by wrapping your big state objects into `JSON.parse()`. **Maybe we can use JSON to speed up `postMessage()` as well? Sadly, the answer seems to be no:** 
+
+<figure>
+  <img src="serialize.svg" alt="A graph comparing the duration of sending an object to serializing, sending, and deserializon an object.">
+  <figcaption>While there is no clear winner, vanilla `postMessage()` seems to perform better than manually serializing and deserializing to JSON.</figcaption>
+</figure>
+
+### Binary formats
+
+Another way to deal with the performance impact of structured cloning is to not use it at all. Apart from structured cloning objects, `postMessage()` can also _transfer_ certain types. `ArrayBuffer` is one of these [transferable] types. As the name implies, transferring an `ArrayBuffer` does not involve copying. The sending realm actually loses access to the buffer and it is now owned by the receiving realm. **Transfering an `ArrayBuffer` is extremely fast and independent of the buffer’s size**. The downside is that `ArrayBuffer` are just a continuous chunk of memory. We are not conveniently working with objects and properties anymore, but instead have to decide how our data in marshalled into memory ourselves. This in itself will have a cost, but if knowing the shape or structure of your data at build time will open up many more optimizations.
+
+One format that excels at this are [FlatBuffers]. FlatBuffers take a schema file and generate JavaScript (amongst many other languages) to serialize and deserialize data. Even more interestingly: FlatBuffers don’t need to parse the entirety of the `ArrayBuffer` to access a field. 
+
+### WebAssembly — Lite version
+
+While I consider WebAssembly a last resort for this, it is definitely a viable and potentially highly performant solution. One solution is to look at the ecosystems of the all the languages that have WebAssembly support, and try to find serialization libraries. [CBOR], for example, has bindings in many languages, so do [ProtoBuffers] and the aforemention [FlatBuffers].
+
+However, we can be cheeky here: We can just use whatever memory layout the language decides to use. I wrote [a little example][rust binarystate] using [Rust]: It defines a `State` struct with some getter and setter methods so I can manipulate and inspect the state from JavaScript. To “serialize” the state object, I just copy the chunk of memory occupied by the struct. To deserialize, I allocate a new `State` object, and overwrite it with the chunk of memory I intend to “deserialize”.
+
+```rust
+pub struct State {
+    counters: [u8; NUM_COUNTERS]
+}
+
+#[wasm_bindgen]
+pub fn deserialize(vec: Vec<u8>) -> Option<State> {
+    let size = size_of::<State>();
+    if vec.len() != size {
+        return None;
+    }
+
+    let mut s = State::new();
+    unsafe {
+        std::ptr::copy_nonoverlapping(
+            vec.as_ptr(), 
+            &mut s as *mut State as *mut u8, 
+            size
+        );
+    }
+    Some(s)
+}
+```
+
+The WebAssembly module is ends up at about 3KiB, which is mostly due to the one-off cost of including an allocator and some core library functions. The entire state object is sent whenever it changes, but due to the transferability of `ArrayBuffers`, this is extremely cheap. In other words: **This technique should have constant transfer time, regardless of state size.** It will, however, be more costly to access state data. There’s always a tradeoff!
+
+> **Note:** This technique requires a lot of attention to make sure that the state struct does not make any use of indirection like pointers, as those values will become invalid when copied to a new WebAssembly module instance.
+
+### WebAssembly — Full version
+
+Threads ’n stuff
 
 [Web Workers]: https://developer.mozilla.org/en-US/docs/Web/API/Worker
 [moan]: https://twitter.com/dfabu/status/1139567716052930561
@@ -188,3 +237,12 @@ In these situations you can make an architectural decision: Can you reasonably d
 [post message steps]: https://html.spec.whatwg.org/multipage/web-messaging.html#message-port-post-message-steps
 [exposing structured clone]: https://github.com/whatwg/html/pull/3414
 [ff bug]: https://bugzilla.mozilla.org/show_bug.cgi?id=1564880
+[performance.now]: https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
+[mathias json.parse]: https://twitter.com/mathias/status/1143551692732030979
+[transferable]: https://developer.mozilla.org/en-US/docs/Web/API/Transferable
+[flatbuffers]: https://google.github.io/flatbuffers/
+[cbor]: https://cbor.io
+[protobuffers]: https://developers.google.com/protocol-buffers/
+[rust]: https://www.rust-lang.org
+[rust binarystate]: ./binary-state-rust
+[rust binarystate source]: https://gist.github.com/surma/7fd34630a4ec567e01db0ef713523c1a
