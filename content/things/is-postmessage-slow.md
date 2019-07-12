@@ -48,29 +48,29 @@ Armed with a conceptual understanding of `postMessage()` and the determination t
   <figcaption>Depth and breadth vary between 1 and 6. For each permutation, 1000 objects will be generated.</figcaption>
 </figure>
 
-The benchmark will generate an object with a specific “breadth” and “depth”. The values for breadth and depth lie between 1 and 6. **For each combination of breadth and depth, 1000 unique objects will be `postMessage()`’d from a worker to the main thread**. The property names of these objects are random 16-digit hexadecimal numbers as a string, the values are either a random boolean, a random float or again a random string in the from of a 16-digit hexadecimal number. **The benchmark will measure the time and calculate the 95th percentile.**
+The benchmark will generate an object with a specific “breadth” and “depth”. The values for breadth and depth lie between 1 and 6. **For each combination of breadth and depth, 1000 unique objects will be `postMessage()`’d from a worker to the main thread**. The property names of these objects are random 16-digit hexadecimal numbers as a string, the values are either a random boolean, a random float or again a random string in the from of a 16-digit hexadecimal number. **The benchmark will measure the transfer time and calculate the 95th percentile.**
 
 Since the whole context of my [last blog post][when workers] was about low-end phones, the Nokia 2 benchmark is probably the most interesting one. I also ran the benchmark across multiple browsers on my MacBook as I can’t assume that structured cloning is implemented the same everywhere.
 
-<section class="carousell">
-<div>
-  <img src="nokia2-chrome.svg">
-</div>
-<div>
-  <img src="pixel3-chrome.svg">
-</div>
-<div>
-  <img src="macbook-chrome.svg">
-</div>
-<div>
-  <img src="macbook-firefox.svg">
-</div>
-<div>
-  <img src="macbook-safari.svg">
-</div>
+<section class="carousel">
+  <div class="bg-white">
+    <img src="nokia2-chrome.svg">
+  </div>
+  <div class="bg-white">
+    <img src="pixel3-chrome.svg">
+  </div>
+  <div class="bg-white">
+    <img src="macbook-chrome.svg">
+  </div>
+  <div class="bg-white">
+    <img src="macbook-firefox.svg">
+  </div>
+  <div class="bg-white">
+    <img src="macbook-safari.svg">
+  </div>
 </section>
 
-> **Note:** You can find the benchmark data, to code to generate it and the code for the visualization in [this gist][viz gist].
+> **Note:** You can find the benchmark data, to code to generate it and the code for the visualization in [this gist][viz gist]. Also, this was the first time in my life writing Pythong. Don’t be too harsh on me.
 
 The benchmark data from the Pixel 3 and especially Safari looks a bit odd, doesn’t it? When Spectre & Meltdown was discovered, all browsers disabled [SharedArrayBuffers] and reduced the precision of timers like [`performance.now()`][performance.now], which I am relying on here. Only Chrome was able to revert most these changes since they shipped [Site Isolation] to Chrome on desktop. More concretely, that means that browsers clamp the precision of `performance.now()` to the following values:
 
@@ -98,7 +98,7 @@ That’s a lot of data, but it’s meaningless if we don’t contextualize it. I
 
 In my experience, one of the worker’s core responsibilties is managing your app’s state object. As a result, you only end up changing your app’s state when the user interacts with your app. This means that **even on the slowest devices, you can `postMessage()` objects up to 100KiB and stay within your budget.**
 
-This changes when you JS-driven animations running. The RAIL budget for animations is 16ms, as the visual needs to get update every frame. As such we send any messages from the worker that would block the main thread for longer than that. Looking at the numbers from our benchmarks, everything up to 10KiB will not pose a risk to your animation budget. **This is a strong reason to prefer CSS animations and transitions over JavaScript-driven animations.** CSS animations and transitions run on a separate thread and are not affected by a blocked main thread. 
+This changes when you JS-driven animations running. The RAIL budget for animations is 16ms, as the visual needs to get update every frame. As such we send any messages from the worker that would block the main thread for longer than that. Looking at the numbers from our benchmarks, everything up to 10KiB will not pose a risk to your animation budget. **This is a strong reason to prefer CSS animations and transitions over JavaScript-driven animations.** CSS animations and transitions run on a separate thread and are not affected by a blocked main thread.
 
 ## Fasterrrrr
 
@@ -118,7 +118,7 @@ immer.produce(stateObject, draftState => {
 
 // main.js
 worker.addEventListener("message", ({data}) => {
-  state = immer.applyPatches(state, data); 
+  state = immer.applyPatches(state, data);
   // React to new state
 }
 ```
@@ -151,7 +151,7 @@ As I said, for state objects it’ _often_ only a handful of properies that chan
 ```typescript
 interface Cell {
   hasMine: boolean;
-  flagged: boolean; 
+  flagged: boolean;
   revealed: boolean;
   touchingMines: number;
   touchingFlags: number;
@@ -171,7 +171,7 @@ This is what we do in PROXX. When the user taps a field and causes a big “ripp
 
 ### Maybe JSON?
 
-`JSON.parse()` and `JSON.stringify()` have not only been heavily optimized, they only have to handle a small subset of JavaScript, making them incredibly fast. [Mathias recently pointed out][mathias json.parse], that you can sometimes reduce parse time if your JavaScript files by wrapping your big state objects into `JSON.parse()`. **Maybe we can use JSON to speed up `postMessage()` as well? Sadly, the answer seems to be no:** 
+`JSON.parse()` and `JSON.stringify()` have not only been heavily optimized, they only have to handle a small subset of JavaScript, making them incredibly fast. [Mathias recently pointed out][mathias json.parse], that you can sometimes reduce parse time if your JavaScript files by wrapping your big state objects into `JSON.parse()`. **Maybe we can use JSON to speed up `postMessage()` as well? Sadly, the answer seems to be no:**
 
 <figure>
   <img src="serialize.svg" alt="A graph comparing the duration of sending an object to serializing, sending, and deserializon an object.">
@@ -182,7 +182,7 @@ This is what we do in PROXX. When the user taps a field and causes a big “ripp
 
 Another way to deal with the performance impact of structured cloning is to not use it at all. Apart from structured cloning objects, `postMessage()` can also _transfer_ certain types. `ArrayBuffer` is one of these [transferable] types. As the name implies, transferring an `ArrayBuffer` does not involve copying. The sending realm actually loses access to the buffer and it is now owned by the receiving realm. **Transfering an `ArrayBuffer` is extremely fast and independent of the buffer’s size**. The downside is that `ArrayBuffer` are just a continuous chunk of memory. We are not conveniently working with objects and properties anymore, but instead have to decide how our data in marshalled into memory ourselves. This in itself will have a cost, but if knowing the shape or structure of your data at build time will open up many more optimizations.
 
-One format that excels at this are [FlatBuffers]. FlatBuffers take a schema file and generate JavaScript (amongst many other languages) to serialize and deserialize data. Even more interestingly: FlatBuffers don’t need to parse the entirety of the `ArrayBuffer` to access a field. 
+One format that excels at this are [FlatBuffers]. FlatBuffers take a schema file and generate JavaScript (amongst many other languages) to serialize and deserialize data. Even more interestingly: FlatBuffers don’t need to parse the entirety of the `ArrayBuffer` to access a field.
 
 ### WebAssembly — Lite version
 
@@ -205,8 +205,8 @@ pub fn deserialize(vec: Vec<u8>) -> Option<State> {
     let mut s = State::new();
     unsafe {
         std::ptr::copy_nonoverlapping(
-            vec.as_ptr(), 
-            &mut s as *mut State as *mut u8, 
+            vec.as_ptr(),
+            &mut s as *mut State as *mut u8,
             size
         );
     }
@@ -214,19 +214,29 @@ pub fn deserialize(vec: Vec<u8>) -> Option<State> {
 }
 ```
 
-The WebAssembly module is ends up at about 3KiB, which is mostly due to the one-off cost of including an allocator and some core library functions. The entire state object is sent whenever it changes, but due to the transferability of `ArrayBuffers`, this is extremely cheap. In other words: **This technique should have constant transfer time, regardless of state size.** It will, however, be more costly to access state data. There’s always a tradeoff!
+The WebAssembly module is ends up at about 3KiB gzip’d, which is mostly due to the one-off cost of including an allocator and some core library functions. The entire state object is sent whenever something changes, but due to the transferability of `ArrayBuffers`, this is extremely cheap. In other words: **This technique should have constant transfer time, regardless of state size.** It will, however, be more costly to access state data. There’s always a tradeoff!
 
 > **Note:** This technique requires a lot of attention to make sure that the state struct does not make any use of indirection like pointers, as those values will become invalid when copied to a new WebAssembly module instance.
 
 ### WebAssembly — Full version
 
-Threads ’n stuff
+> **Heads up:** This section works with `SharedArrayBuffer`, which have been disabled in all browsers except Chrome on desktop. All browsers are working on reenabling them, but no ETA can be given on this.
+
+Especially from game developers, I have heard requests to somehow enable JavaScript to share objects across multiple threads. I think this is unlikely to ever be added to JavaScript itself, as it breaks one of the basic assumptions of JavaScript. However, there is [`SharedArrayBuffer`][SharedArrayBuffer] (“SABs”) which behave exactly like `ArrayBuffers`, but instead of being transferred, they can be cloned and will all work on the same, underlying chunk of memory. So changes from one realm will be _immediately_ reflect in another. **SABs allows the JavaScript to adopt a shared memory model.** To allow synchronization between realms with access to the same memory, [`Atomics`][atomics] were shipped which provide Mutexes and atomic operations.
+
+With SABs, you’d only have to transfer a chunk of memory once at the start of your app. However, you still can’t access it like a JavaScript object but would once again have to look into a binary representation format. Additionally you’d have to use Atomics to avoid race-conditions and partial data reads, which both come at a cost and can slow things down. As always, measure first then decide!
+
+As an alternative to using SABs and serializing/deserializing data manually, you could embrace WebAssembly. WebAssembly has standardized support for threads, but is gated on the availability of SABs. **With threaded WebAssembly way you can write code with the exact same patterns you are used to from threaded programming languages.** This, of course, comes at the cost of development complexity, orchestration and potentially bigger and monolithic modules that need to get shipped.
+
+## Conclusion
+
+As I already hinted at in [an older blog post][actor model] about the Actor Model, I strongly believe we can implement performant off-main-thread architectures on the web _today_. This definitely requires pushing the boundaries of our comfort zones, may that be a mindset from threaded languages or the all-on-main-by-default we have been exercising on the web so far. **`postMessage()` does have a cost, but not the extent that it makes off-main-thread architecutures unviable.** If we embrace asynchronicity as a default, either by raw message passing or something more RPC-like á la [Comlink], we will not only be able to reach a wider audience with our apps, but it will also force us into better UI patterns.
 
 [Web Workers]: https://developer.mozilla.org/en-US/docs/Web/API/Worker
 [moan]: https://twitter.com/dfabu/status/1139567716052930561
 [snakeoil]: /things/less-snakeoil/
 [when workers]: /things/when-workers/
-[shared array buffers]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer 
+[shared array buffers]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
 [site isolation]: https://www.chromium.org/Home/chromium-security/site-isolation
 [viz gist]: https://gist.github.com/surma/08923b78c42fab88065461f9f507ee96
 [RAIL]: https://developers.google.com/web/fundamentals/performance/rail
@@ -246,3 +256,7 @@ Threads ’n stuff
 [rust]: https://www.rust-lang.org
 [rust binarystate]: ./binary-state-rust
 [rust binarystate source]: https://gist.github.com/surma/7fd34630a4ec567e01db0ef713523c1a
+[actor model]: /things/actormodel/
+[sharedarraybuffer]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+[atomics]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics
+[comlink]: https://github.com/GoogleChromeLabs/comlink

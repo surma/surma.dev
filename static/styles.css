@@ -537,26 +537,29 @@ footer .back {
   transform: scaleX(-1);
 }
 
-.carousell {
+.carousel {
   display: flex;
   flex-wrap: nowrap;
   width: 100%;
   max-height: 66vh;
   overflow-x: auto;
-  justify-items: center;
   scroll-snap-type: x mandatory;
 }
 
-.carousell > * {
-  flex: 0 0 70%;
+.carousel > * {
+  flex: 0 0 calc(100% - 10 * var(--grid-gutter));
   scroll-snap-align: center;
+  margin: 0 calc(2 * var(--grid-gutter));
 }
 
-.carousell img {
+.carousel img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
-  margin: 0 calc(2 * var(--grid-gutter));
   max-width: initial;
+}
+
+.bg-white {
+  background: white;
 }
