@@ -80,7 +80,7 @@ body {
   line-height: calc(var(--grid-height) + var(--grid-gutter));
   min-height: 100vh;
   overflow-x: hidden;
-
+  hyphens: auto;
 }
 * {
   font-variation-settings: inherit;
@@ -124,6 +124,9 @@ img, video {
   margin: 0 auto;
   display: block;
   width: 100%;
+}
+code {
+  hyphens: none;
 }
 figure {
   margin: 0;
