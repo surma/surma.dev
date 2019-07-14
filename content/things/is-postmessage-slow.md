@@ -183,19 +183,38 @@ While there is no clear winner, vanilla `postMessage()` seems to perform better 
 
 ### Binary formats
 
-Another way to deal with the performance impact of structured cloning is to not use it at all. Apart from structured cloning objects, `postMessage()` can also _transfer_ certain types. `ArrayBuffer` is one of these [transferable] types. As the name implies, transferring an `ArrayBuffer` does not involve copying. The sending realm actually loses access to the buffer and it is now owned by the receiving realm. **Transfering an `ArrayBuffer` is extremely fast and independent of the size of the `ArrayBuffer`**. The downside is that `ArrayBuffer` are just a continuous chunk of memory. We are not working with objects and properties anymore. For an `ArrayBuffer` to be useful we have to decide how our data is marshalled  ourselves. This in itself will have a cost, but by knowing the shape or structure of our data at build time we can potentially tap into many optimizations that are unavailable to a generic cloning algorithm.
+Another way to deal with the performance impact of structured cloning is to not use it at all. Apart from structured cloning objects, `postMessage()` can also _transfer_ certain types. `ArrayBuffer` is one of these [transferable] types. As the name implies, transferring an `ArrayBuffer` does not involve copying. The sending realm actually loses access to the buffer and it is now owned by the receiving realm. **Transfering an `ArrayBuffer` is extremely fast and independent of the size of the `ArrayBuffer`**. The downside is that `ArrayBuffer` are just a continuous chunk of memory. We are not working with objects and properties anymore. For an `ArrayBuffer` to be useful we have to decide how our data is marshalled  ourselves. This in itself has a cost, but by knowing the shape or structure of our data at build time we can potentially tap into many optimizations that are unavailable to a generic cloning algorithm.
 
-One format that allows you to tap into these optimizations if your data has a schema are [FlatBuffers]. FlatBuffers take a schema file and generate JavaScript code (amongst many other languages) to serialize and deserialize data. Even more interestingly: FlatBuffers don’t need to parse (or “unpack”) the entire `ArrayBuffer` to return the value of a field.
+One format that allows you to tap into these optimizations are [FlatBuffers]. FlatBuffers have compilers for JavaScript (and other languages) that turn schema descriptions into code. That code contains functions to serialize and deserialize your data. Even more interestingly: FlatBuffers don’t need to parse (or “unpack”) the entire `ArrayBuffer` to return a value it contains.
 
 ### WebAssembly
 
-What about my favorite everyone’s favorite: WebAssembly? One solution is to look at the ecosystems of all the languages that have WebAssembly support and try to find serialization libraries. [CBOR], for example, has been implemented in many languages. [ProtoBuffers] and the aforemention [FlatBuffers] have wide language support as well.
+What about everyone’s favorite: WebAssembly? One approach is to use WebAssembly to look at serialization libraries in the ecosystems of other languages. [CBOR], a JSON-inspired binary object format, has been implemented in many languages. [ProtoBuffers] and the aforemention [FlatBuffers] have wide language support as well.
 
-However, we can be more cheeky here: We can the memory layout of the language as our serialization format. I wrote [a little example][rust binarystate] using [Rust]: It defines a `State` struct with some getter and setter methods so I can manipulate and inspect the state from JavaScript. To “serialize” the state object, I just copy the chunk of memory occupied by the struct. To deserialize, I allocate a new `State` object, and overwrite it with the chunk of memory I intend to “deserialize”. Since I’m using the same WebAssembly module for both the worker thread and the main thread, this memory layout of both instances will be identical.
+However, we can be more cheeky here: We can rely on the memory layout of the language as our serialization format. I wrote [a little example][rust binarystate] using [Rust]: It defines a `State` struct with some getter and setter methods so I can inspect and manipulate the state from JavaScript. To “serialize” the state object, I just copy the chunk of memory occupied by the struct. To deserialize, I allocate a new `State` object, and overwrite it with the data passed to the deserialization function. Since I’m using the same WebAssembly module in both cases, the memory layout will be identical.
 
 ```rust
 pub struct State {
     counters: [u8; NUM_COUNTERS]
+}
+
+#[wasm_bindgen]
+impl State {
+    // Constructors, getters and setter...
+
+    pub fn serialize(&self) -> Vec<u8> {
+        let size = size_of::<State>();
+        let mut r = Vec::with_capacity(size);
+        r.resize(size, 0);
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                self as *const State as *const u8, 
+                r.as_mut_ptr(), 
+                size
+            );
+        };
+        r
+    }
 }
 
 #[wasm_bindgen]
@@ -219,7 +238,7 @@ pub fn deserialize(vec: Vec<u8>) -> Option<State> {
 
 > **Note:** There’s some unnecessary copying going on here. I know. It’s just a proof-of-concept.
 
-The WebAssembly module ends up at about 3KiB gzip’d, most of which comes from memory management and some core library functions. The entire state object is sent whenever something changes, but due to the transferability of `ArrayBuffers`, this is extremely cheap. In other words: **This technique should have near-constant transfer time, regardless of state size.** It will, however, be more costly to access state data. There’s always a tradeoff!
+The WebAssembly module ends up at about 3KiB gzip’d, most of which stems from memory management and some core library functions. The entire state object is sent whenever something changes, but due to the transferability of `ArrayBuffers`, this is extremely cheap. In other words: **This technique should have near-constant transfer time, regardless of state size.** It will, however, be more costly to access state data. There’s always a tradeoff!
 
 This technique also requires that the state struct does not make any use of indirection like pointers, as those values will become invalid when copied to a new WebAssembly module instance. As a result, you will probably struggle to use this approach with higher-level languages. My recommendations are C, Rust and AssemblyScript, as you are in full control and have sufficient insight into memory layout.
 
@@ -227,17 +246,19 @@ This technique also requires that the state struct does not make any use of indi
 
 > **Heads up:** This section works with `SharedArrayBuffer`, which have been disabled in all browsers except Chrome on desktop. This is being worked on, but no ETA can be given on this.
 
-Especially from game developers, I have heard multiple requests to give JavaScript the capability to share objects across multiple threads. I think this is unlikely to ever be added to JavaScript itself, as it breaks one of the fundamentals design principles of JavaScript. However, there is an exception to this called [`SharedArrayBuffer`][SharedArrayBuffer] (“SABs”). SABs behave exactly like `ArrayBuffers`, but instead of being transferred and one realm losing access to the data, they can be cloned and _both_ realms will have access to the same underlying chunk of memory. **SABs allows the JavaScript realms to adopt a shared memory model.** For synchronization between realms, there’s [`Atomics`][atomics] which provide Mutexes and atomic operations.
+Especially from game developers, I have heard multiple requests to give JavaScript the capability to share objects across multiple threads. I think this is unlikely to ever be added to JavaScript itself, as it breaks one of the fundamentals assumptions of JavaScript engines. However, there is an exception to this called [`SharedArrayBuffer`][SharedArrayBuffer] (“SABs”). SABs behave exactly like `ArrayBuffers`, but instead of one realm losing access when being transferred , they can be cloned and _both_ realms will have access to the same underlying chunk of memory. **SABs allows the JavaScript realms to adopt a shared memory model.** For synchronization between realms, there’s [`Atomics`][atomics] which provide Mutexes and atomic operations.
 
-With SABs, you’d only have to transfer a chunk of memory once at the start of your app. However, in addition to the binary represenation problem, you’d have to use `Atomics` to prevent one realm from reading the state object while the other realm is still writing and vice-versa. This comes at a cost as it will block one realm for proceeding.
+With SABs, you’d only have to transfer a chunk of memory once at the start of your app. However, in addition to the binary represenation problem, you’d have to use `Atomics` to prevent one realm from reading the state object while the other realm is still writing and vice-versa. This can have a considerable performance impact.
 
 As an alternative to using SABs and serializing/deserializing data manually, you could embrace _threaded_ WebAssembly. WebAssembly has standardized support for threads, but is gated on the availability of SABs. **With threaded WebAssembly you can write code with the exact same patterns you are used to from threaded programming languages.** This, of course, comes at the cost of development complexity, orchestration and potentially bigger and monolithic modules that need to get shipped.
 
 ## Conclusion
 
-Here’s my verdict: Even on the slowest devices, you can `postMessage()` objects up to 100KiB and stay within your 100ms budget. If you have JS-driven animations, payloads up to 10KiB are risk-free. If your payloads are bigger than this, you can try patching, chunking or switching to a binary format. **Considering state layout, transferability and patchability as an architectural decision from the start can help your app run on a wider spectrum of devices.** If you feel like a shared memory model is your best bet, WebAssembly will pave that way for you in the near future.
+Here’s my verdict: Even on the slowest devices, you can `postMessage()` objects up to 100KiB and stay within your 100ms budget. If you have JS-driven animations, payloads up to 10KiB are risk-free. This should be sufficient for most apps. **`postMessage()` does have a cost, but not the extent that it makes off-main-thread architecutures unviable.**
 
-As I already hinted at in [an older blog post][actor model] about the Actor Model, I strongly believe we can implement performant off-main-thread architectures on the web _today_. This definitely requires leaving our comfort zone of threaded languages and the web’s all-on-main-by-default. **`postMessage()` does have a cost, but not the extent that it makes off-main-thread architecutures unviable.**
+If your payloads are bigger than this, you can try sending patches or switching to a binary format. **Considering state layout, transferability and patchability as an architectural decision from the start can help your app run on a wider spectrum of devices.** If you feel like a shared memory model is your best bet, WebAssembly will pave that way for you in the near future.
+
+As I already hinted at in [an older blog post][actor model] about the Actor Model, I strongly believe we can implement performant off-main-thread architectures on the web _today_, but this requires us leaving our comfort zone of threaded languages and the web’s all-on-main-by-default and explore alternative architectures and models. The benefits are worth it.
 
 [Web Workers]: https://developer.mozilla.org/en-US/docs/Web/API/Worker
 [moan]: https://twitter.com/dfabu/status/1139567716052930561
