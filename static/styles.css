@@ -111,7 +111,7 @@ em {
   --body-font-slant: 10;
   font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
 }
-p, pre, .codestyle {
+p, pre, .codestyle, figure {
   margin: calc(var(--grid-height) + 2 * var(--grid-gutter)) 0;
 }
 hr {
@@ -127,9 +127,6 @@ img, video {
 }
 code {
   hyphens: none;
-}
-figure {
-  margin: 0;
 }
 figure > img, figure > video {
   max-height: 66vh;

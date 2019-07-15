@@ -38,11 +38,9 @@ Something that the algorithm above doesn’t spell out explicitly is the fact th
 
 With that in mind, we have to make a choice _what_ to benchmark: We could measure end-to-end, so measuring how much time it takes to send a message from a worker to the main thread. However, that number would capture the sum of serialization and deserialization, each of which are happening in different realms. Remember: **This whole spiel with workers is motivated by wanting to keep the main thread free and responsive.** Alternatively, we could limit the benchmarks to Chrome and Safari and measure how long it takes to access te `.data` property to measure `StructuredDeserialize()` in isolation, which would exclude Firefox from the benchmark. I also haven’t found a way to measure `StructuredSerialize()` in isolation, short of running a trace. Neither of these choices are ideal, but in the spirit of building resilient web apps, **I decided to run the end-to-end benchmark to provide an _upper bound_ for the cost of `postMessage()`.**
 
-## Raw data
-
 Armed with a conceptual understanding of `postMessage()` and the determination to measure, I shall use <span class="mirror" data-symbol="☠️">microbenchmarks</span>. Please mind your head.
 
-### Benchmark 1: How long does sending a message take?
+## Benchmark 1: How long does sending a message take?
 
 <figure>
   <img src="breadth-depth.svg" alt="Two JSON objects showing depth and breadth">
@@ -51,23 +49,28 @@ Armed with a conceptual understanding of `postMessage()` and the determination t
 
 The benchmark will generate an object with a specific “breadth” and “depth”. The values for breadth and depth lie between 1 and 6. **For each combination of breadth and depth, 1000 unique objects will be `postMessage()`’d from a worker to the main thread**. The property names of these objects are random 16-digit hexadecimal numbers as a string, the values are either a random boolean, a random float or again a random string in the from of a 16-digit hexadecimal number. **The benchmark will measure the transfer time and calculate the 95th percentile.**
 
-<section class="carousel">
-  <div class="bg-white">
-    <img src="nokia2-chrome.svg">
-  </div>
-  <div class="bg-white">
-    <img src="pixel3-chrome.svg">
-  </div>
-  <div class="bg-white">
-    <img src="macbook-chrome.svg">
-  </div>
-  <div class="bg-white">
-    <img src="macbook-firefox.svg">
-  </div>
-  <div class="bg-white">
-    <img src="macbook-safari.svg">
-  </div>
-</section>
+### Results
+
+<figure>
+  <section class="carousel">
+    <div class="bg-white">
+      <img src="nokia2-chrome.svg">
+    </div>
+    <div class="bg-white">
+      <img src="pixel3-chrome.svg">
+    </div>
+    <div class="bg-white">
+      <img src="macbook-chrome.svg">
+    </div>
+    <div class="bg-white">
+      <img src="macbook-firefox.svg">
+    </div>
+    <div class="bg-white">
+      <img src="macbook-safari.svg">
+    </div>
+  </section>
+  <figcaption>The benchmark was run on Firefox, Safari and Chrome on a 2018 MacBook Pro, on Chrome on a Pixel 3XL and on Chrome on a Nokia 2.q</figcaption>
+</figure>
 
 > **Note:** You can find the benchmark data, to code to generate it and the code for the visualization in [this gist][viz gist]. Also, this was the first time in my life writing Python. Don’t be too harsh on me.
 
@@ -78,11 +81,13 @@ The benchmark data from the Pixel 3 and especially Safari might look a bit suspi
 - Firefox (desktop): 1ms (clamping can be disabled flag, which I did)
 - Safari (desktop): 1ms
 
-### Benchmark 2: What makes postMessage slow?
+## Benchmark 2: What makes postMessage slow?
 
 The previous benchmark shows that the complexity of the object is a strong factor in how long it takes to serialize and deserialize an object. This should not be surprising: Both the serialization and deserialization process have to traverse the entire object one way or another. The data indicates furthermore that the size of the JSON representation of an object is a good predictor for how long it takes to transfer that object.
 
-To verify, I modified the benchmark: I generate all permutations of breadth and depth between 1 and 6, but in addition all leaf properties have a string value with a length between 16 bytes and 2KiB:
+To verify, I modified the benchmark: I generate all permutations of breadth and depth between 1 and 6, but in addition all leaf properties have a string value with a length between 16 bytes and 2KiB.
+
+### Results
 
 <figure>
   <img src="correlation.svg" alt="A graph showing the correlation between payload size and transfer time for postMessage">
@@ -97,7 +102,7 @@ We have data, but it’s meaningless if we don’t contextualize it. If we want 
 
 In my experience, a web worker’s core responsibility is, at the very least, managing your app’s state object. State often only changes when the user interacts with your app. According to RAIL, we have 100ms to react to user interactions, which means that **even on the slowest devices, you can `postMessage()` objects up to 100KiB and stay within your budget.**
 
-This changes when you have JS-driven animations running. The RAIL budget for animations is 16ms, as the visuals need to get updated every frame. If we send a message from the worker that would block the main thread for longer than that, we are in trouble. Looking at the numbers from our benchmarks, everything up to 10KiB will not pose a risk to your animation budget. That being said, **this is a strong reason to prefer CSS animations and transitions over JavaScript-driven animations.** CSS animations and transitions runs on a separate thread — the compositor thread — and are not affected by a blocked main thread.
+This changes when you have JS-driven animations running. The RAIL budget for animations is 16ms, as the visuals need to get updated every frame. If we send a message from the worker that would block the main thread for longer than that, we are in trouble. Looking at the numbers from our benchmarks, everything up to 10KiB will not pose a risk to your animation budget. That being said, **this is a strong reason to prefer CSS animations and transitions over main-thread JS-driven animations.** CSS animations and transitions runs on a separate thread — the compositor thread — and are not affected by a blocked main thread.
 
 ## Must. send. moar. data.
 
@@ -161,7 +166,9 @@ This means that the amount that needs to get transferred is proportional to the 
 
 As I said, for state objects it’s _often_ only a handful of properies that change. But not always. In fact, [PROXX] has a scenario where patchsets could turn out quite big: The first reveal can affect up to 80% of the game field, which adds up to a patchset of about ~70KiB. When targeting feature phones, that is too much, especially as we might have JS-driven WebGL animations running.
 
-We asked ourselves an architectural question: Can our app support partial updates? Patchsets are a collection of patches. **Instead of sending all patches in the patchset at once, you can “chunk” the patchset into smaller partitions and apply them sequentially.** Send patches 1-10 in the first message, 11-20 on the next, and so on. Of course, this can result in incomplete or even broken visuals if you don’t pay attention. However, you are in control of how the chunking happens and could reorder the patches to avoid any undesired effects. For example, you could make sure that the first chunk contains all patches affecting on-screen elements, and put the remaining patches in to a couple of patchsets to give the main thread room to breathe.
+We asked ourselves an architectural question: Can our app support partial updates? Patchsets are a collection of patches. **Instead of sending all patches in the patchset at once, you can “chunk” the patchset into smaller partitions and apply them sequentially.** Send patches 1-10 in the first message, 11-20 on the next, and so on. Taking this to the extreme, you are streaming your patches rather, allowing you to use all the patterns you might know and love from reactive programming.
+
+Of course, this can result in incomplete or even broken visuals if you don’t pay attention. However, you are in control of how the chunking happens and could reorder the patches to avoid any undesired effects. For example, you could make sure that the first chunk contains all patches affecting on-screen elements, and put the remaining patches in to a couple of patchsets to give the main thread room to breathe.
 
 We do chunking in [PROXX]. When the user taps a field, the worker iterates over the entire grid to figure out which fields need to be updated and collects them in a list. If that list grows over a certain threshold, we send what we have so far to the main thread, empty the list and continue iterating the game field. These patchsets are small enough that even on a feature phone the cost of `postMessage()` is negligible and we still have enough main thread budget time to update our game’s UI. The iteration algorithm works from the first tile outwards, meaning our patches are ordered in the same fashion. If the main thread can only fit one message into its frame budget (like on the Nokia 8110), the partial updates disguise as a reveal animation. If we are on a powerful machine, the main thread will keep processing message events until it runs out of budget just by nature JavaScript’s event loop.
 
@@ -208,8 +215,8 @@ impl State {
         r.resize(size, 0);
         unsafe {
             std::ptr::copy_nonoverlapping(
-                self as *const State as *const u8, 
-                r.as_mut_ptr(), 
+                self as *const State as *const u8,
+                r.as_mut_ptr(),
                 size
             );
         };
@@ -254,7 +261,7 @@ As an alternative to using SABs and serializing/deserializing data manually, you
 
 ## Conclusion
 
-Here’s my verdict: Even on the slowest devices, you can `postMessage()` objects up to 100KiB and stay within your 100ms budget. If you have JS-driven animations, payloads up to 10KiB are risk-free. This should be sufficient for most apps. **`postMessage()` does have a cost, but not the extent that it makes off-main-thread architecutures unviable.**
+Here’s my verdict: Even on the slowest devices, you can `postMessage()` objects up to 100KiB and stay within your 100ms response budget. If you have JS-driven animations, payloads up to 10KiB are risk-free. This should be sufficient for most apps. **`postMessage()` does have a cost, but not the extent that it makes off-main-thread architecutures unviable.**
 
 If your payloads are bigger than this, you can try sending patches or switching to a binary format. **Considering state layout, transferability and patchability as an architectural decision from the start can help your app run on a wider spectrum of devices.** If you feel like a shared memory model is your best bet, WebAssembly will pave that way for you in the near future.
 
