@@ -14,7 +14,7 @@ No, not really. (It depends.)
 
 What does “slow” mean? [I said it before][snakeoil], and I will say it again: If you didn’t measure it, it is not slow, and even if you measure it, the numbers are meaningless without context.
 
-That being said, the fact that people will not even consider adopting [Web Workers] because of their concerns about the performance of `postMessage()`, means that this is worth investigating. [My last blog post][when workers] on workers got [responses][moan] along these lines, too. Let’s put actual numbers to the performance of `postMessage()` and see at what point you risk blowing your budets. What can you do if vanilla `postMessage()` is too slow for your use-case?
+That being said, the fact that people will not even consider adopting [Web Workers] because of their concerns about the performance of `postMessage()`, means that this is worth investigating. [My last blog post][when workers] on workers got [responses][moan] along these lines, too. Let’s put actual numbers to the performance of `postMessage()` and see at what point you risk blowing your budgets. What can you do if vanilla `postMessage()` is too slow for your use-case?
 
 Ready? Go.
 
@@ -22,7 +22,7 @@ Ready? Go.
 
 Before we start measuring, we need to understand _what_ `postMessage()` is and which part of it we want to measure. Otherwise, [we’ll end up gathering meaningless data][deep copy] and drawing meaningless conclusions.
 
-`postMessage()` is part of the [HTML spec] (not [ECMA-262]!). As I mentioned in my [deep-copy post][deep copy], `postMessage()` relies on structrued cloning to copy the message from one JavaScript realm to another. Taking a closer look at [the specification of `postMessage()`][post message steps], it turns out that structured cloning is a two-step process:
+`postMessage()` is part of the [HTML spec] (not [ECMA-262]!). As I mentioned in my [deep-copy post][deep copy], `postMessage()` relies on structured cloning to copy the message from one JavaScript realm to another. Taking a closer look at [the specification of `postMessage()`][post message steps], it turns out that structured cloning is a two-step process:
 
 ### Structured Clone algorithm
 1. Run `StructuredSerialize()` on the message
@@ -34,7 +34,7 @@ This is a simplified version of the algorithm so we can focus on the parts that 
 
 Something that the algorithm above doesn’t spell out explicitly is the fact that **serialization blocks the sending realm, while deserialization blocks the receiving realm.** And there’s more: It turns out that both Chrome and Safari defer running `StructuredDeserialize()` until you actually access the `.data` property on the `MessageEvent`. Firefox on the other hand deserializes before dispatching the event.
 
-> **Note:** Both of these behaviors _are_ spec-compatible and perfectly valid. [I openend a bug with Mozilla][ff bug], asking if they are willing to align their implementation, as it puts the developer in control when to take the “performance hit” of deserializing big payloads.
+> **Note:** Both of these behaviors _are_ spec-compatible and perfectly valid. [I opened a bug with Mozilla][ff bug], asking if they are willing to align their implementation, as it puts the developer in control when to take the “performance hit” of deserializing big payloads.
 
 With that in mind, we have to make a choice _what_ to benchmark: We could measure end-to-end, so measuring how much time it takes to send a message from a worker to the main thread. However, that number would capture the sum of serialization and deserialization, each of which are happening in different realms. Remember: **This whole spiel with workers is motivated by wanting to keep the main thread free and responsive.** Alternatively, we could limit the benchmarks to Chrome and Safari and measure how long it takes to access te `.data` property to measure `StructuredDeserialize()` in isolation, which would exclude Firefox from the benchmark. I also haven’t found a way to measure `StructuredSerialize()` in isolation, short of running a trace. Neither of these choices are ideal, but in the spirit of building resilient web apps, **I decided to run the end-to-end benchmark to provide an _upper bound_ for the cost of `postMessage()`.**
 
@@ -164,7 +164,7 @@ This means that the amount that needs to get transferred is proportional to the 
 
 ### Chunking
 
-As I said, for state objects it’s _often_ only a handful of properies that change. But not always. In fact, [PROXX] has a scenario where patchsets could turn out quite big: The first reveal can affect up to 80% of the game field, which adds up to a patchset of about ~70KiB. When targeting feature phones, that is too much, especially as we might have JS-driven WebGL animations running.
+As I said, for state objects it’s _often_ only a handful of properties that change. But not always. In fact, [PROXX] has a scenario where patchsets could turn out quite big: The first reveal can affect up to 80% of the game field, which adds up to a patchset of about ~70KiB. When targeting feature phones, that is too much, especially as we might have JS-driven WebGL animations running.
 
 We asked ourselves an architectural question: Can our app support partial updates? Patchsets are a collection of patches. **Instead of sending all patches in the patchset at once, you can “chunk” the patchset into smaller partitions and apply them sequentially.** Send patches 1-10 in the first message, 11-20 on the next, and so on. If you take this to the extreme, you are effectively _streaming_ your patches, allowing you to use all the patterns you might know and love from reactive programming.
 
@@ -182,7 +182,7 @@ We do chunking in [PROXX]. When the user taps a field, the worker iterates over 
 `JSON.parse()` and `JSON.stringify()` are incredibly fast. JSON is a small subset of JavaScript, so the parser has fewer cases to handle. Because of their frequent usage, they have also been heavily optimized. [Mathias recently pointed out][mathias json.parse], that you can sometimes reduce parse time of your JavaScript by wrapping big objects into `JSON.parse()`. **Maybe we can use JSON to speed up `postMessage()` as well? Sadly, the answer seems to be no:**
 
 <figure>
-  <img src="serialize.svg" alt="A graph comparing the duration of sending an object to serializing, sending, and deserializon an object.">
+  <img src="serialize.svg" alt="A graph comparing the duration of sending an object to serializing, sending, and deserializing an object.">
   <figcaption>Comparing the performance of manual JSON serialization to vanilla `postMessage()` yields no clear result.</figcaption>
 </figure>
 
@@ -190,13 +190,13 @@ While there is no clear winner, vanilla `postMessage()` seems to perform better 
 
 ### Binary formats
 
-Another way to deal with the performance impact of structured cloning is to not use it at all. Apart from structured cloning objects, `postMessage()` can also _transfer_ certain types. `ArrayBuffer` is one of these [transferable] types. As the name implies, transferring an `ArrayBuffer` does not involve copying. The sending realm actually loses access to the buffer and it is now owned by the receiving realm. **Transfering an `ArrayBuffer` is extremely fast and independent of the size of the `ArrayBuffer`**. The downside is that `ArrayBuffer` are just a continuous chunk of memory. We are not working with objects and properties anymore. For an `ArrayBuffer` to be useful we have to decide how our data is marshalled  ourselves. This in itself has a cost, but by knowing the shape or structure of our data at build time we can potentially tap into many optimizations that are unavailable to a generic cloning algorithm.
+Another way to deal with the performance impact of structured cloning is to not use it at all. Apart from structured cloning objects, `postMessage()` can also _transfer_ certain types. `ArrayBuffer` is one of these [transferable] types. As the name implies, transferring an `ArrayBuffer` does not involve copying. The sending realm actually loses access to the buffer and it is now owned by the receiving realm. **Transferring an `ArrayBuffer` is extremely fast and independent of the size of the `ArrayBuffer`**. The downside is that `ArrayBuffer` are just a continuous chunk of memory. We are not working with objects and properties anymore. For an `ArrayBuffer` to be useful we have to decide how our data is marshalled  ourselves. This in itself has a cost, but by knowing the shape or structure of our data at build time we can potentially tap into many optimizations that are unavailable to a generic cloning algorithm.
 
 One format that allows you to tap into these optimizations are [FlatBuffers]. FlatBuffers have compilers for JavaScript (and other languages) that turn schema descriptions into code. That code contains functions to serialize and deserialize your data. Even more interestingly: FlatBuffers don’t need to parse (or “unpack”) the entire `ArrayBuffer` to return a value it contains.
 
 ### WebAssembly
 
-What about everyone’s favorite: WebAssembly? One approach is to use WebAssembly to look at serialization libraries in the ecosystems of other languages. [CBOR], a JSON-inspired binary object format, has been implemented in many languages. [ProtoBuffers] and the aforemention [FlatBuffers] have wide language support as well.
+What about everyone’s favorite: WebAssembly? One approach is to use WebAssembly to look at serialization libraries in the ecosystems of other languages. [CBOR], a JSON-inspired binary object format, has been implemented in many languages. [ProtoBuffers] and the aforementioned [FlatBuffers] have wide language support as well.
 
 However, we can be more cheeky here: We can rely on the memory layout of the language as our serialization format. I wrote [a little example][rust binarystate] using [Rust]: It defines a `State` struct with some getter and setter methods so I can inspect and manipulate the state from JavaScript. To “serialize” the state object, I just copy the chunk of memory occupied by the struct. To deserialize, I allocate a new `State` object, and overwrite it with the data passed to the deserialization function. Since I’m using the same WebAssembly module in both cases, the memory layout will be identical.
 
@@ -255,13 +255,13 @@ This technique also requires that the state struct does not make any use of indi
 
 Especially from game developers, I have heard multiple requests to give JavaScript the capability to share objects across multiple threads. I think this is unlikely to ever be added to JavaScript itself, as it breaks one of the fundamentals assumptions of JavaScript engines. However, there is an exception to this called [`SharedArrayBuffer`][SharedArrayBuffer] (“SABs”). SABs behave exactly like `ArrayBuffers`, but instead of one realm losing access when being transferred , they can be cloned and _both_ realms will have access to the same underlying chunk of memory. **SABs allows the JavaScript realms to adopt a shared memory model.** For synchronization between realms, there’s [`Atomics`][atomics] which provide Mutexes and atomic operations.
 
-With SABs, you’d only have to transfer a chunk of memory once at the start of your app. However, in addition to the binary represenation problem, you’d have to use `Atomics` to prevent one realm from reading the state object while the other realm is still writing and vice-versa. This can have a considerable performance impact.
+With SABs, you’d only have to transfer a chunk of memory once at the start of your app. However, in addition to the binary representation problem, you’d have to use `Atomics` to prevent one realm from reading the state object while the other realm is still writing and vice-versa. This can have a considerable performance impact.
 
 As an alternative to using SABs and serializing/deserializing data manually, you could embrace _threaded_ WebAssembly. WebAssembly has standardized support for threads, but is gated on the availability of SABs. **With threaded WebAssembly you can write code with the exact same patterns you are used to from threaded programming languages.** This, of course, comes at the cost of development complexity, orchestration and potentially bigger and monolithic modules that need to get shipped.
 
 ## Conclusion
 
-Here’s my verdict: Even on the slowest devices, you can `postMessage()` objects up to 100KiB and stay within your 100ms response budget. If you have JS-driven animations, payloads up to 10KiB are risk-free. This should be sufficient for most apps. **`postMessage()` does have a cost, but not the extent that it makes off-main-thread architecutures unviable.**
+Here’s my verdict: Even on the slowest devices, you can `postMessage()` objects up to 100KiB and stay within your 100ms response budget. If you have JS-driven animations, payloads up to 10KiB are risk-free. This should be sufficient for most apps. **`postMessage()` does have a cost, but not the extent that it makes off-main-thread architectures unviable.**
 
 If your payloads are bigger than this, you can try sending patches or switching to a binary format. **Considering state layout, transferability and patchability as an architectural decision from the start can help your app run on a wider spectrum of devices.** If you feel like a shared memory model is your best bet, WebAssembly will pave that way for you in the near future.
 
