@@ -198,7 +198,11 @@ One format that allows you to tap into these optimizations are [FlatBuffers]. Fl
 
 What about everyone’s favorite: WebAssembly? One approach is to use WebAssembly to look at serialization libraries in the ecosystems of other languages. [CBOR], a JSON-inspired binary object format, has been implemented in many languages. [ProtoBuffers] and the aforementioned [FlatBuffers] have wide language support as well.
 
-However, we can be more cheeky here: We can rely on the memory layout of the language as our serialization format. I wrote [a little example][rust binarystate] using [Rust]: It defines a `State` struct with some getter and setter methods so I can inspect and manipulate the state from JavaScript. To “serialize” the state object, I just copy the chunk of memory occupied by the struct. To deserialize, I allocate a new `State` object, and overwrite it with the data passed to the deserialization function. Since I’m using the same WebAssembly module in both cases, the memory layout will be identical.
+However, we can be more cheeky here: We can rely on the memory layout of the language as our serialization format. I wrote [a little example][rust binarystate] using [Rust]: It defines a `State` struct (symbolic for whatever your app’s state looks like) with some getter and setter methods so I can inspect and manipulate the state from JavaScript. To “serialize” the state object, I just copy the chunk of memory occupied by the struct. To deserialize, I allocate a new `State` object, and overwrite it with the data passed to the deserialization function. Since I’m using the same WebAssembly module in both cases, the memory layout will be identical.
+
+<blockquote class="warning">
+This is just a proof-of-concept. You can easily tap into undefined behavior here if you struct contains pointers at some level (like <code>Vec</code> and <code>String</code> do, for example). There’s also some unnecessary copying going. Code responsibly!
+</blockquote>
 
 ```rust
 pub struct State {
@@ -243,7 +247,7 @@ pub fn deserialize(vec: Vec<u8>) -> Option<State> {
 }
 ```
 
-> **Note:** There’s some unnecessary copying going on here. I know. It’s just a proof-of-concept.
+> **Note:** [Ingvar][RReverser] pointed me to [Abomonation], a seriously questionable serialization library that works even _with_ pointers. His advice: “Do \[not\] try this!”.
 
 The WebAssembly module ends up at about 3KiB gzip’d, most of which stems from memory management and some core library functions. The entire state object is sent whenever something changes, but due to the transferability of `ArrayBuffers`, this is extremely cheap. In other words: **This technique should have near-constant transfer time, regardless of state size.** It will, however, be more costly to access state data. There’s always a tradeoff!
 
@@ -298,3 +302,5 @@ As I already hinted at in [an older blog post][actor model] about the Actor Mode
 [atomics]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics
 [comlink]: https://github.com/GoogleChromeLabs/comlink
 [ECMA-262]: http://www.ecma-international.org/ecma-262/10.0/index.html#Title
+[RReverser]: https://twitter.com/rreverser
+[Abomonation]: https://github.com/TimelyDataflow/abomonation

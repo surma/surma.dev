@@ -307,6 +307,12 @@ blockquote > p:last-child {
 blockquote a {
   color: var(--orange);
 }
+blockquote.warning {
+  --color: var(--red);
+}
+.warning code {
+  color: var(--blue);
+}
 aside.warning {
   --color: var(--red);
 }
