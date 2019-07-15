@@ -3,7 +3,7 @@
   "title": "Is postMessage slow?",
   "date": "2019-07-15",
   "socialmediaimage": "social.png",
-  "live": false
+  "live": true
 }
 
 ---
