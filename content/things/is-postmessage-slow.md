@@ -69,7 +69,7 @@ The benchmark will generate an object with a specific “breadth” and “depth
       <img src="macbook-safari.svg">
     </div>
   </section>
-  <figcaption>The benchmark was run on Firefox, Safari and Chrome on a 2018 MacBook Pro, on Chrome on a Pixel 3XL and on Chrome on a Nokia 2.q</figcaption>
+  <figcaption>The benchmark was run on Firefox, Safari and Chrome on a 2018 MacBook Pro, on Chrome on a Pixel 3XL and on Chrome on a Nokia 2.</figcaption>
 </figure>
 
 > **Note:** You can find the benchmark data, to code to generate it and the code for the visualization in [this gist][viz gist]. Also, this was the first time in my life writing Python. Don’t be too harsh on me.
@@ -81,9 +81,9 @@ The benchmark data from the Pixel 3 and especially Safari might look a bit suspi
 - Firefox (desktop): 1ms (clamping can be disabled flag, which I did)
 - Safari (desktop): 1ms
 
-## Benchmark 2: What makes postMessage slow?
+The data shows that the complexity of the object is a strong factor in how long it takes to serialize and deserialize an object. This should not be surprising: Both the serialization and deserialization process have to traverse the entire object one way or another. The data indicates furthermore that the size of the JSON representation of an object is a good predictor for how long it takes to transfer that object.
 
-The previous benchmark shows that the complexity of the object is a strong factor in how long it takes to serialize and deserialize an object. This should not be surprising: Both the serialization and deserialization process have to traverse the entire object one way or another. The data indicates furthermore that the size of the JSON representation of an object is a good predictor for how long it takes to transfer that object.
+## Benchmark 2: What makes postMessage slow?
 
 To verify, I modified the benchmark: I generate all permutations of breadth and depth between 1 and 6, but in addition all leaf properties have a string value with a length between 16 bytes and 2KiB.
 
@@ -166,7 +166,7 @@ This means that the amount that needs to get transferred is proportional to the 
 
 As I said, for state objects it’s _often_ only a handful of properies that change. But not always. In fact, [PROXX] has a scenario where patchsets could turn out quite big: The first reveal can affect up to 80% of the game field, which adds up to a patchset of about ~70KiB. When targeting feature phones, that is too much, especially as we might have JS-driven WebGL animations running.
 
-We asked ourselves an architectural question: Can our app support partial updates? Patchsets are a collection of patches. **Instead of sending all patches in the patchset at once, you can “chunk” the patchset into smaller partitions and apply them sequentially.** Send patches 1-10 in the first message, 11-20 on the next, and so on. Taking this to the extreme, you are streaming your patches rather, allowing you to use all the patterns you might know and love from reactive programming.
+We asked ourselves an architectural question: Can our app support partial updates? Patchsets are a collection of patches. **Instead of sending all patches in the patchset at once, you can “chunk” the patchset into smaller partitions and apply them sequentially.** Send patches 1-10 in the first message, 11-20 on the next, and so on. If you take this to the extreme, you are effectively _streaming_ your patches, allowing you to use all the patterns you might know and love from reactive programming.
 
 Of course, this can result in incomplete or even broken visuals if you don’t pay attention. However, you are in control of how the chunking happens and could reorder the patches to avoid any undesired effects. For example, you could make sure that the first chunk contains all patches affecting on-screen elements, and put the remaining patches in to a couple of patchsets to give the main thread room to breathe.
 
@@ -174,7 +174,7 @@ We do chunking in [PROXX]. When the user taps a field, the worker iterates over 
 
 <figure>
   <video src="proxx-reveal.mp4" muted autoplay loop></video>
-  <figcaption>Classic sleight of hand: The chunking of the patchset looks like an animation.</figcaption>
+  <figcaption>Classic sleight of hand: In [PROXX], the chunking of the patchset looks like an animation. This is especially visible on low-end mobile phones or on desktop with 6x CPU throttling enabled.</figcaption>
 </figure>
 
 ### Maybe JSON?
@@ -265,7 +265,7 @@ Here’s my verdict: Even on the slowest devices, you can `postMessage()` object
 
 If your payloads are bigger than this, you can try sending patches or switching to a binary format. **Considering state layout, transferability and patchability as an architectural decision from the start can help your app run on a wider spectrum of devices.** If you feel like a shared memory model is your best bet, WebAssembly will pave that way for you in the near future.
 
-As I already hinted at in [an older blog post][actor model] about the Actor Model, I strongly believe we can implement performant off-main-thread architectures on the web _today_, but this requires us leaving our comfort zone of threaded languages and the web’s all-on-main-by-default and explore alternative architectures and models. The benefits are worth it.
+As I already hinted at in [an older blog post][actor model] about the Actor Model, I strongly believe we can implement performant off-main-thread architectures on the web _today_, but this requires us leaving our comfort zone of threaded languages and the web’s all-on-main-by-default. We need to explore alternative architectures and models that _embrace_ the constraints of the Web and JavaScript. The benefits are worth it.
 
 <script src="/carousel-reset.js" type="module"></script>
 
