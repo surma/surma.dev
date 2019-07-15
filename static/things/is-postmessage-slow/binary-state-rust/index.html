@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<main id="main"></main>
+<button id="start">
+  Start
+</button>
+<a href="https://gist.github.com/surma/7fd34630a4ec567e01db0ef713523c1a">Source code</a>
+
+<script language="javascript+worker" id="workerCode">
+  importScripts("https://unpkg.com/comlink@4.0.1");
+
+  function nextEvent(el, name) {
+    return new Promise(resolve => {
+      el.addEventListener(name, resolve, { once: true });
+    });
+  }
+
+  async function run() {
+    importScripts((await nextEvent(self, "message")).data);
+    await wasm_bindgen((await nextEvent(self, "message")).data);
+
+    const state = wasm_bindgen.State.new(5);
+
+    const obj = {
+      // Overwrite serialize so we transfer the buffer
+      serialize() {
+        return Comlink.transfer(state.serialize());
+      }
+    };
+    Object.setPrototypeOf(obj, state);
+    Comlink.expose(obj);
+
+    // Let main thread know we are ready to receive
+    postMessage("READY");
+  }
+  run();
+</script>
+<script src="binarystate.js"></script>
+<script type="module">
+  import { render, html } from "https://unpkg.com/lit-html@1.1.0?module";
+  import { wrap } from "https://unpkg.com/comlink@4.0.1?module";
+
+  function nextEvent(el, name) {
+    return new Promise(resolve => {
+      el.addEventListener(name, resolve, { once: true });
+    });
+  }
+
+  function blobFromTag(el) {
+    const content = el.innerHTML;
+    const blob = new Blob([content], { type: "text/javascript" });
+    const blobURL = URL.createObjectURL(blob);
+    return blobURL;
+  }
+
+  async function run(ev) {
+    // Remove button for easy copy/paste
+    ev.target.remove();
+    await wasm_bindgen("binarystate_bg.wasm");
+    console.log("Starting worker");
+    const worker = new Worker(blobFromTag(document.all.workerCode));
+    worker.postMessage(`${location.protocol}//${location.host}/${location.pathname}/binarystate.js`);
+    worker.postMessage(`${location.protocol}//${location.host}/${location.pathname}/binarystate_bg.wasm`);
+    // Wait for worker to be ready
+    await nextEvent(worker, "message");
+    const api = wrap(worker);
+    refreshView(api);
+  }
+
+  async function refreshView(api) {
+    const stateBuffer = await api.serialize();
+    const state = wasm_bindgen.State.from_buffer(stateBuffer);
+    render(
+      html`
+        <h1>State</h1>
+        <ul>
+          ${new Array(state.num_counters()).fill(0).map(
+            (_, idx) => html`
+              <li>
+                Counter #${idx}: ${state.get_counter(idx)}
+                <button
+                  @click=${async () => {
+                    await api.inc_counter(idx);
+                    refreshView(api);
+                  }}
+                >
+                  +
+                </button>
+              </li>
+            `
+          )}
+        </ul>
+      `,
+      document.all.main
+    );
+  }
+  document.all.start.onclick = run;
+</script>

@@ -80,7 +80,7 @@ body {
   line-height: calc(var(--grid-height) + var(--grid-gutter));
   min-height: 100vh;
   overflow-x: hidden;
-
+  hyphens: auto;
 }
 * {
   font-variation-settings: inherit;
@@ -111,7 +111,7 @@ em {
   --body-font-slant: 10;
   font-variation-settings: "wdth" var(--body-font-width), "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
 }
-p, pre, .codestyle {
+p, pre, .codestyle, figure {
   margin: calc(var(--grid-height) + 2 * var(--grid-gutter)) 0;
 }
 hr {
@@ -125,8 +125,11 @@ img, video {
   display: block;
   width: 100%;
 }
-figure {
-  margin: 0;
+code {
+  hyphens: none;
+}
+figure > img, figure > video {
+  max-height: 66vh;
 }
 figcaption {
   margin-top: var(--grid-height);
@@ -532,4 +535,31 @@ footer .back {
 }
 .mirror:after {
   transform: scaleX(-1);
+}
+
+.carousel {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-height: 66vh;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.carousel > * {
+  flex: 0 0 calc(100% - 10 * var(--grid-gutter));
+  scroll-snap-align: center;
+  margin: 0 calc(2 * var(--grid-gutter));
+}
+
+.carousel img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  max-width: initial;
+}
+
+.bg-white {
+  background: white;
 }
