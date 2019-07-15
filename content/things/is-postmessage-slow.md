@@ -38,7 +38,7 @@ Something that the algorithm above doesn’t spell out explicitly is the fact th
 
 With that in mind, we have to make a choice _what_ to benchmark: We could measure end-to-end, so measuring how much time it takes to send a message from a worker to the main thread. However, that number would capture the sum of serialization and deserialization, each of which are happening in different realms. Remember: **This whole spiel with workers is motivated by wanting to keep the main thread free and responsive.** Alternatively, we could limit the benchmarks to Chrome and Safari and measure how long it takes to access te `.data` property to measure `StructuredDeserialize()` in isolation, which would exclude Firefox from the benchmark. I also haven’t found a way to measure `StructuredSerialize()` in isolation, short of running a trace. Neither of these choices are ideal, but in the spirit of building resilient web apps, **I decided to run the end-to-end benchmark to provide an _upper bound_ for the cost of `postMessage()`.**
 
-Armed with a conceptual understanding of `postMessage()` and the determination to measure, I shall use <span class="mirror" data-symbol="☠️">microbenchmarks</span>. Please mind your head.
+Armed with a conceptual understanding of `postMessage()` and the determination to measure, I shall use <span class="mirror" data-symbol="☠️">microbenchmarks</span>. Please mind the gap between these numbers and reality.
 
 ## Benchmark 1: How long does sending a message take?
 
