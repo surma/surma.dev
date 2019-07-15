@@ -201,7 +201,7 @@ What about everyone’s favorite: WebAssembly? One approach is to use WebAssembl
 However, we can be more cheeky here: We can rely on the memory layout of the language as our serialization format. I wrote [a little example][rust binarystate] using [Rust]: It defines a `State` struct (symbolic for whatever your app’s state looks like) with some getter and setter methods so I can inspect and manipulate the state from JavaScript. To “serialize” the state object, I just copy the chunk of memory occupied by the struct. To deserialize, I allocate a new `State` object, and overwrite it with the data passed to the deserialization function. Since I’m using the same WebAssembly module in both cases, the memory layout will be identical.
 
 <blockquote class="warning">
-This is just a proof-of-concept. You can easily tap into undefined behavior here if you struct contains pointers at some level (like <code>Vec</code> and <code>String</code> do, for example). There’s also some unnecessary copying going. Code responsibly!
+This is just a proof-of-concept. You can easily tap into undefined behavior if your struct contains pointers (like <code>Vec</code> and <code>String</code> do). There’s also some unnecessary copying going on. Code responsibly!
 </blockquote>
 
 ```rust
