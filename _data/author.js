@@ -3,7 +3,7 @@ const puppeteer = require("puppeteer");
 const baseData = {
   name: "Surma",
   bio: "Undefined, lol",
-  avatar: "surma.jpg",
+  avatar: "surma.png",
   socials: {
     twitter: "https://twitter.com/dassurma",
     github: "https://github.com/surma",

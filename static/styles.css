@@ -569,3 +569,11 @@ footer .back {
 .bg-white {
   background: white;
 }
+
+.licenses {
+  font-size: .5em;
+  color: var(--yellow);
+  margin: 0 auto;
+  display: block;
+  grid-column: 1 / -1;
+}
