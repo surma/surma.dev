@@ -393,6 +393,7 @@ footer > .arrows {
   height: var(--avatar-size);
   border-radius: 50%;
   max-width: initial;
+  transform: scaleX(-1);
 }
 .arrow {
   position: relative;
