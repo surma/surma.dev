@@ -1,4 +1,5 @@
 const puppeteer = require("puppeteer");
+const ExpiringCache = require("../expiring-cache");
 
 const baseData = {
   name: "Surma",
@@ -14,7 +15,12 @@ const baseData = {
   }
 };
 
-async function grabBio() {
+module.exports = async function() {
+  const cached = ExpiringCache.get("bio");
+  if (cached) {
+    return cached;
+  }
+
   const browser = await puppeteer.launch();
   let data;
   try {
@@ -37,7 +43,7 @@ async function grabBio() {
     data = { ...baseData, bio };
   }
   browser.close();
-  return data;
-}
 
-module.exports = grabBio();
+  ExpiringCache.set("bio", data, 24 * 60 * 60 * 1000);
+  return data;
+};
