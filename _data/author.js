@@ -33,6 +33,7 @@ async function grabBio() {
     });
     data = { ...baseData, bio };
   } catch (e) {
+    const bio = `Error: ${e.message}`;
     data = { ...baseData, bio };
   }
   browser.close();
