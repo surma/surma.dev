@@ -11,9 +11,20 @@
 
 <!--more-->
 
-[React] is arguably the most popular web framework right now. Some love it for its component system, some because the vast ecosystem. To me, React just like [Preact], [Svelte] or [lit-html] provide mainly one feature of interest: Turning state into DOM. This allows you to clearly separate business logic from presentation logic where the state object is your (hopefully) well-defined interface.
+[React] is a popular web framework.
 
-Now while these types of web apps _can_ have that clear separation, it can often feel easier to put more and more data into component-internal state. Over time, your components contain parts of your business logic, reducing reusability and testability. This is where [Redux] comes into play, a popular “state container”. It centralizes your state and all its mutations in a single place, outside your components, reenforcing the aforementioned separation.
+> **Note:** I use words like “popular” or “often” being very aware that I am under the influence of the Web Development Twitter Echo Chamber™️. Your mileage may vary, proceed with care. Also, if you are not conceptually familiar with React, this blog post might not be of interest for you.
+
+Some love React for its component system, some because of its vast ecosystem and some for its meta-platform properties. The more I read up on React, the more I see React and Redux appearing together. May that be in the description of a job offer, a stack overflow post or a library. Since **my goal is to bring off-main-thread architectures to main-stream web development. How much React or Redux are compatible with this philosophy?** Yes, I admit it. I have never written React code before, only Preact.
+
+## Architecture
+
+To me, [React] — just like [Preact], [Svelte] or [lit-html] — provides mainly one feature of interest: Turning state into DOM, ideally in an efficient manner. Your business logic manipulates a state object and your UI framework consumes said object to update your UI accordingly. Like any architectural choice, this has pros and cons.**` One the one hand, this architecture allows or even enforces a clear separation between business logic and presentation logic. The shape (or schema) of your state object is your interface between these two responsibilities. 
+
+Now while with these frameworks you _can_ have that clear separation, it can often feel easier to encapsualte logic into components tied to component-internal state. 
+
+
+Over time, your components contain parts of your business logic, reducing reusability and testability. This is where [Redux] comes into play, a popular “state container”. It centralizes your state and all its mutations in a single place, outside your components, reenforcing the aforementioned separation.
 
 I mentioned [before][when workers], that only UI work should be on the UI thread. State in itself is not UI work, only translating state into DOM is. With React/Redux being a seemingly popular combination, I set off to try and move Redux to a worker.
 
