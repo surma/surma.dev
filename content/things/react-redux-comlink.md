@@ -12,33 +12,31 @@
 
 <!--more-->
 
-[React] is a popular web framework.
+[React] is a popular web framework.Some love React for its component abstraction, some because of its vast ecosystem and some for its meta-platform properties.
 
 > **Note:** I use words like “popular” or “often” being very aware that I am under the influence of the Web Development Twitter Echo Chamber™️. Your mileage may vary, proceed with care, dont @ me. Also, if you are not conceptually familiar with React & Redux, this blog post might not only be of marginal interest to you.
 
-Some love React for its component abstraction, some because of its vast ecosystem and some for its meta-platform properties. The more I read up on React, the more I see React and Redux appearing together. May that be in the description of a job offer, a stack overflow post or a library. **My goal is to bring off-main-thread architectures to main-stream web development, but how compatible are React or Redux with this philosophy?**
+The more I read up on React, the more I see React and [Redux] appearing together. That got met thinking: **My goal is to bring off-main-thread architectures to main-stream web development. Are React and Redux compatible with this philosophy?** Let’s give it a try!
 
 ## Architecture
 
-To me, [React] — just like [Preact], [Svelte] or [lit-html] — provide mainly one feature of interest: Turning state into DOM, ideally in an efficient manner. Your business logic manipulates a state object and your UI framework consumes said object to update your UI accordingly. These frameworks enable you to have a clear separation between state and UI, however, I often see people encapsulate their business logic into components tied to component-internal state. Over time, this can get unwieldy. This is where [Redux] comes into play, a popular “state container”. It centralizes your state and all its mutations in a single place, outside your components, reenforcing the aforementioned separation.
+To me, [React] — just like [Preact], [Svelte] or [lit-html] — provide mainly one feature of interest: Turning state into DOM, ideally in an efficient manner. Your business logic manipulates a state object and your UI framework consumes said object to update your UI accordingly. These frameworks enable you to have a clear separation between state and UI. Nonetheless, I often see people encapsulate their business logic into their (visual) components tied to component-internal state. This is where [Redux] can help. Redux is a popular “state container”, centralizing your state and all its mutations in one place, outside your components, reenforcing the aforementioned separation.
 
-As I have said [before][when workers], my mantra is **“UI thread for UI work only”**. State in itself is not UI work so **Redux should not be running on the UI thread!** Since I have not written React or Redux myself 😱, I figured I’d use _the_ canonical sample for pretty much every UI framework out there: TodoMVC. And of course, Redux has a [Todo MVC sample][redux todomvc]!
+As I have said [before][when workers], my mantra is **“UI thread for UI work only”**. State management is not UI work and consequently **Redux should not be running on the UI thread!** Since I have not written React or Redux myself 😱, I figured I’d use _the_ canonical sample for pretty much every UI framework out there: TodoMVC. And of course, Redux has a [Todo MVC sample][redux todomvc]!
 
 ## CRArgh
 
-The problem with Redux’s TodoMVC sample is that it uses [create-react-app]. Don’t get me wrong, CRA is not inherently bad. Not at all. But I did run into problems in the context of this experiment. **CRA’s default build setup doesn’t support workers** [yet.][cra worker pr] I did try and use the branch from that PR, but it doesn’t seem to be fully working yet.
+The problem with Redux’s TodoMVC sample is that it uses [create-react-app]. I don’t mean that CRA is inherently bad. Not at all. But **CRA’s default build setup doesn’t support workers** [yet][cra worker pr], which is _kinda_ essential for this experiment. I did try and use the branch from that PR, but it doesn’t seem to be fully working yet.
 
 Alternatively, you can “eject” from CRA and take matters into your own hands. Ejecting brings everything from under the hood to... well, over the hood, I guess. After doing so I found myself _way_ out of my depth. The [webpack] and [babel] configs are impenetrable to me, which is mostly due to my lack of experience with webpack and babel. The bottom line here is that I couldn’t easily adjust Redux’s TodoMVC sample to support workers.
 
-On a related note: **webpack is not optimal for workers**, as it cannot share chunks between main thread and workers. [I opened an issue][webpack worker issue] about this a while ago and talked to [Sean Larkin] about it quite recently. It seems webpack 5 will make solving this much easier. But let me be clear: **webpack is an acceptable choice for OMT**, as long as you keep an eye on the amount of double-loading that you are potentially causing. If you are using webpack and want to use workers, [Jason] wrote [`worker-plugin`][worker-plugin], which teaches webpack about the `new Worker()` constructor to make workers easy to use.
+> **Note**: **webpack is not optimal for workers**, as it cannot share chunks between main thread and workers. [I opened an issue][webpack worker issue] for this a while ago and talked to [Sean Larkin] about it quite recently. It seems webpack 5 will make solving this much easier. But let me be clear: **webpack is an acceptable choice for OMT**, as long as you keep an eye on the amount of double-loading that you are potentially causing. If you are using webpack and want to use workers, [Jason] wrote [`worker-plugin`][worker-plugin], which teaches webpack about the `new Worker()` constructor to make workers easy to use.
 
-All in all it doesn’t really matter which build system you use. For the purpose of this blog post I used [Rollup], as I am familiar with that and even maintain an [off-main-thread plugin][rollup omt] for Rollup. If you are a [Preact] users, [Jason]’s [stockroom] might be worth a look! It’s a simple state container that runs in a worker by default.
+The bottom line is that I couldn’t really do this with CRA, so for the purpose of this blog post I used [Rollup], as I am familiar with that and even maintain an [off-main-thread plugin][rollup omt] for Rollup.  **All in all it doesn’t really matter which build system you use.**
 
 ## Business as usual
 
-To have a starting point, [I whipped up a useless counter app](step1). It has a counter. You can increment and decrement it. That’s it. No bells and whistles. It uses Redux for state management, React for the UI and [react-redux] as the glue between the two.
-
-Let’s start with the state: Our state is just a counter. We have two actions we can perform: Incrementing and decrementing that counter.
+To have a starting point, [I whipped up a useless counter app](step1). It has a counter. You can increment and decrement it. That’s it. No bells and whistles. It uses Redux for state management, React for the UI and [react-redux] as the glue between the two. Let’s look at some code: Our state is just a counter. We have two actions we can perform: Incrementing and decrementing that counter.
 
 ```js
 const reducer = (state = 0, { type }) => {
@@ -55,7 +53,7 @@ const reducer = (state = 0, { type }) => {
 const store = createStore(reducer);
 ```
 
-This `store` variable contains our state container. Through this store we can `dispatch()` actions to mutate the state or subscribe to state changes. The (important parts of the) store’s interface looks like this:
+This `store` variable contains our state container. Through this store we can `subscribe()` to state changes or `dispatch()` actions to mutate the state. The (important parts of the) store’s interface looks like this:
 
 ```ts
 interface Store {
@@ -97,14 +95,13 @@ And violá, we have [a _beautiful_ counter app][counter live basic]. You can fin
 
 As the app is fairly simple, so is our reducer. But even for bigger apps **state management is rarely bound to the main thread** in my experience. Everything we are doing can also be done in a worker as we are not using any main-thread-only API like the DOM. So let’s remove all of the Redux code from our main file and put it in a new file for our worker. Additionally, we are going to pull in [Comlink].
 
-Comlink is a library to make web workers enjoyable. Instead of wrangling `postMessage()`, Comlink uses the (rather old) concept of RPC with the help of proxies. The proxy will “record” any actions (like method invocations), send these recorded actions to the worker, replay them against the real object and send back the result. This way you can work on the object on the main thread even though the _real_ object lives in a worker.
+Comlink is a library to make web workers enjoyable. Instead of wrangling `postMessage()`, Comlink implements the (surprisingly old) concept of [RPC] with the help of proxies. Comlink will give you a proxy and that proxy will “record” any actions (like method invocations) performed on it. Comlink will send these records to the worker, replay them against the real object and send back the result. This way you can work on an object on the main thread even though the _real_ object lives in a worker.
 
 With this in mind, we can move `store` to a worker and proxy it back to the main thread:
 
 ```js
 // worker.js
 import { createStore } from "redux";
-
 import { expose } from "comlink";
 
 const reducer = (state = 0, { type }) => {
@@ -141,15 +138,15 @@ interface RemoteStore {
 }
 ```
 
-The reason for this is the nature of RPC. **Every method invocation is turned into a `postMessage()`** by Comlink and it has to wait for the worker to come back with a reply. This process is inherently asynchronous. The advantage is that we just moved all processing into the worker, away from the main thread. We can use the `remoteStore` the same we would `store`. We just have to remember to use `await` whenever we call a method.
+The reason for this is the nature of RPC. **Every method invocation is turned into a `postMessage()`** by Comlink and it has to wait for the worker to come back with a reply. This process is inherently asynchronous. The advantage is that we just moved all processing into the worker, away from the main thread. We can use the `remoteStore` the same way we would `store`. We just have to remember to use `await` whenever we call a method.
 
 ### Problems
 
 As the interface shows, `subscribe()` expects a callback as a parameter. But functions can’t be sent via `postMessage()`, so this would throw. For this reason Comlink provides `proxy()`. Wrapping a value in **`proxy()` will cause Comlink to not send the value itself but a proxy instead**. So it’s like Comlink using itself.
 
-Another problem is `getState()` is expected to return a useful value synchronously, but Comlink has made it asynchronous. To solve this we’ll have to get our hands dirty and keep a local copy of the most recent state value we have received.
+Another problem is that `getState()` is expected to return a value synchronously, but Comlink has made it asynchronous. To solve this we’ll have to get our hands dirty and keep a local copy of the most recent state value we have received.
 
-Let’s put all these little fixes in to a wrapper for `remoteStore`:
+Let’s put all these two fixes in a wrapper for `remoteStore`:
 
 ```js
 export default async function remoteStoreWrapper(remoteStore) {
@@ -173,9 +170,9 @@ export default async function remoteStoreWrapper(remoteStore) {
 }
 ```
 
-> **Note:** You might have noticed that I re-implemented `subscribe()` here rather than just calling `remoteStore.subscribe()`. The reason is that there is a long-standing issue with Comlink: When one end of a [`MessageChannel`][messagechannel] get garbage collected, most browsers are _not_ able to garbage collect the other end, permanently leaking memory. Considering that `proxy()` creates a `MessageChannel` and that `subscribe()` might get called quite a lot, I opted to re-implement the subscription mechanism. In the future, [WeakRefs] will help Comlink address this problem.
+> **Note:** You might have noticed that I re-implemented `subscribe()` here rather than just calling `remoteStore.subscribe()`. The reason is that there is a long-standing issue with Comlink: When one end of a [`MessageChannel`][messagechannel] gets garbage collected, most browsers are _not_ able to garbage collect the other end, permanently leaking memory. Considering that `proxy()` creates a `MessageChannel` and that `subscribe()` might get called quite a lot, I opted to re-implement the subscription mechanism to avoid building up leaked memory. In the future, [WeakRefs] will help Comlink address this problem.
 
-In our main file, we have to use this wrapper function to turn our `RemoteStore` into something that is fully compatible to `Store`:
+In our main file, we have to use this wrapper to turn our `RemoteStore` into something that is fully compatible to `Store`:
 
 ```diff
 - const store = remoteStore;
@@ -188,7 +185,7 @@ You can find the full code in a [gist].
 
 ## Conclusion
 
-**[Comlink] can help you move logic to a worker without buying into a massive refactor.** I did take some shortcuts here (like ignoring the return value of `remoteStore.subscribe()`), but all-in-all this is a web app that makes good use of a worker. Not only is the business logic separated from the view, but the processing of state is not costing us any precious main thread budget. Additionally, moving your state management to a worker means that **all the parsing for the dependencies is happening off-main-thread** as well.
+**[Comlink] can help you move logic to a worker without buying into a massive refactor.** I did take some shortcuts here (like ignoring the return value of `remoteStore.subscribe()`), but all-in-all this is a web app that makes good use of a worker. Not only is the business logic separated from the view, but the processing of state is not costing us any precious main thread budget. Additionally, moving your state management to a worker means that **all the parsing for the worker’s dependencies is happening off-main-thread** as well.
 
 [react]: https://reactjs.org
 [preact]: https://preactjs.com
@@ -215,3 +212,4 @@ You can find the full code in a [gist].
 [gist]: https://gist.github.com/surma/64d137ee5548b7d2f978cb59d20b604d
 [stockroom]: https://github.com/developit/stockroom
 [weakrefs]: https://github.com/tc39/proposal-weakrefs
+[RPC]: https://en.wikipedia.org/wiki/Remote_procedure_call
