@@ -187,13 +187,15 @@ You can find the full code in a [gist].
 
 **[Comlink] can help you move logic to a worker without buying into a massive refactor.** I did take some shortcuts here (like ignoring the return value of `remoteStore.subscribe()`), but all-in-all this is a web app that makes good use of a worker. Not only is the business logic separated from the view, but the processing of state is not costing us any precious main thread budget. Additionally, moving your state management to a worker means that **all the parsing for the worker’s dependencies is happening off-main-thread** as well.
 
+> **Note:** It was [pointed out to me on Twitter][twitter ref eq] that by moving Redux to a worker every state change will cause the creation of a new copy due to structured cloning. This can be bad as it will cause React to rerender the entire app instead of just the elements whose state properties that have changed. While I didn’t solve this problem in _this_ blog post, I did talk about a solution in my [previous blog post][is postmessage slow] in the “Patching” section.
+
 [react]: https://reactjs.org
 [preact]: https://preactjs.com
 [svelte]: https://svelte.dev
 [lit-html]: https://lit-html.polymer-project.org
 [redux]: https://redux.js.org
 [redux todomvc]: https://github.com/reduxjs/redux/tree/master/examples/todomvc
-[when workers]: /things/when-workers
+[when workers]: /things/when-workers/
 [create-react-app]: https://facebook.github.io/create-react-app/
 [cra worker pr]: https://github.com/facebook/create-react-app/pull/5886
 [webpack]: https://webpack.js.org
@@ -213,3 +215,5 @@ You can find the full code in a [gist].
 [stockroom]: https://github.com/developit/stockroom
 [weakrefs]: https://github.com/tc39/proposal-weakrefs
 [RPC]: https://en.wikipedia.org/wiki/Remote_procedure_call
+[twitter ref eq]: https://twitter.com/nejcramovs/status/1156234576093687813
+[is postmessage slow]: /things/is-postmessage-slow/
