@@ -1,8 +1,8 @@
 ---json
 {
 "title": "React + Redux + Comlink = Off-main-thread",
-"date": "2019-07-22",
-"socialmediaimage": "",
+"date": "2019-07-30",
+"socialmediaimage": "social.png",
 "live": false
 }
 
