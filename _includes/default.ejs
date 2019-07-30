@@ -86,7 +86,7 @@
     <a href="/" class="back">← Back to home</a>
   <% } %>
   <section class="me">
-    <img src="/avatars/<%= author.avatar %>" class="avatar">
+    <img src="emitChunk(/avatars/<%= author.avatar %>)" class="avatar">
     <div class="bio">
       <h3 class="name">
         <%= author.name %>
@@ -107,7 +107,7 @@
           continue;
         }
     %>
-      <span class="icon" style="--mask: url(/icons/<%= social %>.svg);">
+      <span class="icon" style="--mask: url(emitChunk(/icons/<%= social %>.svg));">
         <a href="<%= link %>">
           <%= social %>
         </a>

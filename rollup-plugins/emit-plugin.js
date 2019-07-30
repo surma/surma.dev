@@ -3,7 +3,7 @@ import { copyRegexp } from "./utils";
 import { join, extname } from "path";
 
 const defaultOpts = {
-  extension: "html",
+  extensions: ["html"],
   baseDir: __dirname,
   chunkRegexp: /emitChunk\(([^)]+)\)/
 };
@@ -15,21 +15,23 @@ export default function(opts = {}) {
   const processedFiles = new Map();
 
   return {
-    name: "emit-chunk-plugin",
+    name: "emit-plugin",
     async load(id) {
-      if (!id.endsWith(opts.extension)) {
+      if (!opts.extensions.some(ext => id.endsWith(ext))) {
         return;
       }
       let contents = await fsp.readFile(id, "utf-8");
       processedFiles.set(id, {
         refs: []
       });
+
       while (true) {
         const match = copyRegexp(opts.chunkRegexp).exec(contents);
         if (!match) {
           break;
         }
         let importee = match[1];
+        console.log(importee);
         if (importee.startsWith("/")) {
           importee = join(opts.baseDir, "." + importee);
         } else {
@@ -43,12 +45,14 @@ export default function(opts = {}) {
           `#${chunkRefId}#` +
           contents.slice(match.index + match[0].length);
       }
+
       processedFiles.get(id).contents = contents;
       // To keep Rollup quiet
       return `export default {}`;
     },
     async generateBundle(_options, bundle) {
       for (let [file, { refs, contents }] of processedFiles.entries()) {
+        const originalExt = extname(file);
         const [key, chunk] = Object.entries(bundle).find(
           ([key, chunk]) => chunk.facadeModuleId === file
         );
@@ -62,7 +66,7 @@ export default function(opts = {}) {
         }
         delete bundle[key];
         chunk.code = contents;
-        chunk.fileName = chunk.fileName.replace(/\.js/i, opts.extension);
+        chunk.fileName = chunk.fileName.replace(/\.js/i, originalExt);
         bundle[chunk.fileName] = chunk;
       }
     }
