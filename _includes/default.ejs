@@ -35,10 +35,10 @@
     <% } %>
   }
 </style>
-<link rel="stylesheet" href="/styles.css">
-<link rel="prefetch" href="/syntax.css" onload="this.rel = 'stylesheet'">
+<link rel="stylesheet" href="emitChunk(/styles.css)">
+<link rel="prefetch" href="emitChunk(/syntax.css)" onload="this.rel = 'stylesheet'">
 <noscript>
-    <link rel="stylesheet" href="/syntax.css">
+    <link rel="stylesheet" href="emitChunk(/syntax.css)">
 </noscript>
 <header>
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
@@ -126,4 +126,4 @@
   s.src = "https://www.google-analytics.com/analytics.js";
   document.head.appendChild(s);
 </script>
-<script src="/noise.js" type="module"></script>
+<script src="emitChunk(/noise.js)" type="module"></script>
