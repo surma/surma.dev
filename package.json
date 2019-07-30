@@ -8,6 +8,7 @@
     "flat-cache": "^2.0.1",
     "puppeteer": "^1.17.0"
   },
+  "engines" : { "node" : ">=12.4.0" },
   "scripts": {
     "build": "eleventy",
     "serve": "LOCAL_DEV=true eleventy --serve"
