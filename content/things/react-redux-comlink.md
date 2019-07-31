@@ -32,7 +32,7 @@ Alternatively, you can “eject” from CRA and take matters into your own hands
 
 > **Note**: **webpack is not optimal for workers**, as it cannot share chunks between main thread and workers. [I opened an issue][webpack worker issue] for this a while ago and talked to [Sean Larkin] about it quite recently. It seems webpack 5 will make solving this much easier. But let me be clear: **webpack is an acceptable choice for OMT**, as long as you keep an eye on the amount of double-loading that you are potentially causing. If you are using webpack and want to use workers, [Jason] wrote [`worker-plugin`][worker-plugin], which teaches webpack about the `new Worker()` constructor to make workers easy to use.
 
-The bottom line is that I couldn’t really do this with CRA, so for the purpose of this blog post I used [Rollup], as I am familiar with that and even maintain an [off-main-thread plugin][rollup omt] for Rollup.  **All in all it doesn’t really matter which build system you use.**
+The bottom line is that I couldn’t really do this with CRA, so for the purpose of this blog post I used [Rollup], as I am familiar with that and even maintain an [off-main-thread plugin][rollup omt] for Rollup. **All in all it doesn’t really matter which build system you use.**
 
 ## Business as usual
 
@@ -63,7 +63,7 @@ interface Store {
 }
 ```
 
-For our main app component `CounterDemo`, we are going write some vanilla HTML and `connect()` the resulting component to our state store:
+For our main app component `CounterDemo`, we are going to write some vanilla HTML and `connect()` the resulting component to our state store:
 
 ```js
 const CounterDemo = connect(counter => ({ counter }))(
