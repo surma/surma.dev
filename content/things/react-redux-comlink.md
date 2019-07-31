@@ -16,7 +16,7 @@
 
 > **Note:** I use words like “popular” or “often” being very aware that I am under the influence of the Web Development Twitter Echo Chamber™️. Your mileage may vary, proceed with care, dont @ me. Also, if you are not conceptually familiar with React & Redux, this blog post might not only be of marginal interest to you.
 
-The more I read up on React, the more I see React and [Redux] appearing together. That got met thinking: **My goal is to bring off-main-thread architectures to main-stream web development. Are React and Redux compatible with this philosophy?** Let’s give it a try!
+The more I read up on React, the more I see React and [Redux] appearing together. That got me thinking: **My goal is to bring off-main-thread architectures to main-stream web development. Are React and Redux compatible with this philosophy?** Let’s give it a try!
 
 ## Architecture
 
