@@ -89,7 +89,7 @@ ReactDOM.render(
 );
 ```
 
-And violà, we have [a _beautiful_ counter app][counter live basic]. You can find the full code for this demo in a [gist][counter code basic].
+And voilà, we have [a _beautiful_ counter app][counter live basic]. You can find the full code for this demo in a [gist][counter code basic].
 
 ## Comlinking it
 
