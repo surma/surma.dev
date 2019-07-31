@@ -1,33 +1,46 @@
 <% include("./tools") %>
-<!doctype html>
+<!DOCTYPE html>
 <meta charset="utf-8" />
-<meta name="viewport" content="minimum-scale=1, width=device-width">
-<meta name="theme-color" content="<%= colors.convertToHex(colors.palette.yellow) %>">
+<meta name="viewport" content="minimum-scale=1, width=device-width" />
+<meta
+  name="theme-color"
+  content="<%= colors.convertToHex(colors.palette.yellow) %>"
+/>
 <meta property="og:url" content="<%= meta.domain %><%= page.url %>" />
 <% if(typeof title === "string") { %>
-  <meta property="og:title" content="<%= title %> — DasSur.ma" />
-  <meta name="twitter:title" content="<%= title %> — DasSur.ma" />
-  <title><%= title %> — DasSur.ma</title>
+<meta property="og:title" content="<%= title %> — DasSur.ma" />
+<meta name="twitter:title" content="<%= title %> — DasSur.ma" />
+<title><%= title %> — DasSur.ma</title>
 <% } else { %>
-  <meta property="og:title" content="DasSur.ma" />
-  <meta name="twitter:title" content="DasSur.ma" />
-  <title>DasSur.ma</title>
+<meta property="og:title" content="DasSur.ma" />
+<meta name="twitter:title" content="DasSur.ma" />
+<title>DasSur.ma</title>
 <% } %>
 <meta property="og:type" content="article" />
 <% if(typeof socialmediaimage === "string") { %>
-  <meta property="og:image" content="<%= meta.domain %><%= page.url %><%= socialmediaimage %>" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="<%= meta.domain %><%= page.url %><%= socialmediaimage %>" />
+<meta
+  property="og:image"
+  content="<%= meta.domain %><%= page.url %><%= socialmediaimage %>"
+/>
+<meta name="twitter:card" content="summary_large_image" />
+<meta
+  name="twitter:image"
+  content="<%= meta.domain %><%= page.url %><%= socialmediaimage %>"
+/>
 <% } else { %>
-  <meta name="twitter:card" content="summary" />
-<% } %>
-<% if(hasExcerpt(content)) { %>
-  <meta property="og:description" content="<%= excerpt(content) %>" />
-  <meta name="twitter:description" content="<%= excerpt(content) %>" />
+<meta name="twitter:card" content="summary" />
+<% } %> <% if(hasExcerpt(content)) { %>
+<meta property="og:description" content="<%= excerpt(content) %>" />
+<meta name="twitter:description" content="<%= excerpt(content) %>" />
 <% } %>
 
 <meta name="twitter:site" content="@DasSurma" />
-<link href="index.xml" type="application/atom+xml" rel="alternate" title="Sitewide Atom feed" />
+<link
+  href="index.xml"
+  type="application/atom+xml"
+  rel="alternate"
+  title="Sitewide Atom feed"
+/>
 <style>
   :root {
     <% for(const [name, color] of Object.entries(colors.palette)) { %>
@@ -35,29 +48,30 @@
     <% } %>
   }
 </style>
-<link rel="stylesheet" href="/emitChunk(/styles.css)">
-<link rel="prefetch" href="/emitChunk(/syntax.css)" onload="this.rel = 'stylesheet'">
+<link rel="stylesheet" href="emitChunk(/styles.css)" />
+<link
+  rel="prefetch"
+  href="emitChunk(/syntax.css)"
+  onload="this.rel = 'stylesheet'"
+/>
 <noscript>
-    <link rel="stylesheet" href="/emitChunk(/syntax.css)">
+  <link rel="stylesheet" href="emitChunk(/syntax.css)" />
 </noscript>
 <header>
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
   <a href="/" class="back">← Back to home</a>
   <% } %>
   <h1>
-    <% if(typeof title === "string") { %>
-      <%= title %>
-    <% } else { %>
-      DasSur.ma
-    <% } %>
-    <% if(typeof title === "string" && typeof live === "boolean" && live === false) { %>
-      <p>UNPUBLISHED / PREVIEW</p>
+    <% if(typeof title === "string") { %> <%= title %> <% } else { %> DasSur.ma
+    <% } %> <% if(typeof title === "string" && typeof live === "boolean" && live
+    === false) { %>
+    <p>UNPUBLISHED / PREVIEW</p>
     <% } %>
   </h1>
   <% if(typeof date === "string") { %>
-    <time datetime="<%= date %>">
-      <%= date %>
-    </time>
+  <time datetime="<%= date %>">
+    <%= date %>
+  </time>
   <% } %>
   <div class="arrows">
     <div class="arrow darkblue"></div>
@@ -73,20 +87,20 @@
   <%- content %>
 </main>
 <footer>
-   <div class="arrows">
-     <div class="arrow yellow"></div>
-     <div class="arrow orange"></div>
-     <div class="arrow red"></div>
-     <div class="arrow pink"></div>
-     <div class="arrow purple"></div>
-     <div class="arrow lightblue"></div>
-     <div class="arrow blue"></div>
+  <div class="arrows">
+    <div class="arrow yellow"></div>
+    <div class="arrow orange"></div>
+    <div class="arrow red"></div>
+    <div class="arrow pink"></div>
+    <div class="arrow purple"></div>
+    <div class="arrow lightblue"></div>
+    <div class="arrow blue"></div>
   </div>
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
-    <a href="/" class="back">← Back to home</a>
+  <a href="/" class="back">← Back to home</a>
   <% } %>
   <section class="me">
-    <img src="/emitChunk(/avatars/<%= author.avatar %>)" class="avatar">
+    <img src="emitChunk(/avatars/<%= author.avatar %>)" class="avatar" />
     <div class="bio">
       <h3 class="name">
         <%= author.name %>
@@ -95,23 +109,18 @@
         <%= author.bio %>
       </p>
     </div>
-    <%
-      const numSocialCols = 6;
-      const socials = [
-        ...new Array(6 - Object.keys(author.socials).length).fill(["", ""]),
-        ...Object.entries(author.socials)
-      ];
-      for(const [social, link] of socials) {
-        if(!social) {
-          %><span class="icon"></span><%
-          continue;
-        }
-    %>
-      <span class="icon" style="--mask: url(/emitChunk(/icons/<%= social %>.svg));">
-        <a href="<%= link %>">
-          <%= social %>
-        </a>
-      </span>
+    <% const numSocialCols = 6; const socials = [ ...new Array(6 -
+    Object.keys(author.socials).length).fill(["", ""]),
+    ...Object.entries(author.socials) ]; for(const [social, link] of socials) {
+    if(!social) { %><span class="icon"></span><% continue; } %>
+    <span
+      class="icon"
+      style="--mask: url(emitChunk(/icons/<%= social %>.svg));"
+    >
+      <a href="<%= link %>">
+        <%= social %>
+      </a>
+    </span>
     <% } %>
     <a href="/licenses" class="licenses">Licenses</a>
   </section>
@@ -126,4 +135,4 @@
   s.src = "https://www.google-analytics.com/analytics.js";
   document.head.appendChild(s);
 </script>
-<script src="/emitChunk(/noise.js)" type="module"></script>
+<script src="emitChunk(/noise.js)" type="module"></script>

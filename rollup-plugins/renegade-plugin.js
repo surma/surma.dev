@@ -39,9 +39,12 @@ export default function(opts = {}) {
               case "string":
                 return item.value;
               case "chunkRefId":
-                return this.getChunkFileName(item.chunkRefId).replace(
-                  /\.js$/i,
-                  extname(item.importId)
+                return (
+                  "/" +
+                  this.getChunkFileName(item.chunkRefId).replace(
+                    /\.js$/i,
+                    extname(item.importId)
+                  )
                 );
               default:
                 throw Error(`Aaaah unknown type "${item.type}"`);

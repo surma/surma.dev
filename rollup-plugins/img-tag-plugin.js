@@ -4,14 +4,15 @@ import { parse, pack, isRenegadeFile } from "./renegade-helpers";
 
 const defaultOpts = {
   baseDir: __dirname,
-  chunkRegexp: /emitChunk\(([^)]+)\)/
+  imgTagRegexp: /<img[^>]+src=["']([^"']+)["'][^>]*>/i
 };
 
 export default function(opts = {}) {
   opts = Object.assign({}, defaultOpts, opts);
   return {
-    name: "emit-plugin",
+    name: "img-tag-plugin",
     async transform(code, _id) {
+      debugger;
       if (!isRenegadeFile(code)) {
         return;
       }
@@ -23,25 +24,41 @@ export default function(opts = {}) {
         let remainingCode = contentChunk.value;
         const result = [];
         while (true) {
-          const match = copyRegexp(opts.chunkRegexp).exec(remainingCode);
+          const match = copyRegexp(opts.imgTagRegexp).exec(remainingCode);
           if (!match) {
             result.push({ type: "string", value: remainingCode });
             break;
           }
-          let importId = match[1];
-          if (importId.startsWith("/")) {
-            importId = join(opts.baseDir, "." + importId);
+          const originalImportId = match[1];
+          let importId;
+          if (originalImportId.startsWith("/")) {
+            importId = join(opts.baseDir, "." + originalImportId);
           } else {
-            importId = await this.resolveId("./" + importId, id);
+            importId = await this.resolveId("./" + originalImportId, id);
+          }
+          if (!importId) {
+            throw Error(
+              `Could not resolve "${originalImportId} imported from ${id}"`
+            );
           }
           const chunkRefId = this.emitChunk(importId);
 
           const prefix = remainingCode.slice(0, match.index);
+          const imgTag = remainingCode.slice(
+            match.index,
+            match.index + match[0].length
+          );
+          const fileNameIdx = imgTag.indexOf(originalImportId);
           remainingCode = remainingCode.slice(match.index + match[0].length);
           result.push(
             ...[
               { type: "string", value: prefix },
-              { type: "chunkRefId", chunkRefId, importId }
+              { type: "string", value: imgTag.slice(0, fileNameIdx) },
+              { type: "chunkRefId", chunkRefId, importId },
+              {
+                type: "string",
+                value: imgTag.slice(fileNameIdx + originalImportId.length)
+              }
             ]
           );
         }

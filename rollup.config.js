@@ -3,12 +3,14 @@ import startSequence from "./rollup-plugins/start-sequence-plugin.js";
 import globInput from "./rollup-plugins/glob-input-input.js";
 import renegade from "./rollup-plugins/renegade-plugin.js";
 import emit from "./rollup-plugins/emit-plugin.js";
+import imgTags from "./rollup-plugins/img-tag-plugin.js";
 import passthrough from "./rollup-plugins/passthrough-plugin.js";
 import { sync as rmdir } from "rimraf";
 import { join } from "path";
 
 rmdir("_site");
 
+const baseDir = join(__dirname, ".tmp");
 export default {
   output: {
     dir: "_site",
@@ -22,10 +24,9 @@ export default {
       extensions: ["html", "css"]
     }),
     passthrough({
-      extensions: ["svg", "png", "jpg", "woff", "woff2", "eot"]
+      extensions: ["svg", "png", "jpg", "woff", "woff2", "eot", "gif"]
     }),
-    emit({
-      baseDir: join(__dirname, ".tmp")
-    })
+    emit({ baseDir }),
+    imgTags({ baseDir })
   ]
 };
