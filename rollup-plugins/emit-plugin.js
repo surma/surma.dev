@@ -16,7 +16,6 @@ export default function(opts = {}) {
         return;
       }
       let { id, contents } = parse(code);
-      debugger;
       contents = contents.map(async contentChunk => {
         if (contentChunk.type !== "string") {
           return contentChunk;

@@ -35,10 +35,10 @@
     <% } %>
   }
 </style>
-<link rel="stylesheet" href="emitChunk(/styles.css)">
-<link rel="prefetch" href="emitChunk(/syntax.css)" onload="this.rel = 'stylesheet'">
+<link rel="stylesheet" href="/emitChunk(/styles.css)">
+<link rel="prefetch" href="/emitChunk(/syntax.css)" onload="this.rel = 'stylesheet'">
 <noscript>
-    <link rel="stylesheet" href="emitChunk(/syntax.css)">
+    <link rel="stylesheet" href="/emitChunk(/syntax.css)">
 </noscript>
 <header>
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
@@ -86,7 +86,7 @@
     <a href="/" class="back">← Back to home</a>
   <% } %>
   <section class="me">
-    <img src="emitChunk(/avatars/<%= author.avatar %>)" class="avatar">
+    <img src="/emitChunk(/avatars/<%= author.avatar %>)" class="avatar">
     <div class="bio">
       <h3 class="name">
         <%= author.name %>
@@ -107,7 +107,7 @@
           continue;
         }
     %>
-      <span class="icon" style="--mask: url(emitChunk(/icons/<%= social %>.svg));">
+      <span class="icon" style="--mask: url(/emitChunk(/icons/<%= social %>.svg));">
         <a href="<%= link %>">
           <%= social %>
         </a>
@@ -126,4 +126,4 @@
   s.src = "https://www.google-analytics.com/analytics.js";
   document.head.appendChild(s);
 </script>
-<script src="emitChunk(/noise.js)" type="module"></script>
+<script src="/emitChunk(/noise.js)" type="module"></script>
