@@ -28,11 +28,17 @@ export default function(opts = {}) {
             result.push({ type: "string", value: remainingCode });
             break;
           }
-          let importId = match[1];
-          if (importId.startsWith("/")) {
-            importId = join(opts.baseDir, "." + importId);
+          const originalImportId = match[1];
+          let importId;
+          if (originalImportId.startsWith("/")) {
+            importId = join(opts.baseDir, "." + originalImportId);
           } else {
-            importId = await this.resolveId("./" + importId, id);
+            importId = await this.resolveId("./" + originalImportId, id);
+          }
+          if (!importId) {
+            throw Error(
+              `Could not resolve "${originalImportId}" imported from ${id}"`
+            );
           }
           const chunkRefId = this.emitChunk(importId);
 

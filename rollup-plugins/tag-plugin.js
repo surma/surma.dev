@@ -4,13 +4,13 @@ import { parse, pack, isRenegadeFile } from "./renegade-helpers";
 
 const defaultOpts = {
   baseDir: __dirname,
-  imgTagRegexp: /<img[^>]+src=["']([^"']+)["'][^>]*>/i
+  imgTagRegexp: /<(?:img|video|source)[^>]+src=["']([^"']+)["'][^>]*>/i
 };
 
 export default function(opts = {}) {
   opts = Object.assign({}, defaultOpts, opts);
   return {
-    name: "img-tag-plugin",
+    name: "tag-plugin",
     async transform(code, _id) {
       debugger;
       if (!isRenegadeFile(code)) {
@@ -38,7 +38,7 @@ export default function(opts = {}) {
           }
           if (!importId) {
             throw Error(
-              `Could not resolve "${originalImportId} imported from ${id}"`
+              `Could not resolve "${originalImportId}" imported from ${id}"`
             );
           }
           const chunkRefId = this.emitChunk(importId);
