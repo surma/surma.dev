@@ -1,3 +1,5 @@
+import {mat4} from "gl-matrix";
+
 (function() {
   const canvas = document.querySelector('#gl');
   const textureCanvas = document.querySelector('#texture');

@@ -1,8 +1,10 @@
+import workerURL from "chunk-name:./worker.js";
+
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 const {width, height} = canvas;
 
-const worker = new Worker('worker.js');
+const worker = new Worker(workerURL);
 const sab = new SharedArrayBuffer(4 * height * width + 6 * 4);
 worker.postMessage({sab, width, height});
 

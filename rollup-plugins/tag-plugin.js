@@ -4,7 +4,10 @@ import { parse, pack, isRenegadeFile } from "./renegade-helpers";
 
 const defaultOpts = {
   baseDir: __dirname,
-  imgTagRegexp: /<(?:img|video|source)[^>]+src=["']([^"']+)["'][^>]*>/i
+  imgTagRegexp: /<img[^>]+src=["']([^"(']+)["'][^>]*>/i,
+  getFilename(match) {
+    return match[1];
+  }
 };
 
 export default function(opts = {}) {
@@ -29,7 +32,7 @@ export default function(opts = {}) {
             result.push({ type: "string", value: remainingCode });
             break;
           }
-          const originalImportId = match[1];
+          const originalImportId = opts.getFilename(match);
           let importId;
           if (originalImportId.startsWith("/")) {
             importId = join(opts.baseDir, "." + originalImportId);
