@@ -5,10 +5,12 @@ import renegade from "./rollup-plugins/renegade-plugin.js";
 import emit from "./rollup-plugins/emit-plugin.js";
 import tags from "./rollup-plugins/tag-plugin.js";
 import passthrough from "./rollup-plugins/passthrough-plugin.js";
+import copyStatic from "./rollup-plugins/copy-static.js";
 import { sync as rmdir } from "rimraf";
 import { join } from "path";
 
 rmdir("_site");
+rmdir(".tmp");
 
 const baseDir = join(__dirname, ".tmp");
 export default {
@@ -27,6 +29,9 @@ export default {
       extensions: ["svg", "png", "jpg", "woff", "woff2", "eot", "gif", "mp4", "webm"]
     }),
     emit({ baseDir }),
-    tags({ baseDir })
+    tags({ baseDir }),
+    copyStatic({
+      src: ["static"]
+    })
   ]
 };
