@@ -6,12 +6,9 @@
     "@11ty/eleventy": "github:11ty/eleventy#master",
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3",
     "flat-cache": "^2.0.1",
-    "gl-matrix": "^2.7.0",
-    "lit-html": "^1.1.1",
     "puppeteer": "^1.17.0",
     "rimraf": "^2.6.3",
-    "rollup": "^1.17.0",
-    "rollup-plugin-node-resolve": "^5.2.0"
+    "rollup": "^1.17.0"
   },
   "scripts": {
     "build": "rollup -c",
