@@ -42,5 +42,3 @@ TODO: When does it move on?
 #### ???
 
 ???
-
-![A flowchart for the lifecycle of a spec](diagram.png)

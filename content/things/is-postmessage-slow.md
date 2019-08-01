@@ -271,7 +271,7 @@ If your payloads are bigger than this, you can try sending patches or switching 
 
 As I already hinted at in [an older blog post][actor model] about the Actor Model, I strongly believe we can implement performant off-main-thread architectures on the web _today_, but this requires us leaving our comfort zone of threaded languages and the web’s all-on-main-by-default. We need to explore alternative architectures and models that _embrace_ the constraints of the Web and JavaScript. The benefits are worth it.
 
-<script src="/carousel-reset.js" type="module"></script>
+<script src="emitChunk(/carousel-reset.js)" type="module"></script>
 
 [Web Workers]: https://developer.mozilla.org/en-US/docs/Web/API/Worker
 [moan]: https://twitter.com/dfabu/status/1139567716052930561
