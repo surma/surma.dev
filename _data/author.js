@@ -3,7 +3,7 @@ const ExpiringCache = require("../expiring-cache");
 
 const baseData = {
   name: "Surma",
-  bio: "Undefined, lol",
+  bio: "Web Advocate @Google. Internetrovert 🏳️‍🌈 Craving simplicity, finding it nowhere.",
   avatar: "surma.png",
   socials: {
     twitter: "https://twitter.com/dassurma",
@@ -15,6 +15,9 @@ const baseData = {
   }
 };
 
+module.exports = baseData;
+
+/*
 module.exports = async function() {
   const cached = ExpiringCache.get("bio");
   if (cached) {
@@ -47,3 +50,4 @@ module.exports = async function() {
   ExpiringCache.set("bio", data, 24 * 60 * 60 * 1000);
   return data;
 };
+*/
