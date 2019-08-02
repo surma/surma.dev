@@ -18,3 +18,9 @@
   for = "/*.html"
   [headers.values]
     Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/index.xml"
+  [headers.values]
+    Cache-Control = "no-cache"
+
