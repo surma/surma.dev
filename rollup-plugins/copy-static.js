@@ -1,4 +1,7 @@
-import { ncp } from "ncp";
+import copy from "copy";
+import { promisify } from "util";
+
+const copyP = promisify(copy);
 
 export default function({ src }) {
   let outputDir;
@@ -8,7 +11,7 @@ export default function({ src }) {
       outputDir = outputOptions.dir;
     },
     async writeBundle() {
-      await Promise.all(src.map(src => ncp(src, outputDir)));
+      await Promise.all(src.map(src => copyP(src, outputDir)));
     }
   };
 }

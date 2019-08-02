@@ -26,12 +26,24 @@ export default {
       extensions: ["html", "css"]
     }),
     passthrough({
-      extensions: ["svg", "png", "jpg", "woff", "woff2", "eot", "gif", "mp4", "webm"]
+      extensions: [
+        "svg",
+        "png",
+        "jpg",
+        "woff",
+        "woff2",
+        "eot",
+        "gif",
+        "mp4",
+        "webm"
+      ]
     }),
     emit({ baseDir }),
     tags({ baseDir }),
     copyStatic({
-      src: ["static"]
+      // The wildcard is here for index.xml so that copy() will
+      // not put it in _site/.tmp/index.xml but _site/index.xml
+      src: ["static", ".tmp/*index.xml"]
     })
   ]
 };
