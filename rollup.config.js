@@ -43,7 +43,7 @@ export default {
     copyStatic({
       // The wildcard is here for index.xml so that copy() will
       // not put it in _site/.tmp/index.xml but _site/index.xml
-      src: ["static", ".tmp/*index.xml"]
+      src: ["static/**/*", ".tmp/*index.xml"]
     })
   ]
 };
