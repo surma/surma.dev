@@ -1,0 +1,1 @@
+static/gallery/*.jpg filter=lfs diff=lfs merge=lfs -text
