@@ -1,0 +1,24 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 240px);
+  grid-auto-rows: 240px;
+  grid-gap: 10px;
+  place-items: stretch;
+  place-content: space-evenly;
+}
+
+.grid picture {
+  position: relative;
+  margin: 0;
+}
+.grid img {
+  /* position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0; */
+  max-width: initial;
+  object-fit: contain;
+  background-color: white;
+  margin: 0;
+}
