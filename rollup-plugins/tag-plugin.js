@@ -4,7 +4,7 @@ import { parse, pack, isRenegadeFile } from "./renegade-helpers";
 
 const defaultOpts = {
   baseDir: __dirname,
-  imgTagRegexp: /<(?:img|video|source)[^>]+src=["']([^"']+)["'][^>]*>/i
+  imgTagRegexp: /<(?:img|video|source)[^>]+src=["']([^"'(]+)["'][^>]*>/i
 };
 
 export default function(opts = {}) {
