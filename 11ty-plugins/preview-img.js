@@ -2,8 +2,15 @@ const { parse, serialize } = require("parse5");
 const { convert } = require("imagemagick");
 const { promisify } = require("util");
 const { join, extname } = require("path");
+const { access } = require("fs").promises;
 
 const convertP = promisify(convert);
+
+function exists(path) {
+  return access(path)
+    .then(() => true)
+    .catch(() => false);
+}
 
 function zip(...arrs) {
   const resultLength = Math.min(...arrs.map(a => a.length));
@@ -52,6 +59,10 @@ async function transformMarkup(rawContent, outputPath) {
     const images = await Promise.all(
       resolutions.map(async resolution => {
         const outputName = `${filenameNoExt}.${resolution}x${ext}`;
+        if (await exists(join(".tmp/", outputName))) {
+          return outputName;
+        }
+
         await convertP([
           join("assets/", src),
           "-resize",
@@ -84,7 +95,6 @@ async function transformMarkup(rawContent, outputPath) {
 }
 
 module.exports = {
-  initArguments: {},
   configFunction: (eleventyConfig, pluginOptions = {}) => {
     eleventyConfig.addTransform("preview-img", transformMarkup);
   }
