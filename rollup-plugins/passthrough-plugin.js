@@ -2,7 +2,7 @@ import { promises as fsp } from "fs";
 import { extname } from "path";
 
 const defaultOpts = {
-  extensions: ["svg", "png", "jpg"],
+  extensions: ["svg", "png", "jpg"]
 };
 
 export default function(opts = {}) {

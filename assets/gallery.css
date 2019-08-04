@@ -1,7 +1,7 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 240px);
-  grid-auto-rows: 240px;
+  grid-template-columns: repeat(auto-fill, var(--gallery-size));
+  grid-auto-rows: var(--gallery-size);
   grid-gap: 10px;
   place-items: stretch;
   place-content: space-evenly;

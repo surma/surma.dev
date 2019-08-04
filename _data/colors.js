@@ -11,6 +11,17 @@ module.exports = {
     white: "rgb(251, 248, 228)"
   },
   convertToHex(s) {
-    return "#" + s.slice(4, -1).split(",").map(v => Number(v.trim()).toString(16).padStart(2, "0")).join("");
+    return (
+      "#" +
+      s
+        .slice(4, -1)
+        .split(",")
+        .map(v =>
+          Number(v.trim())
+            .toString(16)
+            .padStart(2, "0")
+        )
+        .join("")
+    );
   }
 };
