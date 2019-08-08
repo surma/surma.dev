@@ -363,9 +363,6 @@ header > h1 {
   font-variation-settings: "size" var(--title-size), "quad" var(--title-quad),
     "bevl" var(--title-bevl), "oval" var(--title-oval);
 }
-header > h1 > a {
-  color: inherit;
-}
 header > h1:before,
 header > h1:after {
   content: none;

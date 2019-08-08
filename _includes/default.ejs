@@ -57,30 +57,25 @@
 <!-- IndieWeb -->
 <link rel="icon" href="emitChunk(/avatars/surma.jpg)" />
 <link rel="apple-touch-icon-precomposed" href="emitChunk(/avatars/surma.jpg)" />
-<link rel="me" class="u-email" href="mailto:surma@dassur.ma" />
-<link rel="me" href="https://twitter.com/dassurma" />
-<link rel="me" href="https://github.com/surma" />
-<link rel="me" href="https://toot.cafe/@surma" />
+<link rel="me" href="mailto:surma@dassur.ma" />
 
 <noscript>
   <link rel="stylesheet" href="emitChunk(/syntax.css)" />
 </noscript>
-<body class="h-entry">
+<body>
 <header>
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
   <a href="/" class="back">← Back to home</a>
   <% } %>
-  <h1 class="p-name">
-    <a class="u-url u-uid" href="<%= meta.domain %><%= page.url %>">
-      <% if(typeof title === "string") { %> <%= title %> <% } else { %> DasSur.ma
-      <% } %> <% if(typeof title === "string" && typeof live === "boolean" && live
-      === false) { %>
-      <p>UNPUBLISHED / PREVIEW</p>
-      <% } %>
-    </a>
+  <h1>
+    <% if(typeof title === "string") { %> <%= title %> <% } else { %> DasSur.ma
+    <% } %> <% if(typeof title === "string" && typeof live === "boolean" && live
+    === false) { %>
+    <p>UNPUBLISHED / PREVIEW</p>
+    <% } %>
   </h1>
   <% if(typeof date === "string") { %>
-  <time class="dt-published" datetime="<%= date %>">
+  <time datetime="<%= date %>">
     <%= date %>
   </time>
   <% } %>
@@ -94,7 +89,7 @@
     <div class="arrow orange"></div>
   </div>
 </header>
-<main lang="en" class="e-content">
+<main lang="en">
   <%- content %>
 </main>
 <footer>
@@ -110,13 +105,13 @@
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
   <a href="/" class="back">← Back to home</a>
   <% } %>
-  <section class="me p-author h-card">
-    <img src="emitChunk(/avatars/<%= author.avatar %>)" class="avatar u-photo" />
+  <section class="me">
+    <img src="emitChunk(/avatars/<%= author.avatar %>)" class="avatar" />
     <div class="bio">
-      <h3 class="name p-name">
+      <h3 class="name">
         <%= author.name %>
       </h3>
-      <p class="info p-note">
+      <p class="info">
         <%= author.bio %>
       </p>
     </div>
@@ -128,7 +123,7 @@
       class="icon"
       style="--mask: url(emitChunk(/icons/<%= social %>.svg));"
     >
-      <a href="<%= link %>">
+      <a href="<%= link %>" rel="me">
         <%= social %>
       </a>
     </span>
