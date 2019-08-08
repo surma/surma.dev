@@ -54,9 +54,15 @@
   href="emitChunk(/syntax.css)"
   onload="this.rel = 'stylesheet'"
 />
+<!-- IndieWeb -->
+<link rel="icon" href="emitChunk(/avatars/surma.jpg)" />
+<link rel="apple-touch-icon-precomposed" href="emitChunk(/avatars/surma.jpg)" />
+<link rel="me" href="mailto:surma@dassur.ma" />
+
 <noscript>
   <link rel="stylesheet" href="emitChunk(/syntax.css)" />
 </noscript>
+<body>
 <header>
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
   <a href="/" class="back">← Back to home</a>
@@ -117,7 +123,7 @@
       class="icon"
       style="--mask: url(emitChunk(/icons/<%= social %>.svg));"
     >
-      <a href="<%= link %>">
+      <a href="<%= link %>" rel="me">
         <%= social %>
       </a>
     </span>
@@ -125,6 +131,7 @@
     <a href="/licenses" class="licenses">Licenses</a>
   </section>
 </footer>
+</body>
 <script>
   window.ga = window.ga || ((...args) => (ga.q = ga.q || []).push(args));
   ga("create", "UA-69989029-1", "auto");
