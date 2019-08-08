@@ -57,7 +57,7 @@
 <!-- IndieWeb -->
 <link rel="icon" href="emitChunk(/avatars/surma.jpg)" />
 <link rel="apple-touch-icon-precomposed" href="emitChunk(/avatars/surma.jpg)" />
-<link rel="me" class="u-email">href="mailto:surma@dassur.ma" />
+<link rel="me" class="u-email" href="mailto:surma@dassur.ma" />
 <link rel="me" href="https://twitter.com/dassurma" />
 <link rel="me" href="https://github.com/surma" />
 <link rel="me" href="https://toot.cafe/@surma" />
@@ -71,11 +71,13 @@
   <a href="/" class="back">← Back to home</a>
   <% } %>
   <h1 class="p-name">
-    <% if(typeof title === "string") { %> <%= title %> <% } else { %> DasSur.ma
-    <% } %> <% if(typeof title === "string" && typeof live === "boolean" && live
-    === false) { %>
-    <p>UNPUBLISHED / PREVIEW</p>
-    <% } %>
+    <a class="u-url u-uid" href="<%= meta.domain %><%= page.url %>">
+      <% if(typeof title === "string") { %> <%= title %> <% } else { %> DasSur.ma
+      <% } %> <% if(typeof title === "string" && typeof live === "boolean" && live
+      === false) { %>
+      <p>UNPUBLISHED / PREVIEW</p>
+      <% } %>
+    </a>
   </h1>
   <% if(typeof date === "string") { %>
   <time class="dt-published" datetime="<%= date %>">
