@@ -6,7 +6,7 @@ module.exports = class BigCachedFunction {
   }
 
   async get(key, fn) {
-    let { isCached, value } = this.cache.get(key);
+    let { isCached, value } = await this.cache.get(key);
     if (!isCached) {
       value = await fn();
       this.cache.set(key, value);
