@@ -18,12 +18,12 @@ module.exports = class Gallery {
           .map(
             item => html`
               <a href="${item.url}">
-                <prevxew-img
-                  src="/gallery/${item.data.file}"
+                <preview-img
+                  src="${item.url}${item.data.file}"
                   width="${size}"
                   height="${size}"
                   quality="${quality}"
-                ></prevxew-img>
+                ></preview-img>
               </a>
             `
           )}

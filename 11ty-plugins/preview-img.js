@@ -6,6 +6,9 @@ const { access } = require("fs").promises;
 
 const convertP = promisify(convert);
 
+// TODO: Get this from the 11ty config somehow.
+const outputDir = ".tmp";
+
 function exists(path) {
   return access(path)
     .then(() => true)
@@ -64,14 +67,14 @@ async function transformMarkup(rawContent, outputPath) {
         }
 
         await convertP([
-          join("assets/", src),
+          join(outputDir, src),
           "-resize",
           `${Math.floor(width * resolution)}x${Math.floor(
             height * resolution
           )}`,
           "-quality",
           `${quality}`,
-          join(".tmp/", outputName)
+          join(outputDir, outputName)
         ]);
         return outputName;
       })
