@@ -2,13 +2,13 @@ require("dotenv").config();
 
 const S3 = require("aws-sdk/clients/s3");
 const config = {
-  region: process.env.AWS_BUCKET_REGION,
+  region: process.env.SURMBLOG_AWS_BUCKET_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    accessKeyId: process.env.SURMBLOG_AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.SURMBLOG_AWS_SECRET_ACCESS_KEY
   }
 };
-const Bucket = process.env.AWS_BUCKET_NAME;
+const Bucket = process.env.SURMBLOG_AWS_BUCKET_NAME;
 
 const s3 = new S3(config);
 
