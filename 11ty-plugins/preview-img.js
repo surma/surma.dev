@@ -3,17 +3,12 @@ const { convert } = require("imagemagick");
 const { promisify } = require("util");
 const { join, extname } = require("path");
 const { access } = require("fs").promises;
+const { exists } = require("../fs-helpers");
 
 const convertP = promisify(convert);
 
 // TODO: Get this from the 11ty config somehow.
 const outputDir = ".tmp";
-
-function exists(path) {
-  return access(path)
-    .then(() => true)
-    .catch(() => false);
-}
 
 function zip(...arrs) {
   const resultLength = Math.min(...arrs.map(a => a.length));
@@ -62,7 +57,8 @@ async function transformMarkup(rawContent, outputPath) {
     const images = await Promise.all(
       resolutions.map(async resolution => {
         const outputName = `${filenameNoExt}.${resolution}x${ext}`;
-        if (await exists(join(".tmp/", outputName))) {
+        const outputPath = join(outputDir, outputName);
+        if (await exists(outputPath)) {
           return outputName;
         }
 
@@ -74,7 +70,7 @@ async function transformMarkup(rawContent, outputPath) {
           )}`,
           "-quality",
           `${quality}`,
-          join(outputDir, outputName)
+          outputPath
         ]);
         return outputName;
       })

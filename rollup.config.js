@@ -10,6 +10,7 @@ import { sync as rmdir } from "rimraf";
 import { join } from "path";
 
 rmdir("_site");
+rmdir(".tmp");
 
 const baseDir = join(__dirname, ".tmp");
 export default {
