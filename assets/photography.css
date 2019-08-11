@@ -1,0 +1,41 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--gallery-size));
+  grid-auto-rows: var(--gallery-size);
+  grid-gap: 10px;
+  place-items: stretch;
+  place-content: space-evenly;
+}
+
+.grid a {
+  position: relative;
+  margin: 0;
+}
+.grid img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  object-fit: contain;
+}
+img {
+  margin: 0;
+  max-width: initial;
+  width: 100%;
+}
+dl {
+  display: grid;
+  grid-gap: 0 var(--grid-gutter);
+  grid-template-columns: repeat(2, max-content);
+  margin-top: var(--grid-height);
+  justify-content: center;
+}
+
+dt {
+  grid-column: 1 / span 1;
+  font-weight: bold;
+}
+dd {
+  grid-column: 2 / span 1;
+  margin: 0;
+}

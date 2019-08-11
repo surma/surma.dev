@@ -1,7 +1,9 @@
 @font-face {
   font-display: block;
   font-family: "Lab 2";
+  /* prettier-ignore */
   src: url(emitChunk(/fonts/lab/lab.eot));
+  /* prettier-ignore */
   src: url(emitChunk(/fonts/lab/lab.woff2)) format("woff2"),
     url(emitChunk(/fonts/lab/lab.woff)) format("woff");
   font-weight: normal;
@@ -11,6 +13,7 @@
 @font-face {
   font-display: block;
   font-family: "Vinila";
+  /* prettier-ignore */
   src: url(emitChunk(/fonts/vinila/vinila.woff2)) format("woff2");
   font-style: normal;
   font-weight: 100 900;
@@ -48,7 +51,9 @@
   --social-icon: var(--grid-height);
   --noise-size: 64;
 
+  /* prettier-ignore */
   --arrow-file: url(emitChunk(/arrow.svg));
+  /* prettier-ignore */
   --arrow-right-file: url(emitChunk(/arrow-right.svg));
 }
 @media (max-width: 720px) {

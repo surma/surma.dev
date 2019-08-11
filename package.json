@@ -5,17 +5,25 @@
   "dependencies": {
     "@11ty/eleventy": "github:11ty/eleventy#master",
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3",
+    "async-disk-cache": "^1.3.4",
+    "aws-sdk": "^2.507.0",
     "copy": "^0.3.2",
-    "flat-cache": "^2.0.1",
+    "dotenv": "^8.0.0",
+    "imagemagick": "^0.1.3",
+    "mkdirp": "^0.5.1",
+    "parse5": "^5.1.0",
     "puppeteer": "^1.17.0",
     "rimraf": "^2.6.3",
-    "rollup": "^1.17.0"
+    "rollup": "^1.17.0",
+    "tmp": "^0.1.0"
   },
   "scripts": {
     "build": "rollup -c",
-    "serve": "node ./devserver.js"
+    "serve": "node ./devserver.js",
+    "fmt": "prettier --write {./,./**/}*.{json,md,js,css}"
   },
   "devDependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "prettier": "^1.18.2"
   }
 }
