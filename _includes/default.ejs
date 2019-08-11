@@ -46,6 +46,9 @@
     <% for(const [name, color] of Object.entries(colors.palette)) { %>
       --<%= name %>: <%= color %>;
     <% } %>
+    <% for(const [name, color] of Object.entries(colors.extras)) { %>
+      --<%= name %>: <%= color %>;
+    <% } %>
   }
 </style>
 <link rel="stylesheet" href="emitChunk(/styles.css)" />

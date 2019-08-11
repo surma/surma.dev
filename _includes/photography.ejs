@@ -1,0 +1,20 @@
+---
+layout: default
+---
+<link rel="stylesheet" href="emitChunk(/photography.css)" />
+<style>
+  :root {
+    <%-
+      Object.keys(colors.palette)
+        .map((name, i, arr) => {
+          const shade = i/(arr.length-1)*0.8+0.1;
+          return `--${name}: hsl(42, 10%, ${Math.floor(shade * 100)}%);`
+        })
+        .join("\n")
+    %>
+    <% for(const [name, color] of Object.entries(colors.extras)) { %>
+      --<%= name %>: <%= color %>;
+    <% } %>
+  }
+</style>
+<%- content %>

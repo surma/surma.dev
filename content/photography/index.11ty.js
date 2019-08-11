@@ -6,13 +6,12 @@ const size = 320;
 module.exports = class Gallery {
   data() {
     return {
-      layout: "default"
+      layout: "photography"
     };
   }
 
   async render({ collections }) {
     return html`
-      <link rel="stylesheet" href="emitChunk(/gallery.css)" />
       <div class="grid" style="--gallery-size: ${size}px;">
         ${collections.photo
           .filter(entry => entry.data.live)

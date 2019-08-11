@@ -13,18 +13,18 @@ module.exports = class {
       photographicSensitivity
     } = exif;
     return html`
+      <img src="./${file}" />
       <dl>
         <dt>Lens</dt>
         <dd>${lensModel}</dd>
         <dt>Camera</dt>
         <dd>${model}</dd>
       </dl>
-      <img src="./${file}" />
     `;
   }
   data() {
     return {
-      layout: "default"
+      layout: "photography"
     };
   }
 };
