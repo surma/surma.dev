@@ -1,14 +1,10 @@
 const { parse, serialize } = require("parse5");
-const { convert } = require("imagemagick");
-const { promisify } = require("util");
 const { join, extname } = require("path");
-const { access } = require("fs").promises;
-const { exists } = require("../fs-helpers");
-
-const convertP = promisify(convert);
+const { writeFile, relative } = require("fs").promises;
+const { thumbGalleryPhoto } = require("../gallery-helpers");
 
 // TODO: Get this from the 11ty config somehow.
-const outputDir = ".tmp";
+const outputDir = ".tmp/photography";
 
 function zip(...arrs) {
   const resultLength = Math.min(...arrs.map(a => a.length));
@@ -58,21 +54,16 @@ async function transformMarkup(rawContent, outputPath) {
       resolutions.map(async resolution => {
         const outputName = `${filenameNoExt}.${resolution}x${ext}`;
         const outputPath = join(outputDir, outputName);
-        if (await exists(outputPath)) {
-          return outputName;
-        }
 
-        await convertP([
-          join(outputDir, src),
-          "-resize",
-          `${Math.floor(width * resolution)}x${Math.floor(
-            height * resolution
-          )}`,
-          "-quality",
-          `${quality}`,
-          outputPath
-        ]);
-        return outputName;
+        const { value: thumb } = await thumbGalleryPhoto({
+          file: src,
+          quality,
+          width,
+          height,
+          resolution
+        });
+        await writeFile(outputPath, thumb);
+        return join("/photography", outputName);
       })
     );
 

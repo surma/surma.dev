@@ -2,15 +2,25 @@ const Cache = require("async-disk-cache");
 
 module.exports = class BigCachedFunction {
   constructor(name) {
+    this.inProgress = new Map();
     this.cache = new Cache(name, { supportBuffer: true });
   }
 
-  async get(key, fn) {
-    let { isCached, value } = await this.cache.get(key);
-    if (!isCached) {
-      value = await fn();
-      this.cache.set(key, value);
+  async get(ikey, fn) {
+    if (this.inProgress.has(ikey)) {
+      return this.inProgress.get(ikey);
     }
-    return value;
+    const p = new Promise(async resolve => {
+      let { isCached, key, value } = await this.cache.get(ikey);
+      if (!isCached) {
+        value = await fn();
+        this.cache.set(ikey, value);
+        key = await this.cache.get(ikey).key;
+      }
+      resolve({ key, value });
+    });
+    this.inProgress.set(ikey, p);
+    p.then(() => this.inProgress.delete(ikey));
+    return p;
   }
 };

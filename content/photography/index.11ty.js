@@ -22,7 +22,7 @@ module.exports = class Gallery {
             return html`
               <a href="${item.url}">
                 <preview-img
-                  src="${item.url}${file}"
+                  src="${file}"
                   width="${size}"
                   height="${size}"
                   quality="${quality}"
