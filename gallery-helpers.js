@@ -7,11 +7,12 @@ const { promisify } = require("util");
 
 const mkdirp = require("mkdirp");
 const { tmpName } = require("tmp");
-const { convert } = require("imagemagick");
+const { convert, readMetadata } = require("imagemagick");
 
 const mkdirpP = promisify(mkdirp);
 const tmpNameP = promisify(tmpName);
 const convertP = promisify(convert);
+const readMetadataP = promisify(readMetadata);
 
 const cache = new BigCachedFunction("photos");
 
@@ -22,13 +23,16 @@ async function exists(path) {
 }
 
 async function downloadGalleryPhoto({ page, file }) {
-  const { value: photo } = await cache.get(file, () => lfsBucket.get(file));
+  const { key, value: photo } = await cache.get(file, () =>
+    lfsBucket.get(file)
+  );
   const outputDir = dirname(page.outputPath);
   await mkdirpP(outputDir);
   const outputPath = join(outputDir, file);
   if (!(await exists(outputPath))) {
     await writeFile(outputPath, photo);
   }
+  return key;
 }
 async function thumbGalleryPhoto({ file, quality, width, height, resolution }) {
   const key = `${file}:${width}:${height}:${quality}:${resolution}`;
@@ -46,4 +50,14 @@ async function thumbGalleryPhoto({ file, quality, width, height, resolution }) {
     return await readFile(tmpName);
   });
 }
-module.exports = { downloadGalleryPhoto, thumbGalleryPhoto };
+async function getEXIF({ file }) {
+  const key = `${file}:EXIF`;
+  const { value } = await cache.get(key, async () => {
+    const { key: photoPath } = await cache.get(file, () => lfsBucket.get(file));
+    const { exif } = await readMetadataP(photoPath);
+    return JSON.stringify(exif);
+  });
+  return JSON.parse(value);
+}
+
+module.exports = { downloadGalleryPhoto, thumbGalleryPhoto, getEXIF };
