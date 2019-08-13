@@ -2,7 +2,7 @@
   publish = "_site"
   command = "npm run build"
 
-  # functions = "project/functions/"
+  functions = "functions/"
 
 [[headers]]
   for = "/*"
