@@ -1,7 +1,12 @@
-const diff = require("array-differ");
-exports.handler = async function(event) {
-  return {
-    statusCode: 200,
-    body: JSON.stringify(diff([1, 2, 3], [1, 4, 5]))
-  };
+const { eventToRequest, Response } = require("./aws-to-node");
+
+function myHandler(req, res) {
+  res.send("Hello world");
+}
+
+exports.handler = async event => {
+  const req = eventToRequest(event);
+  const res = new Response();
+  myHandler(req, res);
+  return res.convert();
 };
