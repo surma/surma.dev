@@ -1,5 +1,5 @@
 const { EventEmitter } = require("events");
-const { parse } = require("url");
+const { URLSearchParams, parse } = require("url");
 
 class Response {
   constructor() {
@@ -67,12 +67,8 @@ function eventToRequest(event) {
     complete
   });
 
-  let body = event.body;
-  if (event.body) {
-    body = Buffer.from(event.body, event.isBase64Encoded ? "base64" : "utf8");
-    headers["Content-Length"] = Buffer.byteLength(body);
-  }
-
+  body = Buffer.from(body, isBase64Encoded ? "base64" : "utf8");
+  headers["Content-Length"] = Buffer.byteLength(body);
   Promise.resolve()
     .then(() => req.emit("data", body))
     .then(() => req.emit("end"));
