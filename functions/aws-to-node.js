@@ -42,20 +42,19 @@ class Response {
 }
 
 function eventToRequest(event) {
-  const headers = Object.assign({}, event.headers);
-
   const {
     path,
     queryStringParameters,
     httpMethod: method,
     isBase64Encoded
   } = event;
+
+  const headers = Object.assign({}, event.headers);
   const query = new URLSearchParams(queryStringParameters);
   const protocol = `${headers["x-forwarded-proto"]}:`;
   const host = `${headers["host"]}:`;
   const port = headers["x-forwarded-port"];
   const httpVersion = "1.1";
-  let complete = false;
   const url = parse(`${protocol}//${host}:${port}/${path}?${query}`);
 
   const req = new EventEmitter();
@@ -63,11 +62,10 @@ function eventToRequest(event) {
     method,
     headers,
     url,
-    httpVersion,
-    complete
+    httpVersion
   });
 
-  body = Buffer.from(body, isBase64Encoded ? "base64" : "utf8");
+  const body = Buffer.from(event.body, isBase64Encoded ? "base64" : "utf8");
   headers["Content-Length"] = Buffer.byteLength(body);
   Promise.resolve()
     .then(() => req.emit("data", body))
@@ -76,7 +74,17 @@ function eventToRequest(event) {
   return req;
 }
 
+function adapter(h) {
+  return async event => {
+    const req = eventToRequest(event);
+    const res = new Response();
+    await h(req, res);
+    return res.convert();
+  };
+}
+
 module.exports = {
   eventToRequest,
-  Response
+  Response,
+  adapter
 };
