@@ -1,5 +1,6 @@
 const { EventEmitter } = require("events");
 const { URLSearchParams, parse } = require("url");
+const fromEntries = require("./from-entries");
 
 class Response {
   constructor() {
@@ -62,7 +63,8 @@ function eventToRequest(event) {
     method,
     headers,
     url,
-    httpVersion
+    httpVersion,
+    query: fromEntries(query.entries())
   });
 
   const body = Buffer.from(event.body, isBase64Encoded ? "base64" : "utf8");
