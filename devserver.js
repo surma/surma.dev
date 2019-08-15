@@ -1,3 +1,5 @@
+require("dotenv").config()
+
 const { join } = require("path");
 const express = require("express");
 const {
