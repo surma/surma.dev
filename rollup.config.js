@@ -1,3 +1,4 @@
+import nodeResolve from "rollup-plugin-node-resolve";
 import run11ty from "./rollup-plugins/11ty-plugin.js";
 import startSequence from "./rollup-plugins/start-sequence-plugin.js";
 import globInput from "./rollup-plugins/glob-input-input.js";
@@ -19,6 +20,7 @@ export default {
     format: "esm"
   },
   plugins: [
+    nodeResolve(),
     startSequence(),
     run11ty(),
     globInput(".tmp/**/*.html"),

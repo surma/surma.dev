@@ -1,24 +1,46 @@
-const { adapter } = require("./utils/aws-to-node");
-const Passport = require("passport");
-const { init } = require("./utils/passport-setup");
-const { chain } = require("./utils/http-helpers");
-const jwt = require("jsonwebtoken");
+const { sign } = require("jsonwebtoken");
+const fetch = require("node-fetch");
+const { SESSION_LENGTH } = require("./utils/config");
 
-init();
-exports.handler = adapter(chain(
-  (req, res) => console.log("!!!", req),
-  Passport.initialize(),
-  (req, res) => console.log("!!2", req),
-  Passport.authenticate("github", { scope: [], session: false }),
-  (req, res) => console.log("!!3", req),
-  (req, res) => {
-    console.log(">>", req.user);
-    const claim = {
-      id: req.user.id
+exports.handler = async event => {
+  const { code } = event.queryStringParameters;
+  if (!code) {
+    return {
+      statusCode: 400,
+      body: "Code missing from callback"
     };
-    const token = jwt.sign(claim, process.env.SURMBLOG_SECRET, {
-      expiresIn: parseInt(process.env.SURMBLOG_SESSION_LENGTH)
-    });
-    res.send(token);
   }
-));
+
+  const authParams = {
+    client_id: process.env.SURMBLOG_GITHUB_APP_ID,
+    client_secret: process.env.SURMBLOG_GITHUB_APP_SECRET,
+    code
+  };
+
+  const body = JSON.stringify(authParams);
+  const resp = await fetch(`https://github.com/login/oauth/access_token`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "Content-Length": body.length
+    },
+    body
+  });
+  if (!resp.ok) {
+    return {
+      statusCode: 400,
+      body: `Could not get access token: ${resp.status}`
+    };
+  }
+  const jwt = sign(await resp.json(), process.env.SURMBLOG_SECRET, {
+    expiresIn: SESSION_LENGTH
+  });
+  return {
+    statusCode: 307,
+    headers: {
+      Location: `/admin?${new URLSearchParams({ token: jwt })}`
+    },
+    body: ""
+  };
+};
