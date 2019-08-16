@@ -19,8 +19,10 @@ function init() {
           ""}/.netlify/functions/callback`
       },
       (accessToken, refreshToken, profile, cb) => {
-        console.log(profile);
-        return cb(null, profile);
+        const user = {
+          id: profile.id
+        };
+        return cb(null, user);
       }
     )
   );
