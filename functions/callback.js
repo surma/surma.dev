@@ -1,13 +1,23 @@
-const { sign } = require("jsonwebtoken");
+const { abortOnThrow } = require("./utils/http-helpers");
+const { sign, verify } = require("jsonwebtoken");
 const fetch = require("node-fetch");
 const { SESSION_LENGTH } = require("./utils/config");
 
-exports.handler = async event => {
-  const { code } = event.queryStringParameters;
+exports.handler = abortOnThrow(async event => {
+  const { code, state } = event.queryStringParameters;
   if (!code) {
     return {
       statusCode: 400,
       body: "Code missing from callback"
+    };
+  }
+
+  try {
+    verify(state, process.env.SURMBLOG_SECRET);
+  } catch (e) {
+    return {
+      statusCode: 400,
+      body: "Bad state"
     };
   }
 
@@ -43,4 +53,4 @@ exports.handler = async event => {
     },
     body: ""
   };
-};
+});

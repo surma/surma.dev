@@ -1,14 +1,20 @@
+const { abortOnThrow } = require("./utils/http-helpers");
 const { join } = require("path");
+const { sign } = require("jsonwebtoken");
+const uuid = require("uuid").v4;
 const { URLSearchParams } = require("url");
 const { FUNCTIONS_ROOT } = require("./utils/config");
 
-exports.handler = async event => {
+exports.handler = abortOnThrow(async event => {
   const params = {
     client_id: process.env.SURMBLOG_GITHUB_APP_ID,
     redirect_uri: `${process.env.SURMBLOG_HOST}${join(
       FUNCTIONS_ROOT,
       "callback"
-    )}`
+    )}`,
+    state: sign({ nonce: uuid() }, process.env.SURMBLOG_SECRET, {
+      expiresIn: 30
+    })
   };
 
   return {
@@ -20,4 +26,4 @@ exports.handler = async event => {
     },
     body: ""
   };
-};
+});
