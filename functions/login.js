@@ -14,7 +14,8 @@ exports.handler = abortOnThrow(async event => {
     )}`,
     state: sign({ nonce: uuid() }, process.env.SURMBLOG_SECRET, {
       expiresIn: 30
-    })
+    }),
+    scope: ["repo"].join(" ")
   };
 
   return {
