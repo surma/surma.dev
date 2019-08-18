@@ -1,4 +1,5 @@
 const { sign } = require("aws4");
+
 const { abortOnThrow } = require("./utils/http-helpers");
 const { requiresAuth } = require("./utils/auth");
 

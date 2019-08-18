@@ -1,8 +1,11 @@
-const { abortOnThrow } = require("./utils/http-helpers");
+const { URLSearchParams } = require("url");
+
 const { sign, verify } = require("jsonwebtoken");
 const fetch = require("node-fetch");
-const { SESSION_LENGTH } = require("./utils/config");
 const Octokit = require("@octokit/rest");
+
+const { abortOnThrow } = require("./utils/http-helpers");
+const { SESSION_LENGTH } = require("./utils/config");
 
 exports.handler = abortOnThrow(async event => {
   const { code, state } = event.queryStringParameters;

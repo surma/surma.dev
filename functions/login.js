@@ -1,8 +1,10 @@
-const { abortOnThrow } = require("./utils/http-helpers");
+const { URLSearchParams } = require("url");
 const { join } = require("path");
+
 const { sign } = require("jsonwebtoken");
 const uuid = require("uuid").v4;
-const { URLSearchParams } = require("url");
+
+const { abortOnThrow } = require("./utils/http-helpers");
 const { FUNCTIONS_ROOT } = require("./utils/config");
 
 exports.handler = abortOnThrow(async event => {
