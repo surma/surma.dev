@@ -61,7 +61,7 @@ async function submit(evt) {
   }
   const { access_token, token_type } = decode(token);
   const r = await fetch(
-    `https://api.github.com/repos/surma/surma.github.io/contents/content/photography/${date.value}.md`,
+    `https://api.github.com/repos/surma/surma.github.io/contents/content/photography/${dateField.value}.md`,
     {
       method: "PUT",
       headers: {
