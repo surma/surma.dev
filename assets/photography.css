@@ -21,8 +21,10 @@
 }
 img {
   margin: 0;
-  max-width: initial;
+  max-width: 100vw;
+  max-height: 100vh;
   width: 100%;
+  object-fit: contain;
 }
 dl {
   display: grid;

@@ -5,10 +5,7 @@ import { html } from "htm/preact";
 
 import { decode } from "../jwt.js";
 import unindent from "../unindent.js";
-
-function toDateInputValue(date) {
-  return date.toISOString().replace(/T.+$/, "");
-}
+import { toISODate } from "../date-helper.js";
 
 async function shaHash(buffer, hash = "SHA-256") {
   const digest = await crypto.subtle.digest(hash, buffer);
@@ -27,7 +24,7 @@ export default class App extends Component {
   constructor(...args) {
     super(...args);
     this.state = {
-      date: toDateInputValue(new Date()),
+      date: toISODate(new Date()),
       state: "waiting"
     };
 
