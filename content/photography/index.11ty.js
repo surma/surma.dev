@@ -1,7 +1,7 @@
 const { downloadGalleryPhoto } = require("../../gallery-helpers");
 const html = require("../../render-string");
 const quality = 40;
-const size = 320;
+const size = 300;
 
 module.exports = class Gallery {
   data() {

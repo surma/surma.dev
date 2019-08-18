@@ -49,7 +49,7 @@ async function transformMarkup(rawContent, outputPath) {
     const filenameNoExt = src.replace(/\.[^.]+$/, "");
     const ext = extname(src);
 
-    const resolutions = new Array(6).fill(0).map((_, i) => i / 2 + 1);
+    const resolutions = new Array(3).fill(0).map((_, i) => i + 1);
     const images = await Promise.all(
       resolutions.map(async resolution => {
         const outputName = `${filenameNoExt}.${resolution}x${ext}`;

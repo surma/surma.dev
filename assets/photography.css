@@ -10,6 +10,7 @@
 .grid a {
   position: relative;
   margin: 0;
+  background-color: white;
 }
 .grid img {
   position: absolute;
