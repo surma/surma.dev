@@ -5,13 +5,13 @@ import { render } from "preact";
 import { html } from "htm/preact";
 
 const TOKEN_KEY = "token";
-
 function getToken() {
   const params = new URLSearchParams(location.search);
   if (params.has(TOKEN_KEY)) {
     return params.get(TOKEN_KEY);
   }
 }
+let token = getToken();
 
 async function shaHash(buffer, hash = "SHA-256") {
   const digest = await crypto.subtle.digest(hash, buffer);
@@ -91,7 +91,6 @@ async function submit(evt) {
 }
 
 async function init() {
-  let token = getToken();
   if (!token) {
     render(
       html`
