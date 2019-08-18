@@ -8,8 +8,18 @@ if (params.has(TOKEN_KEY)) {
   token = params.get(TOKEN_KEY);
 }
 
+async function shaHash(file) {
+  const buffer = await new Response(file).arrayBuffer();
+  const digest = await crypto.subtle.digest("SHA-512", buffer);
+  return [...new Uint8Array(digest)].map(o => o.toString(16)).join("");
+}
+
 document.querySelector("form").onsubmit = async evt => {
   evt.preventDefault();
+  const file = evt.target.file.files[0];
+  const hash = await shaHash(file);
+  console.log({ hash });
+  return;
   const { access_token, token_type } = decode(token);
   const r = await fetch(
     "https://api.github.com/repos/surma/surma.github.io/contents/test123.txt",
