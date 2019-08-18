@@ -1,5 +1,4 @@
 import { decode } from "./jwt.js";
-
 let token;
 
 const TOKEN_KEY = "token";
@@ -8,17 +7,38 @@ if (params.has(TOKEN_KEY)) {
   token = params.get(TOKEN_KEY);
 }
 
-async function shaHash(file) {
-  const buffer = await new Response(file).arrayBuffer();
-  const digest = await crypto.subtle.digest("SHA-512", buffer);
+async function shaHash(buffer, hash = "SHA-256") {
+  const digest = await crypto.subtle.digest(hash, buffer);
   return [...new Uint8Array(digest)].map(o => o.toString(16)).join("");
 }
 
 document.querySelector("form").onsubmit = async evt => {
   evt.preventDefault();
   const file = evt.target.file.files[0];
-  const hash = await shaHash(file);
-  console.log({ hash });
+  const buffer = await new Response(file).arrayBuffer();
+  const hash = await shaHash(buffer);
+  const req = {
+    host: "s3.eu-west-1.amazonaws.com",
+    method: "PUT",
+    path: `/photography.dassur.ma/${hash}.jpg`,
+    headers: {
+      "Content-Length": buffer.length,
+      "x-amz-content-sha256": "UNSIGNED-PAYLOAD"
+    }
+  };
+  const signedReq = await (await fetch("/.netlify/functions/sign_request", {
+    method: "POST",
+    body: JSON.stringify(req),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  })).json();
+  const url = new URL(signedReq.path, `https://${signedReq.host}`).toString();
+  const upload = await fetch(url, {
+    ...signedReq,
+    body: buffer
+  });
   return;
   const { access_token, token_type } = decode(token);
   const r = await fetch(
