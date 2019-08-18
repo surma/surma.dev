@@ -7,15 +7,15 @@ layout: ""
 <form enctype="multipart/form-data">
   <label>
     Publish date:
-    <input type="date" name="date" >
+    <input type="date" name="date" required>
   </label>
   <label>
-    Description:
-    <input type="text" value="description" >
+    Location:
+    <input type="text" name="location" required>
   </label>
   <label>
     File:
-    <input type="file" name="file" >
+    <input type="file" name="file" required>
   </label>
   <input type="submit" value="go">
 </form>
