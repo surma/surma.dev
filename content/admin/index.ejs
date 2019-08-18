@@ -1,22 +1,15 @@
 ---
 layout: ""
 ---
-
-<h1>Admin!</h1>
-<a href="/.netlify/functions/login">Login</a>
-<form enctype="multipart/form-data">
-  <label>
-    Publish date:
-    <input type="date" name="date" required>
-  </label>
-  <label>
-    Location:
-    <input type="text" name="location" required>
-  </label>
-  <label>
-    File:
-    <input type="file" name="file" required>
-  </label>
-  <input type="submit" value="go">
-</form>
+<meta name="viewport" content="minimum-scale=1, width=device-width" />
+<style>
+  label {
+    margin: 10px 0;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+</style>
+<span></span>
 <script src="emitChunk(/admin.js)"></script>

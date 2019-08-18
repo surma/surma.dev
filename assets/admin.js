@@ -1,12 +1,16 @@
 import { SURMBLOG_AWS_BUCKET_NAME, SURMBLOG_AWS_BUCKET_REGION } from "env:";
 import { decode } from "./jwt.js";
 import unindent from "./unindent.js";
-let token;
+import { render } from "preact";
+import { html } from "htm/preact";
 
 const TOKEN_KEY = "token";
-const params = new URLSearchParams(location.search);
-if (params.has(TOKEN_KEY)) {
-  token = params.get(TOKEN_KEY);
+
+function getToken() {
+  const params = new URLSearchParams(location.search);
+  if (params.has(TOKEN_KEY)) {
+    return params.get(TOKEN_KEY);
+  }
 }
 
 async function shaHash(buffer, hash = "SHA-256") {
@@ -22,11 +26,12 @@ function ext(name) {
   return match[1];
 }
 
-document.querySelector("form").onsubmit = async evt => {
+async function submit(evt) {
   evt.preventDefault();
-  const { date, file, location } = evt.target;
-  const fileExt = ext(file.files[0].name);
-  const buffer = await new Response(file.files[0]).arrayBuffer();
+  const { dateField, fileField, locationField } = evt.target;
+  const file = fileField.files[0];
+  const fileExt = ext(file.name);
+  const buffer = await new Response(file).arrayBuffer();
   const hash = await shaHash(buffer);
   const req = {
     host: `s3.${SURMBLOG_AWS_BUCKET_REGION}.amazonaws.com`,
@@ -67,13 +72,13 @@ document.querySelector("form").onsubmit = async evt => {
         message: "New file from SurmBlog Admin interface",
         content: btoa(
           unindent(`
-          ---
-          file: ${hash}.${fileExt}
-          location: ${location.value}
-          date: ${date.value}
-          live: true
-          ---
-        `)
+            ---
+            file: ${hash}.${fileExt}
+            location: ${locationField.value}
+            date: ${dateField.value}
+            live: true
+            ---
+          `)
         )
       })
     }
@@ -83,4 +88,44 @@ document.querySelector("form").onsubmit = async evt => {
   } else {
     alert("ok");
   }
-};
+}
+
+async function init() {
+  let token = getToken();
+  if (!token) {
+    render(
+      html`
+        <a href="/.netlify/functions/login">Login</a>
+      `,
+      document.body
+    );
+    return;
+  }
+
+  render(
+    html`
+      <form enctype="multipart/form-data" onSubmit=${submit}>
+        <label>
+          Publish date:
+          <input
+            type="date"
+            name="dateField"
+            value=${new Date().toISOString().replace(/T.+$/, "")}
+            required
+          />
+        </label>
+        <label>
+          Location:
+          <input type="text" name="locationField" required />
+        </label>
+        <label>
+          File:
+          <input type="file" name="fileField" required />
+        </label>
+        <input type="submit" value="Publish" />
+      </form>
+    `,
+    document.body
+  );
+}
+init();
