@@ -12,9 +12,13 @@ exports.handler = abortOnThrow(async event => {
       FUNCTIONS_ROOT,
       "callback"
     )}`,
-    state: sign({ nonce: uuid() }, process.env.SURMBLOG_SECRET, {
-      expiresIn: 30
-    }),
+    state: sign(
+      { nonce: uuid(), redirect: event.queryStringParameters["redirect"] },
+      process.env.SURMBLOG_SECRET,
+      {
+        expiresIn: 30
+      }
+    ),
     scope: ["repo"].join(" ")
   };
 

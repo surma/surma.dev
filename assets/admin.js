@@ -95,7 +95,9 @@ async function init() {
   if (!token) {
     render(
       html`
-        <a href="/.netlify/functions/login">Login</a>
+        <a href="/.netlify/functions/login?redirect=${location.pathname}"
+          >Login</a
+        >
       `,
       document.body
     );

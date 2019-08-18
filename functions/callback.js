@@ -13,14 +13,7 @@ exports.handler = abortOnThrow(async event => {
     };
   }
 
-  try {
-    verify(state, process.env.SURMBLOG_SECRET);
-  } catch (e) {
-    return {
-      statusCode: 400,
-      body: "Bad state"
-    };
-  }
+  const { redirect } = verify(state, process.env.SURMBLOG_SECRET);
 
   const authParams = {
     client_id: process.env.SURMBLOG_GITHUB_APP_ID,
@@ -70,7 +63,7 @@ exports.handler = abortOnThrow(async event => {
   return {
     statusCode: 307,
     headers: {
-      Location: `/admin?${new URLSearchParams({ token: jwt })}`
+      Location: `${redirect}?${new URLSearchParams({ token: jwt })}`
     },
     body: ""
   };
