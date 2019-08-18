@@ -3,8 +3,19 @@ layout: ""
 ---
 
 <h1>Admin!</h1>
-<a href="/.netlify/functions/login">Login!</a>
-<a id="logout" href="#">Logout</a>
-<pre>Logged out</pre>
-<button id="create">Create file!</button>
+<a href="/.netlify/functions/login">Login</a>
+<form enctype="multipart/form-data">
+  <label>
+    Publish date:
+    <input type="date" name="date">
+  </label>
+  <label>
+    Description:
+    <input type="text" value="description">
+  </label>
+  <label>
+    File:
+    <input type="file" name="file">
+  </label>
+</form>
 <script src="emitChunk(/admin.js)"></script>

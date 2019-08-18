@@ -2,6 +2,7 @@ const { abortOnThrow } = require("./utils/http-helpers");
 const { sign, verify } = require("jsonwebtoken");
 const fetch = require("node-fetch");
 const { SESSION_LENGTH } = require("./utils/config");
+const Octokit = require("@octokit/rest");
 
 exports.handler = abortOnThrow(async event => {
   const { code, state } = event.queryStringParameters;
@@ -43,9 +44,29 @@ exports.handler = abortOnThrow(async event => {
       body: `Could not get access token: ${resp.status}`
     };
   }
-  const jwt = sign(await resp.json(), process.env.SURMBLOG_SECRET, {
+  const token = await resp.json();
+  const { token_type, access_token } = token;
+
+  const octokit = new Octokit({
+    auth: `${token_type} ${access_token}`,
+    userAgent: "SurmBlog"
+  });
+  const { data: repoData } = await octokit.repos.get({
+    owner: "surma",
+    repo: "surma.github.io"
+  });
+
+  if (!repoData.permissions.admin && !repoData.permissions.push) {
+    return {
+      statusCode: 403,
+      body: "No write access to the repository"
+    };
+  }
+
+  const jwt = sign(token, process.env.SURMBLOG_SECRET, {
     expiresIn: SESSION_LENGTH
   });
+
   return {
     statusCode: 307,
     headers: {
