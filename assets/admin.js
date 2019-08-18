@@ -1,3 +1,4 @@
+import { SURMBLOG_AWS_BUCKET_NAME, SURMBLOG_AWS_BUCKET_REGION } from "env:";
 import { decode } from "./jwt.js";
 let token;
 
@@ -18,9 +19,9 @@ document.querySelector("form").onsubmit = async evt => {
   const buffer = await new Response(file).arrayBuffer();
   const hash = await shaHash(buffer);
   const req = {
-    host: "s3.eu-west-1.amazonaws.com",
+    host: `s3.${SURMBLOG_AWS_BUCKET_REGION}.amazonaws.com`,
     method: "PUT",
-    path: `/photography.dassur.ma/${hash}.jpg`,
+    path: `/${SURMBLOG_AWS_BUCKET_NAME}/${hash}.jpg`,
     headers: {
       "Content-Length": buffer.length,
       "x-amz-content-sha256": "UNSIGNED-PAYLOAD"
@@ -60,15 +61,4 @@ document.querySelector("form").onsubmit = async evt => {
   } else {
     alert("ok");
   }
-  // const formData = new FormData(evt.target);
-  // const r = await fetch("/.netlify/functions/new_photo", {
-  //   method: "POST",
-  //   body: formData
-  // });
-  // if (!r.ok) {
-  //   alert("Something went wrong");
-  // } else {
-  //   alert("OK!");
-  //   // location.reload();
-  // }
 };

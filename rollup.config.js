@@ -7,8 +7,12 @@ import emit from "./rollup-plugins/emit-plugin.js";
 import tags from "./rollup-plugins/tag-plugin.js";
 import passthrough from "./rollup-plugins/passthrough-plugin.js";
 import copyStatic from "./rollup-plugins/copy-static.js";
+import env from "./rollup-plugins/env-plugin.js";
 import { sync as rmdir } from "rimraf";
 import { join } from "path";
+import { config } from "dotenv";
+
+config();
 
 rmdir("_site");
 rmdir(".tmp");
@@ -23,6 +27,7 @@ export default {
     nodeResolve(),
     startSequence(),
     run11ty(),
+    env(),
     globInput(".tmp/**/*.html"),
     renegade({
       extensions: ["html", "css"]
