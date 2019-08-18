@@ -1,3 +1,4 @@
+import nodeResolve from "rollup-plugin-node-resolve";
 import run11ty from "./rollup-plugins/11ty-plugin.js";
 import startSequence from "./rollup-plugins/start-sequence-plugin.js";
 import globInput from "./rollup-plugins/glob-input-input.js";
@@ -6,8 +7,12 @@ import emit from "./rollup-plugins/emit-plugin.js";
 import tags from "./rollup-plugins/tag-plugin.js";
 import passthrough from "./rollup-plugins/passthrough-plugin.js";
 import copyStatic from "./rollup-plugins/copy-static.js";
+import env from "./rollup-plugins/env-plugin.js";
 import { sync as rmdir } from "rimraf";
 import { join } from "path";
+import { config } from "dotenv";
+
+config();
 
 rmdir("_site");
 rmdir(".tmp");
@@ -19,8 +24,10 @@ export default {
     format: "esm"
   },
   plugins: [
+    nodeResolve(),
     startSequence(),
     run11ty(),
+    env(),
     globInput(".tmp/**/*.html"),
     renegade({
       extensions: ["html", "css"]

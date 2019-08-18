@@ -15,6 +15,7 @@ module.exports = class Gallery {
       <div class="grid" style="--gallery-size: ${size}px;">
         ${collections.photo
           .filter(entry => entry.data.live)
+          .sort((a, b) => new Date(b.data.date) - new Date(a.data.date))
           .map(async item => {
             const { file, page } = item.data;
             await downloadGalleryPhoto({ file, page });
