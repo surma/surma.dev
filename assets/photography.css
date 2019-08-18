@@ -4,7 +4,7 @@
   grid-auto-rows: var(--gallery-size);
   grid-gap: 10px;
   place-items: stretch;
-  place-content: space-evenly;
+  place-content: center;
 }
 
 .grid a {
