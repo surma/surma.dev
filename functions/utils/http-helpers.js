@@ -2,11 +2,11 @@ function abortOnThrow(h) {
   return async (...args) => {
     try {
       return h(...args);
-    } catch(e) {
+    } catch (e) {
       return {
         statusCode: 500,
         body: `Internal server error: ${e.message}`
-      }
+      };
     }
   };
 }

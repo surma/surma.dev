@@ -28,7 +28,7 @@
   "scripts": {
     "build": "rollup -c",
     "serve": "node ./devserver.js",
-    "fmt": "prettier --write {./,./**/}*.{json,md,js,css}"
+    "fmt": "prettier --write '{./,./{assets,11ty-plugins,functions,rollup-plugins,_includes,_data}/**/}*.{json,md,js,css}'"
   },
   "devDependencies": {
     "express": "^4.17.1",
