@@ -74,6 +74,7 @@ body {
 }
 html {
   background-color: var(--darkblue);
+  min-height: 100vh;
 }
 body {
   position: relative;
@@ -84,7 +85,6 @@ body {
     "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
   font-size: var(--grid-height);
   line-height: calc(var(--grid-height) + var(--grid-gutter));
-  min-height: 100vh;
   overflow-x: hidden;
   hyphens: auto;
 }
