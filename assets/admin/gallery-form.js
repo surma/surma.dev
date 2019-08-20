@@ -29,6 +29,7 @@ export default class App extends Component {
     };
 
     this._submit = this._submit.bind(this);
+    this._saveFormRef = this._saveFormRef.bind(this);
   }
 
   _submitButtonLabel() {
@@ -58,7 +59,11 @@ export default class App extends Component {
 
   render(props, { date, location, file, error }) {
     return html`
-      <form enctype="multipart/form-data" onSubmit=${this._submit}>
+      <form
+        ref=${this._saveFormRef}
+        enctype="multipart/form-data"
+        onSubmit=${this._submit}
+      >
         <label>
           Publish date:
           <input
@@ -99,6 +104,13 @@ export default class App extends Component {
           : null}
       </form>
     `;
+  }
+
+  _saveFormRef(formElement) {
+    if (this.state.formElement === formElement) {
+      return;
+    }
+    this.setState({ formElement });
   }
 
   async _submit(evt) {
@@ -176,6 +188,7 @@ export default class App extends Component {
       });
       return;
     }
+    this.state.formElement.fileField.value = "";
     this.setState({ state: "waiting" });
   }
 }
