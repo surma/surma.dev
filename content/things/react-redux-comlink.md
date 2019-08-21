@@ -55,7 +55,7 @@ const store = createStore(reducer);
 
 This `store` variable contains our state container. Through this store we can `subscribe()` to state changes or `dispatch()` actions to mutate the state. The (important parts of the) store’s interface looks like this:
 
-```ts
+```typescript
 interface Store {
   dispatch(action): void;
   getState(): State;
@@ -130,7 +130,7 @@ ReactDOM.render(
 
 **`remoteStore` has all the methods and properties that the `store` has**, but _everything is async_. More concretely that means that `remoteStore`’s interface looks like this:
 
-```ts
+```typescript
 interface RemoteStore {
   dispatch(action): Promise<void>;
   getState(): Promise<State>;

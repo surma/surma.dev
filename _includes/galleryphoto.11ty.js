@@ -1,12 +1,20 @@
 const { getEXIF } = require("../gallery-helpers");
 const html = String.raw;
 
+function exifDate(s) {
+  // 2019:07:19 09:00:21
+  const [d, t] = s.split(" ").map(s => s.split(":"));
+  return new Date([
+    d.join("-"),
+    t.join(":")
+  ].join("T"));
+}
+
 function toISODate(date) {
   return date.toISOString().replace(/T.+$/, "");
 }
 
-function fractionize(s) {
-  const [num, den] = s.split("/").map(v => parseInt(v));
+function fractionize([[num, den]]) {
   return num / den;
 }
 
@@ -14,16 +22,18 @@ module.exports = class {
   async render({ page, file, location, date }) {
     const exif = await getEXIF({ file });
     let {
-      lensModel,
-      model,
-      dateTimeOriginal,
-      exposureTime,
-      fNumber,
-      focalLength,
-      isoSpeedRatings
+      LensModel,
+      Model,
+      DateTimeOriginal,
+      ExposureTime,
+      FNumber,
+      FocalLength,
+      ISO
     } = exif;
-    if (exposureTime.endsWith("/1")) {
-      exposureTime = exposureTime.slice(0, -2);
+    if (ExposureTime[0][1] === 1) {
+      ExposureTime = ExposureTime[0][1];
+    } else {
+      ExposureTime = `${ExposureTime[0][0]}/${ExposureTime[0][1]}`;
     }
     return html`
       <img src="./${file}" />
@@ -31,19 +41,19 @@ module.exports = class {
         <dt>Location</dt>
         <dd>${location}</dd>
         <dt>Camera</dt>
-        <dd>${model}</dd>
+        <dd>${Model}</dd>
         <dt>Lens</dt>
-        <dd>${lensModel}</dd>
+        <dd>${LensModel}</dd>
         <dt>Focal length</dt>
-        <dd>${fractionize(focalLength).toFixed(0)}mm</dd>
+        <dd>${fractionize(FocalLength).toFixed(0)}mm</dd>
         <dt>Aperture</dt>
-        <dd>f/${fractionize(fNumber).toFixed(1)}</dd>
+        <dd>f/${fractionize(FNumber).toFixed(1)}</dd>
         <dt>Shutter speed</dt>
-        <dd>${exposureTime}s</dd>
+        <dd>${ExposureTime}s</dd>
         <dt>ISO</dt>
-        <dd>${isoSpeedRatings}</dd>
+        <dd>${ISO}</dd>
         <dt>Shot date</dt>
-        <dd>${toISODate(new Date(dateTimeOriginal))}</dd>
+        <dd>${toISODate(exifDate(DateTimeOriginal))}</dd>
         <dt>Publish date</dt>
         <dd>${toISODate(date)}</dd>
       </dl>

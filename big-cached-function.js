@@ -3,7 +3,7 @@ const Cache = require("async-disk-cache");
 module.exports = class BigCachedFunction {
   constructor(name) {
     this.inProgress = new Map();
-    this.cache = new Cache(name, { supportBuffer: true });
+    this.cache = new Cache(name, { supportBuffer: true, location: ".cache" });
   }
 
   async get(ikey, fn) {

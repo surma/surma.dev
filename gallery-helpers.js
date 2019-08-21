@@ -7,12 +7,12 @@ const { promisify } = require("util");
 
 const mkdirp = require("mkdirp");
 const { tmpName } = require("tmp");
-const { convert, readMetadata } = require("imagemagick");
+const { convert } = require("imagemagick");
+const exifParser = require("exif-parser");
 
 const mkdirpP = promisify(mkdirp);
 const tmpNameP = promisify(tmpName);
 const convertP = promisify(convert);
-const readMetadataP = promisify(readMetadata);
 
 const cache = new BigCachedFunction("photos");
 
@@ -54,7 +54,10 @@ async function getEXIF({ file }) {
   const key = `${file}:EXIF`;
   const { value } = await cache.get(key, async () => {
     const { key: photoPath } = await cache.get(file, () => lfsBucket.get(file));
-    const { exif } = await readMetadataP(photoPath);
+    const buffer = await readFile(photoPath);
+    const parser = exifParser.create(buffer);
+    parser.enableSimpleValues(false);
+    const { tags: exif } = parser.parse();
     return JSON.stringify(exif);
   });
   return JSON.parse(value);
