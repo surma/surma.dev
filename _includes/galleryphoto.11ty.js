@@ -20,7 +20,7 @@ module.exports = class {
       exposureTime,
       fNumber,
       focalLength,
-      photographicSensitivity
+      isoSpeedRatings
     } = exif;
     if (exposureTime.endsWith("/1")) {
       exposureTime = exposureTime.slice(0, -2);
@@ -41,7 +41,7 @@ module.exports = class {
         <dt>Shutter speed</dt>
         <dd>${exposureTime}s</dd>
         <dt>ISO</dt>
-        <dd>${photographicSensitivity}</dd>
+        <dd>${isoSpeedRatings}</dd>
         <dt>Shot date</dt>
         <dd>${toISODate(new Date(dateTimeOriginal))}</dd>
         <dt>Publish date</dt>
