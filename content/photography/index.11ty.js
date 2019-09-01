@@ -26,6 +26,7 @@ module.exports = class Gallery {
                   width="${size}"
                   height="${size}"
                   quality="${quality}"
+                  loading="lazy"
                 ></preview-img>
               </a>
             `;
