@@ -31,7 +31,7 @@ module.exports = class {
       ISO
     } = exif;
     if (ExposureTime[0][1] === 1) {
-      ExposureTime = ExposureTime[0][1];
+      ExposureTime = ExposureTime[0][0];
     } else {
       ExposureTime = `${ExposureTime[0][0]}/${ExposureTime[0][1]}`;
     }
