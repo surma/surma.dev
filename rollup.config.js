@@ -37,6 +37,7 @@ export default {
         "svg",
         "png",
         "jpg",
+        "jpeg",
         "woff",
         "woff2",
         "eot",
