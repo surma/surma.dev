@@ -42,3 +42,17 @@ dd {
   grid-column: 2 / span 1;
   margin: 0;
 }
+nav {
+  display: flex;
+  justify-content: center;
+}
+nav a {
+  margin: 0 0.3em;
+}
+nav .selected {
+  color: var(--darkblue);
+  font-weight: bold;
+}
+nav .ellipsis {
+  color: var(--red);
+}
