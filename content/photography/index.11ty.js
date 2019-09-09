@@ -8,7 +8,8 @@ module.exports = class Gallery {
     return {
       pagination: {
         data: "collections.photo",
-        size: 9
+        size: 9,
+        reverse: true
       },
       tags: [],
       layout: "photography"
