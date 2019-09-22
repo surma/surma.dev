@@ -12,4 +12,11 @@ layout: ""
   }
 </style>
 <span></span>
+<datalist id="location-list">
+  <%-
+    [...new Set(collections.photo.map(x => x.data.location))]
+      .map(l => `<option value="${l}"></option>`)
+      .join("")
+  %>
+</datalist>
 <script src="emitChunk(/admin.js)"></script>

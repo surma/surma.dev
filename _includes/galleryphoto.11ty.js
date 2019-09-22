@@ -4,10 +4,7 @@ const html = String.raw;
 function exifDate(s) {
   // 2019:07:19 09:00:21
   const [d, t] = s.split(" ").map(s => s.split(":"));
-  return new Date([
-    d.join("-"),
-    t.join(":")
-  ].join("T"));
+  return new Date([d.join("-"), t.join(":")].join("T"));
 }
 
 function toISODate(date) {

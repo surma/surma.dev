@@ -80,6 +80,7 @@ export default class App extends Component {
             type="text"
             name="locationField"
             onChange=${ev => this.setState({ location: ev.target.value })}
+            list="location-list"
             required
           />
         </label>
