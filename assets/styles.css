@@ -101,14 +101,6 @@ a {
   color: var(--red);
   text-decoration: none;
 }
-@media (prefers-color-scheme: dark) {
-  a {
-    color: var(--lightblue);
-  }
-}
-html.forcedark a {
-  color: var(--lightblue);
-}
 a > code {
   color: inherit !important;
 }
@@ -626,4 +618,51 @@ footer .back {
   margin: 0 auto;
   display: block;
   grid-column: 1 / -1;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  a {
+    color: var(--lightblue);
+  }
+  figure img,
+  figure picture,
+  figure video {
+    filter: saturate(0.5) brightness(0.8);
+  }
+  blockquote {
+    --color: var(--red);
+    color: var(--darkblue);
+  }
+  blockquote code {
+    color: var(--lightblue);
+  }
+  blockquote.warning {
+    --color: var(--blue);
+  }
+  blockquote.warning code {
+    color: var(--orange);
+  }
+}
+html.forcedark a {
+  color: var(--lightblue);
+}
+html.forcedark blockquote.warning {
+  --color: var(--blue);
+  color: var(--yellow);
+}
+html.forcedark blockquote.warning code {
+  color: var(--orange);
+}
+html.forcedark blockquote {
+  --color: var(--red);
+  color: var(--darkblue);
+}
+html.forcedark blockquote code {
+  color: var(--lightblue);
+}
+html.forcedark figure img,
+html.forcedark figure picture,
+html.forcedark figure video {
+  filter: saturate(0.8) brightness(0.8);
 }

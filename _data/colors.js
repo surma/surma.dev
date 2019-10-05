@@ -17,7 +17,7 @@ module.exports = {
     red: "rgb(38, 57, 125)",
     pink: "rgb(62, 63, 163)",
     purple: "rgb(128, 65, 200)",
-    lightblue: "rgb(164, 73, 202)",
+    lightblue: "rgb(192, 76, 194)",
     blue: "rgb(184, 111, 170)",
     darkblue: "rgb(206, 166, 186)"
   },
