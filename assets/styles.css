@@ -564,6 +564,18 @@ ul.things {
   left: var(--grid-gutter);
   line-height: 1em;
 }
+.darkmode-toggle {
+  background: initial;
+  border: initial;
+  display: block;
+  font-size: 0.5em;
+  position: absolute;
+  top: var(--grid-gutter);
+  bottom: initial;
+  right: var(--grid-gutter);
+  line-height: 1em;
+  color: var(--red);
+}
 footer .back {
   top: initial;
   bottom: var(--grid-gutter);
@@ -622,25 +634,25 @@ footer .back {
 
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
-  a:not(.nothing) {
+  html:not(.forcelight) a:not(.nothing) {
     color: var(--lightblue);
   }
-  figure img,
-  figure picture,
-  figure video {
+  html:not(.forcelight) figure img,
+  html:not(.forcelight) figure picture,
+  html:not(.forcelight) figure video {
     filter: saturate(0.5) brightness(0.8);
   }
-  blockquote {
+  html:not(.forcelight) blockquote {
     --color: var(--red);
     color: var(--darkblue);
   }
-  blockquote code {
+  html:not(.forcelight) blockquote code {
     color: var(--lightblue);
   }
-  blockquote.warning {
+  html:not(.forcelight) blockquote.warning {
     --color: var(--blue);
   }
-  blockquote.warning code {
+  html:not(.forcelight) blockquote.warning code {
     color: var(--orange);
   }
 }
