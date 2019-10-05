@@ -42,11 +42,25 @@
   title="Sitewide Atom feed"
 />
 <style>
-  :root {
+  :root{
     <% for(const [name, color] of Object.entries(colors.palette)) { %>
       --<%= name %>: <%= color %>;
     <% } %>
-    <% for(const [name, color] of Object.entries(colors.extras)) { %>
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      <% for(const [name, color] of Object.entries(colors.darkpalette)) { %>
+        --<%= name %>: <%= color %>;
+      <% } %>
+    }
+  }
+  html.forcelight {
+    <% for(const [name, color] of Object.entries(colors.palette)) { %>
+      --<%= name %>: <%= color %>;
+    <% } %>
+  }
+  html.forcedark {
+    <% for(const [name, color] of Object.entries(colors.darkpalette)) { %>
       --<%= name %>: <%= color %>;
     <% } %>
   }
@@ -147,3 +161,4 @@
   document.head.appendChild(s);
 </script>
 <script src="emitChunk(/noise.js)" type="module"></script>
+<script src="emitChunk(/darkmode.js)" type="module"></script>

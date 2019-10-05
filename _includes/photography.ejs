@@ -12,9 +12,6 @@ layout: default
         })
         .join("\n")
     %>
-    <% for(const [name, color] of Object.entries(colors.extras)) { %>
-      --<%= name %>: <%= color %>;
-    <% } %>
   }
 </style>
 <%- content %>

@@ -564,6 +564,18 @@ ul.things {
   left: var(--grid-gutter);
   line-height: 1em;
 }
+.darkmode-toggle {
+  background: initial;
+  border: initial;
+  display: block;
+  font-size: 0.5em;
+  position: absolute;
+  top: var(--grid-gutter);
+  bottom: initial;
+  right: var(--grid-gutter);
+  line-height: 1em;
+  color: var(--red);
+}
 footer .back {
   top: initial;
   bottom: var(--grid-gutter);
@@ -618,4 +630,51 @@ footer .back {
   margin: 0 auto;
   display: block;
   grid-column: 1 / -1;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  html:not(.forcelight) a:not(.nothing) {
+    color: var(--lightblue);
+  }
+  html:not(.forcelight) figure img,
+  html:not(.forcelight) figure picture,
+  html:not(.forcelight) figure video {
+    filter: saturate(0.5) brightness(0.8);
+  }
+  html:not(.forcelight) blockquote {
+    --color: var(--red);
+    color: var(--darkblue);
+  }
+  html:not(.forcelight) blockquote code {
+    color: var(--lightblue);
+  }
+  html:not(.forcelight) blockquote.warning {
+    --color: var(--blue);
+  }
+  html:not(.forcelight) blockquote.warning code {
+    color: var(--orange);
+  }
+}
+html.forcedark a {
+  color: var(--lightblue);
+}
+html.forcedark blockquote.warning {
+  --color: var(--blue);
+  color: var(--yellow);
+}
+html.forcedark blockquote.warning code {
+  color: var(--orange);
+}
+html.forcedark blockquote {
+  --color: var(--red);
+  color: var(--darkblue);
+}
+html.forcedark blockquote code {
+  color: var(--lightblue);
+}
+html.forcedark figure img,
+html.forcedark figure picture,
+html.forcedark figure video {
+  filter: saturate(0.8) brightness(0.8);
 }
