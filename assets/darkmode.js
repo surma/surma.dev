@@ -13,6 +13,7 @@ async function init() {
   document.querySelector("header").appendChild(btn);
 
   document.documentElement.classList.toggle("forcedark", darkMode);
+  document.documentElement.classList.toggle("forcelight", !darkMode);
   btn.onclick = async () => {
     document.documentElement.classList.toggle("forcedark");
     document.documentElement.classList.toggle("forcelight");
