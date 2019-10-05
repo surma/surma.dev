@@ -42,6 +42,11 @@
   title="Sitewide Atom feed"
 />
 <style>
+  :root{
+    <% for(const [name, color] of Object.entries(colors.palette)) { %>
+      --<%= name %>: <%= color %>;
+    <% } %>
+  }
   @media (prefers-color-scheme: dark) {
     :root {
       <% for(const [name, color] of Object.entries(colors.darkpalette)) { %>
@@ -49,7 +54,7 @@
       <% } %>
     }
   }
-  :root, html.forcelight {
+  html.forcelight {
     <% for(const [name, color] of Object.entries(colors.palette)) { %>
       --<%= name %>: <%= color %>;
     <% } %>
