@@ -101,6 +101,14 @@ a {
   color: var(--red);
   text-decoration: none;
 }
+@media (prefers-color-scheme: dark) {
+  a {
+    color: var(--lightblue);
+  }
+}
+html.forcedark a {
+  color: var(--lightblue);
+}
 a > code {
   color: inherit !important;
 }
