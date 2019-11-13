@@ -160,7 +160,9 @@
   s.src = "https://www.google-analytics.com/analytics.js";
   document.head.appendChild(s);
 </script>
+<% if(typeof disableNoise !== "boolean" || !disableNoise) { %>
 <script src="emitChunk(/noise.js)" type="module"></script>
+<% } %>
 <% if(typeof disableDarkMode !== "boolean" || !disableDarkMode) { %>
 <script src="emitChunk(/darkmode.js)" type="module"></script>
 <% } %>
