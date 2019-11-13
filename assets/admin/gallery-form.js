@@ -160,8 +160,12 @@ export default class App extends Component {
     }
     const { access_token, token_type } = decode(token);
     this.setState({ state: "publishing" });
+    const uuid = new Array(16)
+      .fill(0)
+      .map(() => Math.floor(Math.random() * 256).toString(16))
+      .join("");
     const publishReq = await fetch(
-      `https://api.github.com/repos/surma/surma.github.io/contents/content/photography/${date}.md`,
+      `https://api.github.com/repos/surma/surma.github.io/contents/content/photography/${date}-${uuid}.md`,
       {
         method: "PUT",
         headers: {
