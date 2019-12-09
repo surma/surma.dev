@@ -18,7 +18,7 @@ const api = {
     return data.Contents.map(entry => entry.Key);
   },
   async get(Key) {
-    console.log("Donwloading", Key);
+    console.log("Downloading", Key);
     const data = await s3.getObject({ Bucket, Key }).promise();
     return data.Body;
   }
