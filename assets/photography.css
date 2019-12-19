@@ -29,7 +29,7 @@ img {
 dl {
   display: grid;
   grid-gap: 0 var(--grid-gutter);
-  grid-template-columns: repeat(2, max-content);
+  grid-template-columns: max-content auto;
   margin-top: var(--grid-height);
   justify-content: center;
 }
