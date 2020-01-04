@@ -36,17 +36,145 @@ RxJS implements an `Observable` type and also packs utility functions, for examp
 ```js
 import { fromEvent } from "rxjs";
 
-const observable = fromEvent("myButton", "click");
+const observable = fromEvent(myButton, "click");
 observable.subscribe(ev => {
   /* ... */
 });
 ```
 
-## Observables with streams
+## Sugar for streams
 
-Now looking at Wikipedia’s definition of RP as well [the introduction that RxJS gives][rxjs observable], I felt like [WHATWG Streams] fit that description very well. I was convinced (and I still have that worry) that I must be missing something, because I know that there has been a [TC39 proposal for observables][tc39 observables] out for a while. It’s quieted down a bit in the last couple of months, but a lot of work has been put into it. So why is this proposal there, when streams are already on the platform? I decided to write a little proof-of-concept library that models observables with streams to see if that would help me realize the difference. And so I wrote the [`observables-with-streams`][ows] (or “ows”) package. Not the most inspiring name, I know.
+Now looking at Wikipedia’s definition of RP as well as [the introduction that RxJS gives][rxjs observable], I felt like [WHATWG Streams] (or just “streams”) fit that description very well. I was convinced (and I still worry) that I must be missing something. Why is there a [TC39 proposal for observables][tc39 observables] when we have streams? Why is RxJS not built on top of streams?
 
-The thing to note about ows is that it’s merely a collection of operators like `map`, `filter`, `zip`, `merge`, etc. ows does not contain an implementation of `Observable`, as the whole premise is that observables are already on the platform through [`ReadableStream`][mdn readablestream].
+The first thing that stands out that is that the API of streams is less convenient (but arguably more flexible and powerful) than observables. For example, the click event stream from the example above would look like this when written with vanilla streams:
+
+```js
+const stream = new ReadableStream({
+  start(controller) {
+    myButton.addEventListener("click", ev => controller.enqueue(ev));
+  }
+});
+
+stream.pipeTo(
+  new WritableStream({
+    write(ev) {
+      /* ... */
+    }
+  })
+);
+```
+
+Definitely more noisy. Too noisy.
+
+### Observables _with_ streams
+
+To reduce the noise, I decided to write a little proof-of-concept library that models observables _with_ streams to make differences more obvious. It’s called [`observables-with-streams`][ows] (or “ows”) and published as a package.
+
+With this library in place, the example above can be simplified:
+
+```js
+import { fromEvent, subscribe } from "observables-with-streams";
+
+const owsObservable = fromEvent(myButton, "click");
+ows.pipeTo(
+  subscribe(v => {
+    /* ... */
+  })
+);
+```
+
+At least in terms of syntax, that is pretty comparable, wouldn’t you agree? And that's no coincidence. The RxJS folks spent a lot of time and energy building their APIs and battle-testing it. All I did is look at their documentation for inspiration.
+
+### Operators
+
+Operators take data from an observable and transform it somehow to create a new observable. This can be a basic transformation like a `map` or `filter` which you might know from Arrays. But can also be more complex time-based transforms like `debouce` or flattening higher-order observables (an observable of observables) into a first-order observable with `concatAll`.
+
+All of these operators are already well-defind and document by RxJS and as a result, ows contains many of the operators RxJS containsc. However, ows does not contain an implementation of `Observable`, as the whole premise is that observables are already on the platform through [`ReadableStream`][mdn readablestream].
+
+```js
+import { fromEvent } from "rxjs";
+import { debounceTime } from "rxjs/operators";
+
+fromEvent(myButton, "click")
+  .pipe(debounceTime(100))
+  .subscribe(ev => {
+    /* ... */
+  });
+```
+
+Or with ows:
+
+```js
+import { fromEvent, debounce, subscribe } from "observables-with-streams";
+
+fromEvent(myButton, "click")
+  .pipeThrough(debounce(100))
+  .pipeTo(
+    subscribe(v => {
+      /* ... */
+    })
+  );
+```
+
+## Streams vs. Observables
+
+So where do behave observables differently to streams? It seems to me that **the biggest difference between observables and streams is that observables create a new data source for every subscription, while a stream has one data source and one sink that get created immediately.** Let’s visualize that with a code example:
+
+```js
+import { Observable } from "rxjs";
+
+const rxObservable = new Observable(subscriber => {
+  setTimeout(() => {
+    subscriber.next("hello world");
+    subscriber.complete();
+  }, 1000);
+});
+
+setTimeout(() => {
+  rxObservable.subscribe(v => console.log(v));
+}, 2000);
+```
+
+This code written with RxJS will exhibit the following behavior:
+
+- Nothing for 3 seconds
+- Logs `"hello world"`
+
+Let’s compare this to the behavior of streams:
+
+```js
+import { fromNext, EOF, subscribe } from "observables-with-streams";
+
+const owsObservable = fromNext(next => {
+  setTimeout(() => {
+    next(1);
+    next(EOF);
+  }, 1000);
+});
+
+setTimeout(() => {
+  owsObservable.pipeTo(
+    subscribe(v => console.log(v))),
+  );
+}, 2000);
+```
+
+This code written with ows will exhibit the following behavior:
+
+- Nothing for **2 seconds**
+- Logs `"hello world"`
+
+The ows example waits one second less until it starts logging. The difference stems from the fact that when using RxJS the code that generates the data (the callback passed to `new Observable()`) will only get executed once a subscriber appears. Streams work with data sources that get evaluated independently of data sinks, hence why the data is already queued up by the time the `subscribe()` call is executed.
+
+### Single subscribers & backpressure
+
+Streams were designed to model network traffic (amongst other things). You h
+
+The reason is that streams work with data source independently of data sinks. They don’t wait for somebody to listen (a subscriber) to send data down the stream. Considering that WHATWG streams are used to model network transmission, that makes a lot of sense. Also, data that goes from a sink into a stream can only go to exactly one sink.
+
+The callback that is passed to `new Observable()` will be executed for every time `subscribe()` is called on the observable. Once the callback of timeout #2 fires, the callback given to the `Observable` constructor will be executed. As a result, it will will see any data coming in for another second, after which timeout #1 will fire. Then the subscription callback will receive `"hello world"` and then the observable will end. To phrase it another way: Every subscriber gets its own data source.
+
+With streams (and by extension ows), the same example behaves slightly different:
 
 ### Using observables with streams
 
@@ -95,8 +223,6 @@ merge(
   .pipe(scan((v0, v1) => v0 + v1, 0))
   .subscribe(v => (document.querySelector("#counter").textContent = v));
 ```
-
-And that's no coincidence. The RxJS spent a lot of time and energy building their APIs and battle-tested them. All I had to do is look at their operators and pick my favorites. I implemented a bunch of them for ows. You can find them in the [documentation][ows documentation].
 
 ## A full app
 
