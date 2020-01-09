@@ -39,7 +39,7 @@ RxJS implements an `Observable` type and also ships many utility functions, for 
 import { fromEvent } from "rxjs";
 
 const observable = fromEvent(myButton, "click");
-observable.subscribe(ev => {
+observable.subscribe(event => {
   /* ... */
 });
 ```
@@ -60,13 +60,13 @@ Streams arguably more flexible and powerful than observables. Streams are separa
 ```js
 const stream = new ReadableStream({
   start(controller) {
-    myButton.addEventListener("click", ev => controller.enqueue(ev));
+    myButton.addEventListener("click", event => controller.enqueue(event));
   }
 });
 
 stream.pipeTo(
   new WritableStream({
-    write(ev) {
+    write(event) {
       /* ... */
     }
   })
@@ -86,7 +86,7 @@ import { fromEvent, subscribe } from "observables-with-streams";
 
 const owsObservable = fromEvent(myButton, "click");
 ows.pipeTo(
-  subscribe(v => {
+  subscribe(event => {
     /* ... */
   })
 );
@@ -110,7 +110,7 @@ import { debounceTime } from "rxjs/operators";
 
 fromEvent(myButton, "click")
   .pipe(debounceTime(100))
-  .subscribe(ev => {
+  .subscribe(event => {
     /* ... */
   });
 ```
@@ -123,7 +123,7 @@ import { fromEvent, debounce, subscribe } from "observables-with-streams";
 fromEvent(myButton, "click")
   .pipeThrough(debounce(100))
   .pipeTo(
-    subscribe(v => {
+    subscribe(event => {
       /* ... */
     })
   );
