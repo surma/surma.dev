@@ -171,6 +171,7 @@ h3 {
     "quad" var(--heading-quad), "bevl" var(--heading-bevl),
     "oval" var(--heading-oval);
   line-height: 1.2em;
+  hyphens: none;
 }
 h2 {
   --color: var(--darkblue);
