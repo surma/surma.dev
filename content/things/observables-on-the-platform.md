@@ -29,7 +29,7 @@ myButton.addEventListener("click", myClickHandler);
 In this example, `myClickHandler` would be the observer, while `myButton` is an observable. Kinda. The differences (as I perceive them), are subtle but important:
 
 - An observable is a single stream of data. `myButton` here has multiple “streams”, one for each event type. So one for clicks, one for moving the mouse, one for key presses etc.
-- A stream implies an input, an output and an order. Event listener don’t have an output as the return value of an event listener is discarded. And if the event handler is asynchronous, the next event of the same type can get processed despite the previous event one not having finished processing.
+- A stream implies an input, an output and an order. Event listeners don’t have an output as the return value of an event listener is discarded. And if the event handler is asynchronous, the next event of the same type can get processed despite the previous event one not having finished processing.
 
 > **Note:** As I said before, there are multiple libraries that employ the RP pattern. For the remainder of this blog post, I am going to focus on [RxJS] to keep the blog post clear and because their documentation was a major source of information for me.
 
