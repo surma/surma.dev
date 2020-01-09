@@ -319,6 +319,8 @@ However, operators are implemented as `TransformStreams` and sinks as `WritableS
 
 To run ows in these browsers, you’d need to load a polyfill, like [Mattias Buelens’][mattiasbuelens] excellent [`web-streams-polyfill`][web-streams-polyfill], which adds a whopping 20KiB after gzip. While that is a lot, this additional weight will automatically go away when browsers catch up.
 
+Why is that polyfill so big? As I mentioned earlier, streams are a low-level primitive with lots of capabilities under the hood. Streams can propagate backpressure. This allows a data sink to signal when it is backed up and would rather not receive any new data. This is not only useful but essential for efficient data transfer over network connections. The spec also contains a subtype for each stream that allows reading data straight into an `ArrayBuffer` for increased memory-efficiency. All these things have to be included in a proper polyfill even though they are not required to build an observable.
+
 ### Loading the polyfill
 
 _If_ you wanted to use ows (it’s just an experiment, remember?), make sure to only load the polyfill if the browser requires it. You’d want to make sure that your app’s payload goes down if and when browsers catch up, without having to re-deploy. Here’s how I’m doing that in DoF Tool:
