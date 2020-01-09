@@ -313,11 +313,11 @@ Maybe somewhat surprisingly, I did not do any benchmarks. While I think there’
 
 ### Library size & cross-browser support
 
-ows uses `ReadableStream` as its basic type for observables, and `ReadableStream` is available in all major browsers. As a result, ows doesn't have to ship an implementation of the fundamental type itself. The entire ows library (the `really-big-bundle.js` version) currently weighs in at 2KiB after gzip.
+ows uses `ReadableStream` as its basic type for observables, and `ReadableStream` is available in all major browsers. As a result, ows doesn't have to ship an implementation of the fundamental type itself. The entire ows library (the `really-big-bundle.js` version) currently weighs in at 2KiB after brotli.
 
 However, operators are implemented as `TransformStreams` and sinks as `WritableStreams`, [the support for which is more lacking][streams support]. At the time of writing, only Blink-based browsers have full support for _all_ stream types. Firefox supports neither `WritableStreams`, `TransformStream` nor the `pipeTo()` or `pipeThrough()` methods. Safari is also lacking support for `WritableStream`.
 
-To run ows in these browsers, you’d need to load a polyfill, like [Mattias Buelens’][mattiasbuelens] excellent [`web-streams-polyfill`][web-streams-polyfill], which adds a whopping 20KiB after gzip. While that is a lot, this additional weight will automatically go away when browsers catch up.
+To run ows in these browsers, you’d need to load a polyfill, like [Mattias Buelens’][mattiasbuelens] excellent [`web-streams-polyfill`][web-streams-polyfill], which adds a whopping 17KiB after brotli. While that is a lot, this additional weight will automatically go away when browsers catch up.
 
 Why is that polyfill so big? As I mentioned earlier, streams are a low-level primitive with lots of capabilities under the hood. Streams can propagate backpressure. This allows a data sink to signal when it is backed up and would rather not receive any new data. This is not only useful but essential for efficient data transfer over network connections. The spec also contains a subtype for each stream that allows reading data straight into an `ArrayBuffer` for increased memory-efficiency. All these things have to be included in a proper polyfill even though they are not required to build an observable.
 
