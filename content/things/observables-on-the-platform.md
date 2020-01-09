@@ -342,7 +342,7 @@ import { init } from "./main.js";
 })();
 ```
 
-Note that I am _statically_ importing my app’s main code but expose it wrapped in an `init` function. This way the app starts way quicker when it can skip the polyfill.
+Note that I am _statically_ importing my app’s main code but expose it wrapped in an `init` function. This way the app starts way quicker when it can skip the polyfill. If we had [top-level await], this would be even simpler to write.
 
 ## Conclusion
 
@@ -361,7 +361,6 @@ I think that streams are an incredibly well-designed API and are a Swiss army kn
 [not_woods]: https://twitter.com/Not_Woods
 [ows documentation]: https://observables-with-streams.surma.technology
 [jsdelivr]: https://www.jsdelivr.com/
-[rxjs sample]: https://rxjs-playground.github.io/#/?html=%3Cbutton%20id%3D%22dec%22%3E-%3C%2Fbutton%3E%0A%3Cspan%20id%3D%22counter%22%3E0%3C%2Fspan%3E%0A%3Cbutton%20id%3D%22inc%22%3E%2B%3C%2Fbutton%3E&js=Rx.Observable.merge%28%0A%20%20Rx.Observable.fromEvent%28document.querySelector%28%22%23dec%22%29%2C%20%22click%22%29%0A%20%20%20%20.map%28%28%29%20%3D%3E%20-1%29%2C%0A%20%20Rx.Observable.fromEvent%28document.querySelector%28%22%23inc%22%29%2C%20%22click%22%29%0A%20%20%20%20%20.map%28%28%29%20%3D%3E%201%29%0A%29%0A%20%20.scan%28%28v0%2C%20v1%29%20%3D%3E%20v0%20%2B%20v1%2C%200%29%0A%20%20.subscribe%28v%20%3D%3E%20document.querySelector%28%22%23counter%22%29.textContent%20%3D%20v%29%0A
 [dof tool]: https://dof-tool.surma.technology
 [dof source]: https://github.com/surma/dof-tool
 [mdn readablestream]: https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream
@@ -375,3 +374,4 @@ I think that streams are an incredibly well-designed API and are a Swiss army kn
 [observer pattern]: https://en.wikipedia.org/wiki/Observer_pattern
 [jake archibald]: https://twitter.com/jaffathecake
 [rollup]: https://rollupjs.org/
+[top-level await]: https://v8.dev/features/top-level-await
