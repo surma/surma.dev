@@ -1,24 +1,24 @@
 ---json
 {
-"title": "Observables on the platform",
-"date": "2020-01-09",
+"title": "Streams for reactive programming",
+"date": "2020-01-10",
 "socialmediaimage": "social.png",
 "live": false
 }
 
 ---
 
-They are already there. I think. Streams certainly feel like they fill that gap quite nicely.
+Streams and observables always felt similar to me. But where are they different? Can I use streams to write code? It seems so.
 
 <!--more-->
 
-> **Disclaimer:** I am not experienced with reactive programming or the libraries that enable this pattern. The library I am introducing in this blog post is not supposed to compete with any of these libraries, but is merely an experiment if streams can be used as an underlying primitive. The communities around these libraries deserve a lot of credit for bringing reactive programming to the web and I benefitted massively from their experience as I built and wrote this. I am standing on the shoulders of giants here.
+<!-- > **Disclaimer:** I am not experienced with reactive programming or the libraries that enable this pattern. The library I am introducing in this blog post is not supposed to compete with any of these libraries, but is merely an experiment if streams can be used as an underlying primitive. The communities around these libraries deserve a lot of credit for bringing reactive programming to the web and I benefitted massively from their experience as I built and wrote this. I am standing on the shoulders of giants here. -->
 
-**TL;DR:** Streams and observables are very similar. Their biggest difference seems to be that streams can deliver their data only once and that streams do so asynchronously. Writing a [demo app][dof tool] with my [stream-based observables library][ows] instead of RxJS makes me think that these differences don’t really matter when it comes to writing web apps. Go try it for yourself!
+<!-- **TL;DR:** Streams and observables are very similar. Their biggest difference seems to be that streams can deliver their data only once and that streams do so asynchronously. Writing a [demo app][dof tool] with my [stream-based observables library][ows] instead of RxJS makes me think that these differences don’t really matter when it comes to writing web apps. Go try it for yourself! -->
 
-## Observables? Reactive Programming?
+## Reactive Programming?
 
-The Reactive Programming (RP) paradigm is not new and has enjoyed popularity in many different genres of programming. For example Android folks, especially since the introduction of Kotlin, have seen a rise in popularity around RP. I have also noticed some game engines experimenting with RP. On the web there have been a number of attempts to enable reactive programming. [RxJS] and [CycleJS] are front of mind to me. More recently, [Svelte 3][svelte] is trying to establish [a slightly different take on reactive programming][svelte 3 reactivity].
+The Reactive Programming (RP) paradigm is not new and has enjoyed popularity in many different genres of programming. For example Android folks, especially since the introduction of Kotlin, have seen a rise in popularity around RP. I have also noticed some game engines experimenting with RP. On the web there have been a number of attempts to enable reactive programming. [RxJS] and [CycleJS] come to mind. More recently, [Svelte 3][svelte] is trying to establish [a slightly different take on reactive programming][svelte 3 reactivity].
 
 Reactive programming in general as well as these specific implementations are well covered on the web, so I won’t write yet another introduction to RP. But I want to make sure we are on the same page. According to [Wikipedia][wiki rp], “reactive programming is a _declarative_ programming paradigm concerned with _data streams_ and the _propagation of change_.” (Emphasis mine.) An “observable” is a type on which you can register “observers”, as defined in the [observer pattern] in [the GoF book]. For the time being, you can think of an observer as a callback in JavaScript land:
 
@@ -31,7 +31,7 @@ In this example, `myClickHandler` would be the observer, while `myButton` is an 
 - An observable is a single stream of data. `myButton` here has multiple “streams”, one for each event type. So one for clicks, one for moving the mouse, one for key presses etc.
 - A stream implies an input, an output and an order. Event listeners don’t have an output as the return value of an event listener is discarded. And if the event handler is asynchronous, the next event of the same type can get processed despite the previous event one not having finished processing.
 
-> **Note:** As I said before, there are multiple libraries that employ the RP pattern. For the remainder of this blog post, I am going to focus on [RxJS] to keep the blog post clear and because their documentation was a major source of information for me.
+> **Note:** As I said before, there are many libraries that employ enable RP on the web. I am going to mostly focus on [RxJS] because their documentation was my main reference.
 
 RxJS implements an `Observable` type and also ships many utility functions, for example to turn that button into a proper observable:
 
@@ -44,18 +44,22 @@ observable.subscribe(event => {
 });
 ```
 
-## Sugar for streams
+## Streams
 
-Let’s take a [the introduction that RxJS gives][rxjs observable]:
+[WHATWG Streams] (or just “streams”) are a relatively new platform primitive and are prominently in use in the Fetch API to model request and response bodies. You could describe them as a special case of [asynchronous iterators], specialized to model network traffic (or I/O in general).
 
 <figure>
   <img src="table.png" alt="A table describing observables as push-based data structures that can deliver multiple values.">
   <figcaption>RxJS’ introduction categorizes functions, promises, iterators and observables by 2 dimensions: Their ability to deliver a single or multiple values, and whether that value is delivered on demand (pull) or just-in-time (push).</figcaption>
 </figure>
 
-I felt like [WHATWG Streams] (or just “streams”) fit in the same gap as observables. Even Wikipedia’s definition of RP mentions “streams of data”. Then why are streams and observables mentioned together so rarely? Why is there a [TC39 proposal for observables][tc39 observables] when we have streams? Why is RxJS not built on top of streams? Am I missing something?
+## Observables _vs._ streams
 
-Streams arguably more flexible and powerful than observables. Streams are separated into data sources, data sinks and data transformers. Streams can model both push-based and pull-based data sources. But as so often, more power and flexibility requires more control and causes a low-level API design rather than a high-level one. So the vanilla API of streams is less convenient than observables. For example, the click event stream from the example above would look like this:
+I always felt like streams and observables are just a rose by another name. Even Wikipedia’s definition of RP mentions “streams of data”. Then why are streams and observables mentioned together so rarely? Why is there a [TC39 proposal for observables][tc39 observables] when we have streams? Why is RxJS not built on top of streams? Am I missing something? _Yes_. Yes, you are, Surma.
+
+### Syntax
+
+Let’s start with syntax. Because syntax is easy. The quite minimal RxJS example above would look as follows when written with vanilla streams:
 
 ```js
 const stream = new ReadableStream({
@@ -73,11 +77,7 @@ stream.pipeTo(
 );
 ```
 
-Definitely too noisy to be practical. But does that warrant a completely new API with its own TC39 proposal? Maybe some sugar will be enough.
-
-### Observables _with_ streams
-
-To reduce the noise, I decided to write a little proof-of-concept library that models observables with streams as its underlying type. Not only would this be a fun exercise, but it will allow me to explore the differences between RxJS’ take on observables and mine. It’s called [`observables-with-streams`][ows] (or “ows”) and published as a package npm.
+Definitely too noisy to be practical. But with some minimal sugar we can achieve not only comparable terseness, but even comparable syntax. I decided to write a little proof-of-concept library that models observables with streams as its underlying type. Not only would this be a fun exercise, but it will allow me to explore the differences between RxJS’ take on observables and mine. It’s called [`observables-with-streams`][ows] (or “ows”) and published as a package npm.
 
 With this library in place, the above example can be simplified:
 
@@ -92,11 +92,11 @@ ows.pipeTo(
 );
 ```
 
-At least in terms of syntax, that is pretty comparable, wouldn’t you agree? And that's no coincidence, as I used RxJS’ documentation as my reference. The RxJS folks spent a lot of time to battle-test and refine their APIs. It seemed like a good idea to mirror their behaviors and use what has already been tried and tested.
+I used RxJS’ excellent documentation as my reference, as it seemed like a good idea to mirror RxJS’ behaviors and use what has already been tried and tested.
 
 If you want to know which operators ows currently provides, take a look at the [documentation][ows documentation]. At this point also a massive “thank you” to [Tiger Oakes (@not_woods)][not_woods] who wrote a good chunk of the documentation!
 
-### Operators
+#### Operators
 
 Just having a different syntax to subscribe to events is not really that interesting, though. What makes RP really powerful is the ability to encapsulate individual steps of data processing and to connect multiple observables into a network of data streams. RxJS calls these units of functionality “operators”.
 
@@ -129,9 +129,21 @@ fromEvent(myButton, "click")
   );
 ```
 
-## Streams vs. Observables
+ows uses `ReadableStream` as its basic type for observables, which means ows doesn't have to bundle that part. It’s already on the platform. The entire ows library currently weighs in at 2KiB after brotli. More on file size later, tho.
 
-These examples above _look_ like equivalent code. But do they actually behave the same or is there a difference between observables and streams? Here is one example where two seemingly equivalent programs behave differently:
+With all of this in place, ows seems to be able to keep up with RxJS, at least as far as syntax goes.
+
+## Subscribers
+
+The examples above _look_ like equivalent code, but do they actually behave the same? I already hinted at the fact that there are difference between these two models, and one of them lies in the way they handle “subscribers”.
+
+### Push vs. pull
+
+When it comes to modelling data sources and data sinks, there’s a common dichotomy of “push” vs. “pull”. In the simplest terms: In the push model, the data source let’s sinks know when there is new data to consume. In a pull model, the sinks let the sources know when they are ready to consume more data.
+
+One of the nice aspects of the pull model is the sinks’ ability to communicate with a source. Either to request more data, but also to signal “back pressure”, which the source could react to by, for example, stopping to generate more data until the sink has worked through the backlog.
+
+Here is one example where two seemingly equivalent programs behave differently:
 
 ```js
 import { Observable } from "rxjs";
@@ -259,7 +271,7 @@ Now that I had established where streams (and by extension ows) work differently
 When you take a picture with your camera, the camera needs to focus on a subject. The “focus point”, the point in space that the camera is focusing on, is often shown on the screen of your camera. But not only that specific point is in focus. Subjects closer to the camera (and subjects further away) can also appear sharp on the picture that you take, depending on _how much_ they are deviating from the focus point. The region that subjects can move around in and still remain in focus is called the “Depth of Field”, or DoF for short. Its size depends on a number of things: Focal length and aperture of the lens, subject distance and sensor size of the camera to begin with. There a number of apps out there that calculate the DoF for you based on these variables, but some have a disappointing UX or only expose a subset of the data I am interested in.
 
 <figure>
-  <video src="emitChunk(/things/observables-on-the-platform/dof-tool.mp4)" poster="emitChunk(/things/observables-on-the-platform/dof-tool-poster.jpg)" muted loop controls></video>
+  <video src="emitChunk(/things/streams-for-reactive-programming/dof-tool.mp4)" poster="emitChunk(/things/streams-for-reactive-programming/dof-tool-poster.jpg)" muted loop controls></video>
   <figcaption>DoF Tool uses ows to process user input</figcaption>
 </figure>
 
@@ -317,8 +329,6 @@ I have to say: I enjoyed writing an app this way. And ows help up very well. I t
 Maybe somewhat surprisingly, I did not do any benchmarks. While I think there’s a good chance that RxJS will perform better in a benchmarking scenario, I have grown skeptical of the relevance of those kinds of benchmarks. The app performs well on a wide spectrum of devices (including the Nokia 2!), and that’s all that matters to me in the end. I was also more interested in comparing capabilities and developer experience first before jumping straight into the performance rabbit hole.
 
 ### Library size & cross-browser support
-
-ows uses `ReadableStream` as its basic type for observables, and `ReadableStream` is available in all major browsers. As a result, ows doesn't have to ship an implementation of the fundamental type itself. The entire ows library (the `really-big-bundle.js` version) currently weighs in at 2KiB after brotli.
 
 However, operators are implemented as `TransformStreams` and sinks as `WritableStreams`, [the support for which is more lacking][streams support]. At the time of writing, only Blink-based browsers have full support for _all_ stream types. Firefox supports neither `WritableStreams`, `TransformStream` nor the `pipeTo()` or `pipeThrough()` methods. Safari is also lacking support for `WritableStream`.
 
@@ -380,3 +390,4 @@ I think that streams are an incredibly well-designed API and are a Swiss army kn
 [jake archibald]: https://twitter.com/jaffathecake
 [rollup]: https://rollupjs.org/
 [top-level await]: https://v8.dev/features/top-level-await
+[asynchronous iterators]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of
