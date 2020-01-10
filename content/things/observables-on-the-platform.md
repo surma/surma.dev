@@ -258,6 +258,11 @@ Now that I had established where streams (and by extension ows) work differently
 
 When you take a picture with your camera, the camera needs to focus on a subject. The “focus point”, the point in space that the camera is focusing on, is often shown on the screen of your camera. But not only that specific point is in focus. Subjects closer to the camera (and subjects further away) can also appear sharp on the picture that you take, depending on _how much_ they are deviating from the focus point. The region that subjects can move around in and still remain in focus is called the “Depth of Field”, or DoF for short. Its size depends on a number of things: Focal length and aperture of the lens, subject distance and sensor size of the camera to begin with. There a number of apps out there that calculate the DoF for you based on these variables, but some have a disappointing UX or only expose a subset of the data I am interested in.
 
+<figure>
+  <video src="emitChunk(/things/observables-on-the-platform/dof-tool.mp4)" poster="emitChunk(/things/observables-on-the-platform/dof-tool-poster.jpg)" muted loop controls></video>
+  <figcaption>DoF Tool uses ows to process user input</figcaption>
+</figure>
+
 As any self-respecting web developer who technically had other, more pressing responsibilities, I procrastinated by writing my own app. The tool that came out of this effort is called [DoF Tool]. Another uninspiring name. DoF Tool is [open source][dof source] and makes use of [observables-with-streams][ows] for all of the UI and user interactions. ows is highly tree-shakable, so it should be used with a bundler. For DoF Tool I’m using [Rollup]. However, if you just want to take ows for a quick spin to try it out, you can include it from a CDN like [JSDelivr] as one big bundle:
 
 ```html
