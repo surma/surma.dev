@@ -8,7 +8,7 @@
 
 ---
 
-Streams and observables always felt similar to me. But where are they different? Can I use streams to write code? It seems so.
+Can you use [WHATWG Streams] for reactive programming? It seems so. But that does not mean they are equivalent to observables.
 
 <!--more-->
 
