@@ -351,20 +351,6 @@ import { init } from "./main.js";
 
 Note that I am _statically_ importing my app’s main code but expose it wrapped in an `init` function. This way the app’s code ends up in the main bundle and the app starts way quicker when no polyfill is needed.
 
-If we had [top-level await], we could ditch the `init()` function and do this instead:
-
-```js
-const hasReadableStream = typeof ReadableStream !== "undefined";
-const hasWritableStream = typeof WritableStream !== "undefined";
-const hasTransformStream = typeof TransformStream !== "undefined";
-
-if (!hasReadableStream || !hasWritableStream || !hasTransformStream) {
-  await import("web-streams-polyfill/dist/polyfill.es2018.mjs");
-}
-
-import "./main.js";
-```
-
 ## Conclusion
 
 Getting my feet wet with reactive programming was really fun. If you haven’t tried it, I’d recommend you give it a spin. Use [ows]. Use [RxJS]. Use [Svelte 3][svelte] or [CycleJS]. Use something else. It doesn’t really matter. My point is that RP makes developing UIs very enjoyable.
