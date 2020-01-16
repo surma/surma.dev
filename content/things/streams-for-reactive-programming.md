@@ -12,10 +12,6 @@ Can you use [WHATWG Streams] for reactive programming? It seems so. But is it a 
 
 <!--more-->
 
-<!-- > **Disclaimer:** I am not experienced with reactive programming or the libraries that enable this pattern. The library I am introducing in this blog post is not supposed to compete with any of these libraries, but is merely an experiment if streams can be used as an underlying primitive. The communities around these libraries deserve a lot of credit for bringing reactive programming to the web and I benefitted massively from their experience as I built and wrote this. I am standing on the shoulders of giants here. -->
-
-<!-- **TL;DR:** Streams and observables are very similar. Their biggest difference seems to be that streams can deliver their data only once and that streams do so asynchronously. Writing a [demo app][dof tool] with my [stream-based observables library][ows] instead of RxJS makes me think that these differences don’t really matter when it comes to writing web apps. Go try it for yourself! -->
-
 ## Reactive Programming?
 
 The Reactive Programming (RP) paradigm is not new and has enjoyed popularity in many different genres of programming. For example Android folks, especially since the introduction of Kotlin, have seen a rise in popularity around RP. I have also noticed some game engines experimenting with RP. On the web there have been a number of attempts to enable reactive programming. [RxJS], [MostJS] and [CycleJS] come to mind. More recently, [Svelte 3][svelte] implemented [a slightly different take on reactive programming][svelte 3 reactivity].
