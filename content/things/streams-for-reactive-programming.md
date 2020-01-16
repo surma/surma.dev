@@ -269,7 +269,7 @@ When you take a picture with your camera, the camera needs to focus on a subject
   <figcaption>DoF Tool uses ows to process user input</figcaption>
 </figure>
 
-As any self-respecting web developer who technically had other, more pressing responsibilities, I procrastinated by writing my own app. The tool that came out of this effort is called [DoF Tool]. Another uninspiring name. DoF Tool is [open source][dof source] and makes use of [observables-with-streams][ows] for all of the UI and user interactions. ows is highly tree-shakable, so it should be used with a bundler. For DoF Tool I’m using [Rollup]. However, if you just want to take ows for a quick spin to try it out, you can include it from a CDN like [JSDelivr] as one big bundle:
+As any self-respecting web developer who technically had other, more pressing responsibilities, I procrastinated by writing my own app. The tool that came out of this effort is called [DoF Tool]. Another uninspired name. DoF Tool is [open source][dof source] and makes use of [observables-with-streams][ows] for all of the UI and user interactions. The ows module is highly tree-shakable, so it should be used with a bundler. For DoF Tool I’m using [Rollup]. However, if you just want to take ows for a quick spin to try it out, you can include it from a CDN like [JSDelivr] as one big bundle:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/observables-with-streams@latest/dist/really-big-bundle.js"></script>
