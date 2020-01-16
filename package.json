@@ -29,6 +29,7 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "build:local": "LOCAL_DEV=1 rollup -c",
     "serve": "node ./devserver.js",
     "fmt": "prettier --write '{./,./{assets,11ty-plugins,functions,rollup-plugins,_includes,_data}/**/}*.{json,md,js,css}'"
   },
