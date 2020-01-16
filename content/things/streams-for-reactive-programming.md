@@ -1,9 +1,9 @@
 ---json
 {
 "title": "Streams for reactive programming",
-"date": "2020-01-15",
+"date": "2020-01-16",
 "socialmediaimage": "social.png",
-"live": false
+"live": true
 }
 
 ---
