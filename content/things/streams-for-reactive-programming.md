@@ -158,7 +158,7 @@ o2.pipeTo(subscribe(v => console.log(`Subscriber 2: ${v}`)));
 
 A beneficial aspects of a pull model is the sinks’ natural ability to “communicate” with a source. Whenever it pulls from the source, it can pass along some auxilliary data, e.g. to signal “back pressure”. The source could then react to this signal by, for example, stopping to generate more data until the sink has worked through the backlog. Streams support backpressure which is important for efficient network communication.
 
-**Observables on the other hand implement a pull model.** You register a callback (or observer) with an observable which will be invoked _by the observable_. It _pushes_ the value to you. **Observables can have multiple subscribers**, as opposed to the single-subscriber nature of the pull model.
+**Observables on the other hand implement a push model.** You register a callback (or observer) with an observable which will be invoked _by the observable_. It _pushes_ the value to you. **Observables can have multiple subscribers**, as opposed to the single-subscriber nature of the pull model.
 
 The fact that observables and streams implement different models does manifest in diverging behavior in some cases. Here’s an example:
 
