@@ -377,7 +377,7 @@ Is using streams for reactive programming a good idea? Probably not. The fact th
 
 Apart from the specific RP use-case, I think that streams are an incredibly well-designed API and have become a Swiss army knife for me. I think every web developer should strive to be familiar with them. They can be useful in a variety of situations, not only to process `fetch()`. Sometimes, a little stream here and there can make your life a lot easier!
 
-Thanks to [Domenic] and [Jake][jake archibald] for their feedback on this blog post!
+Thanks to [Domenic], [Jake][jake archibald] and [Jason][developit] for their feedback on this blog post!
 
 [rxjs]: https://rxjs-dev.firebaseapp.com/
 [wiki rp]: https://en.wikipedia.org/wiki/Reactive_programming
@@ -409,3 +409,4 @@ Thanks to [Domenic] and [Jake][jake archibald] for their feedback on this blog p
 [mostjs]: https://github.com/cujojs/most
 [domenic]: https://twitter.com/domenic
 [stackoverflow post]: https://stackoverflow.com/questions/39439653/events-vs-streams-vs-observables-vs-async-iterators/47214496#47214496
+[developit]: https://twitter.com/_developit
