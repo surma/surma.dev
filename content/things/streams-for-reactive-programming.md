@@ -92,7 +92,7 @@ With this library in place, the above example can be simplified:
 import { fromEvent, subscribe } from "observables-with-streams";
 
 const owsObservable = fromEvent(myButton, "click");
-ows.pipeTo(
+owsObservable.pipeTo(
   subscribe(event => {
     /* ... */
   })
