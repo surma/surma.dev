@@ -140,6 +140,10 @@ video {
 code {
   hyphens: none;
 }
+figure {
+  position: relative;
+  z-index: 999;
+}
 figure > img,
 figure > video {
   max-height: 66vh;
@@ -529,7 +533,7 @@ footer > .arrows {
   background-size: calc(2px * var(--noise-size));
   pointer-events: none;
   opacity: 0.012;
-  z-index: 999;
+  z-index: 980;
   animation: fade-in 4s;
 }
 @keyframes fade-in {
