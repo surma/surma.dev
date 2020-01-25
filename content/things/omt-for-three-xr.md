@@ -71,18 +71,119 @@ The question is how we inform the UI thread of the new positions of the spheres.
 
 ### ArrayBuffer
 
-[`ArrayBuffer`][arraybuffer] are a continuous chunk of memory. Just a bunch of bits. Using [`ArrayBuffer` views][typedarray] you can interpret that chunk of memory in different ways. Using `Int8Array` you can interpret it as a sequence of 8-bit signed integers, using `Float32Array` you can interpret it as a sequence of 32-bit IEEE754 floats. The special power of `ArrayBuffer`s is that they are [transferable][transferables]. Transferables are data type that can be transferred instead of structurally cloned. Some data types like `ArrayBuffer` are _both_ cloneable _and_ transferable. Other types like `MessagePort` are only transferable and not cloneable. To let `postMessage()` know that you want to transfer a value rather than cloning it, you can provide a list of transferables as the second parameter for `postMessage()`. These values will be sent pretty much instantaneously, but this also means the original owner loses access to the contents.
+[`ArrayBuffer`][arraybuffer] are a continuous chunk of memory. Just a bunch of bits. Using [`ArrayBuffer` views][typedarray] you can interpret that chunk of memory in different ways. Using `Int8Array` you can interpret it as a sequence of 8-bit signed integers, using `Float32Array` you can interpret it as a sequence of 32-bit IEEE754 floats. Because `ArrayBuffer`s map to a continuous chunk of memory, they are extremely fast to clone.
 
-```js
-const buffer = getSomeArrayBuffer();
-worker.postMessage(buffer, [buffer]);
-// No access to the buffer’s data
-console.assert(buffer.byteLength === 0);
-```
+> **Note:** I can already hear some people shout at me for not transferring the `ArrayBuffer`. In my very first implementation I actually did transfer the `ArrayBuffer`s, but before sending it over to the main thread I had to create a copy as I needed the positions for the next tick of the physics calculation. Might as well let the structured cloning algorithm take care of the copying.
 
-With this out of the way, we can create 2 `Float32Array`s in our worker, one for the balls’ positions and one of the velocities. Each frame we can send a copy
+With this out of the way, we can create 2 `Float32Array`s in our worker, one for the balls’ positions and one of the velocities.
 
 ### Pull model
+
+My first attempt would let the physics calculation run and the main thread would pull the latest positions from the worker whenever it wants to ship a frame. This turned out to be a bad idea. The whole point is that we want the main thread to be unblocked, always able to ship a frame to keep the frame rate steady. With a pull model the main thread occasionally had to wait quite extensively until the worker was available to reply to the main thread’s request. **The main thread should never have to wait for anything.**
+
+### Push model
+
+Instead a push model is much more appropriate here. The main thread will register a callback with the worker to receive the updated positions. The rendering loop will just use whatever data is available. If the main thread hasn’t received an update since the last frame, the balls will be frozen in place. That’s not great, but we will still get fresh data from the WebXR API, allowing us to rerender according to positional changes from the user. This is crucial to avoid nausea.
+
+Overall, my worked looked roughly like this:
+
+```js
+import * as Comlink from "comlink";
+
+class BallShooter {
+  constructor() {
+    // ... set instance variables ...
+    this._positions = new Float32Array(3 * this._numBalls);
+    this._velocities = new Float32Array(3 * this._numBalls);
+    // Prepare views onto the main buffers for each ball
+    this._balls = Array.from({ length: this._numBalls }, (_, i) => {
+      return {
+        index: i,
+        position: this._positions.subarray(i * 3 + 0, i * 3 + 3),
+        velocity: this._velocities.subarray(i * 3 + 0, i * 3 + 3)
+      };
+    });
+    this._init();
+  }
+
+  setCallback(cb) {
+    this._cb = cb;
+  }
+
+  _init() {
+    // Init balls’ position and velocity
+    // with random values
+  }
+
+  start() {
+    // Schedule _update() at 90Hz
+  }
+
+  getPositions() {
+    return this._positions;
+  }
+
+  _update() {
+    this._doPhysics(delta / 1000);
+    this._cb(this.getPositions());
+  }
+
+  _doPhysics(delta) {
+    // Take a wild guess
+  }
+}
+
+Comlink.expose(BallShooter);
+```
+
+A simplified version of the main script looks like this:
+
+```js
+import * as THREE from "three";
+import * as Comlink from "comlink";
+
+const worker = new Worker("./worker.js");
+const BallShooter = Comlink.wrap(worker);
+let positions;
+// ... more variables
+
+init().then(() => animate());
+
+async function init() {
+  ballShooter = await new BallShooter();
+  scene = new THREE.Scene();
+
+  // ... ThreeJS stuff ...
+
+  positions = await ballShooter.getPositions();
+  updateBallPositions();
+  await ballShooter.setCallback(
+    Comlink.proxy(buffer => {
+      positions = buffer;
+    });
+  );
+}
+
+async function updateBallPositions() {
+  const positionView = new Float32Array(positions);
+  for (var i = 0; i < room.children.length; i++) {
+    var object = room.children[i];
+    object.position.x = positionView[i * 3 + 0];
+    object.position.y = positionView[i * 3 + 1];
+    object.position.z = positionView[i * 3 + 2];
+  }
+}
+
+function animate() {
+  renderer.setAnimationLoop(render);
+  ballShooter.start();
+}
+
+async function render() {
+  updateBallPositions();
+  renderer.render(scene, camera);
+}
+```
 
 [threejs]: https://threejs.org/
 [mrdoob]: https://twitter.com/mrdoob
