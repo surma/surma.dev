@@ -55,14 +55,19 @@ Looking at the trace, each frame takes around 16ms. Which in the normal web worl
 
 > **Note:** More experienced WebGL developers will feel the urge to point out that the example code does not make use of instanced rendering. That is correct and switching to instanced rendering should free up some of our main thread budget. The overall point however remains the same (but we will switch to instanced rendering later).
 
-This is the same problem I talked about in a [previous blog post][when workers]: **The performance metrics of the device you run are unpredictable and not under your control.** This is a problem on the web as I have explained in that blog post, but it becomes a detrimental problem for virtual reality. Dropping frames and unsteady frame rates can be nausea inducing for users. As this will _render_ the app unusable, it is _vital_ to avoid dropping frames at all costs. How do we do that? 
+This is the same problem I talked about in a [previous blog post][when workers]: **The performance metrics of the device you run are unpredictable and not under your control.** This is a problem on the web as I have explained in that blog post, but it becomes a detrimental problem for virtual reality. Dropping frames and unsteady frame rates can be nausea inducing for users. As this will _render_ the app unusable, it is _vital_ to avoid dropping frames at all costs. How do we do that?
 
 ## Adding a worker
+
 To nobody’s surprise, this is all just an excuse to talk about workers and off-main-thread architecture. As I proclaimed in [my Chrome Dev Summit 2019 talk][cds19 talk], the mantra is “the UI thread is for UI work only”. The UI thread will run Three.JS to render the game using WebGL and will use WebXR to the parameters of the VR headset and the controllers. What should _not_ run on the UI thread are the physics calculations that make the balls bounce off the wall and off each other.
 
 The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls in an array. Each ball’s gravity is changed according to gravity, each ball’s position is changed according to its velocity. If two balls intersect, they will be separated and their velocity will be changed according to how they would have changed trajectory due to their collision.
 
-Moving this code to a worker is easily doable as it is purely computational and doesn’t make use of any APIs. The question is how we inform the UI thread of the new positions of the spheres.
+Moving this code to a worker is easily doable as it is purely computational and doesn’t make use of any APIs. Since we don’t have a `requestAnimationFrame()` in a worker, we will have to make it work with good old `setTimeout()`. We’ll run the physics simulation at 90 ticks per second to make sure we can deliver a fresh frame to most VR devices.
+
+> **Note:** `requestAnimationFrame` has been made available in Workers in Chrome, but even if all browsers had that, it would run at the framerate of the web renderer, not necessarily of the VR headset itself. This is something I’d love to see added to the WebXR API.
+
+The question is how we inform the UI thread of the new positions of the spheres. Two things stand out here: The number of balls will be large-ish, each of consisting of at least 3 floats and we want to update their position at least 90 times a second (to accomodate the common 90Hz refresh rate of VR devices). We could take the naïve approach and just send a JavaScript array containing all the balls for every frame.
 
 [threejs]: https://threejs.org/
 [mrdoob]: https://twitter.com/mrdoob
