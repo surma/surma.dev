@@ -61,13 +61,28 @@ This is the same problem I talked about in a [previous blog post][when workers]:
 
 To nobody’s surprise, this is all just an excuse to talk about workers and off-main-thread architecture. As I proclaimed in [my Chrome Dev Summit 2019 talk][cds19 talk], the mantra is “the UI thread is for UI work only”. The UI thread will run Three.JS to render the game using WebGL and will use WebXR to the parameters of the VR headset and the controllers. What should _not_ run on the UI thread are the physics calculations that make the balls bounce off the wall and off each other.
 
-The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls in an array. Each ball’s gravity is changed according to gravity, each ball’s position is changed according to its velocity. If two balls intersect, they will be separated and their velocity will be changed according to how they would have changed trajectory due to their collision.
+The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls’ positions and velocities in an array. Each ball’s velocity is changed according to gravity, each ball’s position is changed according to its velocity. We check all pairings of balls if they intersect, and if they do they are be separated and their velocity is changed as if they bounced off of each other.
 
 Moving this code to a worker is easily doable as it is purely computational and doesn’t make use of any APIs. Since we don’t have a `requestAnimationFrame()` in a worker, we will have to make it work with good old `setTimeout()`. We’ll run the physics simulation at 90 ticks per second to make sure we can deliver a fresh frame to most VR devices.
 
 > **Note:** `requestAnimationFrame` has been made available in Workers in Chrome, but even if all browsers had that, it would run at the framerate of the web renderer, not necessarily of the VR headset itself. This is something I’d love to see added to the WebXR API.
 
-The question is how we inform the UI thread of the new positions of the spheres. Two things stand out here: The number of balls will be large-ish, each of consisting of at least 3 floats and we want to update their position at least 90 times a second (to accomodate the common 90Hz refresh rate of VR devices). We could take the naïve approach and just send a JavaScript array containing all the balls for every frame.
+The question is how we inform the UI thread of the new positions of the spheres. We could take the naïve approach and just send a JavaScript array containing the positions for all balls for every frame. A quick estimation based on [the rule of thumb I presented in another previous blog post][is postmessage slow] reveals: Structured cloning an array of that size would take long enough to potentially blow our frame budget at 60fps (let alone for 72fps or even 90fps). And that’s just transfer time without any rendering. **For a hot-path like this, structured cloning is not going to cut it.**
+
+### ArrayBuffer
+
+[`ArrayBuffer`][arraybuffer] are a continuous chunk of memory. Just a bunch of bits. Using [`ArrayBuffer` views][typedarray] you can interpret that chunk of memory in different ways. Using `Int8Array` you can interpret it as a sequence of 8-bit signed integers, using `Float32Array` you can interpret it as a sequence of 32-bit IEEE754 floats. The special power of `ArrayBuffer`s is that they are [transferable][transferables]. Transferables are data type that can be transferred instead of structurally cloned. Some data types like `ArrayBuffer` are _both_ cloneable _and_ transferable. Other types like `MessagePort` are only transferable and not cloneable. To let `postMessage()` know that you want to transfer a value rather than cloning it, you can provide a list of transferables as the second parameter for `postMessage()`. These values will be sent pretty much instantaneously, but this also means the original owner loses access to the contents.
+
+```js
+const buffer = getSomeArrayBuffer();
+worker.postMessage(buffer, [buffer]);
+// No access to the buffer’s data
+console.assert(buffer.byteLength === 0);
+```
+
+With this out of the way, we can create 2 `Float32Array`s in our worker, one for the balls’ positions and one of the velocities. Each frame we can send a copy
+
+### Pull model
 
 [threejs]: https://threejs.org/
 [mrdoob]: https://twitter.com/mrdoob
@@ -78,4 +93,8 @@ The question is how we inform the UI thread of the new positions of the spheres.
 [prettier]: https://prettier.io/
 [gist]: https://gist.github.com/surma/83878d60b1edb0bb7d0cfd46c8b8cc56
 [when workers]: /things/when-workers/
+[is postmessage slow]: /things/is-postmessage-slow/
 [cds19 talk]: https://www.youtube.com/watch?v=7Rrv9qFMWNM
+[arraybuffer]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
+[typedarray]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray
+[transferable]: https://developer.mozilla.org/en-US/docs/Web/API/Transferable
