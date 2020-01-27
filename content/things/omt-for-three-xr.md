@@ -79,7 +79,7 @@ Moving this code to a worker is doable as it is purely computational and doesn�
 
 > **Note:** `requestAnimationFrame` has been made available in Workers in Chrome, but that’s the only browser that implemented this. But even if all browsers had that, it would run at the framerate of the web renderer, not necessarily of the VR headset itself. HMD-coupled rAF for workers is something I’d love to see specified in the WebXR API.
 
-The next question is how we inform the UI thread of the new positions of the ball. We could take the naïve approach and just send a JavaScript array containing the positions for all balls on every frame. A quick estimation based on [the rule of thumb][is postmessage slow] reveals: Structured cloning an array of that size would put us at risk of blowing our frame budget at 60fps (let alone 72fps or even 90fps). And that’s just cloning time without any rendering. **For a hot paths like this, structured cloning with big objects can often be a bottleneck.**
+With [Comlink], it is easy to expose multiple functions or class methods from the worker. But the question is in what form we send all the updated positions to the UI thread. We could take the naïve approach and just send a JavaScript array containing the positions for all balls on every frame. A quick estimation based on [the rule of thumb][is postmessage slow] reveals: Structured cloning an array of that size would put us at risk of blowing our frame budget at 60fps (let alone 72fps or even 90fps). And that’s just cloning time without any rendering. **For a hot paths like this, structured cloning with big objects can often be a bottleneck.**
 
 ### ArrayBuffer
 
@@ -387,3 +387,4 @@ Gaming in general and VR specifically doesn’t only seem to benefit from an off
 [instancedmesh]: https://threejs.org/docs/index.html#api/en/objects/InstancedMesh
 [rollup-plugin-off-main-thread]: https://npm.im/@surma/rollup-plugin-off-main-thread
 [omt ball]: /things/omt-for-three-xr/omt-ball/?balls=500
+[comlink]: https://npm.im/comlink
