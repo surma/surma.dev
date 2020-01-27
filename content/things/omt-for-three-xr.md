@@ -54,7 +54,7 @@ This yields a horrible, even nauseating experience:
   <figcaption>Increasing the number of balls to 2000 prevents the Oculus Quest from shipping frames in time.</figcaption>
 </figure>
 
-Whatever the game is doing takes way too long and so the Quest’s browser can’t ship a frame in time to update the canvas. **You should never have to start into the void as you can on the edges of the video above,** and have to wait until the canvas snaps back into place. This harsh criticism is obviously unfair towards the authors of this game, which was never meant to be more than a VR sample app and prioritizes readable code above all else.
+Whatever the game is doing takes way too long and so the Quest’s browser can’t ship a frame in time to update the canvas. **You should never have to stare into the void as you can on the edges of the video above,** and have to wait until the canvas snaps back into place. This harsh criticism is obviously unfair towards the authors of this game, which was never meant to be more than a VR sample app and prioritizes readable code above all else.
 
 But _where_ exactly are we losing time? Let’s scale things a bit back (to 500 balls to be exact) so we can still bear to play the game but also take a look at the trace:
 
@@ -299,7 +299,7 @@ We have now fully replicated the functionality of the original game, with the ph
 
 ### Running it all
 
-With all of that in place, we can play the game just as before. But does it behave any better when increasing the number of balls to 2000? What you get I’d call unejoyable but nausea-free:
+With all of that in place, we can play the game just as before. But does it behave any better when increasing the number of balls to 2000? What you get I’d call unenjoyable but nausea-free:
 
 <figure>
   <video src="emitChunk(/things/omt-for-three-xr/ballshooter-2k.mp4)" muted loop controls></video>
