@@ -1,6 +1,6 @@
 ---json
 {
-"title": "Case study: Moving a Three.JS-based WebXR app off-main-thread",
+"title": "Case study: Moving a Three.js-based WebXR app off-main-thread",
 "date": "2020-01-27",
 "socialmediaimage": "social.jpg",
 "live": false
@@ -14,7 +14,7 @@ Keeping the frame rate stable is vital for virtual reality applications. Off-mai
 
 > **Note:** Looking for the final version? [Play it][omt ball] or read [the source][gist].
 
-I recently [became an owner of the Oculus Quest][oculus tweet], and since the browser that comes with it has support for [WebXR][webxr spec], I thought it only sensible to play around with that API. I looked at the [Three.JS examples] and tried out the XR samples. Annoyingly, even the rather bare-bones [Ballshooter] was fun. However, I felt like it didn’t have enough balls. Time to start hacking!
+I recently [became an owner of the Oculus Quest][oculus tweet], and since the browser that comes with it has support for [WebXR][webxr spec], I thought it only sensible to play around with that API. I looked at the [Three.js examples] and tried out the XR samples. Annoyingly, even the rather bare-bones [Ballshooter] was fun. However, I felt like it didn’t have enough balls. Time to start hacking!
 
 <figure>
   <video src="emitChunk(/things/omt-for-three-xr/ballshooter-original.mp4)" muted loop controls></video>
@@ -23,7 +23,7 @@ I recently [became an owner of the Oculus Quest][oculus tweet], and since the br
 
 ## Moar balls
 
-I ripped out the demo from the repository so I could set up Rollup to handle workerization using my [`rollup-plugin-off-main-thread`][rollup-plugin-off-main-thread] plugin. I also used this opportunity to run [`prettier`][prettier] (what were you thinking, [MrDoob][mrdoob]? Just kidding.) and refactor the code a bit to give me a bunch of top-level variables to fiddle with:
+I ripped out the demo from the repository so I could set up Rollup to handle workerization using my [`rollup-plugin-off-main-thread`][rollup-plugin-off-main-thread] plugin. I also used this opportunity to run [`prettier`][prettier] (what were you thinking, [Mr.doob][mrdoob]? Just kidding.) and refactor the code a bit to give me a bunch of top-level variables to fiddle with:
 
 ```js
 // Field of View
@@ -71,7 +71,7 @@ This is the same problem I talked about in my [previous blog post on workers][wh
 
 ## Adding a worker
 
-To nobody’s surprise, this is all just an excuse to talk some more about workers and off-main-thread architecture. As I proclaimed in [my Chrome Dev Summit 2019 talk][cds19 talk], the mantra is **“the UI thread is for UI work only”**. The UI thread will run Three.JS to render the game using WebGL and will use WebXR to get the parameters of the VR headset and the controllers. What should _not_ run on the UI thread are the physics calculations that make the balls bounce off the wall and off each other.
+To nobody’s surprise, this is all just an excuse to talk some more about workers and off-main-thread architecture. As I proclaimed in [my Chrome Dev Summit 2019 talk][cds19 talk], the mantra is **“the UI thread is for UI work only”**. The UI thread will run Three.js to render the game using WebGL and will use WebXR to get the parameters of the VR headset and the controllers. What should _not_ run on the UI thread are the physics calculations that make the balls bounce off the wall and off each other.
 
 The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls’ positions and velocities in an array. Each ball’s velocity is changed according to gravity, each ball’s position is changed according to its velocity. We check all pairings of balls if they intersect (can you say <span style="--ratio: 2.19; --image: url(emitChunk(/things/omt-for-three-xr/bigo.png))" class="textimage" alt="Big O n squared"></span>?), and if they do, the balls are separated and their velocity is changed as if they bounced off of each other.
 
@@ -361,19 +361,19 @@ At this point the main thread is free to render a more complex scene, more balls
   <figcaption>Even with 2000 balls there are no more glimpses of the void, even with rapid head movements.</figcaption>
 </figure>
 
-The only downside of switching to instanced rendering is that ThreeJS’s can only render all instances with the same material. MrDoob said it’s on his list of things to fix. For now, all balls will remain orange. If you want to play the final, off-main-thread version of this game with instanced rendering, you can check it out [here][omt ball].
+The only downside of switching to instanced rendering is that ThreeJS’s can only render all instances with the same material. Mr.doob said it’s on his list of things to fix. For now, all balls will remain orange. If you want to play the final, off-main-thread version of this game with instanced rendering, you can check it out [here][omt ball].
 
 ## Conclusion
 
 I think I had an interesting realization throughout this experiment: If structured cloning is a bottleneck for you, switching to transferables is _not_ the only alternative. `ArrayBuffer`s are so fast to copy that they might be simple but effective optimizations over JSON-like objects. Only if your buffers are _really_ big will you see a difference between copying and transferring.
 
-Gaming in general and VR specifically doesn’t only seem to benefit from an off-main-thread architecture, it seems to me that it is a requirement. Especially for VR it is absolutely critical to keep the render loop going to avoid making your users unwell. With more and more VR devices coming to the market, the spectrum of performance metrics will widen, just like it did for mobile phones. The amount of time of your code takes will become more and more unpredictable. Off-main-thread architecture can help you make your app more resilient.
+Gaming in general and VR specifically doesn’t only seem to benefit from an off-main-thread architecture, it seems to me that it is a requirement. Especially for VR it is absolutely critical to keep the render loop going to avoid making your users unwell. With more and more VR devices coming to the market, the variance in performance will only increase, just like it did for mobile phones. The amount of time of your code takes will become more and more unpredictable. Off-main-thread architecture can help you make your app more resilient.
 
 [threejs]: https://threejs.org/
 [mrdoob]: https://twitter.com/mrdoob
 [oculus tweet]: https://twitter.com/DasSurma/status/1217065178803724289
 [webxr spec]: https://immersive-web.github.io/webxr/
-[three.js examples]: https://threejs.org/examples/
+[three.js examples]: https://threejs.org/examples/?q=webxr
 [ballshooter]: https://threejs.org/examples/webxr_vr_ballshooter.html
 [prettier]: https://prettier.io/
 [gist]: https://gist.github.com/surma/83878d60b1edb0bb7d0cfd46c8b8cc56
