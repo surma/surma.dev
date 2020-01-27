@@ -683,3 +683,15 @@ html.forcedark figure picture,
 html.forcedark figure video {
   filter: saturate(0.8) brightness(0.8);
 }
+
+.textimage {
+  display: inline-block;
+  height: 1em;
+  width: calc(var(--ratio) * 1em);
+  background: var(--darkblue);
+  -webkit-mask-image: var(--image);
+  mask-image: var(--image);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  transform: translateY(0.2em);
+}

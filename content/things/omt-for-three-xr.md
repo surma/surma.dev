@@ -8,11 +8,11 @@
 
 ---
 
-Keeping the frame rate stable is literally vital for virtual reality applications. Off-main-thread architecture can help ensure that the frames keep shipping. **Warning:** This blog post contains the word “balls” a lot.
+Keeping the frame rate stable is vital for virtual reality applications. Off-main-thread architecture can help ensure that the frames keep shipping.
 
 <!-- more -->
 
-I recently [became the owner of an Oculus Quest][oculus tweet], and since the browser that comes with it has support for [WebXR][webxr spec], I thought it only sensible to play around with that API. I looked at the [Three.JS examples] and tried out the XR samples. Annoyingly, even the rather bare-bones [Ballshooter] was fun. However, I felt like it didn’t have enough balls. Time to start hacking!
+I recently [became an owner of the Oculus Quest][oculus tweet], and since the browser that comes with it has support for [WebXR][webxr spec], I thought it only sensible to play around with that API. I looked at the [Three.JS examples] and tried out the XR samples. Annoyingly, even the rather bare-bones [Ballshooter] was fun. However, I felt like it didn’t have enough balls. Time to start hacking!
 
 <figure>
   <video src="emitChunk(/things/omt-for-three-xr/ballshooter-original.mp4)" muted loop controls></video>
@@ -21,7 +21,7 @@ I recently [became the owner of an Oculus Quest][oculus tweet], and since the br
 
 ## Step 1: Run prettier
 
-I ripped out the demo from the repository and couldn’t do anything until I ran [Prettier]. What were you _thinking_, [MrDoob][mrdoob]? (Just kidding). I refactored the code a bit to give me a bunch of top-level variables to fiddle with:
+I ripped out the demo from the repository so I could set up Rollup to handle workerization using my [`rollup-plugin-off-main-thread`][rollup-plugin-off-main-thread] plugin. I also used this opportunity to run [`prettier`][prettier] (what were you thinking, [MrDoob][mrdoob]? Just kidding.) and refactor the code a bit to give me a bunch of top-level variables to fiddle with:
 
 ```js
 // Field of View
@@ -45,6 +45,8 @@ The next step is obviously to increase the number of balls:
 + var ballCount = 500;
 ```
 
+VIDEO OF 2000 BALLS ON THE MAIN THREADS
+
 Running that example with an increased number of balls seemed to affect the framerate. The balls’ movements were jankier, but acceptable. However, the head tracking was affected by the same jank, making the game noticeably uncomfortable to use over longer periods of time. A quick trace confirms:
 
 <figure>
@@ -56,27 +58,27 @@ Looking at the trace, each frame takes around 16ms. Which in the normal web worl
 
 > **Note:** More experienced WebGL developers will feel the urge to point out that the example code does not make use of instanced rendering. That is correct and I’ll switch to instanced rendering later in the blog post.
 
-This is the same problem I talked about in my [previous blog post on workers][when workers]: **The performance metrics of the device you run are not under your control and the amount of time your code takes to run is unpredictable.** This is a concern on the web as I have explained in that blog post, but it becomes a detrimental problem for virtual reality. An unsteady frame rate can cause nause for the user and will _render_ the app unusable. It is _vital_ to avoid dropping frames at all costs. How do we do that?
+This is the same problem I talked about in my [previous blog post on workers][when workers]: **The performance metrics of the device you run are not under your control and the amount of time your code takes to run is unpredictable.** This is a concern on the web as I have explained in that blog post, but it becomes a detrimental problem for virtual reality. An unsteady frame rate can cause nausea for the user and will render the app unusable. It is vital to avoid dropping frames at all costs. How do we do that?
 
 ## Adding a worker
 
 To nobody’s surprise, this is all just an excuse to talk some more about workers and off-main-thread architecture. As I proclaimed in [my Chrome Dev Summit 2019 talk][cds19 talk], the mantra is “the UI thread is for UI work only”. The UI thread will run Three.JS to render the game using WebGL and will use WebXR to get the parameters of the VR headset and the controllers. What should _not_ run on the UI thread are the physics calculations that make the balls bounce off the wall and off each other.
 
-The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls’ positions and velocities in an array. Each ball’s velocity is changed according to gravity, each ball’s position is changed according to its velocity. We check all pairings of balls if they intersect, and if they do the balls are separated and their velocity is changed as if they bounced off of each other.
+The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls’ positions and velocities in an array. Each ball’s velocity is changed according to gravity, each ball’s position is changed according to its velocity. We check all pairings of balls if they intersect (can you say <span style="--ratio: 2.19; --image: url(emitChunk(/things/omt-for-three-xr/bigo.png))" class="textimage"></span>?), and if they do, the balls are separated and their velocity is changed as if they bounced off of each other.
 
-Moving this code to a worker is easily doable as it is purely computational and doesn’t make use of any APIs. Since we don’t have a `requestAnimationFrame()` in a worker, we will have to make it work with good old `setTimeout()`. We’ll run the physics simulation at 90 ticks per second to make sure we can deliver a fresh frame to the majority of VR devices.
+Moving this code to a worker is doable as it is purely computational and doesn’t rely on any main thread APIs. Since we don’t have a `requestAnimationFrame()` in a worker, we will have to make due with good old `setTimeout()`. We’ll run the physics simulation at 90 ticks per second to make sure we can deliver a fresh frame to the majority of VR devices.
 
-> **Note:** `requestAnimationFrame` has been made available in Workers in Chrome, but even if all browsers had that, it would run at the framerate of the web renderer, not necessarily of the VR headset itself. This is something I’d love to see added to the WebXR API.
+> **Note:** `requestAnimationFrame` has been made available in Workers in Chrome, but that’s the only browser that implemented this. But even if all browsers had that, it would run at the framerate of the web renderer, not necessarily of the VR headset itself. HMD-coupled rAF for workers is something I’d love to see specified in the WebXR API.
 
-The next question is how we inform the UI thread of the new positions of the ball. We could take the naïve approach and just send a JavaScript array containing the positions for all balls for every frame. A quick estimation based on [the rule of thumb][is postmessage slow] reveals: Structured cloning an array of that size would put us at risk of blowing our frame budget at 60fps (let alone 72fps or even 90fps). And that’s just cloning time without any rendering. For a hot-path like this, structured cloning big objects is not going to cut it.
+The next question is how we inform the UI thread of the new positions of the ball. We could take the naïve approach and just send a JavaScript array containing the positions for all balls on every frame. A quick estimation based on [the rule of thumb][is postmessage slow] reveals: Structured cloning an array of that size would put us at risk of blowing our frame budget at 60fps (let alone 72fps or even 90fps). And that’s just cloning time without any rendering. For a hot-path like this, structured cloning big objects is not going to cut it.
 
 ### ArrayBuffer
 
 [`ArrayBuffer`][arraybuffer] are a continuous chunk of memory. Just a bunch of bits. Using [`ArrayBuffer` views][typedarray] you can interpret that chunk of memory in different ways. Using `Int8Array` you can interpret it as a sequence of 8-bit signed integers, using `Float32Array` you can interpret it as a sequence of 32-bit IEEE754 floats. Because `ArrayBuffer`s map to a continuous chunk of memory, they are extremely fast to clone.
 
-> **Note:** I can already hear some people shout at me for not transferring the `ArrayBuffer`. In my very first implementation I actually did transfer the `ArrayBuffer`s and built a memory pool so I can reuse memory buffers. However, I realized that before sending the buffer over to the main thread I had to create a copy as I needed the positions to _remain_ in the worker for the next tick of the physics calculation. I tried letting the structured cloning algorithm take care of the copying rather than doing it myself and discovered that it performed just as well which allowed me to get rid of the memory pool.
+> **Note:** Did you think I was going to talk about _transferring_ `ArrayBuffer`? I can’t blame you, so did I! In my very first implementation I actually did transfer the `ArrayBuffer`s and built a memory pool so I can reuse memory buffers. However, I realized that before sending the buffer over to the main thread I had to create a copy as I needed the positions to _remain_ in the worker for the next tick of the physics calculation. I tried letting the structured cloning algorithm take care of the copying rather than doing it myself and discovered that it performed just as well which allowed me to get rid of the code for the memory pool and made the overall code simpler to read.
 
-With this out of the way, we can create 2 `Float32Array`s in our worker, one for the balls’ positions and one for the velocities.
+With this out of the way, we can create two `Float32Array`s in our worker, one for the balls’ positions and one for the velocities.
 
 ### Pull model
 
@@ -84,7 +86,7 @@ My first attempt would let the physics calculation run and the main thread would
 
 ### Push model
 
-Instead a push model is much more appropriate here. The main thread will register a callback with the worker to receive the updated positions. The rendering loop will just use whatever data is available. If the main thread hasn’t received an update since the last frame, the balls will not move and appear to be frozen in place. That’s not ideal, but allows us to at least incorporate fresh data from the WebXR API in case the user has moved and rerender the scene. This is crucial to avoid nausea.
+Instead a push model is much more appropriate here. The main thread will register a callback with the worker to receive the updated positions. The rendering loop will just use whatever data is available. If the main thread hasn’t received an update, the balls will not move from one frame to the next and appear to be frozen in place. That’s not ideal, but at least allows us to incorporate fresh positional data from the WebXR API in case the user has moved their head and rerender the scene. This is crucial to avoid nausea.
 
 Overall, the worker looked like this:
 
@@ -99,6 +101,7 @@ class BallShooter {
     this._balls = Array.from({ length: this._numBalls }, (_, i) => {
       return {
         index: i,
+        // `subarray()` creates a view onto the same memory
         position: this._positions.subarray(i * 3 + 0, i * 3 + 3),
         velocity: this._velocities.subarray(i * 3 + 0, i * 3 + 3)
       };
@@ -111,8 +114,8 @@ class BallShooter {
   }
 
   _init() {
-    // Init balls’ position and velocity
-    // with random values
+    // Initialize balls’ positions and
+    // velocities with random values
   }
 
   start() {
@@ -125,7 +128,7 @@ class BallShooter {
 
   _update() {
     this._doPhysics(delta / 1000);
-    this._cb(this.getPositions());
+    this._cb(this._positions);
   }
 
   _doPhysics(delta) {
@@ -184,13 +187,13 @@ async function render() {
 }
 ```
 
-The physics calculations run in a worker, ensuring that our framerate remains stable and our VR users don’t throw up. However, the balls just fall down and the controllers do nothing, yet.
+So far so good! The physics calculations now run in a worker, ensuring that our framerate remains stable and our VR users don’t throw up. However, the balls just fall down from their initial positions and bounce around a little. The controllers do nothing.
 
 ### Accessing the controllers
 
-To be able to shoot balls, the worker needs to know the positions and rotations of the controllers so it can update a ball’s position and velocity accordingly. Because the WebXR API is not available in a worker, we have to forward that data ourselves.
+To be able to shoot balls, the worker needs to know the positions and rotations of the controllers so it can make balls shoot through the room. Because the WebXR API is not available in a worker, we have to forward that data ourselves.
 
-On the main thread we just send the position and quaternion of each controller on every frame as an array. Because these are arrays with 3 or 4 elements, the structured cloning time is negligible. If it does become a problem, we could switch to `ArrayBuffer`s here as well.
+On the main thread we just send the position and quaternion of each controller on every frame as an array. Because these are arrays with 3 or 4 elements, the structured cloning time is negligible. If it does become a problem, we could switch to `ArrayBuffer`s here as well, but that didn’t turn out to be necessary.
 
 ```js
 async function init() {
@@ -281,13 +284,13 @@ class BallShooter {
 }
 ```
 
-> **Note:** Another feature request for the WebXR API. I’d love to get access to the positional data from a worker, too. Not sure if that is easily possible.
+> **Note:** Another feature request for the WebXR API: I’d love to get access to the positional data (both for the HMD and controllers) from a worker. Since those are tied to a XR session, I’m not sure if that is easily possible, though.
 
-We have now fully replicated the functionality of the original game, where the physics calculations are isolated to a worker.
+We have now fully replicated the functionality of the original game, with the physics calculations are isolated to a worker.
 
 ### Running it all
 
-With all of that in place, we can play the game just as before. But how does it behave when increasing the number of balls to, let’s say, 2000? What you get I’d call unejoyable but nausea-free:
+With all of that in place, we can play the game just as before. But does it behave any better when increasing the number of balls to 2000? What you get I’d call unejoyable but nausea-free:
 
 <figure>
   <video src="emitChunk(/things/omt-for-three-xr/ballshooter-2k.mp4)" muted loop controls></video>
@@ -310,7 +313,7 @@ I won’t go into optimizing the physics. There is a lot of material out there o
 
 ## Instanced rendering
 
-Currently, each ball is drawn individually, causing a large number of draw calls. This is one of the more common mistakes to make WebGL perform badly. To batch similar objects into one draw call, you can use a technique called [instanced rendering][drawarraysinstanced]. ThreeJS now has support for this technique with their new [`InstancedMesh`][instancedmesh]. Conveniently, WebGL and consequently `InstancedMesh` works with `ArrayBuffer`s, allowing us to pass the data we get from the worker straight to WebGL, without having to loop over it.
+Currently, each ball is drawn individually, causing a large number of draw calls. This is one of the more common optimizations you can look at when writing OpenGL. To batch similar objects into one draw call, you can use a technique called [instanced rendering][drawarraysinstanced]. ThreeJS now has support for this technique with their new [`InstancedMesh`][instancedmesh]. Conveniently, WebGL and consequently `InstancedMesh` works with `ArrayBuffer`s, allowing us to pass the data we get from the worker straight to WebGL, without having to loop over it.
 
 ```js
 async function init() {
@@ -335,22 +338,22 @@ async function init() {
 }
 ```
 
-One additional adjustment is the fact that `InstanceMesh` expects an array of 4x4 matrices instead of just the position. To accommodate this, we need to grow buffers we send from the worker to ~5 times the original size — from 3 floats per ball to 16 floats per ball. Luckily, this has no measurable impact on performance due to how fast `ArrayBuffer`s are to copy. At the same time, the switch to instanced rendering freed up our main thread dramatically (which will not surprise anyone with GL experience):
+One additional adjustment is the fact that `InstanceMesh` expects an array of 4x4 matrices instead of just the position. To accommodate this, we need to grow buffers we send from the worker to ~5 times the original size — from 3 floats per ball to 16 floats per ball. Luckily, this has no measurable impact on performance due to how fast `ArrayBuffer`s are to copy. At the same time, the switch to instanced rendering freed up our main thread dramatically (which won’t surprise anyone with OpenGL experience):
 
 <figure>
   <img src="trace-omt-main-instanced.png">
-  <figcaption>Rendering 2000 balls costs 1ms on the Oculus Quest when using instanced rendering.</figcaption>
+  <figcaption>The cost of rendering 2000 balls went from 13ms to 1ms on the Oculus Quest by using instanced rendering.</figcaption>
 </figure>
 
 At this point the main thread is free to render a more complex scene, more balls or whatever you want to do. We will have to optimize the way our physics calculations are done to make it enjoyable, but that’s a story for another time.
 
-If you want to play off-main-thread version of this game, you can check it out [here].
+If you want to play off-main-thread version of this game, you can check it out [here][omt ball].
 
 ## Conclusion
 
-I think I had an interesting realization throughout this experiment: If structured cloning is a bottleneck for you, switching to transferables is _not_ the only alternative. `ArrayBuffer`s are so fast to copy that they can make the cost of structured cloning disappear. Only if your buffers are _really_ bug will you see a difference between copying and transferring.
+I think I had an interesting realization throughout this experiment: If structured cloning is a bottleneck for you, switching to transferables is _not_ the only alternative. `ArrayBuffer`s are so fast to copy that they might be simple but effective optimizations over JSON-like objects. Only if your buffers are _really_ big will you see a difference between copying and transferring.
 
-Gaming in general but VR specifically doesn’t only seem to benefit from an off-main-thread architecture, it seems to me that it is a requirement. Especially for VR it is absolutely critical to keep the render loop going to avoid making your users unwell. With more and more VR devices coming to the market, the spectrum of performance metrics will widen, just like it did for mobile phones. The amount of time of your code takes will become more and more unpredictable. Off-main-thread architecture can help you make your app more resilient.
+Gaming in general and VR specifically doesn’t only seem to benefit from an off-main-thread architecture, it seems to me that it is a requirement. Especially for VR it is absolutely critical to keep the render loop going to avoid making your users unwell. With more and more VR devices coming to the market, the spectrum of performance metrics will widen, just like it did for mobile phones. The amount of time of your code takes will become more and more unpredictable. Off-main-thread architecture can help you make your app more resilient.
 
 [threejs]: https://threejs.org/
 [mrdoob]: https://twitter.com/mrdoob
@@ -368,3 +371,5 @@ Gaming in general but VR specifically doesn’t only seem to benefit from an off
 [transferable]: https://developer.mozilla.org/en-US/docs/Web/API/Transferable
 [drawarraysinstanced]: https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/drawArraysInstanced
 [instancedmesh]: https://threejs.org/docs/index.html#api/en/objects/InstancedMesh
+[rollup-plugin-off-main-thread]: https://npm.im/@surma/rollup-plugin-off-main-thread
+[omt ball]: /things/omt-for-three-xr/omt-ball/?balls=500
