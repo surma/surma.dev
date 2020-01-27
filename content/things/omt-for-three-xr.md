@@ -12,6 +12,8 @@ Keeping the frame rate stable is vital for virtual reality applications. Off-mai
 
 <!-- more -->
 
+> **Note:** Looking for the final version? [Play it][omt ball] or read [the source][gist].
+
 I recently [became an owner of the Oculus Quest][oculus tweet], and since the browser that comes with it has support for [WebXR][webxr spec], I thought it only sensible to play around with that API. I looked at the [Three.JS examples] and tried out the XR samples. Annoyingly, even the rather bare-bones [Ballshooter] was fun. However, I felt like it didn’t have enough balls. Time to start hacking!
 
 <figure>
@@ -19,7 +21,7 @@ I recently [became an owner of the Oculus Quest][oculus tweet], and since the br
   <figcaption>The original Ballshooter example from <code>threejs.org</code></figcaption>
 </figure>
 
-## Step 1: Run prettier
+## Moar balls
 
 I ripped out the demo from the repository so I could set up Rollup to handle workerization using my [`rollup-plugin-off-main-thread`][rollup-plugin-off-main-thread] plugin. I also used this opportunity to run [`prettier`][prettier] (what were you thinking, [MrDoob][mrdoob]? Just kidding.) and refactor the code a bit to give me a bunch of top-level variables to fiddle with:
 
@@ -42,19 +44,26 @@ The next step is obviously to increase the number of balls:
 
 ```diff
 - var ballCount = 200;
-+ var ballCount = 500;
++ var ballCount = 2000;
 ```
 
-VIDEO OF 2000 BALLS ON THE MAIN THREADS
+This yields a horrible, even nauseating experience:
 
-Running that example with an increased number of balls seemed to affect the framerate. The balls’ movements were jankier, but acceptable. However, the head tracking was affected by the same jank, making the game noticeably uncomfortable to use over longer periods of time. A quick trace confirms:
+<figure>
+  <video src="emitChunk(/things/omt-for-three-xr/ballshooter-frustrum-lag.mp4)" muted loop controls></video>
+  <figcaption>Increasing the number of balls to 2000 prevents the Oculus Quest from shipping frames in time.</figcaption>
+</figure>
+
+Whatever the game is doing takes way too long and so the Quest’s browser can’t ship a frame in time to update the canvas. **You should never have to start into the void as you can on the edges of the video above,** and have to wait until the canvas snaps back into place. This harsh criticism is obviously unfair towards the authors of this game, which was never meant to be more than a VR sample app and prioritizes readable code above all else.
+
+But _where_ exactly are we losing time? Let’s scale things a bit back (to 500 balls to be exact) so we can still bear to play the game but also take a look at the trace:
 
 <figure>
   <img src="trace-original-500.png">
   <figcaption>The trace shows that each frame takes around 16.1ms, which is over budget. However, roughly 10ms of that are the purely computational physics.</figcaption>
 </figure>
 
-Looking at the trace, each frame takes around 16ms. Which in the normal web world would be fine, although definitely cutting it close. In the VR world however, we have different frame rates. The Oculus Quest specifically runs at 72Hz. Most VR headsets actually run at 90Hz, some even higher. **That means that we have 11.1ms per frame for VR** and the current code is blowing through that budget.
+Looking at the trace, each frame takes around 16ms when running with 500 balls. Which in the normal web world would be fine, although definitely cutting it close. In the VR world however, we have different frame rates. The Oculus Quest specifically runs at 72Hz. Most VR headsets actually run at 90Hz, some even higher. **That means that we have 11.1ms per frame for VR** and the current code is blowing through that budget.
 
 > **Note:** More experienced WebGL developers will feel the urge to point out that the example code does not make use of instanced rendering. That is correct and I’ll switch to instanced rendering later in the blog post.
 
@@ -62,21 +71,21 @@ This is the same problem I talked about in my [previous blog post on workers][wh
 
 ## Adding a worker
 
-To nobody’s surprise, this is all just an excuse to talk some more about workers and off-main-thread architecture. As I proclaimed in [my Chrome Dev Summit 2019 talk][cds19 talk], the mantra is “the UI thread is for UI work only”. The UI thread will run Three.JS to render the game using WebGL and will use WebXR to get the parameters of the VR headset and the controllers. What should _not_ run on the UI thread are the physics calculations that make the balls bounce off the wall and off each other.
+To nobody’s surprise, this is all just an excuse to talk some more about workers and off-main-thread architecture. As I proclaimed in [my Chrome Dev Summit 2019 talk][cds19 talk], the mantra is **“the UI thread is for UI work only”**. The UI thread will run Three.JS to render the game using WebGL and will use WebXR to get the parameters of the VR headset and the controllers. What should _not_ run on the UI thread are the physics calculations that make the balls bounce off the wall and off each other.
 
-The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls’ positions and velocities in an array. Each ball’s velocity is changed according to gravity, each ball’s position is changed according to its velocity. We check all pairings of balls if they intersect (can you say <span style="--ratio: 2.19; --image: url(emitChunk(/things/omt-for-three-xr/bigo.png))" class="textimage"></span>?), and if they do, the balls are separated and their velocity is changed as if they bounced off of each other.
+The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls’ positions and velocities in an array. Each ball’s velocity is changed according to gravity, each ball’s position is changed according to its velocity. We check all pairings of balls if they intersect (can you say <span style="--ratio: 2.19; --image: url(emitChunk(/things/omt-for-three-xr/bigo.png))" class="textimage" alt="Big O n squared"></span>?), and if they do, the balls are separated and their velocity is changed as if they bounced off of each other.
 
 Moving this code to a worker is doable as it is purely computational and doesn’t rely on any main thread APIs. Since we don’t have a `requestAnimationFrame()` in a worker, we will have to make due with good old `setTimeout()`. We’ll run the physics simulation at 90 ticks per second to make sure we can deliver a fresh frame to the majority of VR devices.
 
 > **Note:** `requestAnimationFrame` has been made available in Workers in Chrome, but that’s the only browser that implemented this. But even if all browsers had that, it would run at the framerate of the web renderer, not necessarily of the VR headset itself. HMD-coupled rAF for workers is something I’d love to see specified in the WebXR API.
 
-The next question is how we inform the UI thread of the new positions of the ball. We could take the naïve approach and just send a JavaScript array containing the positions for all balls on every frame. A quick estimation based on [the rule of thumb][is postmessage slow] reveals: Structured cloning an array of that size would put us at risk of blowing our frame budget at 60fps (let alone 72fps or even 90fps). And that’s just cloning time without any rendering. For a hot-path like this, structured cloning big objects is not going to cut it.
+The next question is how we inform the UI thread of the new positions of the ball. We could take the naïve approach and just send a JavaScript array containing the positions for all balls on every frame. A quick estimation based on [the rule of thumb][is postmessage slow] reveals: Structured cloning an array of that size would put us at risk of blowing our frame budget at 60fps (let alone 72fps or even 90fps). And that’s just cloning time without any rendering. **For a hot paths like this, structured cloning with big objects can often be a bottleneck.**
 
 ### ArrayBuffer
 
 [`ArrayBuffer`][arraybuffer] are a continuous chunk of memory. Just a bunch of bits. Using [`ArrayBuffer` views][typedarray] you can interpret that chunk of memory in different ways. Using `Int8Array` you can interpret it as a sequence of 8-bit signed integers, using `Float32Array` you can interpret it as a sequence of 32-bit IEEE754 floats. Because `ArrayBuffer`s map to a continuous chunk of memory, they are extremely fast to clone.
 
-> **Note:** Did you think I was going to talk about _transferring_ `ArrayBuffer`? I can’t blame you, so did I! In my very first implementation I actually did transfer the `ArrayBuffer`s and built a memory pool so I can reuse memory buffers. However, I realized that before sending the buffer over to the main thread I had to create a copy as I needed the positions to _remain_ in the worker for the next tick of the physics calculation. I tried letting the structured cloning algorithm take care of the copying rather than doing it myself and discovered that it performed just as well which allowed me to get rid of the code for the memory pool and made the overall code simpler to read.
+If you thought I was going to talk about _transferring_ `ArrayBuffer`, I can’t blame you. That was the plan! In my very first implementation I actually did transfer the `ArrayBuffer`s and built a memory pool so I can reuse memory buffers. However, I realized that before sending the buffer over to the main thread I had to create a copy: I need the positions on the main thread to render the next frame _and_ in the worker for the next tick of the physics calculations. So instead of making a copy myself and transferring buffers, I let the structured cloning algorithm take care of the copying. I discovered that it performed just as well which allowed me to get rid of the code for the memory pool and made the overall code simpler to read.
 
 With this out of the way, we can create two `Float32Array`s in our worker, one for the balls’ positions and one for the velocities.
 
@@ -126,8 +135,8 @@ class BallShooter {
     return this._positions;
   }
 
-  _update() {
-    this._doPhysics(delta / 1000);
+  _update(delta) {
+    this._doPhysics(delta);
     this._cb(this._positions);
   }
 
@@ -284,7 +293,7 @@ class BallShooter {
 }
 ```
 
-> **Note:** Another feature request for the WebXR API: I’d love to get access to the positional data (both for the HMD and controllers) from a worker. Since those are tied to a XR session, I’m not sure if that is easily possible, though.
+> **Note:** Another feature request for the WebXR API: I’d love to get access to the positional data (both for the HMD and the controllers) in a worker. Since those are tied to a XR session, I’m not sure if that is easily possible, though.
 
 We have now fully replicated the functionality of the original game, with the physics calculations are isolated to a worker.
 
@@ -294,10 +303,10 @@ With all of that in place, we can play the game just as before. But does it beha
 
 <figure>
   <video src="emitChunk(/things/omt-for-three-xr/ballshooter-2k.mp4)" muted loop controls></video>
-  <figcaption>The game reacts to head movements immediately, even if the balls are frozen in place for extended periods of time. </figcaption>
-</figure
+  <figcaption>The game reacts to head movements much better than before, even though the balls are frozen in place for extended periods of time. </figcaption>
+</figure>
 
-Looking at a trace quantifies what we have just seen: We are _just barely_ inside our main thread budget and the physics just take _way_ too long, but are isolated.
+We still see glimpses of the void at the corners, but they disappear immediately (and are not visible from within the headset). Looking at a trace quantifies what we have just seen: We are _just barely_ inside our main thread budget and the physics just take _way_ too long, but are isolated.
 
 <figure>
   <img src="trace-omt-main.png">
@@ -348,6 +357,11 @@ One additional adjustment is the fact that `InstanceMesh` expects an array of 4x
 At this point the main thread is free to render a more complex scene, more balls or whatever you want to do. We will have to optimize the way our physics calculations are done to make it enjoyable, but that’s a story for another time.
 
 If you want to play off-main-thread version of this game, you can check it out [here][omt ball].
+
+<figure>
+  <video src="emitChunk(/things/omt-for-three-xr/ballshooter-omt-final.mp4)" muted loop controls></video>
+  <figcaption>Even with 2000 balls there are no more glimpses of the void, even with rapid head movements.</figcaption>
+</figure>
 
 ## Conclusion
 
