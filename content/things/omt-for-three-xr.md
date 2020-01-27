@@ -356,12 +356,12 @@ One additional adjustment is the fact that `InstanceMesh` expects an array of 4x
 
 At this point the main thread is free to render a more complex scene, more balls or whatever you want to do. We will have to optimize the way our physics calculations are done to make it enjoyable, but that’s a story for another time.
 
-If you want to play off-main-thread version of this game, you can check it out [here][omt ball].
-
 <figure>
   <video src="emitChunk(/things/omt-for-three-xr/ballshooter-omt-final.mp4)" muted loop controls></video>
   <figcaption>Even with 2000 balls there are no more glimpses of the void, even with rapid head movements.</figcaption>
 </figure>
+
+The only downside of switching to instanced rendering is that ThreeJS’s can only render all instances with the same material. MrDoob said it’s on his list of things to fix. For now, all balls will remain orange. If you want to play the final, off-main-thread version of this game with instanced rendering, you can check it out [here][omt ball].
 
 ## Conclusion
 
