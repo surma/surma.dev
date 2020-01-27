@@ -3,7 +3,7 @@
 "title": "Case study: Moving a Three.js-based WebXR app off-main-thread",
 "date": "2020-01-27",
 "socialmediaimage": "social.jpg",
-"live": false
+"live": true
 }
 
 ---
