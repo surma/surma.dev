@@ -1,8 +1,8 @@
 ---json
 {
 "title": "Case study: Moving a Three.JS-based WebXR app off-main-thread",
-"date": "2020-01-23",
-"socialmediaimage": "social.png",
+"date": "2020-01-27",
+"socialmediaimage": "social.jpg",
 "live": false
 }
 
