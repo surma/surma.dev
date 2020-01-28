@@ -305,7 +305,6 @@ pre > code,
   width: 100%;
   overflow-x: auto;
   padding-left: calc(50vw - var(--width) / 2);
-  padding-right: calc(50vw - var(--width) / 2);
   font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
 }
 blockquote {
