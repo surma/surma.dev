@@ -81,6 +81,7 @@ body {
   background-color: var(--yellow);
   color: var(--darkblue);
   font-family: "Vinila", "Helvetica", sans-serif;
+  font-synthesis: none; /* Make the below render more nicely in Firefox */
   font-variation-settings: "wdth" var(--body-font-width),
     "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
   font-size: var(--grid-height);
