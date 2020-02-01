@@ -50,6 +50,13 @@ async function thumbGalleryPhoto({ file, quality, width, height, resolution }) {
     return await readFile(tmpName);
   });
 }
+
+const lensMatcher = /crs:LensProfileFilename="[^(]*\(([^)]+)\)/;
+function alternateLensName(buffer) {
+  const match = lensMatcher.exec(buffer.toString());
+  return match && match[1];
+}
+
 async function getEXIF({ file }) {
   const key = `${file}:EXIF`;
   const { value } = await cache.get(key, async () => {
@@ -58,6 +65,12 @@ async function getEXIF({ file }) {
     const parser = exifParser.create(buffer);
     parser.enableSimpleValues(false);
     const { tags: exif } = parser.parse();
+
+    const alternateName = alternateLensName(buffer);
+    if (alternateName && alternateName.length > exif.LensModel.length) {
+      exif.LensModel = alternateName;
+    }
+
     return JSON.stringify(exif);
   });
   return JSON.parse(value);
