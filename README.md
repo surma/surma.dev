@@ -1,1 +1,1 @@
-Repo of my private webiste <https://dassur.ma>.
+Repo of my private webiste <https://surma.dev>.

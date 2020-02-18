@@ -9,7 +9,7 @@ const baseData = {
     instagram: "https://instagram.com/dassurma",
     keybase: "https://keybase.io/surma",
     podcast: "https://player.fm/series/http-203-podcast-88674",
-    rss: "https://dassur.ma/index.xml"
+    rss: "https://surma.dev/index.xml"
   }
 };
 
