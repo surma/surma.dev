@@ -42,9 +42,9 @@ module.exports = class {
         <dt>Lens</dt>
         <dd>${LensModel}</dd>
         <dt>Focal length</dt>
-        <dd>${fractionize(FocalLength).toFixed(0)}mm</dd>
+        <dd>${FocalLength ? fractionize(FocalLength).toFixed(0) : '???'}mm</dd>
         <dt>Aperture</dt>
-        <dd>f/${fractionize(FNumber).toFixed(1)}</dd>
+        <dd>f/${FNumber ? fractionize(FNumber).toFixed(1) : '???'}</dd>
         <dt>Shutter speed</dt>
         <dd>${ExposureTime}s</dd>
         <dt>ISO</dt>
