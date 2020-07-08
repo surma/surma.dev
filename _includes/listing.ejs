@@ -15,7 +15,12 @@
   for(const item of items) {
 %>
   <li class="item">
-    <a href="<%= item.url %>"><h3><%= item.data.title %></h3></a>
+    <a href="<%= item.url %>"><h3>
+			<% if(item.data.live === false) { %>
+			[UNPUBLISHED]
+			<% } %>
+		<%= item.data.title %>
+	</h3></a>
     <p class="excerpt">
       <% if(showExcerpt) { %>
         <% if(item.data.excerpt) { %>
