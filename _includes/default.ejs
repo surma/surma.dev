@@ -66,20 +66,19 @@
     <% } %>
   }
 </style>
-<link rel="stylesheet" href="emitChunk(/styles.css)" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="icon" href="/avatars/surma.jpg" />
+<link rel="apple-touch-icon-precomposed" href="/avatars/surma.jpg" />
+<link rel="me" href="mailto:surma@surma.dev" />
+
 <link
   rel="stylesheet"
-  href="emitChunk(/syntax.css)"
+  href="/syntax.css"
   media="none"
   onload="media = 'all'"
 />
-<!-- IndieWeb -->
-<link rel="icon" href="emitChunk(/avatars/surma.jpg)" />
-<link rel="apple-touch-icon-precomposed" href="emitChunk(/avatars/surma.jpg)" />
-<link rel="me" href="mailto:surma@surma.dev" />
-
 <noscript>
-  <link rel="stylesheet" href="emitChunk(/syntax.css)" />
+  <link rel="stylesheet" href="/syntax.css" />
 </noscript>
 <body>
 <header>
@@ -125,7 +124,7 @@
   <a href="/" class="back">← Back to home</a>
   <% } %>
   <section class="me">
-    <img src="emitChunk(/avatars/<%= author.avatar %>)" class="avatar" />
+    <img src="/avatars/<%= author.avatar %>" class="avatar" />
     <div class="bio">
       <h3 class="name">
         <%= author.name %>
@@ -140,7 +139,7 @@
     if(!social) { %><span class="icon"></span><% continue; } %>
     <span
       class="icon"
-      style="--mask: url(emitChunk(/icons/<%= social %>.svg));"
+      style="--mask: url(/icons/<%= social %>.svg);"
     >
       <a href="<%= link %>" rel="me">
         <%= social %>
@@ -162,8 +161,8 @@
   document.head.appendChild(s);
 </script>
 <% if(typeof disableNoise !== "boolean" || !disableNoise) { %>
-<script src="emitChunk(/noise.js)" type="module"></script>
+<script src="/noise.js" type="module"></script>
 <% } %>
 <% if(typeof disableDarkMode !== "boolean" || !disableDarkMode) { %>
-<script src="emitChunk(/darkmode.js)" type="module"></script>
+<script src="/darkmode.js" type="module"></script>
 <% } %>

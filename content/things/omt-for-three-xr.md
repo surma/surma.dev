@@ -17,7 +17,7 @@ Keeping the frame rate stable is vital for virtual reality applications. Off-mai
 I recently [became an owner of the Oculus Quest][oculus tweet], and since the browser that comes with it has support for [WebXR][webxr spec], I thought it only sensible to play around with that API. I looked at the [Three.js examples] and tried out the XR samples. Annoyingly, even the rather bare-bones [Ballshooter] was fun. However, I felt like it didn’t have enough balls. Time to start hacking!
 
 <figure>
-  <video src="emitChunk(/things/omt-for-three-xr/ballshooter-original.mp4)" muted loop controls></video>
+  <video src="/things/omt-for-three-xr/ballshooter-original.mp4" muted loop controls></video>
   <figcaption>The original Ballshooter example from <code>threejs.org</code></figcaption>
 </figure>
 
@@ -50,7 +50,7 @@ The next step is obviously to increase the number of balls:
 This yields a horrible, even nauseating experience:
 
 <figure>
-  <video src="emitChunk(/things/omt-for-three-xr/ballshooter-frustrum-lag.mp4)" muted loop controls></video>
+  <video src="/things/omt-for-three-xr/ballshooter-frustrum-lag.mp4" muted loop controls></video>
   <figcaption>Increasing the number of balls to 2000 prevents the Oculus Quest from shipping frames in time.</figcaption>
 </figure>
 
@@ -73,7 +73,7 @@ This is the same problem I talked about in my [previous blog post on workers][wh
 
 To nobody’s surprise, this is all just an excuse to talk some more about workers and off-main-thread architecture. As I proclaimed in [my Chrome Dev Summit 2019 talk][cds19 talk], the mantra is **“the UI thread is for UI work only”**. The UI thread will run Three.js to render the game using WebGL and will use WebXR to get the parameters of the VR headset and the controllers. What should _not_ run on the UI thread are the physics calculations that make the balls bounce off the wall and off each other.
 
-The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls’ positions and velocities in an array. Each ball’s velocity is changed according to gravity, each ball’s position is changed according to its velocity. We check all pairings of balls if they intersect (can you say <span style="--ratio: 2.19; --image: url(emitChunk(/things/omt-for-three-xr/bigo.png))" class="textimage" alt="Big O n squared"></span>?), and if they do, the balls are separated and their velocity is changed as if they bounced off of each other.
+The physics engine is tailored to this specific app. It is effectively hard-coded to handle a number of balls of the same size in a fixed size room. The implementation is as straight forward as it is unoptimized. We keep all the balls’ positions and velocities in an array. Each ball’s velocity is changed according to gravity, each ball’s position is changed according to its velocity. We check all pairings of balls if they intersect (can you say <span style="--ratio: 2.19; --image: url(/things/omt-for-three-xr/bigo.png)" class="textimage" alt="Big O n squared"></span>?), and if they do, the balls are separated and their velocity is changed as if they bounced off of each other.
 
 Moving this code to a worker is doable as it is purely computational and doesn’t rely on any main thread APIs. Since we don’t have a `requestAnimationFrame()` in a worker, we will have to make due with good old `setTimeout()`. We’ll run the physics simulation at 90 ticks per second to make sure we can deliver a fresh frame to the majority of VR devices.
 
@@ -302,7 +302,7 @@ We have now fully replicated the functionality of the original game, with the ph
 With all of that in place, we can play the game just as before. But does it behave any better when increasing the number of balls to 2000? What you get I’d call unenjoyable but nausea-free:
 
 <figure>
-  <video src="emitChunk(/things/omt-for-three-xr/ballshooter-2k.mp4)" muted loop controls></video>
+  <video src="/things/omt-for-three-xr/ballshooter-2k.mp4" muted loop controls></video>
   <figcaption>The game reacts to head movements much better than before, even though the balls are frozen in place for extended periods of time. </figcaption>
 </figure>
 
@@ -357,7 +357,7 @@ One additional adjustment is the fact that `InstanceMesh` expects an array of 4x
 At this point the main thread is free to render a more complex scene, more balls or whatever you want to do. We will have to optimize the way our physics calculations are done to make it enjoyable, but that’s a story for another time.
 
 <figure>
-  <video src="emitChunk(/things/omt-for-three-xr/ballshooter-omt-final.mp4)" muted loop controls></video>
+  <video src="/things/omt-for-three-xr/ballshooter-omt-final.mp4" muted loop controls></video>
   <figcaption>Even with 2000 balls there are no more glimpses of the void, even with rapid head movements.</figcaption>
 </figure>
 
