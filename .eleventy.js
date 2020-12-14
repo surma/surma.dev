@@ -2,9 +2,8 @@ const syntaxhighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
 require("prismjs/components");
 
 module.exports = function(config) {
-  // Copy /assets and /static to /
+  // Copy /static to /
   config.addPassthroughCopy({ 
-    assets: "/",
     static: "/"
   });
   config.addPlugin(syntaxhighlight);

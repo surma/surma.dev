@@ -17,8 +17,8 @@
   "scripts": {
     "clean": "rm -rf build .tmp .parcel-cache",
     "build": "eleventy && cd .tmp && npm i && parcel build --dist-dir ../_site index.html",
-    "fmt": "prettier --write '{./,./{assets,11ty-plugins,functions,rollup-plugins,_includes,_data}/**/}*.{json,md,js,css}'",
-    "serve": "serve _site"
+    "serve": "eleventy --serve",
+    "fmt": "prettier --write '{./,./{_includes,_data}/**/}*.{json,md,js,css}'"
   },
   "devDependencies": {
     "prettier": "^1.19.1",
