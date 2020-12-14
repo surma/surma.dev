@@ -1,5 +1,5 @@
-import { render, html } from "https://unpkg.com/lit-html@1.0.0";
-import { until } from "https://unpkg.com/lit-html@1.0.0/directives/until.js";
+import { render, html } from "./lit-html@1.0.0/lit-html.js";
+import { until } from "./lit-html@1.0.0/directives/until.js";
 
 const strategy = {
   size(chunk) {
