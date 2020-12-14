@@ -91,6 +91,21 @@
   <link rel="stylesheet" href="/syntax.css" />
 </noscript>
 <body>
+<script type="module">
+  const KEY = "darkmode";
+  let darkMode = localStorage.getItem(KEY);
+  if(typeof darkMode !== "string") {
+    darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches.toString();
+  }
+
+  function set(darkMode) {
+    document.documentElement.classList.toggle("forcedark", darkMode);
+    document.documentElement.classList.toggle("forcelight", !darkMode);
+    localStorage.setItem(KEY, darkMode);
+  }
+  set(darkMode === "true");
+  import("/darkmode.js").then(m => m.init(KEY, set));
+</script>
 <header>
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
   <a href="/" class="back">← Back to home</a>
@@ -170,7 +185,4 @@
 </script>
 <% if(typeof disableNoise !== "boolean" || !disableNoise) { %>
 <script src="/noise.js" type="module"></script>
-<% } %>
-<% if(typeof disableDarkMode !== "boolean" || !disableDarkMode) { %>
-<script src="/darkmode.js" type="module"></script>
 <% } %>
