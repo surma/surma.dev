@@ -20,12 +20,12 @@
 <% if(typeof socialmediaimage === "string") { %>
 <meta
   property="og:image"
-  content="<%= meta.domain %>emitChunk(./<%= socialmediaimage %>)"
+  content="<%= meta.domain %>/<%= socialmediaimage %>"
 />
 <meta name="twitter:card" content="summary_large_image" />
 <meta
   name="twitter:image"
-  content="<%= meta.domain %>emitChunk(./<%= socialmediaimage %>)"
+  content="<%= meta.domain %>/<%= socialmediaimage %>"
 />
 <% } else { %>
 <meta name="twitter:card" content="summary" />
@@ -46,12 +46,12 @@
 </style>
 <meta name="twitter:site" content="@DasSurma" />
 <link rel="canonical" href="<%= meta.domain %><%= page.url %>" />
-<!-- <link
+<link
   href="/index.xml"
   type="application/atom+xml"
   rel="alternate"
   title="Sitewide Atom feed"
-/> -->
+/>
 <style>
   :root{
     <% for(const [name, color] of Object.entries(colors.palette)) { %>
