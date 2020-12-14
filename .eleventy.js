@@ -5,7 +5,7 @@ module.exports = function(config) {
   // Copy /assets and /static to /
   config.addPassthroughCopy({ 
     assets: "/",
-    // static: "/"
+    static: "/"
   });
   config.addPlugin(syntaxhighlight);
 

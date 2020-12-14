@@ -8,16 +8,19 @@
     "htm": "^2.2.1",
     "idb-keyval": "^3.2.0",
     "mkdirp": "^0.5.1",
-    "parcel": "^2.0.0-beta.1",
+    "parcel": "^2.0.0-nightly.477",
     "rimraf": "^3.0.0",
     "rollup": "^1.27.9",
     "rollup-plugin-node-resolve": "^5.2.0"
   },
   "scripts": {
-    "build": "eleventy && parcel build .tmp/index.html",
-    "fmt": "prettier --write '{./,./{assets,11ty-plugins,functions,rollup-plugins,_includes,_data}/**/}*.{json,md,js,css}'"
+    "clean": "rm -rf build .tmp .parcel-cache",
+    "build": "eleventy && cd .tmp && npm i && parcel build --dist-dir ../_site index.html",
+    "fmt": "prettier --write '{./,./{assets,11ty-plugins,functions,rollup-plugins,_includes,_data}/**/}*.{json,md,js,css}'",
+    "serve": "serve _site"
   },
   "devDependencies": {
-    "prettier": "^1.19.1"
+    "prettier": "^1.19.1",
+    "serve": "^11.3.2"
   }
 }
