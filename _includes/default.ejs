@@ -34,6 +34,16 @@
 <meta name="twitter:description" content="<%= excerpt(content) %>" />
 <% } %>
 
+<style>
+  /* Workaround for https://github.com/parcel-bundler/parcel/issues/5475 */
+<% 
+  for(const [social, link] of Object.entries(author.socials)) {
+%>
+  .social_<%= social %> {
+    --mask: url(/icons/<%= social %>.svg);
+  }
+<% } %>
+</style>
 <meta name="twitter:site" content="@DasSurma" />
 <link rel="canonical" href="<%= meta.domain %><%= page.url %>" />
 <!-- <link
@@ -133,13 +143,11 @@
         <%= author.bio %>
       </p>
     </div>
-    <% const numSocialCols = 6; const socials = [ ...new Array(6 -
-    Object.keys(author.socials).length).fill(["", ""]),
-    ...Object.entries(author.socials) ]; for(const [social, link] of socials) {
-    if(!social) { %><span class="icon"></span><% continue; } %>
+    <% 
+      for(const [social, link] of Object.entries(author.socials)) {
+    %>
     <span
-      class="icon"
-      style="--mask: url(/icons/<%= social %>.svg);"
+      class="icon social_<%= social %>"
     >
       <a href="<%= link %>" rel="me">
         <%= social %>

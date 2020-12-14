@@ -413,6 +413,7 @@ footer > .arrows {
   place-items: stretch;
   grid-auto-flow: row sparse;
 }
+
 .name,
 .info {
   margin: 0;
@@ -513,6 +514,7 @@ footer > .arrows {
   mask: var(--mask) var(--social-icon);
   -webkit-mask: var(--mask) var(--social-icon);
 }
+
 .icon:empty {
   opacity: 0;
 }
