@@ -20,12 +20,12 @@
 <% if(typeof socialmediaimage === "string") { %>
 <meta
   property="og:image"
-  content="<%= meta.domain %>/<%= socialmediaimage %>"
+  content="<%= socialmediaimage %>"
 />
 <meta name="twitter:card" content="summary_large_image" />
 <meta
   name="twitter:image"
-  content="<%= meta.domain %>/<%= socialmediaimage %>"
+  content="<%= socialmediaimage %>"
 />
 <% } else { %>
 <meta name="twitter:card" content="summary" />

@@ -5,7 +5,7 @@
   var showExcerpt = typeof showExcerpt === "boolean" ? showExcerpt : true;
   items = items
     .filter(item => item.data.title)
-    .filter(item => staging || item.data.live !== false)
+    .filter(item => meta.isStaging || item.data.live !== false)
     .sort((a, b) => {
       return b.date.getTime() - a.date.getTime();
     });
