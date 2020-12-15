@@ -261,7 +261,7 @@ But is ows useful _for reactive programming_? I chose to answer this question th
 When you take a picture with your camera, the camera needs to focus on a subject. The “focus point”, the point in space that the camera is focusing on, is often shown on the screen of your camera. But not only that specific point is in focus. Subjects closer to the camera (and subjects further away) can also appear sharp on the picture that you take, depending on _how much_ they are deviating from the focus point. The region that subjects can move around in and still remain in focus is called the “Depth of Field”, or DoF for short. Its size depends on a number of things: Focal length and aperture of the lens, subject distance and sensor size of the camera to begin with. There a number of apps out there that calculate the DoF for you based on these variables, but some have a disappointing UX or only expose a subset of the data I am interested in.
 
 <figure>
-  <video src="emitChunk(/things/streams-for-reactive-programming/dof-tool.mp4)" poster="emitChunk(/things/streams-for-reactive-programming/dof-tool-poster.jpg)" muted loop controls></video>
+  <video src="/things/streams-for-reactive-programming/dof-tool.mp4" poster="/things/streams-for-reactive-programming/dof-tool-poster.jpg" muted loop controls></video>
   <figcaption>DoF Tool uses ows to process user input</figcaption>
 </figure>
 

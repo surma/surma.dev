@@ -20,12 +20,12 @@
 <% if(typeof socialmediaimage === "string") { %>
 <meta
   property="og:image"
-  content="<%= meta.domain %>emitChunk(./<%= socialmediaimage %>)"
+  content="<%= socialmediaimage %>"
 />
 <meta name="twitter:card" content="summary_large_image" />
 <meta
   name="twitter:image"
-  content="<%= meta.domain %>emitChunk(./<%= socialmediaimage %>)"
+  content="<%= socialmediaimage %>"
 />
 <% } else { %>
 <meta name="twitter:card" content="summary" />
@@ -34,10 +34,20 @@
 <meta name="twitter:description" content="<%= excerpt(content) %>" />
 <% } %>
 
+<style>
+  /* Workaround for https://github.com/parcel-bundler/parcel/issues/5475 */
+<% 
+  for(const [social, link] of Object.entries(author.socials)) {
+%>
+  .social_<%= social %> {
+    --mask: url(/icons/<%= social %>.svg);
+  }
+<% } %>
+</style>
 <meta name="twitter:site" content="@DasSurma" />
 <link rel="canonical" href="<%= meta.domain %><%= page.url %>" />
 <link
-  href="index.xml"
+  href="/index.xml"
   type="application/atom+xml"
   rel="alternate"
   title="Sitewide Atom feed"
@@ -66,22 +76,36 @@
     <% } %>
   }
 </style>
-<link rel="stylesheet" href="emitChunk(/styles.css)" />
+<link rel="stylesheet" href="/styles.css" />
+<link rel="icon" href="/avatars/surma.jpg" />
+<link rel="apple-touch-icon-precomposed" href="/avatars/surma.jpg" />
+<link rel="me" href="mailto:surma@surma.dev" />
+
 <link
   rel="stylesheet"
-  href="emitChunk(/syntax.css)"
+  href="/syntax.css"
   media="none"
   onload="media = 'all'"
 />
-<!-- IndieWeb -->
-<link rel="icon" href="emitChunk(/avatars/surma.jpg)" />
-<link rel="apple-touch-icon-precomposed" href="emitChunk(/avatars/surma.jpg)" />
-<link rel="me" href="mailto:surma@surma.dev" />
-
 <noscript>
-  <link rel="stylesheet" href="emitChunk(/syntax.css)" />
+  <link rel="stylesheet" href="/syntax.css" />
 </noscript>
 <body>
+<script type="module">
+  const KEY = "darkmode";
+  let darkMode = localStorage.getItem(KEY);
+  if(typeof darkMode !== "string") {
+    darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches.toString();
+  }
+
+  function set(darkMode) {
+    document.documentElement.classList.toggle("forcedark", darkMode);
+    document.documentElement.classList.toggle("forcelight", !darkMode);
+    localStorage.setItem(KEY, darkMode);
+  }
+  set(darkMode === "true");
+  import("/darkmode.js").then(m => m.init(KEY, set));
+</script>
 <header>
   <% if(typeof hasBackButton === "boolean" && hasBackButton) { %>
   <a href="/" class="back">← Back to home</a>
@@ -125,7 +149,7 @@
   <a href="/" class="back">← Back to home</a>
   <% } %>
   <section class="me">
-    <img src="emitChunk(/avatars/<%= author.avatar %>)" class="avatar" />
+    <img src="/avatars/<%= author.avatar %>" class="avatar" />
     <div class="bio">
       <h3 class="name">
         <%= author.name %>
@@ -134,13 +158,11 @@
         <%= author.bio %>
       </p>
     </div>
-    <% const numSocialCols = 6; const socials = [ ...new Array(6 -
-    Object.keys(author.socials).length).fill(["", ""]),
-    ...Object.entries(author.socials) ]; for(const [social, link] of socials) {
-    if(!social) { %><span class="icon"></span><% continue; } %>
+    <% 
+      for(const [social, link] of Object.entries(author.socials)) {
+    %>
     <span
-      class="icon"
-      style="--mask: url(emitChunk(/icons/<%= social %>.svg));"
+      class="icon social_<%= social %>"
     >
       <a href="<%= link %>" rel="me">
         <%= social %>
@@ -162,8 +184,5 @@
   document.head.appendChild(s);
 </script>
 <% if(typeof disableNoise !== "boolean" || !disableNoise) { %>
-<script src="emitChunk(/noise.js)" type="module"></script>
-<% } %>
-<% if(typeof disableDarkMode !== "boolean" || !disableDarkMode) { %>
-<script src="emitChunk(/darkmode.js)" type="module"></script>
+<script src="/noise.js" type="module"></script>
 <% } %>

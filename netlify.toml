@@ -18,7 +18,7 @@
     Cache-Control = "no-cache"
 
 [[headers]]
-  for = "/**/"
+  for = "/**/*.html"
   [headers.values]
     Cache-Control = "no-cache"
 

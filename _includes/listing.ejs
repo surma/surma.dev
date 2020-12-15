@@ -5,7 +5,7 @@
   var showExcerpt = typeof showExcerpt === "boolean" ? showExcerpt : true;
   items = items
     .filter(item => item.data.title)
-    .filter(item => staging || item.data.live !== false)
+    .filter(item => meta.isStaging || item.data.live !== false)
     .sort((a, b) => {
       return b.date.getTime() - a.date.getTime();
     });
@@ -15,7 +15,7 @@
   for(const item of items) {
 %>
   <li class="item">
-    <a href="<%= item.url %>"><h3>
+    <a href="<%= item.url %>/index.html"><h3>
 			<% if(item.data.live === false) { %>
 			[UNPUBLISHED]
 			<% } %>
