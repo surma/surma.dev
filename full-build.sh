@@ -1,6 +1,7 @@
 #!/bin/bash
 
-TARGET_DOMAIN="${BRANCH:-$(git branch --show-current)}--surmblog.netlify.app"
+BRANCH=${BRANCH:-$(git branch --show-current)}
+TARGET_DOMAIN="$BRANCH--surmblog.netlify.app"
 if [ "$BRANCH" = "master" ]; then
   TARGET_DOMAIN="surma.dev"
 fi
