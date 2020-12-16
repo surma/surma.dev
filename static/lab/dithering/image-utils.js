@@ -5,7 +5,7 @@ export async function blobToImageData(blob) {
     img.onload = resolve;
     img.onerror = reject;
   });
-  return imageToImageData(Img);
+  return imageToImageData(img);
 }
 
 export function imageToImageData(img) {
@@ -64,7 +64,7 @@ export class Image {
     return new this.constructor(this.data.slice(), this.width, this.height);
   }
 
-  selfMap(f) {
+  mapSelf(f) {
     this.data.forEach(
       (v, i, arr) => (arr[i] = f(v, { ...this.pixelForIndex(i), i }))
     );
@@ -131,7 +131,7 @@ export class GrayImageF32N0F8 extends Image {
 
   normalizeSelf() {
     const sum = this.data.reduce((sum, v) => sum + v, 0);
-    this.selfMap(v => v / sum);
+    this.mapSelf(v => v / sum);
     return this;
   }
 

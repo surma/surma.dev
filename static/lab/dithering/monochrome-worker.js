@@ -14,7 +14,7 @@ const pipeline = [
     id: "quantized",
     title: "Quantized",
     async process(grayscale) {
-      return grayscale.copy().selfMap(v => (v > 0.5 ? 1.0 : 0.0));
+      return grayscale.copy().mapSelf(v => (v > 0.5 ? 1.0 : 0.0));
     }
   },
   {
@@ -23,7 +23,7 @@ const pipeline = [
     async process(grayscale) {
       return grayscale
         .copy()
-        .selfMap(v => (v + Math.random() - 0.5 > 0.5 ? 1.0 : 0.0));
+        .mapSelf(v => (v + Math.random() - 0.5 > 0.5 ? 1.0 : 0.0));
     }
   },
   ...Array.from({ length: numBayerLevels }, (_, i) => {
@@ -34,7 +34,7 @@ const pipeline = [
         const bayerLevel = await bayerLevels[i];
         return grayscale
           .copy()
-          .selfMap((v, { i }) => (v + bayerLevel[i] - 0.5 > 0.5 ? 1.0 : 0.0));
+          .mapSelf((v, { i }) => (v + bayerLevel[i] - 0.5 > 0.5 ? 1.0 : 0.0));
       }
     };
   }),
