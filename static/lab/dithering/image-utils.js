@@ -23,7 +23,7 @@ export async function imageDataToPNG(imgData) {
   cvs.height = imgData.height;
   const ctx = cvs.getContext("2d");
   ctx.putImageData(imgData, 0, 0);
-  const blob = await new Promise(resolve => cvs.toBlob(resolve, "image/png"));
+  const blob = await new Promise((resolve) => cvs.toBlob(resolve, "image/png"));
   return blob;
 }
 
@@ -36,6 +36,12 @@ export function brightnessU8(r, g, b) {
 }
 
 export class Image {
+  static empty(width, height) {
+    const buffer = new this.BUFFER_TYPE(width * height * this.NUM_CHANNELS);
+    buffer.fill(0);
+    return new this(buffer, width, height);
+  }
+
   pixelIndex(x, y) {
     return y * this.width + x;
   }
@@ -43,7 +49,7 @@ export class Image {
   pixelForIndex(i) {
     return {
       x: i % this.width,
-      y: Math.floor(i / this.width)
+      y: Math.floor(i / this.width),
     };
   }
 
@@ -80,9 +86,29 @@ export class Image {
     }
     return true;
   }
+
+  randomPixel() {
+    const i = Math.floor(Math.random() * this.width * this.height);
+    return this.pixel(i);
+  }
+
+  *allCoordinates() {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        yield { x, y };
+      }
+    }
+  }
+
+  *allPixels() {
+    for (const { x, y } of this.allCoordinates()) {
+      yield { x, y, pixel: this.pixelAt(x, y) };
+    }
+  }
 }
 
 export class RGBAImageU8 extends Image {
+  static BUFFER_TYPE = Uint8ClampedArray;
   static NUM_CHANNELS = 4;
 
   constructor(data, width, height) {
@@ -106,6 +132,7 @@ export class RGBAImageU8 extends Image {
 }
 
 export class GrayImageF32N0F8 extends Image {
+  static BUFFER_TYPE = Float32Array;
   static NUM_CHANNELS = 1;
 
   constructor(data, width, height) {
@@ -131,7 +158,7 @@ export class GrayImageF32N0F8 extends Image {
 
   normalizeSelf() {
     const sum = this.data.reduce((sum, v) => sum + v, 0);
-    this.mapSelf(v => v / sum);
+    this.mapSelf((v) => v / sum);
     return this;
   }
 

@@ -1,7 +1,7 @@
 import {
   blobToImageData,
   imageDataToPNG,
-  imageToImageData
+  imageToImageData,
 } from "./image-utils.js";
 
 const { fileinput, log, results, examplebtn, exampleimg } = document.all;
@@ -11,7 +11,7 @@ if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
 } else {
   worker = new Worker("./monochrome-worker.js", { type: "module" });
 }
-worker.addEventListener("message", async ev => {
+worker.addEventListener("message", async (ev) => {
   const { title, imageData } = ev.data;
   const imgUrl = URL.createObjectURL(await imageDataToPNG(imageData));
   results.innerHTML += `
@@ -21,6 +21,9 @@ worker.addEventListener("message", async ev => {
     </div>
   `;
 });
+worker.addEventListener("error", () =>
+  console.error("Something went wrong in the worker")
+);
 
 examplebtn.addEventListener("click", async () => {
   try {

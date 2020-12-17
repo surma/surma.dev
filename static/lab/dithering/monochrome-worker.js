@@ -8,14 +8,17 @@ if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
 } else {
   bayerWorker = new Worker("./bayer-worker.js", { type: "module" });
 }
+bayerWorker.addEventListener("error", () =>
+  console.error("Something went wrong in the Bayer worker")
+);
 
 const pipeline = [
   {
     id: "quantized",
     title: "Quantized",
     async process(grayscale) {
-      return grayscale.copy().mapSelf(v => (v > 0.5 ? 1.0 : 0.0));
-    }
+      return grayscale.copy().mapSelf((v) => (v > 0.5 ? 1.0 : 0.0));
+    },
   },
   {
     id: "random",
@@ -23,19 +26,21 @@ const pipeline = [
     async process(grayscale) {
       return grayscale
         .copy()
-        .mapSelf(v => (v + Math.random() - 0.5 > 0.5 ? 1.0 : 0.0));
-    }
+        .mapSelf((v) => (v + Math.random() - 0.5 > 0.5 ? 1.0 : 0.0));
+    },
   },
-  ...Array.from({ length: numBayerLevels }, (_, i) => {
+  ...Array.from({ length: numBayerLevels }, (_, level) => {
     return {
-      id: `bayer-${i}`,
-      title: `Bayer Level ${i + 1}`,
+      id: `bayer-${level}`,
+      title: `Bayer Level ${level + 1}`,
       async process(grayscale, { bayerLevels }) {
-        const bayerLevel = await bayerLevels[i];
+        const bayerLevel = await bayerLevels[level];
         return grayscale
           .copy()
-          .mapSelf((v, { i }) => (v + bayerLevel[i] - 0.5 > 0.5 ? 1.0 : 0.0));
-      }
+          .mapSelf((v, { i }) =>
+            v + bayerLevel.pixel(i)[0] - 0.5 > 0.5 ? 1.0 : 0.0
+          );
+      },
     };
   }),
   {
@@ -45,9 +50,9 @@ const pipeline = [
       return errorDiffusion(
         grayscale.copy(),
         new GrayImageF32N0F8(new Float32Array([0, 1, 1, 0]), 2, 2),
-        v => (v > 0.5 ? 1.0 : 0.0)
+        (v) => (v > 0.5 ? 1.0 : 0.0)
       );
-    }
+    },
   },
   {
     id: "floydsteinberg",
@@ -56,9 +61,9 @@ const pipeline = [
       return errorDiffusion(
         grayscale.copy(),
         new GrayImageF32N0F8(new Float32Array([0, 0, 7, 1, 5, 3]), 3, 2),
-        v => (v > 0.5 ? 1.0 : 0.0)
+        (v) => (v > 0.5 ? 1.0 : 0.0)
       );
-    }
+    },
   },
   {
     id: "jjn",
@@ -71,29 +76,29 @@ const pipeline = [
           5,
           3
         ),
-        v => (v > 0.5 ? 1.0 : 0.0)
+        (v) => (v > 0.5 ? 1.0 : 0.0)
       );
-    }
-  }
+    },
+  },
 ];
 
 function errorDiffusion(img, diffusor, quantizeFunc) {
   diffusor.normalizeSelf();
-  for (let y = 0; y < img.height; y++) {
-    for (let x = 0; x < img.width; x++) {
-      const original = img.pixelAt(x, y)[0];
-      const quantized = quantizeFunc(original);
-      img.pixelAt(x, y)[0] = quantized;
-      const error = original - quantized;
-      for (let diffY = 0; diffY < diffusor.height; diffY++) {
-        for (let diffX = 0; diffX < diffusor.width; diffX++) {
-          const offsetX = diffX - Math.floor((diffusor.width - 1) / 2);
-          const offsetY = diffY;
-          if (img.isInBounds(x + offsetX, y + offsetY)) {
-            const pixel = img.pixelAt(x + offsetX, y + offsetY);
-            pixel[0] = pixel[0] + error * diffusor.pixelAt(diffX, diffY)[0];
-          }
-        }
+  for (const { x, y, pixel } of img.allPixels()) {
+    const original = pixel[0];
+    const quantized = quantizeFunc(original);
+    pixel[0] = quantized;
+    const error = original - quantized;
+    for (const {
+      x: diffX,
+      y: diffY,
+      pixel: diffPixel,
+    } of diffusor.allPixels()) {
+      const offsetX = diffX - Math.floor((diffusor.width - 1) / 2);
+      const offsetY = diffY;
+      if (img.isInBounds(x + offsetX, y + offsetY)) {
+        const pixel = img.pixelAt(x + offsetX, y + offsetY);
+        pixel[0] = pixel[0] + error * diffPixel[0];
       }
     }
   }
@@ -112,22 +117,24 @@ async function init() {
         width: original.width,
         height: original.height,
         level: i,
-        id
+        id,
       });
-      return message(bayerWorker, id).then(m => m.result);
+      return message(bayerWorker, id).then((m) =>
+        Object.setPrototypeOf(m.result, GrayImageF32N0F8.prototype)
+      );
     });
 
     postMessage({
       id: "original",
       title: "Original",
-      imageData: original
+      imageData: original,
     });
 
     const grayscale = GrayImageF32N0F8.fromImageData(original);
     postMessage({
       id: "grayscale",
       title: "Grayscale",
-      imageData: grayscale.toImageData()
+      imageData: grayscale.toImageData(),
     });
 
     for (const step of pipeline) {
@@ -135,7 +142,7 @@ async function init() {
       postMessage({
         resultType: step.id,
         title: step.title,
-        imageData: result.toImageData()
+        imageData: result.toImageData(),
       });
       step.result = result;
     }
