@@ -105,7 +105,7 @@ const pipeline = [
   },
   {
     id: "bluenoise",
-    title: "Blue Noise",
+    title: "Blue Noise (20 minutes, prerendered)",
     async process(grayscale) {
       const bluenoise = await bluenoisePromise;
       const result = grayscale.copy();
@@ -118,7 +118,7 @@ const pipeline = [
   },
   {
     id: "mybluenoise",
-    title: "40-second Blue Noise",
+    title: "Blue Noise (40 seconds, live)",
     async process(grayscale) {
       const bluenoise = await myBluenoisePromise;
       const result = grayscale.copy();

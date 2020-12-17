@@ -1,7 +1,7 @@
 import { GrayImageF32N0F8 } from "./image-utils.js";
 
-const runtime = 40e3; //ms
-const size = 64;
+const runtime = 40 * 1000; //ms
+const size = 128;
 const oi = 2.1;
 const os = 1.0;
 
