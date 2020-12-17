@@ -1,11 +1,16 @@
-export async function blobToImageData(blob) {
+export async function imageFileToImageData(url) {
   const img = document.createElement("img");
-  img.src = URL.createObjectURL(blob);
+  img.src = url;
   await new Promise((resolve, reject) => {
     img.onload = resolve;
     img.onerror = reject;
   });
   return imageToImageData(img);
+}
+
+export async function blobToImageData(blob) {
+  const url = URL.createObjectURL(blob);
+  return imageFileToImageData(url);
 }
 
 export function imageToImageData(img) {
@@ -25,6 +30,16 @@ export async function imageDataToPNG(imgData) {
   ctx.putImageData(imgData, 0, 0);
   const blob = await new Promise((resolve) => cvs.toBlob(resolve, "image/png"));
   return blob;
+}
+
+function clamp(min, v, max) {
+  if (v < min) {
+    return min;
+  }
+  if (v > max) {
+    return max;
+  }
+  return v;
 }
 
 export function brightnessN0F8(r, g, b) {
@@ -61,7 +76,14 @@ export class Image {
       this.constructor.NUM_CHANNELS
     );
   }
-  pixelAt(x, y) {
+  pixelAt(x, y, { wrap = false } = {}) {
+    if (wrap) {
+      x = x % this.width;
+      y = y % this.height;
+    } else {
+      x = clamp(0, x, this.width - 1);
+      y = clamp(0, y, this.height - 1);
+    }
     const nth = this.pixelIndex(x, y);
     return this.pixel(nth);
   }

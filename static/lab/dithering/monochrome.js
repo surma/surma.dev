@@ -1,5 +1,6 @@
 import {
   blobToImageData,
+  imageFileToImageData,
   imageDataToPNG,
   imageToImageData,
 } from "./image-utils.js";
@@ -25,10 +26,24 @@ worker.addEventListener("error", () =>
   console.error("Something went wrong in the worker")
 );
 
+imageFileToImageData("./bluenoise.png").then((bluenoise) =>
+  worker.postMessage({
+    id: "bluenoise",
+    bluenoise,
+  })
+);
+
+function dither(image) {
+  worker.postMessage({
+    id: "image",
+    image,
+  });
+}
+
 examplebtn.addEventListener("click", async () => {
   try {
     const imgData = await imageToImageData(exampleimg);
-    worker.postMessage(imgData);
+    dither(imgData);
   } catch (e) {
     log.innerHTML += `${e.message}\n`;
   }
@@ -38,7 +53,7 @@ fileinput.addEventListener("change", async () => {
   const file = fileinput.files[0];
   try {
     const imgData = await blobToImageData(file);
-    worker.postMessage(imgData);
+    dither(imgData);
   } catch (e) {
     log.innerHTML += `${e.message}\n`;
   }

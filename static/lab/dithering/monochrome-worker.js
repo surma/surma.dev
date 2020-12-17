@@ -12,6 +12,29 @@ bayerWorker.addEventListener("error", () =>
   console.error("Something went wrong in the Bayer worker")
 );
 
+let bluenoiseWorker;
+if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
+  bluenoiseWorker = new Worker("./bluenoise-worker.js");
+} else {
+  bluenoiseWorker = new Worker("./bluenoise-worker.js", { type: "module" });
+}
+bluenoiseWorker.addEventListener("error", () =>
+  console.error("Something went wrong in the Bluenoise worker")
+);
+const myBluenoisePromise = new Promise((resolve) => {
+  bluenoiseWorker.addEventListener(
+    "message",
+    ({ data }) => {
+      resolve(Object.setPrototypeOf(data, GrayImageF32N0F8.prototype));
+    },
+    { once: true }
+  );
+});
+
+const bluenoisePromise = message(self, "bluenoise").then((m) =>
+  GrayImageF32N0F8.fromImageData(m.bluenoise)
+);
+
 const pipeline = [
   {
     id: "quantized",
@@ -80,6 +103,32 @@ const pipeline = [
       );
     },
   },
+  {
+    id: "bluenoise",
+    title: "Blue Noise",
+    async process(grayscale) {
+      const bluenoise = await bluenoisePromise;
+      const result = grayscale.copy();
+      for (const { x, y, pixel } of result.allPixels()) {
+        pixel[0] = pixel[0] + bluenoise.pixelAt(x, y, { wrap: true })[0] - 0.5;
+        pixel[0] = pixel[0] > 0.5 ? 1.0 : 0.0;
+      }
+      return result;
+    },
+  },
+  {
+    id: "mybluenoise",
+    title: "40-second Blue Noise",
+    async process(grayscale) {
+      const bluenoise = await myBluenoisePromise;
+      const result = grayscale.copy();
+      for (const { x, y, pixel } of result.allPixels()) {
+        pixel[0] = pixel[0] + bluenoise.pixelAt(x, y, { wrap: true })[0] - 0.5;
+        pixel[0] = pixel[0] > 0.5 ? 1.0 : 0.0;
+      }
+      return result;
+    },
+  },
 ];
 
 function errorDiffusion(img, diffusor, quantizeFunc) {
@@ -109,13 +158,18 @@ async function init() {
   const reader = MessageStream().getReader();
 
   while (true) {
-    const { value: original } = await reader.read();
+    const {
+      value: { image, id },
+    } = await reader.read();
+    if (id != "image") {
+      continue;
+    }
     const jobId = uid();
     const bayerLevels = Array.from({ length: numBayerLevels }, (_, i) => {
       const id = `${jobId}-${i}`;
       bayerWorker.postMessage({
-        width: original.width,
-        height: original.height,
+        width: image.width,
+        height: image.height,
         level: i,
         id,
       });
@@ -127,10 +181,10 @@ async function init() {
     postMessage({
       id: "original",
       title: "Original",
-      imageData: original,
+      imageData: image,
     });
 
-    const grayscale = GrayImageF32N0F8.fromImageData(original);
+    const grayscale = GrayImageF32N0F8.fromImageData(image);
     postMessage({
       id: "grayscale",
       title: "Grayscale",
