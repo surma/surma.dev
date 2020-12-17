@@ -1,18 +1,24 @@
 import {
   blobToImageData,
-  imageFileToImageData,
   imageDataToPNG,
-  imageToImageData,
+  imageToImageData
 } from "./image-utils.js";
 
-const { fileinput, log, results, examplebtn, exampleimg } = document.all;
+const {
+  fileinput,
+  log,
+  results,
+  examplebtn,
+  exampleimg,
+  bluenoiseimg
+} = document.all;
 let worker;
 if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
   worker = new Worker("./monochrome-worker.js");
 } else {
   worker = new Worker("./monochrome-worker.js", { type: "module" });
 }
-worker.addEventListener("message", async (ev) => {
+worker.addEventListener("message", async ev => {
   const { title, imageData } = ev.data;
   const imgUrl = URL.createObjectURL(await imageDataToPNG(imageData));
   results.innerHTML += `
@@ -26,17 +32,18 @@ worker.addEventListener("error", () =>
   console.error("Something went wrong in the worker")
 );
 
-imageFileToImageData("./bluenoise.png").then((bluenoise) =>
+bluenoiseimg.decode().then(() => {
+  const bluenoise = imageToImageData(bluenoiseimg);
   worker.postMessage({
     id: "bluenoise",
-    bluenoise,
-  })
-);
+    bluenoise
+  });
+});
 
 function dither(image) {
   worker.postMessage({
     id: "image",
-    image,
+    image
   });
 }
 

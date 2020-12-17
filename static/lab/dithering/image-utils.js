@@ -28,7 +28,7 @@ export async function imageDataToPNG(imgData) {
   cvs.height = imgData.height;
   const ctx = cvs.getContext("2d");
   ctx.putImageData(imgData, 0, 0);
-  const blob = await new Promise((resolve) => cvs.toBlob(resolve, "image/png"));
+  const blob = await new Promise(resolve => cvs.toBlob(resolve, "image/png"));
   return blob;
 }
 
@@ -64,7 +64,7 @@ export class Image {
   pixelForIndex(i) {
     return {
       x: i % this.width,
-      y: Math.floor(i / this.width),
+      y: Math.floor(i / this.width)
     };
   }
 
@@ -180,7 +180,7 @@ export class GrayImageF32N0F8 extends Image {
 
   normalizeSelf() {
     const sum = this.data.reduce((sum, v) => sum + v, 0);
-    this.mapSelf((v) => v / sum);
+    this.mapSelf(v => v / sum);
     return this;
   }
 

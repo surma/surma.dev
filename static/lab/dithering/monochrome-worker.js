@@ -21,7 +21,7 @@ if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
 bluenoiseWorker.addEventListener("error", () =>
   console.error("Something went wrong in the Bluenoise worker")
 );
-const myBluenoisePromise = new Promise((resolve) => {
+const myBluenoisePromise = new Promise(resolve => {
   bluenoiseWorker.addEventListener(
     "message",
     ({ data }) => {
@@ -31,7 +31,7 @@ const myBluenoisePromise = new Promise((resolve) => {
   );
 });
 
-const bluenoisePromise = message(self, "bluenoise").then((m) =>
+const bluenoisePromise = message(self, "bluenoise").then(m =>
   GrayImageF32N0F8.fromImageData(m.bluenoise)
 );
 
@@ -40,8 +40,8 @@ const pipeline = [
     id: "quantized",
     title: "Quantized",
     async process(grayscale) {
-      return grayscale.copy().mapSelf((v) => (v > 0.5 ? 1.0 : 0.0));
-    },
+      return grayscale.copy().mapSelf(v => (v > 0.5 ? 1.0 : 0.0));
+    }
   },
   {
     id: "random",
@@ -49,8 +49,8 @@ const pipeline = [
     async process(grayscale) {
       return grayscale
         .copy()
-        .mapSelf((v) => (v + Math.random() - 0.5 > 0.5 ? 1.0 : 0.0));
-    },
+        .mapSelf(v => (v + Math.random() - 0.5 > 0.5 ? 1.0 : 0.0));
+    }
   },
   ...Array.from({ length: numBayerLevels }, (_, level) => {
     return {
@@ -63,7 +63,7 @@ const pipeline = [
           .mapSelf((v, { i }) =>
             v + bayerLevel.pixel(i)[0] - 0.5 > 0.5 ? 1.0 : 0.0
           );
-      },
+      }
     };
   }),
   {
@@ -73,9 +73,9 @@ const pipeline = [
       return errorDiffusion(
         grayscale.copy(),
         new GrayImageF32N0F8(new Float32Array([0, 1, 1, 0]), 2, 2),
-        (v) => (v > 0.5 ? 1.0 : 0.0)
+        v => (v > 0.5 ? 1.0 : 0.0)
       );
-    },
+    }
   },
   {
     id: "floydsteinberg",
@@ -84,9 +84,9 @@ const pipeline = [
       return errorDiffusion(
         grayscale.copy(),
         new GrayImageF32N0F8(new Float32Array([0, 0, 7, 1, 5, 3]), 3, 2),
-        (v) => (v > 0.5 ? 1.0 : 0.0)
+        v => (v > 0.5 ? 1.0 : 0.0)
       );
-    },
+    }
   },
   {
     id: "jjn",
@@ -99,9 +99,9 @@ const pipeline = [
           5,
           3
         ),
-        (v) => (v > 0.5 ? 1.0 : 0.0)
+        v => (v > 0.5 ? 1.0 : 0.0)
       );
-    },
+    }
   },
   {
     id: "bluenoise",
@@ -114,7 +114,7 @@ const pipeline = [
         pixel[0] = pixel[0] > 0.5 ? 1.0 : 0.0;
       }
       return result;
-    },
+    }
   },
   {
     id: "mybluenoise",
@@ -127,8 +127,8 @@ const pipeline = [
         pixel[0] = pixel[0] > 0.5 ? 1.0 : 0.0;
       }
       return result;
-    },
-  },
+    }
+  }
 ];
 
 function errorDiffusion(img, diffusor, quantizeFunc) {
@@ -141,7 +141,7 @@ function errorDiffusion(img, diffusor, quantizeFunc) {
     for (const {
       x: diffX,
       y: diffY,
-      pixel: diffPixel,
+      pixel: diffPixel
     } of diffusor.allPixels()) {
       const offsetX = diffX - Math.floor((diffusor.width - 1) / 2);
       const offsetY = diffY;
@@ -159,7 +159,7 @@ async function init() {
 
   while (true) {
     const {
-      value: { image, id },
+      value: { image, id }
     } = await reader.read();
     if (id != "image") {
       continue;
@@ -171,9 +171,9 @@ async function init() {
         width: image.width,
         height: image.height,
         level: i,
-        id,
+        id
       });
-      return message(bayerWorker, id).then((m) =>
+      return message(bayerWorker, id).then(m =>
         Object.setPrototypeOf(m.result, GrayImageF32N0F8.prototype)
       );
     });
@@ -181,14 +181,14 @@ async function init() {
     postMessage({
       id: "original",
       title: "Original",
-      imageData: image,
+      imageData: image
     });
 
     const grayscale = GrayImageF32N0F8.fromImageData(image);
     postMessage({
       id: "grayscale",
       title: "Grayscale",
-      imageData: grayscale.toImageData(),
+      imageData: grayscale.toImageData()
     });
 
     for (const step of pipeline) {
@@ -196,7 +196,7 @@ async function init() {
       postMessage({
         resultType: step.id,
         title: step.title,
-        imageData: result.toImageData(),
+        imageData: result.toImageData()
       });
       step.result = result;
     }

@@ -26,7 +26,7 @@ async function init() {
 
   while (true) {
     const {
-      value: { width, height, level, id },
+      value: { width, height, level, id }
     } = await reader.read();
 
     const bayer = calculateBayerLevel(level);
