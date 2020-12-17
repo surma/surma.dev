@@ -55,7 +55,7 @@ const pipeline = [
   ...Array.from({ length: numBayerLevels }, (_, level) => {
     return {
       id: `bayer-${level}`,
-      title: `Bayer Level ${level + 1}`,
+      title: `Bayer Level ${level}`,
       async process(grayscale, { bayerLevels }) {
         const bayerLevel = await bayerLevels[level];
         return grayscale
