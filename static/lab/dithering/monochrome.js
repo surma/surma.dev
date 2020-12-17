@@ -19,14 +19,26 @@ if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
   worker = new Worker("./monochrome-worker.js", { type: "module" });
 }
 worker.addEventListener("message", async ev => {
-  const { title, imageData } = ev.data;
-  const imgUrl = URL.createObjectURL(await imageDataToPNG(imageData));
-  results.innerHTML += `
-    <div>
-      <h1>${title}</h1>
-      <img src="${imgUrl}">
-    </div>
-  `;
+  const { id, type, title, imageData } = ev.data;
+  let container = document.getElementById(id);
+  if (!container) {
+    container = document.createElement("fieldset");
+    container.id = id;
+    container.innerHTML = `<legend>${title}</legend>`;
+    results.append(container);
+  }
+  while (container.lastChild.nodeName !== "LEGEND") {
+    container.lastChild.remove();
+  }
+  switch (type) {
+    case "started":
+      container.innerHTML += "Processing...";
+      break;
+    case "result":
+      const imgUrl = URL.createObjectURL(await imageDataToPNG(imageData));
+      container.innerHTML += `<img src="${imgUrl}">`;
+      break;
+  }
 });
 worker.addEventListener("error", () =>
   console.error("Something went wrong in the worker")

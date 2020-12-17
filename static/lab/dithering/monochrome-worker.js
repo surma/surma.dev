@@ -179,6 +179,7 @@ async function init() {
     });
 
     postMessage({
+      type: "result",
       id: "original",
       title: "Original",
       imageData: image
@@ -186,19 +187,24 @@ async function init() {
 
     const grayscale = GrayImageF32N0F8.fromImageData(image);
     postMessage({
+      type: "result",
       id: "grayscale",
       title: "Grayscale",
       imageData: grayscale.toImageData()
     });
 
     for (const step of pipeline) {
+      postMessage({
+        type: "started",
+        id: step.id,
+        title: step.title
+      });
       const result = await step.process(grayscale, { bayerLevels });
       postMessage({
-        resultType: step.id,
-        title: step.title,
+        type: "result",
+        id: step.id,
         imageData: result.toImageData()
       });
-      step.result = result;
     }
   }
 }
