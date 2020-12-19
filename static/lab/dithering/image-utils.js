@@ -76,16 +76,42 @@ export class Image {
       this.constructor.NUM_CHANNELS
     );
   }
+
+  wrapCoordinates({ x, y }) {
+    x = x % this.width;
+    if (x < 0) x += this.width;
+    y = y % this.height;
+    if (y < 0) y += this.height;
+    return { x, y };
+  }
+
   pixelAt(x, y, { wrap = false } = {}) {
     if (wrap) {
-      x = x % this.width;
-      y = y % this.height;
+      ({ x, y } = this.wrapCoordinates({ x, y }));
     } else {
       x = clamp(0, x, this.width - 1);
       y = clamp(0, y, this.height - 1);
     }
     const nth = this.pixelIndex(x, y);
     return this.pixel(nth);
+  }
+
+  valueAt({ x, y, channel = 0 }, { wrap = false } = {}) {
+    if (wrap) {
+      ({ x, y } = this.wrapCoordinates({ x, y }));
+    }
+    return this.data[
+      this.pixelIndex(x, y) * this.constructor.NUM_CHANNELS + channel
+    ];
+  }
+
+  setValueAt({ x, y, channel = 0 }, v, { wrap = false } = {}) {
+    if (wrap) {
+      ({ x, y } = this.wrapCoordinates({ x, y }));
+    }
+    this.data[
+      this.pixelIndex(x, y) * this.constructor.NUM_CHANNELS + channel
+    ] = v;
   }
 
   copy() {
@@ -127,6 +153,54 @@ export class Image {
       yield { x, y, pixel: this.pixelAt(x, y) };
     }
   }
+
+  convolve(other) {
+    console.assert(
+      other.width % 2 == 1 && other.height % 2 == 1,
+      "Convolution matrix must have odd size"
+    );
+
+    const result = this.copy();
+    const offsetX = Math.floor(other.width / 2);
+    const offsetY = Math.floor(other.height / 2);
+    for (const p of this.allCoordinates()) {
+      let sum = 0;
+      for (const q of other.allCoordinates()) {
+        const x = p.x + q.x - offsetX;
+        const y = p.y + q.y - offsetY;
+        sum += this.valueAt({ x, y }, { wrap: true }) * other.valueAt(q);
+      }
+      result.setValueAt(p, sum);
+    }
+    return result;
+  }
+
+  max() {
+    let max;
+    for (const i of this.allPixels()) {
+      if (!max || max.pixel[0] < i.pixel[0]) {
+        max = i;
+      }
+    }
+    return max;
+  }
+
+  min() {
+    let min;
+    for (const i of this.allPixels()) {
+      if (!min || min.pixel[0] > i.pixel[0]) {
+        min = i;
+      }
+    }
+    return min;
+  }
+}
+
+function nextOdd(n) {
+  if (n % 2 == 0) {
+    return n + 1;
+  }
+  return n;
 }
 
 export class RGBAImageU8 extends Image {
@@ -153,6 +227,8 @@ export class RGBAImageU8 extends Image {
   }
 }
 
+const gaussCache = new Map();
+
 export class GrayImageF32N0F8 extends Image {
   static BUFFER_TYPE = Float32Array;
   static NUM_CHANNELS = 1;
@@ -162,6 +238,34 @@ export class GrayImageF32N0F8 extends Image {
     this.width = width;
     this.height = height;
     this.data = data;
+  }
+
+  static gaussianKernel(
+    stdDev,
+    {
+      width = nextOdd(Math.ceil(6 * stdDev)),
+      height = nextOdd(Math.ceil(6 * stdDev))
+    } = {}
+  ) {
+    const key = `${stdDev}:${width}:${height}`;
+    if (gaussCache.has(key)) {
+      return gaussCache.get(key).copy();
+    }
+    const img = GrayImageF32N0F8.empty(width, height);
+    const factor = 1 / (2 * Math.PI * stdDev ** 2);
+    for (const { x, y, pixel } of img.allPixels()) {
+      pixel[0] =
+        factor *
+        Math.exp(
+          -(
+            (x - Math.floor(width / 2)) ** 2 +
+            (y - Math.floor(width / 2)) ** 2
+          ) /
+            (2 * stdDev ** 2)
+        );
+    }
+    gaussCache.set(key, img.copy());
+    return img;
   }
 
   static fromImageData(sourceImage) {
@@ -193,5 +297,13 @@ export class GrayImageF32N0F8 extends Image {
       data[i * 4 + 3] = 255;
     }
     return new ImageData(data, this.width, this.height);
+  }
+
+  gaussianBlur(stdDev, { kernelWidth, kernelHeight } = {}) {
+    const kernel = GrayImageF32N0F8.gaussianKernel(stdDev, {
+      width: kernelWidth,
+      height: kernelHeight
+    });
+    return this.convolve(kernel);
   }
 }

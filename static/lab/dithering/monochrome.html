@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-<!-- This way Parcel is aware of the image -->
-<img src="./bluenoise.png" id="bluenoiseimg" style="display: none" />
+<style>
+img {
+  image-rendering: pixelated;
+}
+</style>
 <input type="file" id="fileinput" />
 <button id="examplebtn">
   <img src="./monochrome-image.png" id="exampleimg" height="40" />

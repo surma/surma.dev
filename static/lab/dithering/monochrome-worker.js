@@ -4,35 +4,23 @@ import { GrayImageF32N0F8 } from "./image-utils.js";
 const numBayerLevels = 4;
 let bayerWorker;
 if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  bayerWorker = new Worker("./bayer-worker.js");
+  bayerWorker = new Worker("./bayer-worker.js", { name: "bayer" });
 } else {
-  bayerWorker = new Worker("./bayer-worker.js", { type: "module" });
+  bayerWorker = new Worker("./bayer-worker.js", {
+    name: "bayer",
+    type: "module"
+  });
 }
 bayerWorker.addEventListener("error", () =>
   console.error("Something went wrong in the Bayer worker")
 );
 
-let bluenoiseWorker;
-if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  bluenoiseWorker = new Worker("./bluenoise-worker.js");
-} else {
-  bluenoiseWorker = new Worker("./bluenoise-worker.js", { type: "module" });
-}
-bluenoiseWorker.addEventListener("error", () =>
-  console.error("Something went wrong in the Bluenoise worker")
-);
-const myBluenoisePromise = new Promise(resolve => {
-  bluenoiseWorker.addEventListener(
-    "message",
-    ({ data }) => {
-      resolve(Object.setPrototypeOf(data, GrayImageF32N0F8.prototype));
-    },
-    { once: true }
-  );
-});
-
-const bluenoisePromise = message(self, "bluenoise").then(m =>
-  GrayImageF32N0F8.fromImageData(m.bluenoise)
+let myBluenoiseDuration;
+const myBluenoisePromise = message(self, "bluenoise").then(
+  ({ mask, duration }) => {
+    myBluenoiseDuration = duration;
+    return Object.setPrototypeOf(mask, GrayImageF32N0F8.prototype);
+  }
 );
 
 const pipeline = [
@@ -104,21 +92,13 @@ const pipeline = [
     }
   },
   {
-    id: "bluenoise",
-    title: "Blue Noise (20 minutes, prerendered)",
-    async process(grayscale) {
-      const bluenoise = await bluenoisePromise;
-      const result = grayscale.copy();
-      for (const { x, y, pixel } of result.allPixels()) {
-        pixel[0] = pixel[0] + bluenoise.pixelAt(x, y, { wrap: true })[0] - 0.5;
-        pixel[0] = pixel[0] > 0.5 ? 1.0 : 0.0;
-      }
-      return result;
-    }
-  },
-  {
     id: "mybluenoise",
-    title: "Blue Noise (40 seconds, live)",
+    title: () =>
+      `Blue Noise (${
+        myBluenoiseDuration
+          ? `${myBluenoiseDuration.toFixed(1)}ms`
+          : "takes a bit..."
+      })`,
     async process(grayscale) {
       const bluenoise = await myBluenoisePromise;
       const result = grayscale.copy();
@@ -194,14 +174,22 @@ async function init() {
     });
 
     for (const step of pipeline) {
+      let title = step.title;
+      if (typeof step.title === "function") {
+        title = step.title();
+      }
       postMessage({
         type: "started",
         id: step.id,
-        title: step.title
+        title
       });
       const result = await step.process(grayscale, { bayerLevels });
+      if (typeof step.title === "function") {
+        title = step.title();
+      }
       postMessage({
         type: "result",
+        title,
         id: step.id,
         imageData: result.toImageData()
       });

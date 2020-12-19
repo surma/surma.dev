@@ -24,12 +24,13 @@ worker.addEventListener("message", async ev => {
   if (!container) {
     container = document.createElement("fieldset");
     container.id = id;
-    container.innerHTML = `<legend>${title}</legend>`;
+    container.innerHTML = `<legend></legend>`;
     results.append(container);
   }
   while (container.lastChild.nodeName !== "LEGEND") {
     container.lastChild.remove();
   }
+  container.querySelector("legend").textContent = title;
   switch (type) {
     case "started":
       container.innerHTML += "Processing...";
@@ -43,14 +44,6 @@ worker.addEventListener("message", async ev => {
 worker.addEventListener("error", () =>
   console.error("Something went wrong in the worker")
 );
-
-bluenoiseimg.decode().then(() => {
-  const bluenoise = imageToImageData(bluenoiseimg);
-  worker.postMessage({
-    id: "bluenoise",
-    bluenoise
-  });
-});
 
 function dither(image) {
   worker.postMessage({
@@ -77,3 +70,23 @@ fileinput.addEventListener("change", async () => {
     log.innerHTML += `${e.message}\n`;
   }
 });
+
+let bluenoiseWorker;
+if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
+  bluenoiseWorker = new Worker("./bluenoise-worker.js", { name: "bluenoise" });
+} else {
+  bluenoiseWorker = new Worker("./bluenoise-worker.js", {
+    name: "bluenoise",
+    type: "module"
+  });
+}
+bluenoiseWorker.addEventListener("error", () =>
+  console.error("Something went wrong in the Bluenoise worker")
+);
+bluenoiseWorker.addEventListener(
+  "message",
+  ({ data }) => {
+    worker.postMessage({ ...data, id: "bluenoise" });
+  },
+  { once: true }
+);
