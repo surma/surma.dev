@@ -152,6 +152,9 @@ figure > * {
   max-width: 100%;
   height: auto;
 }
+figure > p:first-child {
+  display:contents;
+}
 figcaption {
   margin-top: var(--grid-height);
   max-width: calc(100% - 2 * var(--grid-height));
