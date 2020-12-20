@@ -1,6 +1,6 @@
 ---json
 {
-  "title": "Dithering",
+  "title": "Ditherpunk",
   "date": "2020-12-15"
 }
 ---

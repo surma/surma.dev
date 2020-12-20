@@ -299,8 +299,8 @@ Using this diffusion matrixn, even on larger, monotone areas look organic and la
 [Unity]: https://unity.com/
 [Squoosh]: https://squoosh.app
 [dukope dithering]: https://forums.tigsource.com/index.php?topic=40832.msg1363742#msg1363742
-[demo]: /lab/dithering/monochrome.html
-[lab]: /lab/dithering
+[demo]: /lab/ditherpunk/lab.html
+[lab]: /lab/ditherpunk
 [bluenoise93]: ./bluenoise-1993.pdf
 [bayer wikipedia]: https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps
 [bayer filter]: https://en.wikipedia.org/wiki/Bayer_filter
