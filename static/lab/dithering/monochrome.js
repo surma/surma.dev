@@ -22,15 +22,16 @@ worker.addEventListener("message", async ev => {
   const { id, type, title, imageData } = ev.data;
   let container = document.getElementById(id);
   if (!container) {
-    container = document.createElement("fieldset");
+    container = document.createElement("details");
     container.id = id;
-    container.innerHTML = `<legend></legend>`;
+    container.open = true
+    container.innerHTML = `<summary></summary>`;
     results.append(container);
   }
-  while (container.lastChild.nodeName !== "LEGEND") {
+  while (container.lastChild.nodeName !== "SUMMARY") {
     container.lastChild.remove();
   }
-  container.querySelector("legend").textContent = title;
+  container.querySelector("summary").textContent = title;
   switch (type) {
     case "started":
       container.innerHTML += "Processing...";
