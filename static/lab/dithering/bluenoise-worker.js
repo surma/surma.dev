@@ -94,11 +94,8 @@ for (let i = numOnes; i < Math.floor(numPixels / 2); i++) {
 
 // Phase 3
 binaryPattern.mapSelf(v => 1.0 - v);
-for (let i = Math.floor(numPixels / 2) - 1; i < numPixels; i++) {
+for (let i = Math.floor(numPixels / 2) ; i < numPixels; i++) {
   const c = tightestCluster(binaryPattern, gaussian);
-  if (!c) {
-    break;
-  }
   binaryPattern.setValueAt(c, 0.0);
   dither.setValueAt(c, i);
 }
