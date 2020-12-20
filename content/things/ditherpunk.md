@@ -5,27 +5,33 @@ socialmediaimage: "social.png"
 live: false
 ---
 
-How can you make an image look good and close to the original when just using two colors? This article may contain traces of nostaliga and no traces of Lenna.
+Ditherpunk — applying dithering to modern visuals. This article may contain traces of nostaliga and no traces of Lenna.
 
 <!-- more -->
 
 ## How did I get here? (You can skip this)
-s
-I am late to the party, but I finally played [“Return of the Obra Dinn”][Obra Dinn], the most recent game by [Lucas Pope][dukope] of [“Papers Please”][Papers Please] fame. Obra Dinn is a story puzzler that I can only recommend. But what really struck me is that is a 3D game (written using the [Unity game engine][Unity]) using dithering with a monochrome color palette — a combination that I have neverseen before. Apparently, this has been dubbed “Ditherpunk”. And I like it.
+
+I am late to the party, but I finally played [“Return of the Obra Dinn”][Obra Dinn], the most recent game by [Lucas Pope][dukope] of [“Papers Please”][Papers Please] fame. Obra Dinn is a story puzzler that I can only recommend. But what really struck me is that is a 3D game (using the [Unity game engine][Unity]) but rendered using only 2 colors with dithering. Apparently, this has been dubbed “Ditherpunk”, and I love that.
 
 <figure>
   <img src="./obradinn.png" class="pixelated">
   <figcaption>Screenshot of “Return of the Obra Dinn”.</figcaption>
 </figure>
 
-The fact that I have never seen a 3D game with this extreme level of dithering probably stems from the fact that color palettes are mostly a thing from the past. You _may_ remember running Windows 98 with 256 colors or playing games like “Monkey Island” with 16 colors.
+The fact that I have never seen a 3D game with dithering like this probably stems from the fact that color palettes are mostly a thing of the past. You _may_ remember running Windows 95 with 16 colors or playing games like “Monkey Island” with 16 colors.
 
-<figure>
-  <img src="./monkeyisland16.png" class="pixelated">
-  <figcaption>Screenshot of “The Secret of Monkey Island” using 16 colors.</figcaption>
-</figure>
+<section class="carousel">
+  <figure>
+    <img src="./win95.png">
+    <figcaption>Windows 95 configured to use 16 colors. Now spend hours trying to find the right floppy disk with the drivers to get the “256 colors” or, <em>gasp</em>, “True Color” show up.</figcaption>
+  </figure>
+  <figure>
+    <img src="./monkeyisland16.png" class="pixelated">
+    <figcaption>Screenshot of “The Secret of Monkey Island” using 16 colors.</figcaption>
+  </figure>
+</section>
 
-For a long time now, however, we have had 8 bits per channel per pixel, allowing each pixel on your screen to assume one of 16 million colors. With HDR and wide gamut on the horizon, things are moving even further away to from requiring any form of dithering. _But I liked the way it looked._ Knowing a tiny bit about dithering from my work on [Squoosh], I was especially impressed with Obra Dinn’s ability to keep the dithering stable while I moved and rotated the camera through 3D space. I wanted to learn how this dithering magic worked.
+For a long time now, however, we have had 8 bits per channel per pixel, allowing each pixel on your screen to assume one of 16 million colors. With HDR and wide gamut on the horizon, things are moving even further away to ever requiring any form of dithering. _But I like the way it looks,_ and Obra Dinn rekindled that love for me. Knowing a tiny bit about dithering from my work on [Squoosh], I was especially impressed with Obra Dinn’s ability to keep the dithering stable while I moved and rotated the camera through 3D space.
 
 > **Note**: As it turns out, Lucas Pope put extensive work into finding a way to make his dithering visually stable. He wrote about his attempts in a [forum blog post][dukope dithering], which features some of the dithering techniques in this article.
 

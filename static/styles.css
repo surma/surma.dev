@@ -164,6 +164,9 @@ figcaption {
     "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
   text-align: center;
 }
+figcaption em{
+  --body-font-slant: 0;
+}
 :not(pre) > code {
   color: var(--blue);
 }
