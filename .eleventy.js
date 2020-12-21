@@ -2,7 +2,7 @@ const syntaxhighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
 require("prismjs/components");
 
 let markdownIt = require("markdown-it");
-let markdownItKatex = require("markdown-it-katex");
+let markdownItKatex = require("./plugins/markdown-it-katex");
 let options = {
   html: true,
 };
