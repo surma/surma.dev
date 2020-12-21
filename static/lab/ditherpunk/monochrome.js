@@ -24,7 +24,7 @@ worker.addEventListener("message", async ev => {
   if (!container) {
     container = document.createElement("details");
     container.id = id;
-    container.open = true
+    container.open = true;
     container.innerHTML = `<summary></summary>`;
     results.append(container);
   }

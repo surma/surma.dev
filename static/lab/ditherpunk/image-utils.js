@@ -208,8 +208,8 @@ export class Image {
   toComplex() {
     const result = ImageComplexF32.empty(this.width, this.height);
     const c = new Complex();
-    for(const p of result.allCoordinates()) {
-      result.setValueAt(p, c.setFromCartesian({re: this.valueAt(p), im: 0}));
+    for (const p of result.allCoordinates()) {
+      result.setValueAt(p, c.setFromCartesian({ re: this.valueAt(p), im: 0 }));
     }
     return result;
   }
@@ -312,14 +312,22 @@ export class GrayImageF32N0F8 extends Image {
     return this.convolve(kernel);
   }
 
-  clampSelf({min = 0, max = 1} = {}) {
+  clampSelf({ min = 0, max = 1 } = {}) {
     return this.mapSelf(v => clamp(min, v, max));
   }
 }
 
 export function bitReverse(x, numBits) {
   // Lol
-  return parseInt(x.toString(2).padStart(numBits, "0").split("").reverse().join(""), 2);
+  return parseInt(
+    x
+      .toString(2)
+      .padStart(numBits, "0")
+      .split("")
+      .reverse()
+      .join(""),
+    2
+  );
   // x = (x & 0x55555555)  <<   1 | (x & 0xAAAAAAAA) >>  1;
   // x = (x & 0x33333333)  <<   2 | (x & 0xCCCCCCCC) >>  2;
   // x = (x & 0x0F0F0F0F)  <<   4 | (x & 0xF0F0F0F0) >>  4;
@@ -333,13 +341,13 @@ export class ImageComplexF32 extends Image {
   static BUFFER_TYPE = Float32Array;
   static NUM_CHANNELS = 2;
 
-  // real() {
-  //   const img = GrayImageF32N0F8.empty(this.width, this.height);
-  //   for(const p of img.allCoordinates()) {
-  //     img.setValueAt(p, this.valueAt({...p, channel: 0}));
-  //   }
-  //   return img;
-  // }
+  real() {
+    const img = GrayImageF32N0F8.empty(this.width, this.height);
+    for (const p of img.allCoordinates()) {
+      img.setValueAt(p, this.valueAt(p).toCartesian().re);
+    }
+    return img;
+  }
 
   // imaginary() {
   //   const img = GrayImageF32N0F8.empty(this.width, this.height);
@@ -351,73 +359,96 @@ export class ImageComplexF32 extends Image {
 
   abs() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);
-    for(const p of img.allCoordinates()) {
+    for (const p of img.allCoordinates()) {
       img.setValueAt(p, this.valueAt(p).r);
     }
     return img;
   }
 
-  valueAt({x, y}) {
-    const r = super.valueAt({x, y, channel: 0});
-    const phi = super.valueAt({x, y, channel: 1});
+  valueAt({ x, y }) {
+    const r = super.valueAt({ x, y, channel: 0 });
+    const phi = super.valueAt({ x, y, channel: 1 });
     return new Complex(r, phi);
   }
 
-  setValueAt({x, y}, c) {
-    super.setValueAt({x, y, channel: 0}, c.r);
-    super.setValueAt({x, y, channel: 1}, c.phi);
+  setValueAt({ x, y }, c) {
+    super.setValueAt({ x, y, channel: 0 }, c.r);
+    super.setValueAt({ x, y, channel: 1 }, c.phi);
   }
 
-
-  _fft1Self(start, num, inc) {
+  _fft1Self(start, num, inc, sign = -1) {
     const bits = Math.log2(num);
     // Re-arrange data to bit-reversed order
-    for(let i = 0; i < num; i++) {
+    for (let i = 0; i < num; i++) {
       const bi = bitReverse(i, bits);
-      if(i > bi) {
+      if (i > bi) {
         continue;
       }
-      const p1 ={x: start.x + i * inc.x, y: start.y + i * inc.y};
-      const p2 = {x: start.x + bi * inc.x, y: start.y + bi * inc.y};
+      const p1 = { x: start.x + i * inc.x, y: start.y + i * inc.y };
+      const p2 = { x: start.x + bi * inc.x, y: start.y + bi * inc.y };
       const v1 = this.valueAt(p1);
       const v2 = this.valueAt(p2);
       this.setValueAt(p1, v2);
       this.setValueAt(p2, v1);
     }
 
-    for(let s = 1; s <= bits; s++) {
-        const m = 2**s;
-        const wm = new Complex(1, -2*Math.PI/m);
-        for(let k = 0; k < num; k += m) {
-            const w = new Complex(1, 0);
-            for(let j = 0; j < m/2; j++) {
-              const pt = {x: start.x + (k + j + m/2)*inc.x, y: start.y + (k+j+m/2)*inc.y};
-              const t = w.copy().multiplySelf(this.valueAt(pt));
-              const pu = {x: start.x + (k + j)*inc.x, y: start.y + (k+j)*inc.y};
-              const u = this.valueAt(pu);
-              this.setValueAt(pu, u.copy().addSelf(t)) ;
-              this.setValueAt(pt, u.copy().subtractSelf(t)) ;
-              w.multiplySelf(wm);
-            }
+    for (let s = 1; s <= bits; s++) {
+      const m = 2 ** s;
+      const wm = new Complex(1, (sign * 2 * Math.PI) / m);
+      for (let k = 0; k < num; k += m) {
+        const w = new Complex(1, 0);
+        for (let j = 0; j < m / 2; j++) {
+          const pt = {
+            x: start.x + (k + j + m / 2) * inc.x,
+            y: start.y + (k + j + m / 2) * inc.y
+          };
+          const t = w.copy().multiplySelf(this.valueAt(pt));
+          const pu = {
+            x: start.x + (k + j) * inc.x,
+            y: start.y + (k + j) * inc.y
+          };
+          const u = this.valueAt(pu);
+          this.setValueAt(pu, u.copy().addSelf(t));
+          this.setValueAt(pt, u.copy().subtractSelf(t));
+          w.multiplySelf(wm);
         }
+      }
     }
     return this;
   }
 
   fftSelf() {
-    return this.fft2Self();
+    return this._fft2Self(-1);
   }
 
-  fft2Self() {
+  mapSelf(f) {
+    for (const c of this.allCoordinates()) {
+      this.setValueAt(c, f(this.valueAt(c)));
+    }
+    return this;
+  }
+
+  ifftSelf() {
+    const n = this.width * this.height;
+    return this._fft2Self(1).mapSelf(v => {
+      v.r *= 1 / n;
+      return v;
+    });
+  }
+
+  _fft2Self(sign = -1) {
     console.assert(this.width == this.height, "Can only fft square images");
     const numBits = Math.log2(this.width);
-    console.assert(numBits == Math.floor(numBits), "Can only fft images whose size is a power of 2");
+    console.assert(
+      numBits == Math.floor(numBits),
+      "Can only fft images whose size is a power of 2"
+    );
 
-    for(let y = 0; y < this.height; y++) {
-      this._fft1Self({x: 0, y}, this.width, {x: 1, y: 0});
+    for (let y = 0; y < this.height; y++) {
+      this._fft1Self({ x: 0, y }, this.width, { x: 1, y: 0 }, sign);
     }
-    for(let x = 0; x < this.width; x++) {
-      this._fft1Self({x, y: 0}, this.height, {x: 0, y: 1});
+    for (let x = 0; x < this.width; x++) {
+      this._fft1Self({ x, y: 0 }, this.height, { x: 0, y: 1 }, sign);
     }
     return this;
   }
@@ -429,8 +460,8 @@ export class Complex {
     this.phi = phi;
   }
 
-  static fromCartesian({re = 0, im = 0} = {}) {
-    return new Complex(0, 0).setFromCartesian({re, im});
+  static fromCartesian({ re = 0, im = 0 } = {}) {
+    return new Complex(0, 0).setFromCartesian({ re, im });
   }
 
   copy() {
@@ -452,16 +483,16 @@ export class Complex {
     return this.addSelf(other);
   }
 
-  setFromCartesian({re = 0, im = 0} = {}) {
-    this.r = Math.sqrt(re**2 +im**2);
-    if(re == 0 && im == 0) {
+  setFromCartesian({ re = 0, im = 0 } = {}) {
+    this.r = Math.sqrt(re ** 2 + im ** 2);
+    if (re == 0 && im == 0) {
       this.phi = Number.NaN;
     } else if (re > 0 && im == 0) {
       this.phi = 0;
     } else if (re < 0 && im == 0) {
       this.phi = -1 * Math.PI;
     } else {
-      this.phi = 2*Math.atan(im / (this.r + re));
+      this.phi = 2 * Math.atan(im / (this.r + re));
     }
     return this;
   }
@@ -477,5 +508,11 @@ export class Complex {
     this.r *= c.r;
     this.phi += c.phi;
     return this;
+  }
+
+  swapSelf() {
+    const c = this.toCartesian();
+    [c.re, c.im] = [c.im, c.re];
+    this.setFromCartesian(c);
   }
 }
