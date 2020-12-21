@@ -148,7 +148,6 @@ figure {
   align-items: center;
 }
 figure > * {
-  max-height: 66vh;
   max-width: 100%;
   height: auto;
 }
@@ -619,7 +618,6 @@ footer .back {
   flex-wrap: nowrap;
   align-items: center;
   width: 100%;
-  max-height: 66vh;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
 }
