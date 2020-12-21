@@ -14,7 +14,7 @@ I always loved the visual aesthetic of dithering but never knew how exactly it i
 I am late to the party, but I finally played [“Return of the Obra Dinn”][Obra Dinn], the most recent game by [Lucas Pope][dukope] of [“Papers Please”][Papers Please] fame. Obra Dinn is a story puzzler that I can only recommend. But what really struck me is that is a 3D game (using the [Unity game engine][Unity]) but rendered using only 2 colors with dithering. Apparently, this has been dubbed “Ditherpunk”, and I love that.
 
 <figure>
-  <img src="./obradinn.png" class="pixelated">
+  <img loading="lazy" src="./obradinn.png" class="pixelated">
   <figcaption>Screenshot of “Return of the Obra Dinn”.</figcaption>
 </figure>
 
@@ -43,7 +43,7 @@ According to Wikipedia, “Dither is an intentionally applied form of noise used
 ### Quantization 
 
 <figure>
-  <img src="original.png" class="pixelated">
+  <img loading="lazy" src="original.png" class="pixelated">
   <figcaption>Our example image for this article: A black-and-white photograph of San Francisco’s Golden Gate Bridge, downscaled to 400x267 (<a href="./hires.jpg" target="_blank">higher resolution</a>).</figcaption>
 </figure>
 
@@ -60,7 +60,7 @@ grayscaleImage.mapSelf(brightness =>
 ```
 
 <figure>
-  <img src="quantized.png" class="pixelated">
+  <img loading="lazy" src="quantized.png" class="pixelated">
   <figcaption>Each pixel has been quantized to the either black or white depending on its brightness.</figcaption>
 </figure>
 
@@ -75,7 +75,7 @@ grayscaleImage.mapSelf(brightness =>
 ```
 
 <figure>
-  <img src="random.png" class="pixelated">
+  <img loading="lazy" src="random.png" class="pixelated">
   <figcaption>Random noise [-0.5; 0.5] has been added to each pixel before quantization.</figcaption>
 </figure>
 
@@ -116,7 +116,7 @@ $$
 The upside of this approach is that we can talk about a “threshold maps”. These maps can make it easier to reason about why a resulting image looks the way it does by visualizing the threshold map itself. Threshold maps can also be precomputed and reused, which makes the dithering process parallelizable per pixel and as a result can be run as a shader on the GPU. This is what Obra Dinn does! The threshold map for our random noise is also called “white noise”. The name comes from a term in signal processing where every frequency has the same intensity, just like in white light.
 
 <figure>
-  <img src="./whitenoise.png" class="pixelated">
+  <img loading="lazy" src="./whitenoise.png" class="pixelated">
   <figcaption>The threshold map for O.G. dithering is, by definition, white noise.</figcaption>
 </figure>
 
@@ -186,7 +186,7 @@ A level n Bayer matrix contains the number $0$ to $2^{2n+2}$. To use them as a t
 Both white noise and Bayer dithering have drawbacks, of course. Bayer dithering, for example, is very structured and will look quite repetitive, especially at lower levels. White noise is random, meaning that there will be clusters of bright pixels and voids of darker pixels. This can be made more obvious by squinting or, if that is too much work for you, through blurring  algorithmically. These clusters and voids are affecting the output of the dithering process as well, as details in darker areas will not get accurately represented if they fall into one of the cluster or brighter areas fall into a void.
 
 <figure>
-  <img src="whitenoiseblur.png" class="pixelated">
+  <img loading="lazy" src="whitenoiseblur.png" class="pixelated">
   <figcaption>Clear clusters and voids remain visible even after applying a Gaussian blur (σ = 1.5).</figcaption>
 </figure>
 
@@ -199,14 +199,14 @@ The algorithm is based on the idea that you can detect a pixel that is part of c
 My implementation works fine but is not very fast, as I didn’t spend much time optimizing. It takes about 1 minute to generate a 64×64 blue noise texture on my 2018 MacBook, which is sufficient for these purposes. If something faster is needed, the most obvious optimization would to apply the Gaussian Blur not as a convolution filter but in the frequency domain instead. 
 
 <figure>
-  <img src="bluenoiseblur.png" class="pixelated">
+  <img loading="lazy" src="bluenoiseblur.png" class="pixelated">
   <figcaption>A 64×64 blue noise with a Gaussian blur applied (σ = 1.5). No clear structures remain.</figcaption>
 </figure>
 
 As blue noise is based on a Gaussian Blur, which is calculated on a torus (a fancy way of saying that Gaussian blur wraps around at the edges), blue noise will also tile seamlessly. So we can use the 64×64 blue noise and repeat it to cover the entire image. Blue noise dithering has a nice, even distribution without showing any obvious patterns, balancing rendering of details and organic look.
 
 <figure>
-  <img src="bluenoise.png" class="pixelated">
+  <img loading="lazy" src="bluenoise.png" class="pixelated">
   <figcaption>Blue noise dithering.</figcaption>
 </figure>
 
@@ -243,7 +243,7 @@ We now visit each pixel in the image (in the right order!). We quantize the curr
 This animation is supposed to visualize the algorithm, rather than showcase it’s effectiveness. 4×4 pixels are hardly enough do diffuse and average out quantization error. The idea is that if a pixel is made brighter during quantization, neighboring pixels will be made _darker_ to make up for it. 
 
 <figure>
-<img src="./simple2d.png" class="pixelated">
+<img loading="lazy" src="./simple2d.png" class="pixelated">
 <figcaption>Simple 2D error diffusion applied to our test image. The line-like patterns are typical for this simple diffusion matrix.</figcaption>
 </figure>
 
@@ -269,7 +269,7 @@ $$
 Floyd Steinberg is a big improvement as it prevents a lot of patterns from forming. However, larger areas with little texture can still end up looking a bit unorganic.
 
 <figure>
-<img src="./floydsteinberg.png" class="pixelated">
+<img loading="lazy" src="./floydsteinberg.png" class="pixelated">
 <figcaption>Floyd-Steinberg Dithering applied to our test image. Large, monotone areas still show repeating patterns.</figcaption>
 </figure>
 
@@ -294,7 +294,7 @@ $$
 Using this diffusion matrix, even larger, monotone areas look organic and lack repeating patterns. However, the borders of the image can appear undithered as only tiny amounts of the error are diffused to the first couple of rows.
 
 <figure>
-<img src="./jarvisjudiceninke.png" class="pixelated">
+<img loading="lazy" src="./jarvisjudiceninke.png" class="pixelated">
 <figcaption>Jarvis’, Judice’s and Ninke’s dithering matric creates a very organic patterns, but fails at the border of the image.</figcaption>
 </figure>
 
