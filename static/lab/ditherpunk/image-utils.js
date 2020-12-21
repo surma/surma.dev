@@ -22,12 +22,16 @@ export function imageToImageData(img) {
   return ctx.getImageData(0, 0, cvs.width, cvs.height);
 }
 
-export async function imageDataToPNG(imgData) {
+export function imageDataToCanvas(imgData) {
   const cvs = document.createElement("canvas");
   cvs.width = imgData.width;
   cvs.height = imgData.height;
   const ctx = cvs.getContext("2d");
   ctx.putImageData(imgData, 0, 0);
+  return cvs;
+}
+export async function imageDataToPNG(imgData) {
+  const cvs = imageDataToCanvas(imageData);
   const blob = await new Promise(resolve => cvs.toBlob(resolve, "image/png"));
   return blob;
 }
@@ -51,6 +55,12 @@ export function brightnessU8(r, g, b) {
 }
 
 export class Image {
+  constructor(data, width, height) {
+    this.data = data;
+    this.width = width;
+    this.height = height;
+  }
+
   static empty(width, height) {
     const buffer = new this.BUFFER_TYPE(width * height * this.NUM_CHANNELS);
     buffer.fill(0);
@@ -194,6 +204,15 @@ export class Image {
     }
     return min;
   }
+
+  toComplex() {
+    const result = ImageComplexF32.empty(this.width, this.height);
+    const c = new Complex();
+    for(const p of result.allCoordinates()) {
+      result.setValueAt(p, c.setFromCartesian({re: this.valueAt(p), im: 0}));
+    }
+    return result;
+  }
 }
 
 function nextOdd(n) {
@@ -206,13 +225,6 @@ function nextOdd(n) {
 export class RGBAImageU8 extends Image {
   static BUFFER_TYPE = Uint8ClampedArray;
   static NUM_CHANNELS = 4;
-
-  constructor(data, width, height) {
-    super();
-    this.width = width;
-    this.height = height;
-    this.data = data;
-  }
 
   static fromImageData(imgData) {
     return new RGBAImageU8(
@@ -232,13 +244,6 @@ const gaussCache = new Map();
 export class GrayImageF32N0F8 extends Image {
   static BUFFER_TYPE = Float32Array;
   static NUM_CHANNELS = 1;
-
-  constructor(data, width, height) {
-    super();
-    this.width = width;
-    this.height = height;
-    this.data = data;
-  }
 
   static gaussianKernel(
     stdDev,
@@ -305,5 +310,172 @@ export class GrayImageF32N0F8 extends Image {
       height: kernelHeight
     });
     return this.convolve(kernel);
+  }
+
+  clampSelf({min = 0, max = 1} = {}) {
+    return this.mapSelf(v => clamp(min, v, max));
+  }
+}
+
+export function bitReverse(x, numBits) {
+  // Lol
+  return parseInt(x.toString(2).padStart(numBits, "0").split("").reverse().join(""), 2);
+  // x = (x & 0x55555555)  <<   1 | (x & 0xAAAAAAAA) >>  1;
+  // x = (x & 0x33333333)  <<   2 | (x & 0xCCCCCCCC) >>  2;
+  // x = (x & 0x0F0F0F0F)  <<   4 | (x & 0xF0F0F0F0) >>  4;
+  // x = (x & 0x00FF00FF)  <<   8 | (x & 0xFF00FF00) >>  8;
+  // x = (x & 0x0000FFFF)  <<  16 | (x & 0xFFFF0000) >> 16;
+
+  // return x >>> 0;
+}
+
+export class ImageComplexF32 extends Image {
+  static BUFFER_TYPE = Float32Array;
+  static NUM_CHANNELS = 2;
+
+  // real() {
+  //   const img = GrayImageF32N0F8.empty(this.width, this.height);
+  //   for(const p of img.allCoordinates()) {
+  //     img.setValueAt(p, this.valueAt({...p, channel: 0}));
+  //   }
+  //   return img;
+  // }
+
+  // imaginary() {
+  //   const img = GrayImageF32N0F8.empty(this.width, this.height);
+  //   for(const p of img.allCoordinates()) {
+  //     img.setValueAt(p, this.valueAt({...p, channel: 1}));
+  //   }
+  //   return img;
+  // }
+
+  abs() {
+    const img = GrayImageF32N0F8.empty(this.width, this.height);
+    for(const p of img.allCoordinates()) {
+      img.setValueAt(p, this.valueAt(p).r);
+    }
+    return img;
+  }
+
+  valueAt({x, y}) {
+    const r = super.valueAt({x, y, channel: 0});
+    const phi = super.valueAt({x, y, channel: 1});
+    return new Complex(r, phi);
+  }
+
+  setValueAt({x, y}, c) {
+    super.setValueAt({x, y, channel: 0}, c.r);
+    super.setValueAt({x, y, channel: 1}, c.phi);
+  }
+
+
+  _fft1Self(start, num, inc) {
+    const bits = Math.log2(num);
+    // Re-arrange data to bit-reversed order
+    for(let i = 0; i < num; i++) {
+      const bi = bitReverse(i, bits);
+      if(i > bi) {
+        continue;
+      }
+      const p1 ={x: start.x + i * inc.x, y: start.y + i * inc.y};
+      const p2 = {x: start.x + bi * inc.x, y: start.y + bi * inc.y};
+      const v1 = this.valueAt(p1);
+      const v2 = this.valueAt(p2);
+      this.setValueAt(p1, v2);
+      this.setValueAt(p2, v1);
+    }
+
+    for(let s = 1; s <= bits; s++) {
+        const m = 2**s;
+        const wm = new Complex(1, -2*Math.PI/m);
+        for(let k = 0; k < num; k += m) {
+            const w = new Complex(1, 0);
+            for(let j = 0; j < m/2; j++) {
+              const pt = {x: start.x + (k + j + m/2)*inc.x, y: start.y + (k+j+m/2)*inc.y};
+              const t = w.copy().multiplySelf(this.valueAt(pt));
+              const pu = {x: start.x + (k + j)*inc.x, y: start.y + (k+j)*inc.y};
+              const u = this.valueAt(pu);
+              this.setValueAt(pu, u.copy().addSelf(t)) ;
+              this.setValueAt(pt, u.copy().subtractSelf(t)) ;
+              w.multiplySelf(wm);
+            }
+        }
+    }
+    return this;
+  }
+
+  fftSelf() {
+    return this.fft2Self();
+  }
+
+  fft2Self() {
+    console.assert(this.width == this.height, "Can only fft square images");
+    const numBits = Math.log2(this.width);
+    console.assert(numBits == Math.floor(numBits), "Can only fft images whose size is a power of 2");
+
+    for(let y = 0; y < this.height; y++) {
+      this._fft1Self({x: 0, y}, this.width, {x: 1, y: 0});
+    }
+    for(let x = 0; x < this.width; x++) {
+      this._fft1Self({x, y: 0}, this.height, {x: 0, y: 1});
+    }
+    return this;
+  }
+}
+
+export class Complex {
+  constructor(r, phi) {
+    this.r = r;
+    this.phi = phi;
+  }
+
+  static fromCartesian({re = 0, im = 0} = {}) {
+    return new Complex(0, 0).setFromCartesian({re, im});
+  }
+
+  copy() {
+    return new Complex(this.r, this.phi);
+  }
+
+  addSelf(other) {
+    const thisC = this.toCartesian();
+    const otherC = other.toCartesian();
+    thisC.re += otherC.re;
+    thisC.im += otherC.im;
+    this.setFromCartesian(thisC);
+    return this;
+  }
+
+  subtractSelf(other) {
+    other = other.copy();
+    other.phi += -1 * Math.PI;
+    return this.addSelf(other);
+  }
+
+  setFromCartesian({re = 0, im = 0} = {}) {
+    this.r = Math.sqrt(re**2 +im**2);
+    if(re == 0 && im == 0) {
+      this.phi = Number.NaN;
+    } else if (re > 0 && im == 0) {
+      this.phi = 0;
+    } else if (re < 0 && im == 0) {
+      this.phi = -1 * Math.PI;
+    } else {
+      this.phi = 2*Math.atan(im / (this.r + re));
+    }
+    return this;
+  }
+
+  toCartesian() {
+    return {
+      re: Math.cos(this.phi) * this.r,
+      im: Math.sin(this.phi) * this.r
+    };
+  }
+
+  multiplySelf(c) {
+    this.r *= c.r;
+    this.phi += c.phi;
+    return this;
   }
 }
