@@ -7,6 +7,7 @@ if [ "$BRANCH" = "master" ]; then
 fi
 
 export TARGET_DOMAIN
+export BRANCH
 
 PUBLIC_URL=${PUBLIC_URL:-"https://${TARGET_DOMAIN}"}
 npx eleventy
