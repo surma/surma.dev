@@ -1,0 +1,39 @@
+<!doctype html>
+<style>
+  html {
+    background-color: purple;
+  }
+canvas {
+  margin: 10px;
+  width: 400px;
+  height: auto;
+  image-rendering: pixelated;
+}
+</style>
+<script type="module">
+  import * as iu from "./image-utils.js";
+
+  function show(img) {
+    const max = img.max().pixel[0];
+    img.mapSelf(v => v /max);
+    // document.body.append(`Max:${max}`);
+    document.body.append(iu.imageDataToCanvas(img.toImageData()));
+  }
+  const rnd = iu.GrayImageF32N0F8.empty(8, 8);
+  // rnd.mapSelf(() => 1.0);
+  for(const {x, y, pixel} of rnd.allPixels()) {
+    if(x >=3 && x <= 5 && y >=3 && y<= 5) {
+      pixel[0] = 1.0
+    } 
+  }
+  rnd.mapSelf((_, {i}) => i/63)
+  show(rnd);
+  const complex = rnd.toComplex();
+  const fft = complex.fftSelf();
+  show(fft.abs());
+
+  const back = fft.ifftSelf();
+  show(back.abs());
+  // const blur = rnd.fftGaussianBlur(0.8);
+  // show(blur);
+</script>
