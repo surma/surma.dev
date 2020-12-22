@@ -26,13 +26,16 @@ const myBluenoisePromise = message(self, "bluenoise").then(
       type: "result",
       imageData: mask.toImageData()
     });
-    const v = mask.toComplex().fftSelf().abs();
+    const v = mask
+      .toComplex()
+      .fftSelf()
+      .abs();
     const m = v.max().pixel[0];
     postMessage({
       id: "x2",
       title: "Blue noise Pwoer Spectrum",
       type: "result",
-      imageData: v.mapSelf(v => (v/m)**.2).toImageData()
+      imageData: v.mapSelf(v => (v / m) ** 0.2).toImageData()
     });
     return mask;
   }

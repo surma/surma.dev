@@ -209,7 +209,7 @@ export class Image {
     const result = ImageComplexF64.empty(this.width, this.height);
     const c = new Complex();
     for (const p of result.allCoordinates()) {
-      result.setValueAt(p, c.setFromCartesian({ re: this.valueAt(p), im: 0 }));
+      result.setValueAt(p, { re: this.valueAt(p), im: 0 });
     }
     return result;
   }
@@ -318,14 +318,24 @@ export class GrayImageF32N0F8 extends Image {
     kernelWidth = this.width;
     kernelHeight = this.height;
     const key = `${stdDev}:${kernelWidth}:${kernelHeight}`;
-    if(!fftGaussCache.has(key)) {
+    if (!fftGaussCache.has(key)) {
       const kernel = GrayImageF32N0F8.gaussianKernel(stdDev, {
         width: kernelWidth,
-        height: kernelHeight,
-      }).toComplex().fftSelf().centerSelf();
+        height: kernelHeight
+      })
+        .toComplex()
+        .fftSelf()
+        .centerSelf();
       fftGaussCache.set(key, kernel);
     }
-    return this.toComplex().fftSelf().centerSelf().multiplySelf(fftGaussCache.get(key)).centerSelf().ifftSelf().centerSelf().abs();
+    return this.toComplex()
+      .fftSelf()
+      .centerSelf()
+      .multiplySelf(fftGaussCache.get(key))
+      .centerSelf()
+      .ifftSelf()
+      .centerSelf()
+      .abs();
   }
 
   clampSelf({ min = 0, max = 1 } = {}) {
@@ -334,12 +344,16 @@ export class GrayImageF32N0F8 extends Image {
 }
 
 export function bitReverse(x, numBits) {
-  x = (x & 0x55555555)  <<   1 | (x & 0xAAAAAAAA) >>  1;
-  x = (x & 0x33333333)  <<   2 | (x & 0xCCCCCCCC) >>  2;
-  x = (x & 0x0F0F0F0F)  <<   4 | (x & 0xF0F0F0F0) >>  4;
-  x = (x & 0x00FF00FF)  <<   8 | (x & 0xFF00FF00) >>  8;
-  x = (x & 0x0000FFFF)  <<  16 | (x & 0xFFFF0000) >> 16;
+  // Oh-so-clever bit-hackery
+  // https://stackoverflow.com/questions/60226845/reverse-bits-javascript
+  x = ((x & 0x55555555) << 1) | ((x & 0xaaaaaaaa) >> 1);
+  x = ((x & 0x33333333) << 2) | ((x & 0xcccccccc) >> 2);
+  x = ((x & 0x0f0f0f0f) << 4) | ((x & 0xf0f0f0f0) >> 4);
+  x = ((x & 0x00ff00ff) << 8) | ((x & 0xff00ff00) >> 8);
+  x = ((x & 0x0000ffff) << 16) | ((x & 0xffff0000) >> 16);
 
+  // Slight amendment here: The function assumes 32 bit are present
+  // to reverse, but we only want `numBits`. So shift in the end accordingly.
   return x >>> (32 - numBits);
 }
 
@@ -350,19 +364,17 @@ export class ImageComplexF64 extends Image {
   real() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);
     for (const p of img.allCoordinates()) {
-      const v = this.valueAt(p);
-      const vc = new Complex(v.r, v.phi);
-      img.setValueAt(p, vc.toCartesian().re);
+      const { re } = this.valueAt(p);
+      img.setValueAt(p, re);
     }
     return img;
   }
 
   imaginary() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);
-    for(const p of img.allCoordinates()) {
-      const v = this.valueAt(p);
-      const vc = new Complex(v.r, v.phi);
-      img.setValueAt(p, vc.toCartesian().im);
+    for (const p of img.allCoordinates()) {
+      const { im } = this.valueAt(p);
+      img.setValueAt(p, im);
     }
     return img;
   }
@@ -370,60 +382,73 @@ export class ImageComplexF64 extends Image {
   abs() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);
     for (const p of img.allCoordinates()) {
-      img.setValueAt(p, this.valueAt(p).r);
+      const { re, im } = this.valueAt(p);
+      img.setValueAt(p, Math.sqrt(re ** 2 + im ** 2));
     }
     return img;
   }
 
-  valueAt({ x, y }, {wrap = false} = {}) {
-    if(wrap) {
-      ({x,y} = this.wrapCoordinates({x, y}));
+  valueAt({ x, y }, { wrap = false } = {}) {
+    if (wrap) {
+      ({ x, y } = this.wrapCoordinates({ x, y }));
     }
     const offset = this.pixelIndex(x, y) * this.constructor.NUM_CHANNELS;
-    const r = this.data[offset + 0]
-    const phi = this.data[offset + 1]
-    return {r, phi};
+    const re = this.data[offset + 0];
+    const im = this.data[offset + 1];
+    return { re, im };
   }
 
-  setValueAt({ x, y }, {r, phi}, {wrap = false} = {}) {
-    if(wrap) {
-      ({x,y} = this.wrapCoordinates({x, y}));
+  setValueAt({ x, y }, { re, im }, { wrap = false } = {}) {
+    if (wrap) {
+      ({ x, y } = this.wrapCoordinates({ x, y }));
     }
     const offset = this.pixelIndex(x, y) * this.constructor.NUM_CHANNELS;
-    this.data[offset + 0] = r;
-    this.data[offset + 1] = phi;
+    this.data[offset + 0] = re;
+    this.data[offset + 1] = im;
   }
 
   multiplySelf(other) {
-    console.assert(this.width == other.width && this.height == other.height, "Images need to be same size");
-    for(const p of this.allCoordinates()) {
+    console.assert(
+      this.width == other.width && this.height == other.height,
+      "Images need to be same size"
+    );
+    for (const p of this.allCoordinates()) {
       const v1 = this.valueAt(p);
       const v2 = other.valueAt(p);
-      this.setValueAt(p, {r: v1.r * v2.r, phi: v1.phi + v2.phi});
+      this.setValueAt(p, {
+        re: v1.re * v2.re + v1.im * v2.im,
+        im: v1.re * v2.im + v1.im * v2.re
+      });
     }
     return this;
   }
 
   centerSelf() {
-    console.assert(this.width % 2 === 0 && this.height %2 === 0, "width and height must be even");
+    console.assert(
+      this.width % 2 === 0 && this.height % 2 === 0,
+      "width and height must be even"
+    );
 
     const halfWidth = this.width / 2;
     const halfHeight = this.height / 2;
-    for(const p1 of this.allCoordinates()) {
-      if(p1.x == 0 && p1.y == halfHeight) {
+    for (const p1 of this.allCoordinates()) {
+      if (p1.x == 0 && p1.y == halfHeight) {
         break;
       }
-      const v1 = this.valueAt(p1, {wrap: true});
-      const p2 = {x: p1.x + halfWidth, y: p1.y + halfHeight};
-      const v2 = this.valueAt(p2, {wrap: true});
-      this.setValueAt(p1, v2, {wrap: true});
-      this.setValueAt(p2, v1, {wrap: true});
+      const v1 = this.valueAt(p1, { wrap: true });
+      const p2 = { x: p1.x + halfWidth, y: p1.y + halfHeight };
+      const v2 = this.valueAt(p2, { wrap: true });
+      this.setValueAt(p1, v2, { wrap: true });
+      this.setValueAt(p2, v1, { wrap: true });
     }
     return this;
   }
 
   uncenterSelf() {
-    console.assert(this.width % 2 === 0 && this.height %2 === 0, "width and height must be even");
+    console.assert(
+      this.width % 2 === 0 && this.height % 2 === 0,
+      "width and height must be even"
+    );
     // It’s its own inverse!!
     return this.centerSelf();
   }
@@ -433,7 +458,7 @@ export class ImageComplexF64 extends Image {
     // Re-arrange data to bit-reversed order
     for (let i = 0; i < num; i++) {
       const bi = bitReverse(i, bits);
-      if (i > bi) {
+      if (i >= bi) {
         continue;
       }
       const p1 = { x: start.x + i * inc.x, y: start.y + i * inc.y };
@@ -446,9 +471,9 @@ export class ImageComplexF64 extends Image {
 
     for (let s = 1; s <= bits; s++) {
       const m = 2 ** s;
-      const wm = new Complex(1, (sign * 2 * Math.PI) / m);
+      const wm = Complex.fromEuler(1, (sign * 2 * Math.PI) / m);
       for (let k = 0; k < num; k += m) {
-        const w = new Complex(1, 0);
+        const w = Complex.fromEuler(1, 0);
         for (let j = 0; j < m / 2; j++) {
           const pt = {
             x: start.x + (k + j + m / 2) * inc.x,
@@ -459,7 +484,7 @@ export class ImageComplexF64 extends Image {
             x: start.x + (k + j) * inc.x,
             y: start.y + (k + j) * inc.y
           };
-          const u = Complex.fromObject(this.valueAt(pu));
+          const u = Complex.fromCartesianObject(this.valueAt(pu));
           this.setValueAt(pu, u.copy().addSelf(t));
           this.setValueAt(pt, u.copy().subtractSelf(t));
           w.multiplySelf(wm);
@@ -483,7 +508,8 @@ export class ImageComplexF64 extends Image {
   ifftSelf() {
     const n = this.width * this.height;
     return this._fft2Self(1).mapSelf(v => {
-      v.r /= n;
+      v.re /= n;
+      v.im /= n;
       return v;
     });
   }
@@ -507,68 +533,39 @@ export class ImageComplexF64 extends Image {
 }
 
 export class Complex {
-  constructor(r, phi) {
-    this.r = r;
-    this.phi = phi;
+  constructor(re, im) {
+    this.re = re;
+    this.im = im;
   }
 
-  static fromObject({r, phi}) {
-    return new this(r, phi);
+  static fromCartesianObject({ re = 0, im = 0 } = {}) {
+    return new Complex(re, im);
   }
 
-  static fromCartesian({ re = 0, im = 0 } = {}) {
-    return new Complex(0, 0).setFromCartesian({ re, im });
+  static fromEuler(r = 0, phi = 0) {
+    return new Complex(r * Math.cos(phi), r * Math.sin(phi));
   }
 
   copy() {
-    return new Complex(this.r, this.phi);
+    return new Complex(this.re, this.im);
   }
 
   addSelf(other) {
-    const thisC = this.toCartesian();
-    const otherC = other.toCartesian();
-    thisC.re += otherC.re;
-    thisC.im += otherC.im;
-    this.setFromCartesian(thisC);
+    this.re += other.re;
+    this.im += other.im;
     return this;
   }
 
   subtractSelf(other) {
-    other = other.copy();
-    other.phi += -1 * Math.PI;
-    return this.addSelf(other);
-  }
-
-  setFromCartesian({ re = 0, im = 0 } = {}) {
-    this.r = Math.sqrt(re ** 2 + im ** 2);
-    if (re == 0) {
-      this.phi = 0;
-    } else if (re > 0 && im == 0) {
-      this.phi = 0;
-    } else if (re < 0 && im == 0) {
-      this.phi = -1 * Math.PI;
-    } else {
-      this.phi = 2 * Math.atan(im / (this.r + re));
-    }
+    this.re -= other.re;
+    this.im -= other.im;
     return this;
   }
 
-  toCartesian() {
-    return {
-      re: Math.cos(this.phi) * this.r,
-      im: Math.sin(this.phi) * this.r
-    };
-  }
-
-  multiplySelf(c) {
-    this.r *= c.r;
-    this.phi = (this.phi + c.phi) % 360;
+  multiplySelf(other) {
+    let { re, im } = this;
+    this.re = re * other.re - im * other.im;
+    this.im = re * other.im + im * other.re;
     return this;
-  }
-
-  swapSelf() {
-    const c = this.toCartesian();
-    [c.re, c.im] = [c.im, c.re];
-    this.setFromCartesian(c);
   }
 }
