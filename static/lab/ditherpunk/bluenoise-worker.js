@@ -47,7 +47,7 @@ function largestVoid(img, gaussian) {
   return coords;
 }
 
-const size = 64;
+const size = 32;
 const numPixels = size ** 2;
 const binaryPattern = GrayImageF32N0F8.empty(size, size);
 const initFraction = 0.1;
