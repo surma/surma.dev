@@ -87,17 +87,17 @@ export class Image {
     );
   }
 
-  wrapCoordinates({ x, y }) {
+  wrapCoordinates(x, y) {
     x = x % this.width;
     if (x < 0) x += this.width;
     y = y % this.height;
     if (y < 0) y += this.height;
-    return { x, y };
+    return [x, y];
   }
 
   pixelAt(x, y, { wrap = false } = {}) {
     if (wrap) {
-      ({ x, y } = this.wrapCoordinates({ x, y }));
+      [x, y] = this.wrapCoordinates(x, y);
     } else {
       x = clamp(0, x, this.width - 1);
       y = clamp(0, y, this.height - 1);
@@ -108,7 +108,7 @@ export class Image {
 
   valueAt({ x, y, channel = 0 }, { wrap = false } = {}) {
     if (wrap) {
-      ({ x, y } = this.wrapCoordinates({ x, y }));
+      [x, y] = this.wrapCoordinates(x, y);
     }
     return this.data[
       this.pixelIndex(x, y) * this.constructor.NUM_CHANNELS + channel
@@ -117,7 +117,7 @@ export class Image {
 
   setValueAt({ x, y, channel = 0 }, v, { wrap = false } = {}) {
     if (wrap) {
-      ({ x, y } = this.wrapCoordinates({ x, y }));
+      [x, y] = this.wrapCoordinates(x, y);
     }
     this.data[
       this.pixelIndex(x, y) * this.constructor.NUM_CHANNELS + channel
@@ -209,7 +209,7 @@ export class Image {
     const result = ImageComplexF64.empty(this.width, this.height);
     const c = new Complex();
     for (const p of result.allCoordinates()) {
-      result.setValueAt(p, { re: this.valueAt(p), im: 0 });
+      result.setValueAt(p.x, p.y, this.valueAt(p), 0);
     }
     return result;
   }
@@ -364,7 +364,7 @@ export class ImageComplexF64 extends Image {
   real() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);
     for (const p of img.allCoordinates()) {
-      const { re } = this.valueAt(p);
+      const [re] = this.valueAt(p.x, p.y);
       img.setValueAt(p, re);
     }
     return img;
@@ -373,7 +373,7 @@ export class ImageComplexF64 extends Image {
   imaginary() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);
     for (const p of img.allCoordinates()) {
-      const { im } = this.valueAt(p);
+      const [, im] = this.valueAt(p.x, p.y);
       img.setValueAt(p, im);
     }
     return img;
@@ -382,25 +382,25 @@ export class ImageComplexF64 extends Image {
   abs() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);
     for (const p of img.allCoordinates()) {
-      const { re, im } = this.valueAt(p);
+      const [re, im] = this.valueAt(p.x, p.y);
       img.setValueAt(p, Math.sqrt(re ** 2 + im ** 2));
     }
     return img;
   }
 
-  valueAt({ x, y }, { wrap = false } = {}) {
+  valueAt(x, y, wrap = false) {
     if (wrap) {
-      ({ x, y } = this.wrapCoordinates({ x, y }));
+      [x, y] = this.wrapCoordinates(x, y);
     }
     const offset = this.pixelIndex(x, y) * this.constructor.NUM_CHANNELS;
     const re = this.data[offset + 0];
     const im = this.data[offset + 1];
-    return { re, im };
+    return [re, im];
   }
 
-  setValueAt({ x, y }, { re, im }, { wrap = false } = {}) {
+  setValueAt(x, y, re, im, wrap = false) {
     if (wrap) {
-      ({ x, y } = this.wrapCoordinates({ x, y }));
+      [x, y] = this.wrapCoordinates(x, y);
     }
     const offset = this.pixelIndex(x, y) * this.constructor.NUM_CHANNELS;
     this.data[offset + 0] = re;
@@ -412,13 +412,17 @@ export class ImageComplexF64 extends Image {
       this.width == other.width && this.height == other.height,
       "Images need to be same size"
     );
-    for (const p of this.allCoordinates()) {
-      const v1 = this.valueAt(p);
-      const v2 = other.valueAt(p);
-      this.setValueAt(p, {
-        re: v1.re * v2.re + v1.im * v2.im,
-        im: v1.re * v2.im + v1.im * v2.re
-      });
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        const [v1re, v1im] = this.valueAt(x, y);
+        const [v2re, v2im] = other.valueAt(x, y);
+        this.setValueAt(
+          x,
+          y,
+          v1re * v2re + v1im * v2im,
+          v1re * v2im + v1im * v2re
+        );
+      }
     }
     return this;
   }
@@ -431,15 +435,18 @@ export class ImageComplexF64 extends Image {
 
     const halfWidth = this.width / 2;
     const halfHeight = this.height / 2;
-    for (const p1 of this.allCoordinates()) {
-      if (p1.x == 0 && p1.y == halfHeight) {
-        break;
+    outer: for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (x == 0 && y == halfHeight) {
+          break outer;
+        }
+        const v = this.valueAt(x, y, true);
+        const otherX = x + halfWidth;
+        const otherY = y + halfHeight;
+        const otherV = this.valueAt(otherX, otherY, true);
+        this.setValueAt(x, y, ...otherV);
+        this.setValueAt(otherX, otherY, ...v, true);
       }
-      const v1 = this.valueAt(p1, { wrap: true });
-      const p2 = { x: p1.x + halfWidth, y: p1.y + halfHeight };
-      const v2 = this.valueAt(p2, { wrap: true });
-      this.setValueAt(p1, v2, { wrap: true });
-      this.setValueAt(p2, v1, { wrap: true });
     }
     return this;
   }
@@ -461,12 +468,14 @@ export class ImageComplexF64 extends Image {
       if (i >= bi) {
         continue;
       }
-      const p1 = { x: start.x + i * inc.x, y: start.y + i * inc.y };
-      const p2 = { x: start.x + bi * inc.x, y: start.y + bi * inc.y };
-      const v1 = this.valueAt(p1);
-      const v2 = this.valueAt(p2);
-      this.setValueAt(p1, v2);
-      this.setValueAt(p2, v1);
+      const p1x = start.x + i * inc.x;
+      const p1y = start.y + i * inc.y;
+      const p2x = start.x + bi * inc.x;
+      const p2y = start.y + bi * inc.y;
+      const [v1re, v1im] = this.valueAt(p1x, p1y);
+      const [v2re, v2im] = this.valueAt(p2x, p2y);
+      this.setValueAt(p1x, p1y, v2re, v2im);
+      this.setValueAt(p2x, p2y, v1re, v1im);
     }
 
     for (let s = 1; s <= bits; s++) {
@@ -475,18 +484,30 @@ export class ImageComplexF64 extends Image {
       for (let k = 0; k < num; k += m) {
         const w = Complex.fromEuler(1, 0);
         for (let j = 0; j < m / 2; j++) {
-          const pt = {
-            x: start.x + (k + j + m / 2) * inc.x,
-            y: start.y + (k + j + m / 2) * inc.y
-          };
-          const t = w.copy().multiplySelf(this.valueAt(pt));
-          const pu = {
-            x: start.x + (k + j) * inc.x,
-            y: start.y + (k + j) * inc.y
-          };
-          const u = Complex.fromCartesianObject(this.valueAt(pu));
-          this.setValueAt(pu, u.copy().addSelf(t));
-          this.setValueAt(pt, u.copy().subtractSelf(t));
+          const ptx = start.x + (k + j + m / 2) * inc.x;
+          const pty = start.y + (k + j + m / 2) * inc.y;
+          const t = w
+            .copy()
+            .multiplySelf(new Complex(...this.valueAt(ptx, pty)));
+          const pux = start.x + (k + j) * inc.x;
+          const puy = start.y + (k + j) * inc.y;
+          const u = new Complex(...this.valueAt(pux, puy));
+          this.setValueAt(
+            pux,
+            puy,
+            ...u
+              .copy()
+              .addSelf(t)
+              .toArray()
+          );
+          this.setValueAt(
+            ptx,
+            pty,
+            ...u
+              .copy()
+              .subtractSelf(t)
+              .toArray()
+          );
           w.multiplySelf(wm);
         }
       }
@@ -499,8 +520,10 @@ export class ImageComplexF64 extends Image {
   }
 
   mapSelf(f) {
-    for (const c of this.allCoordinates()) {
-      this.setValueAt(c, f(this.valueAt(c)));
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        this.setValueAt(x, y, ...f(this.valueAt(x, y)));
+      }
     }
     return this;
   }
@@ -567,5 +590,9 @@ export class Complex {
     this.re = re * other.re - im * other.im;
     this.im = re * other.im + im * other.re;
     return this;
+  }
+
+  toArray() {
+    return [this.re, this.im];
   }
 }

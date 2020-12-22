@@ -26,7 +26,7 @@ canvas {
       pixel[0] = 1.0
     } 
   }
-  rnd.mapSelf((_, {i}) => i/63)
+  // rnd.mapSelf((_, {i}) => i/63)
   show(rnd);
   const complex = rnd.toComplex();
   const fft = complex.fftSelf();
@@ -34,6 +34,6 @@ canvas {
 
   const back = fft.ifftSelf();
   show(back.abs());
-  // const blur = rnd.fftGaussianBlur(0.8);
-  // show(blur);
+  const blur = rnd.fftGaussianBlur(0.9);
+  show(blur);
 </script>
