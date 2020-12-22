@@ -14,7 +14,7 @@ function shuffle(arr) {
 }
 
 function tightestCluster(img, gaussian) {
-  const blur = img.gaussianBlur(gaussian);
+  const blur = img.fftGaussianBlur(gaussian);
   let coords;
   let bestValue = Number.NEGATIVE_INFINITY;
   for (const p of img.allCoordinates()) {
@@ -31,7 +31,7 @@ function tightestCluster(img, gaussian) {
 }
 
 function largestVoid(img, gaussian) {
-  const blur = img.gaussianBlur(gaussian);
+  const blur = img.fftGaussianBlur(gaussian);
   let coords;
   let bestValue = Number.POSITIVE_INFINITY;
   for (const p of img.allCoordinates()) {
