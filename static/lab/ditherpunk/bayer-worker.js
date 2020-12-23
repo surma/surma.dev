@@ -31,7 +31,7 @@ async function init() {
 
     const bayer = calculateBayerLevel(level);
     const size = bayer.width ** 2;
-    postMessage({ id, result: bayer.copy().mapSelf(v => v / size - 0.5) });
+    postMessage({ id, result: bayer.copy().mapSelf(v => v / size) });
   }
 }
 init();

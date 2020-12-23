@@ -47,7 +47,7 @@ const pipeline = [
     async process(grayscale) {
       return grayscale
         .copy()
-        .mapSelf(v => (v > Math.random() > 0.5 ? 1.0 : 0.0));
+        .mapSelf(v => (v > Math.random() ? 1.0 : 0.0));
     }
   },
   ...Array.from({ length: numBayerLevels }, (_, level) => {
@@ -59,7 +59,7 @@ const pipeline = [
         return grayscale
           .copy()
           .mapSelf((v, { x, y }) =>
-            v + bayerLevel.valueAt({ x, y }, { wrap: true }) > 0.5 ? 1.0 : 0.0
+            v + bayerLevel.valueAt({ x, y }, { wrap: true }) -.5 > 0.5 ? 1.0 : 0.0
           );
       }
     };

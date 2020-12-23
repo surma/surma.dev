@@ -36,7 +36,7 @@ export async function imageDataToPNG(imgData) {
   return blob;
 }
 
-function clamp(min, v, max) {
+export function clamp(min, v, max) {
   if (v < min) {
     return min;
   }
@@ -159,8 +159,10 @@ export class Image {
   }
 
   *allPixels() {
+    let i = 0;
     for (const { x, y } of this.allCoordinates()) {
-      yield { x, y, pixel: this.pixelAt(x, y) };
+      yield { x, y, i, pixel: this.pixelAt(x, y) };
+      i++;
     }
   }
 
@@ -236,6 +238,46 @@ export class RGBAImageU8 extends Image {
 
   toImageData() {
     return new ImageData(this.data.slice(), this.width, this.height);
+  }
+}
+
+export class RGBImageF32N0F8 extends Image {
+  static BUFFER_TYPE = Float32Array;
+  static NUM_CHANNELS = 3;
+
+  static fromImageData(sourceImage) {
+    sourceImage = RGBAImageU8.fromImageData(sourceImage);
+
+    const img = new RGBImageF32N0F8(
+      new Float32Array(sourceImage.width * sourceImage.height * this.NUM_CHANNELS),
+      sourceImage.width,
+      sourceImage.height
+    );
+    for (let i = 0; i < sourceImage.width * sourceImage.height; i++) {
+      img.data[3*i + 0] = sourceImage.data[4*i + 0] / 255;
+      img.data[3*i + 1] = sourceImage.data[4*i + 1] / 255;
+      img.data[3*i + 2] = sourceImage.data[4*i + 2] / 255;
+    }
+    return img;
+  }
+
+  mapSelf(f) {
+    for(const {x, y, i, pixel} of this.allPixels()) {
+      pixel.set(f(pixel, {x,y,i}));
+    }
+    return this;
+  }
+
+  toImageData() {
+    const img = new Uint8ClampedArray(this.width * this.height * 4);
+    for (let i = 0; i < this.width * this.height; i++) {
+      // Clamping and floor’ing is done implicitly by Uint8ClampedArray
+      img[4*i + 0] =  this.data[3*i + 0] * 255
+      img[4*i + 1] =  this.data[3*i + 1] * 255
+      img[4*i + 2] =  this.data[3*i + 2] * 255
+      img[4*i + 3] = 255
+    }
+    return new ImageData(img, this.width, this.height);
   }
 }
 
