@@ -5,7 +5,7 @@ socialmediaimage: "social.png"
 live: false
 ---
 
-I always loved the visual aesthetic of dithering but never knew how exactly it is... achieved. This article may contain traces of nostaliga and none of Lenna.
+I always loved the visual aesthetic of dithering but never knew how it works exactly. This article may contain traces of nostaliga and none of Lenna.
 
 <!-- more -->
 
@@ -51,7 +51,7 @@ This is black-and-white photo uses 256 different shades of gray. If we wanted to
 
 > **Note**: The code samples in this article are real but built on top of a helper class `GrayImageF32N0F8` I wrote for the [demo] of this article. It’s similar to the web’s [`ImageData`][ImageData], but uses `Float32Array`, only has one color channel, represents values between 0.0 and 1.0 and has a whole bunch of helper functions. The source code is available in [the lab][lab].
 
-A straight forward way to quantize an image with a given color palette is to find the closest color in the palette. In our scenario, we can look at the brightness of every pixel. A brightness of 0 means black, a brightness of 1 means white, everything else is in-between, ideally correlating with human perception such that a brightness of 0.5 is a nice mid-gray.To quantize a given color, we only need to check if the color’s brightness is greater or less than 0.5 and quantize to white and black respectively. Applying this quantization to the image above yields an... unsatisfying result.
+A straight forward way to quantize an image with a given color palette is to find the closest color in the palette. In our scenario, we can look at the brightness of every pixel. A brightness of 0 means black, a brightness of 1 means white, everything else is in-between, ideally correlating with human perception such that a brightness of 0.5 is a nice mid-gray. To quantize a given color, we only need to check if the color’s brightness is greater or less than 0.5 and quantize to white and black respectively. Applying this quantization to the image above yields an... unsatisfying result.
 
 ```js
 grayscaleImage.mapSelf(brightness => 
@@ -66,7 +66,7 @@ grayscaleImage.mapSelf(brightness =>
 
 ### Random noise
 
-Back to Wikipedia’s definition of dithering: “Intentionally applied form of noise used to randomize quantization error”. Instead of quantizing each pixel directly, we add noise between -0.5 and 0.5 to each pixel. The idea is that some pixels will now be quantized to the “wrong” color, but how often that happens depends on the pixel’s original brightness. Black will _always_ remain black, white will _always_ remain white, a mid-gray will be black only roughly 50% of the time. Statistically, the overall quantization error is reduced and our brains are quite eager to do the rest and help you see the, uh, big picture.
+Back to Wikipedia’s definition of dithering: “Intentionally applied form of noise used to randomize quantization error”. Instead of quantizing each pixel directly, we add noise with a value between -0.5 and 0.5 to each pixel. The idea is that some pixels will now be quantized to the “wrong” color, but how often that happens depends on the pixel’s original brightness. Black will _always_ remain black, white will _always_ remain white, a mid-gray will be black only roughly 50% of the time. The average brightness of an area in the quantized image should be close to the average brightness of the same area in the original image. Statistically, the overall quantization error is reduced and our brains are quite eager to do the rest and help you see the, uh, big picture.
 
 ```js
 grayscaleImage.mapSelf(brightness => 
@@ -79,7 +79,7 @@ grayscaleImage.mapSelf(brightness =>
   <figcaption>Random noise [-0.5; 0.5] has been added to each pixel before quantization.</figcaption>
 </figure>
 
-I found this quite surprising! It is by no means _good_ — video games from the 80s have shown us that we can do better — but this is a very low effort and quick way to get more detail into a monochrome image. If we wanted to exclusively look at “dithering” in its original sense, we’d be done. 
+I found this quite surprising! It is by no means _good_ — video games from the 80s have shown us that we can do better — but this is a very low effort and quick way to get more detail into a monochrome image. And if I was to take “dithering” literally, I’d end my article here. But there’s more…
 
 ### Threshold maps
 
@@ -122,9 +122,10 @@ The upside of this approach is that we can talk about a “threshold maps”. Th
 
 ## Ordered dithering
 
-Ordered dithering, also sometimes called “Bayer dithering”, uses a Bayer matrix as the threshold map. They are named after Bruce Bayer, inventor of the [Bayer filter], which is in use to this day in digital cameras to give monochrome light sensors the ability to take color images by cleverly arranging colored filters on the individual pixel sensors. The same pattern is used in the Bayer dithering threshold map and might look familiar to some of you.
+Ordered dithering, also sometimes called “Bayer dithering”, uses a Bayer matrix as the threshold map. They are named after Bruce Bayer, inventor of the [Bayer filter], which is in use to this day in digital cameras to give brightness sensors the ability to take color images by cleverly arranging colored filters in front of the individual pixel sensors. That same pattern is used in the Bayer dithering threshold map and might look familiar to some of you.
 
-Bayer matrices come in various sizes (which I ended up calling “levels”). Bayer Level 0 is 2×2 matrix. Bayer Level 1 is a 4×4 matric. Bayer Level n is a $2^{n+1} \times 2^{n+1}$ matrix. A level can be generated recursively (although Wikipedia also lists an [per-cell algorithm][Bayer wikipedia]) and if your image happens to be bigger than your threshold map, you can tile the threshold map. 
+Bayer matrices come in various sizes (which I ended up calling “levels”). Bayer Level 0 is $2 \times 2$ matrix. Bayer Level 1 is a $4 
+\times 4$ matrix. Bayer Level $n$ is a $2^{n+1} \times 2^{n+1}$ matrix. A level $n$ can be recursively generated from level $n-1$ (although Wikipedia also lists an [per-cell algorithm][Bayer wikipedia]) and if your image happens to be bigger than your threshold map, you can tile the threshold map. 
 
 <figure>
 
@@ -156,7 +157,16 @@ $$
 <figcaption>Recursive definition of Bayer matrices.</figcaption>
 </figure>
 
-A level n Bayer matrix contains the number $0$ to $2^{2n+2}$. To use them as a threshold map, you need to normalize them, i.e. divide by $2^{2n+2}$. Anything above level 3 barely makes a difference in the resulting visual as far as I can tell, and I personally found Level 1 and 3 the most aesthetically pleasing.
+A level $n$ Bayer matrix contains the numbers $0$ to $2^{2n+2}$. To use them as a threshold map, you need to normalize them, i.e. divide by $2^{2n+2}$. 
+
+```js
+const bayer = generateBayerLevel(level);
+grayscaleImage.mapSelf((brightness, {x, y}) => 
+  brightness > bayer.valueAt(x, y, {wrap: true}) ? 1.0 : 0.0
+);
+```
+
+Anything above level 3 barely makes a difference in the resulting visual as far as I can tell, and I personally found Level 1 and 3 the most aesthetically pleasing.
 
 <section class="carousel">
   <figure>
@@ -190,13 +200,15 @@ Both white noise and Bayer dithering have drawbacks, of course. Bayer dithering,
   <figcaption>Clear clusters and voids remain visible even after applying a Gaussian blur (σ = 1.5).</figcaption>
 </figure>
 
-A source of noise that tries to address this is labelled _blue_ noise, because the higher frequencies (like blue light) higher intensities than the lower frequencies. By removing or dampening the lower frequencies, cluster and voids become less pronounced and the threshold map gives a more even visual. Blue noise dithering is just as fast to apply to an image as white noise dithering, but generating _good_ quality blue noise is a bit harder and expensive. 
+A source of noise that tries to address this is labelled _blue_ noise, because the higher frequencies (like blue light) have higher intensities compared to the lower frequencies. By removing or dampening the lower frequencies, cluster and voids become less pronounced and the threshold map gives a more even visual. Blue noise dithering is just as fast to apply to an image as white noise dithering — it’s just a threshold map in the end — but _generating_ blue noise is a bit harder and expensive. 
 
 The most common algorithm to generate blue noise seems to be the “void-and-cluster method” by [Robert Ulichney]. Here is the [original whitepaper][bluenoise93]. I found the way the algorithm is described quite unintuitive and, now that I have implemented it, I am convinced it is unnecessarily abstract. 
 
 The algorithm is based on the idea that you can detect a pixel that is part of cluster or a void by applying a [Gaussian Blur] to the image and finding the brightest (or darkest) pixel in the blurred image respectively. After initializing a black image with a couple of random white pixels, the algorihtm proceeds to continuously swap cluster pixels and void pixels to spread the white pixels out as evenly as possible. Afterwards, every pixel gets a number between 0 and n (where n is the total number of pixels) according to their importance for forming clusters and voids. For more details, see the [paper][bluenoise93].
 
-My implementation works fine but is not very fast, as I didn’t spend much time optimizing. It takes about 1 minute to generate a 64×64 blue noise texture on my 2018 MacBook, which is sufficient for these purposes. If something faster is needed, the most obvious optimization would to apply the Gaussian Blur not as a convolution filter but in the frequency domain instead. 
+My implementation works fine but is not very fast, as I didn’t spend much time optimizing. It takes about 1 minute to generate a 64×64 blue noise texture on my 2018 MacBook, which is sufficient for these purposes. If something faster is needed, a promising optimization would be to apply the Gaussian Blur not in the spatial domain but in the frequency domain instead.
+
+> **Note:** Of _course_ knowing this nerd-sniped me into implementing it. The reason this optimization is so promising is because convolution (which is the underlying operation of a Gaussian blur filter) has to loop over each field of the Gaussian kernel _for each pixel_ in the image. However, if you convert both the image as well as the Gaussian kernel to the frequency domain (using one of the many Fast Fourier Transform algorithms), convolution becomes an element-wise multiplication. I implemented the [in-place variant of the Cooley-Tukey FFT algorithm][CT FFT] and — after [some initial hickups][my wrong fft] — it did end up cutting the blue noise generation time by 50%. I still wrote pretty garbage-y code, so there’s a lot more to optimize, if anyone wants a challenge.
 
 <figure>
   <img loading="lazy" src="bluenoiseblur.png" class="pixelated">
@@ -212,9 +224,9 @@ As blue noise is based on a Gaussian Blur, which is calculated on a torus (a fan
 
 ## Error diffusion
 
-All the previous techniques rely on the fact that quantization errors will _statistically_ even out because of the thresholds in the threshold maps are uniformly distributed. A different approach to quantization is the concept of error diffusion, which is most likely what you have read about if you have ever researched image dithering before. In this approach we don’t just quantize, hoping that on average the quantization error remains negligible. Instead, we _measure_ the quantization error, and diffuse the error onto neighboring pixels, influencing how they will get quantized. This makes the process inherently sequential but technically more accurate. 
+All the previous techniques rely on the fact that quantization errors will _statistically_ even out because the thresholds in the threshold maps are uniformly distributed. A different approach to quantization is the concept of error diffusion, which is most likely what you have read about if you have ever researched image dithering before. In this approach we don’t just quantize and hope that on average the quantization error remains negligible. Instead, we _measure_ the quantization error and diffuse the error onto neighboring pixels, influencing how they will get quantized. This makes the process inherently sequential but technically more accurate. 
 
-All error diffusion ditherings that I am going to look at use a “diffusion matrix”, which defines how the quantization error gets distributed across the neighboring pixels. For these matrices it is often assumed that the image’s pixels are traversed top-to-bottom, left-to-right — the same way us westerners read text. This is important as the error can only be diffused to pixels that haven’t been visited (and subsequently quantized) yet. If you find yourself traversing an image in a different order than the diffusion matrix assumes, flip the matrix accordingly.
+All error diffusion ditherings that I am going to look at use a “diffusion matrix”, which defines how the quantization error from the current pixel gets distributed across the neighboring pixels. For these matrices it is often assumed that the image’s pixels are traversed top-to-bottom, left-to-right — the same way us westerners read text. This is important as the error can only be diffused to pixels that haven’t been visited (and subsequently quantized) yet. If you find yourself traversing an image in a different order than the diffusion matrix assumes, flip the matrix accordingly.
 
 ### “Simple” 2D error diffusion
 
@@ -233,14 +245,14 @@ $$
 <figcaption>Diffusion matrix that shares half the error to 2 neightboring pixels, * marking the current pixel.</figcaption>
 </figure>
 
-We now visit each pixel in the image (in the right order!). We quantize the current pixel and measure the quantization error. Note that the quantization error can be negative if the quantization made the pixel brighter than the original brightness value. We then add fractions of the quantization error to neighboring pixels as specified by matrix. Rinse and repeat. 
+The diffusion algorithm visits each pixel in the image (in the right order!), quantizes the current pixel and measures the quantization error. Note that the quantization error is signed, i.e. it can be negative if the quantization made the pixel brighter than the original brightness value. We then add fractions of the quantization error to neighboring pixels as specified by the matrix. Rinse and repeat. 
 
 <figure>
   <video style="max-height: 66vh" src="./errordiffusion.mp4" type="video/mp4" autoplay muted loop controls></video>
   <figcaption>Error diffusion visualized step by step.</figcaption>
 </figure>
 
-This animation is supposed to visualize the algorithm, rather than showcase it’s effectiveness. 4×4 pixels are hardly enough do diffuse and average out quantization error. The idea is that if a pixel is made brighter during quantization, neighboring pixels will be made _darker_ to make up for it. 
+This animation is supposed to visualize the algorithm, rather than showcase it’s effectiveness. 4×4 pixels are hardly enough do diffuse and average out quantization errors. But it does show the idea that if a pixel is made brighter during quantization, neighboring pixels will be made _darker_ to make up for it. 
 
 <figure>
 <img loading="lazy" src="./simple2d.png" class="pixelated">
@@ -251,7 +263,7 @@ However, the simplicity of the diffusion matrix is prone to generating patterns,
 
 ### Floyd Steinberg
 
-Floyd Steinberg is arguably the most well-known error diffusion algorithm, if not even the most well-known dithering algorithm. It uses a more elaborate diffusion matrix to distribute the quantization error to _all_ directly neighboring, unvisited pixels. The numbers are carefully chose to prevent repeating patterns as much as possible.
+Floyd Steinberg is arguably the most well-known error diffusion algorithm, if not even the most well-known dithering algorithm. It uses a more elaborate diffusion matrix to distribute the quantization error to _all_ directly neighboring, unvisited pixels. The numbers are carefully chosen to prevent repeating patterns as much as possible.
 
 <figure>
 
@@ -302,7 +314,60 @@ Using this diffusion matrix, even larger, monotone areas look organic and lack r
 
 Obra Dinn uses both Bayer dithering and blue noise dithering. Most of the environment is dithered using blue noise, people and other objects of interest are dithered using Bayer. If you are curious how he handled camera movement, read his [forum post][dukope dithering].
 
-If you want to dither your own images, take a look at my [demo] that I wrote to generate all the images in the blog post. There is still a question what happens when you have more than two colors, but that is a story for another time.
+<section class="carousel">
+  <figure>
+    <img src="original.png" class="pixelated">
+    <figcaption>The original, unprocessed test image.</figcaption>
+  </figure>
+  <figure>
+    <img src="quantized.png" class="pixelated">
+    <figcaption>Quantization.</figcaption>
+  </figure>
+  <figure>
+    <img src="random.png" class="pixelated">
+    <figcaption>Random noise / white noise.</figcaption>
+  </figure>
+  <figure>
+    <img src="bayer0.png" class="pixelated">
+    <figcaption>Bayer Dithering Level 0.</figcaption>
+  </figure>
+  <figure>
+    <img src="bayer0.png" class="pixelated">
+    <figcaption>Bayer Dithering Level 0.</figcaption>
+  </figure>
+  <figure>
+    <img src="bayer1.png" class="pixelated">
+    <figcaption>Bayer Dithering Level 1.</figcaption>
+  </figure>
+  <figure>
+    <img src="bayer2.png" class="pixelated">
+    <figcaption>Bayer Dithering Level 2.</figcaption>
+  </figure>
+  <figure>
+    <img src="bayer3.png" class="pixelated">
+    <figcaption>Bayer Dithering Level 3.</figcaption>
+  </figure>
+  <figure>
+    <img src="bluenoise.png" class="pixelated">
+    <figcaption>Blue noise.</figcaption>
+  </figure>
+  <figure>
+    <img src="simple2d.png" class="pixelated">
+    <figcaption>Simple 2D error diffusion.</figcaption>
+  </figure>
+  <figure>
+    <img src="floydsteinberg.png" class="pixelated">
+    <figcaption>Floyd-Steinberg error diffusion.</figcaption>
+  </figure>
+  <figure>
+    <img src="jarvisjudiceninke.png" class="pixelated">
+    <figcaption>Jarvis-Judice-Ninke error diffusion.</figcaption>
+  </figure>
+</section>
+
+If you want to try different dithering algorithms on one of your own images, take a look at my [demo] that I wrote to generate all the images in this blog post. Keep in mind that these are not the fastest, and if you throw your 20 megapixel camera JPEG at this, it will take a while. 
+
+There is still a question what happens when you have more than two colors available for quantization, but that is a story for another time.
 
 
 [Obra Dinn]: https://obradinn.com/
@@ -321,3 +386,5 @@ If you want to dither your own images, take a look at my [demo] that I wrote to 
 [CP blue noise]: http://momentsingraphics.de/BlueNoise.html
 [Robert Ulichney]: http://ulichney.com/
 [Gaussian Blur]: https://en.wikipedia.org/wiki/Gaussian_blur
+[CT FFT]: https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm#Data_reordering,_bit_reversal,_and_in-place_algorithms
+[my wrong fft]: https://twitter.com/DasSurma/status/1341203941904834561
