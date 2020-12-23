@@ -14,6 +14,15 @@ if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
 bayerWorker.addEventListener("error", () =>
   console.error("Something went wrong in the Bayer worker")
 );
+const bayerLevels = Array.from({ length: numBayerLevels }, (_, id) => {
+  bayerWorker.postMessage({
+    level: id,
+    id
+  });
+  return message(bayerWorker, id).then(m =>
+    Object.setPrototypeOf(m.result, GrayImageF32N0F8.prototype)
+  );
+});
 
 let myBluenoiseDuration;
 const myBluenoisePromise = message(self, "bluenoise").then(
@@ -38,7 +47,7 @@ const pipeline = [
     async process(grayscale) {
       return grayscale
         .copy()
-        .mapSelf(v => (v + Math.random() - 0.5 > 0.5 ? 1.0 : 0.0));
+        .mapSelf(v => (v > Math.random() > 0.5 ? 1.0 : 0.0));
     }
   },
   ...Array.from({ length: numBayerLevels }, (_, level) => {
@@ -49,8 +58,8 @@ const pipeline = [
         const bayerLevel = await bayerLevels[level];
         return grayscale
           .copy()
-          .mapSelf((v, { i }) =>
-            v + bayerLevel.pixel(i)[0] - 0.5 > 0.5 ? 1.0 : 0.0
+          .mapSelf((v, { x, y }) =>
+            v + bayerLevel.valueAt({ x, y }, { wrap: true }) > 0.5 ? 1.0 : 0.0
           );
       }
     };
@@ -145,19 +154,6 @@ async function init() {
     if (id != "image") {
       continue;
     }
-    const jobId = uid();
-    const bayerLevels = Array.from({ length: numBayerLevels }, (_, i) => {
-      const id = `${jobId}-${i}`;
-      bayerWorker.postMessage({
-        width: image.width,
-        height: image.height,
-        level: i,
-        id
-      });
-      return message(bayerWorker, id).then(m =>
-        Object.setPrototypeOf(m.result, GrayImageF32N0F8.prototype)
-      );
-    });
 
     postMessage({
       type: "result",

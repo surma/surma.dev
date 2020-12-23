@@ -26,16 +26,12 @@ async function init() {
 
   while (true) {
     const {
-      value: { width, height, level, id }
+      value: { level, id }
     } = await reader.read();
 
     const bayer = calculateBayerLevel(level);
-    const size = bayer.width;
-    const result = GrayImageF32N0F8.empty(width, height);
-    for (const { x, y, pixel } of result.allPixels()) {
-      pixel[0] = bayer.pixelAt(x % size, y % size)[0] / size ** 2;
-    }
-    postMessage({ id, result });
+    const size = bayer.width ** 2;
+    postMessage({ id, result: bayer.copy().mapSelf(v => v / size - 0.5) });
   }
 }
 init();
