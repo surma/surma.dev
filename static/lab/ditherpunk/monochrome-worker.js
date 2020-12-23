@@ -20,23 +20,6 @@ const myBluenoisePromise = message(self, "bluenoise").then(
   ({ mask, duration }) => {
     myBluenoiseDuration = duration;
     Object.setPrototypeOf(mask, GrayImageF32N0F8.prototype);
-    postMessage({
-      id: "x1",
-      title: "Blue noise",
-      type: "result",
-      imageData: mask.toImageData()
-    });
-    const v = mask
-      .toComplex()
-      .fftSelf()
-      .abs();
-    const m = v.max().pixel[0];
-    postMessage({
-      id: "x2",
-      title: "Blue noise Pwoer Spectrum",
-      type: "result",
-      imageData: v.mapSelf(v => (v / m) ** 0.2).toImageData()
-    });
     return mask;
   }
 );
