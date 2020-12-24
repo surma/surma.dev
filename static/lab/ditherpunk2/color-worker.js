@@ -28,14 +28,10 @@ const bayerLevels = Array.from({ length: numBayerLevels }, (_, id) => {
   );
 });
 
-let myBluenoiseDuration;
-const myBluenoisePromise = message(self, "bluenoise").then(
-  ({ mask, duration }) => {
-    myBluenoiseDuration = duration;
-    Object.setPrototypeOf(mask, GrayImageF32N0F8.prototype);
-    return mask;
-  }
-);
+const myBluenoisePromise = message(self, "bluenoise").then(({ mask }) => {
+  Object.setPrototypeOf(mask, GrayImageF32N0F8.prototype);
+  return mask;
+});
 
 function createEvenPaletteQuantizer(n) {
   n = clamp(2, n, 255) - 1;
@@ -49,134 +45,114 @@ function remap(a, b) {
 const numColors = 3;
 const pipeline = [
   ...Array.from({ length: numColors }, (_, i) => {
-    const n = (i + 2) ** 3;
-    return {
-      id: `quantized:${n}`,
-      title: `Quantized (${n} colors)`,
-      async process(color) {
-        const q = createEvenPaletteQuantizer(i + 2);
-        return color.copy().mapSelf(q);
-      }
-    };
-  }),
-  ...Array.from({ length: numColors }, (_, i) => {
-    const n = (i + 2) ** 3;
-    return {
-      id: `dither:${n}`,
-      title: `Dithering (${n} colors)`,
-      async process(color) {
-        const q = createEvenPaletteQuantizer(i + 2);
-        const vmap = remap(-1 / (i + 2), 1 / (i + 2));
-        return color
-          .copy()
-          .mapSelf(v => q(v.map(v => v + vmap(Math.random()))));
-      }
-    };
-  }),
-  ...Array.from({ length: numColors }, (_, i) => {
-    const n = (i + 2) ** 3;
-    return {
-      id: `bayer1:${n}`,
-      title: `Bayer Level 1 (${n} colors)`,
-      async process(color, { bayerLevels }) {
-        const bayerLevel = await bayerLevels[1];
-        const q = createEvenPaletteQuantizer(i + 2);
-        const vmap = remap(-1 / (i + 2), 1 / (i + 2));
-        return color
-          .copy()
-          .mapSelf((v, { x, y }) =>
-            q(
-              v.map(v => v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true })))
-            )
+    const colorsPerAxis = i + 2;
+    const n = colorsPerAxis ** 3;
+    const q = createEvenPaletteQuantizer(colorsPerAxis);
+    const vmap = remap(-1 / colorsPerAxis, 1 / colorsPerAxis);
+    return [
+      {
+        id: `quantized:${n}`,
+        title: `Quantized (${n} colors)`,
+        async process(color) {
+          return color.copy().mapSelf(q);
+        }
+      },
+      {
+        id: `dither:${n}`,
+        title: `Dithering (${n} colors)`,
+        async process(color) {
+          return color
+            .copy()
+            .mapSelf(v => q(v.map(v => v + vmap(Math.random()))));
+        }
+      },
+      {
+        id: `bayer1:${n}`,
+        title: `Bayer Level 1 (${n} colors)`,
+        async process(color, { bayerLevels }) {
+          const bayerLevel = await bayerLevels[1];
+          return color
+            .copy()
+            .mapSelf((v, { x, y }) =>
+              q(
+                v.map(
+                  v => v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true }))
+                )
+              )
+            );
+        }
+      },
+      {
+        id: `bayer3:${n}`,
+        title: `Bayer Level 3 (${n} colors)`,
+        async process(color, { bayerLevels }) {
+          const bayerLevel = await bayerLevels[3];
+          return color
+            .copy()
+            .mapSelf((v, { x, y }) =>
+              q(
+                v.map(
+                  v => v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true }))
+                )
+              )
+            );
+        }
+      },
+      {
+        id: `2ded:${n}`,
+        title: `Simple Error Diffusion (${n} colors)`,
+        async process(color) {
+          return errorDiffusion(
+            color.copy(),
+            new GrayImageF32N0F8(new Float32Array([0, 1, 1, 0]), 2, 2),
+            q
           );
-      }
-    };
-  }),
-  ...Array.from({ length: numColors }, (_, i) => {
-    const n = (i + 2) ** 3;
-    return {
-      id: `bayer3:${n}`,
-      title: `Bayer Level 3 (${n} colors)`,
-      async process(color, { bayerLevels }) {
-        const bayerLevel = await bayerLevels[3];
-        const q = createEvenPaletteQuantizer(i + 2);
-        const vmap = remap(-1 / (i + 2), 1 / (i + 2));
-        return color
-          .copy()
-          .mapSelf((v, { x, y }) =>
-            q(
-              v.map(v => v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true })))
-            )
+        }
+      },
+      {
+        id: `fsed:${n}`,
+        title: `Floyd-Steinberg Error Diffusion (${n} colors)`,
+        async process(color) {
+          return errorDiffusion(
+            color.copy(),
+            new GrayImageF32N0F8(new Float32Array([0, 0, 7, 1, 5, 3]), 3, 2),
+            q
           );
-      }
-    };
-  }),
-  ...Array.from({ length: numColors }, (_, i) => {
-    const n = (i + 2) ** 3;
-    return {
-      id: `2ded:${n}`,
-      title: `Simple Error Diffusion (${n} colors)`,
-      async process(color) {
-        const q = createEvenPaletteQuantizer(i + 2);
-        return errorDiffusion(
-          color.copy(),
-          new GrayImageF32N0F8(new Float32Array([0, 1, 1, 0]), 2, 2),
-          q
-        );
-      }
-    };
-  }),
-  ...Array.from({ length: numColors }, (_, i) => {
-    const n = (i + 2) ** 3;
-    return {
-      id: `fsed:${n}`,
-      title: `Floyd-Steinberg Error Diffusion (${n} colors)`,
-      async process(color) {
-        const q = createEvenPaletteQuantizer(i + 2);
-        return errorDiffusion(
-          color.copy(),
-          new GrayImageF32N0F8(new Float32Array([0, 0, 7, 1, 5, 3]), 3, 2),
-          q
-        );
-      }
-    };
-  }),
-  ...Array.from({ length: numColors }, (_, i) => {
-    const n = (i + 2) ** 3;
-    return {
-      id: `jjned:${n}`,
-      title: `Jarvis-Judice-Ninke Error Diffusion (${n} colors)`,
-      async process(color) {
-        const q = createEvenPaletteQuantizer(i + 2);
-        return errorDiffusion(
-          color.copy(),
-          new GrayImageF32N0F8(
-            new Float32Array([0, 0, 0, 7, 5, 3, 5, 7, 5, 3, 1, 3, 5, 3, 1]),
-            5,
-            3
-          ),
-          q
-        );
-      }
-    };
-  }),
-  ...Array.from({ length: numColors }, (_, i) => {
-    const n = (i + 2) ** 3;
-    return {
-      id: `bluenoise:${n}`,
-      title: `Blue Noise (${n} colors)`,
-      async process(color) {
-        const bluenoise = await myBluenoisePromise;
-        const q = createEvenPaletteQuantizer(i + 2);
-        const vmap = remap(-1 / (i + 2), 1 / (i + 2));
-        return color
-          .copy()
-          .mapSelf((v, { x, y }) =>
-            q(v.map(v => v + vmap(bluenoise.valueAt({ x, y }, { wrap: true }))))
+        }
+      },
+      {
+        id: `jjned:${n}`,
+        title: `Jarvis-Judice-Ninke Error Diffusion (${n} colors)`,
+        async process(color) {
+          return errorDiffusion(
+            color.copy(),
+            new GrayImageF32N0F8(
+              new Float32Array([0, 0, 0, 7, 5, 3, 5, 7, 5, 3, 1, 3, 5, 3, 1]),
+              5,
+              3
+            ),
+            q
           );
+        }
+      },
+      {
+        id: `bluenoise:${n}`,
+        title: `Blue Noise (${n} colors)`,
+        async process(color) {
+          const bluenoise = await myBluenoisePromise;
+          return color
+            .copy()
+            .mapSelf((v, { x, y }) =>
+              q(
+                v.map(
+                  v => v + vmap(bluenoise.valueAt({ x, y }, { wrap: true }))
+                )
+              )
+            );
+        }
       }
-    };
-  })
+    ];
+  }).flat()
 ];
 
 function errorDiffusion(img, diffusor, quantizeFunc) {

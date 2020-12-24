@@ -1,10 +1,18 @@
 import {
   blobToImageData,
   imageDataToPNG,
-  imageToImageData
+  imageToImageData,
+  GrayImageF32N0F8
 } from "../ditherpunk/image-utils.js";
 
-const { fileinput, log, results, examplebtn, exampleimg } = document.all;
+const {
+  fileinput,
+  log,
+  results,
+  examplebtn,
+  exampleimg,
+  bluenoiseimg
+} = document.all;
 let worker;
 if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
   worker = new Worker("./color-worker.js");
@@ -70,24 +78,7 @@ fileinput.addEventListener("change", async () => {
   }
 });
 
-let bluenoiseWorker;
-if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  bluenoiseWorker = new Worker("../ditherpunk/bluenoise-worker.js", {
-    name: "bluenoise"
-  });
-} else {
-  bluenoiseWorker = new Worker("../ditherpunk/bluenoise-worker.js", {
-    name: "bluenoise",
-    type: "module"
-  });
-}
-bluenoiseWorker.addEventListener("error", () =>
-  console.error("Something went wrong in the Bluenoise worker")
-);
-bluenoiseWorker.addEventListener(
-  "message",
-  ({ data }) => {
-    worker.postMessage({ ...data, id: "bluenoise" });
-  },
-  { once: true }
-);
+bluenoiseimg.decode().then(() => {
+  const mask = GrayImageF32N0F8.fromImageData(imageToImageData(bluenoiseimg));
+  worker.postMessage({ mask, id: "bluenoise" });
+});
