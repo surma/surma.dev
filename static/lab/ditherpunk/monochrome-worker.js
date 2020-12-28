@@ -1,28 +1,6 @@
-import { MessageStream, message, uid } from "./worker-utils.js";
+import { MessageStream, message} from "./worker-utils.js";
 import { GrayImageF32N0F8 } from "./image-utils.js";
 
-const numBayerLevels = 4;
-let bayerWorker;
-if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  bayerWorker = new Worker("./bayer-worker.js", { name: "bayer" });
-} else {
-  bayerWorker = new Worker("./bayer-worker.js", {
-    name: "bayer",
-    type: "module"
-  });
-}
-bayerWorker.addEventListener("error", () =>
-  console.error("Something went wrong in the Bayer worker")
-);
-const bayerLevels = Array.from({ length: numBayerLevels }, (_, id) => {
-  bayerWorker.postMessage({
-    level: id,
-    id
-  });
-  return message(bayerWorker, id).then(m =>
-    Object.setPrototypeOf(m.result, GrayImageF32N0F8.prototype)
-  );
-});
 
 let myBluenoiseDuration;
 const myBluenoisePromise = message(self, "bluenoise").then(
@@ -32,6 +10,9 @@ const myBluenoisePromise = message(self, "bluenoise").then(
     return mask;
   }
 );
+
+const numBayerLevels = 4;
+let bayerLevels = message(self, "bayerlevels").then( ({bayerLevels}) => bayerLevels.map(bl => Object.setPrototypeOf(bl, GrayImageF32N0F8.prototype)));
 
 const pipeline = [
   {
@@ -55,7 +36,7 @@ const pipeline = [
       id: `bayer-${level}`,
       title: `Bayer Level ${level}`,
       async process(grayscale, { bayerLevels }) {
-        const bayerLevel = await bayerLevels[level];
+        const bayerLevel = (await bayerLevels)[level];
         return grayscale
           .copy()
           .mapSelf((v, { x, y }) =>

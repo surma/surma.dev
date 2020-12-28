@@ -225,8 +225,8 @@ function nextOdd(n) {
 }
 
 export class RGBAImageU8 extends Image {
-  static BUFFER_TYPE = Uint8ClampedArray;
-  static NUM_CHANNELS = 4;
+  static get BUFFER_TYPE() { return Uint8ClampedArray};
+  static get NUM_CHANNELS() { return 4};
 
   static fromImageData(imgData) {
     return new RGBAImageU8(
@@ -242,8 +242,8 @@ export class RGBAImageU8 extends Image {
 }
 
 export class RGBImageF32N0F8 extends Image {
-  static BUFFER_TYPE = Float32Array;
-  static NUM_CHANNELS = 3;
+  static get BUFFER_TYPE() { return Float32Array};
+  static get NUM_CHANNELS() { return 3};
 
   static fromImageData(sourceImage) {
     sourceImage = RGBAImageU8.fromImageData(sourceImage);
@@ -285,8 +285,8 @@ const gaussCache = new Map();
 const fftGaussCache = new Map();
 
 export class GrayImageF32N0F8 extends Image {
-  static BUFFER_TYPE = Float32Array;
-  static NUM_CHANNELS = 1;
+  static get BUFFER_TYPE() { return Float32Array};
+  static get NUM_CHANNELS() { return 1};
 
   static gaussianKernel(
     stdDev,
@@ -400,8 +400,8 @@ export function bitReverse(x, numBits) {
 }
 
 export class ImageComplexF64 extends Image {
-  static BUFFER_TYPE = Float64Array;
-  static NUM_CHANNELS = 2;
+  static get BUFFER_TYPE() {return Float64Array};
+  static get NUM_CHANNELS() {return  2};
 
   real() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);
