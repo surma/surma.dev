@@ -120,7 +120,7 @@ function weightGenerator(length, ratio) {
 }
 
 function* hilbertCurve(n) {
-  if (n == 0) {
+  if (n == 1) {
     yield "A";
     return;
   }
@@ -162,7 +162,7 @@ function* lsystem2coordinates(it) {
 }
 
 export function* hilbertCurveGenerator(width, height) {
-  const n = Math.max(Math.ceil(Math.log2(width)), Math.ceil(Math.log2(height)));
+  const n = Math.ceil(Math.log2(Math.max(width, height)));
   yield* lsystem2coordinates(hilbertCurve(n + 1));
 }
 

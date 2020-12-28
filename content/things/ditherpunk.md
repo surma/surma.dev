@@ -224,9 +224,9 @@ As blue noise is based on a Gaussian Blur, which is calculated on a torus (a fan
 
 ## Error diffusion
 
-All the previous techniques rely on the fact that quantization errors will _statistically_ even out because the thresholds in the threshold maps are uniformly distributed. A different approach to quantization is the concept of error diffusion, which is most likely what you have read about if you have ever researched image dithering before. In this approach we don’t just quantize and hope that on average the quantization error remains negligible. Instead, we _measure_ the quantization error and diffuse the error onto neighboring pixels, influencing how they will get quantized. This makes the process inherently sequential but technically more accurate. 
+All the previous techniques rely on the fact that quantization errors will _statistically_ even out because the thresholds in the threshold maps are uniformly distributed. A different approach to quantization is the concept of error diffusion, which is most likely what you have read about if you have ever researched image dithering before. In this approach we don’t just quantize and hope that on average the quantization error remains negligible. Instead, we _measure_ the quantization error and diffuse the error onto neighboring pixels, influencing how they will get quantized. We are effectively changing the image we want to dither as we go along. This makes the process inherently sequential.
 
-All error diffusion ditherings that I am going to look at use a “diffusion matrix”, which defines how the quantization error from the current pixel gets distributed across the neighboring pixels. For these matrices it is often assumed that the image’s pixels are traversed top-to-bottom, left-to-right — the same way us westerners read text. This is important as the error can only be diffused to pixels that haven’t been visited (and subsequently quantized) yet. If you find yourself traversing an image in a different order than the diffusion matrix assumes, flip the matrix accordingly.
+Almost all error diffusion ditherings that I am going to look at use a “diffusion matrix”, which defines how the quantization error from the current pixel gets distributed across the neighboring pixels. For these matrices it is often assumed that the image’s pixels are traversed top-to-bottom, left-to-right — the same way us westerners read text. This is important as the error can only be diffused to pixels that haven’t been visited (and subsequently quantized) yet. If you find yourself traversing an image in a different order than the diffusion matrix assumes, flip the matrix accordingly.
 
 ### “Simple” 2D error diffusion
 
@@ -310,9 +310,37 @@ Using this diffusion matrix, even larger, monotone areas look organic and lack r
 <figcaption>Jarvis’, Judice’s and Ninke’s dithering matric creates a very organic patterns, but fails at the border of the image.</figcaption>
 </figure>
 
+### Riemersma Dither
+
+Riemersma dither is something I hadn’t heard of before and only stumbled over an [in-depth article][riemersma article] by accident. It doesn’t seem to be widely known, but I _really_ like the way it looks. It aims to find a balance between ordered dithering and error diffusion dithering, and the twist is as simple as it is effective. Instead of traversing the image row-by-row it traverses the image with a [Hilbert curve]. Technically, any [space-filling curve] would do, but the Hilbert curve works well and is [rather easy to implement using generators][lsystem tweet]. 
+
+<figure>
+<img loading="lazy" src="./hilbertcurve.png" class="pixelated">
+<figcaption>Visualization of the Hilbert curve by making pixels brighter the later they are visisted.</figcaption>
+</figure>
+
+The Hilbert curve has a strong locality feature, meaning that the pixels that are close together on the curve are also close together in the picture. This way we don’t need to use an error diffusion matrix but rather a diffusion _sequence_ of length $n$. To quantize the current pixel, the last $n$ quantization errors are added to the current pixel with the weights given in the sequence. In the article, it is recommended to define the length $q$ of that list as well as the ratio $r$ between the first and last weight. The $i$th weight is then given by
+
+$$
+\text{weight}[i] = r^{-\frac{i}{q-1}}
+$$
+
+The article recommends a ratio of $r = \frac{1}{16}$ and a minimum list length of $q = 16$, but for my test image I found $r = \frac{1}{8}$ and $q = 32$ to be better looking.
+
+<figure>
+  <img src="riemersma.png" class="pixelated">
+  <figcaption>
+  
+  Riemersma dither with $r = \frac{1}{8}$ and $q = 32$.
+  
+  </figcaption>
+</figure>
+
+The dithering looks very organic, competing with blue noise and Jarvis-Judice-Ninke, but also covers the edges of the image correctly. At the same time it is easier to implement than both of the previous ones. It is, however, still an error diffusion dithering algorithm, meaning it is sequential and not suitable for GPUs.
+
 ## That’d be all... for now.
 
-Obra Dinn uses both Bayer dithering and blue noise dithering. Most of the environment is dithered using blue noise, people and other objects of interest are dithered using Bayer. If you are curious how he handled camera movement, read his [forum post][dukope dithering].
+Obra Dinn uses both Bayer dithering and blue noise dithering, as they can run as a shader. Most of the environment is dithered using blue noise, people and other objects of interest are dithered using Bayer. If you are curious how he handled camera movement, read his [forum post][dukope dithering].
 
 <section class="carousel">
   <figure>
@@ -349,7 +377,7 @@ Obra Dinn uses both Bayer dithering and blue noise dithering. Most of the enviro
   </figure>
   <figure>
     <img src="bluenoise.png" class="pixelated">
-    <figcaption>Blue noise.</figcaption>
+    <figcaption>Blue noise with σ = 1.5.</figcaption>
   </figure>
   <figure>
     <img src="simple2d.png" class="pixelated">
@@ -362,6 +390,10 @@ Obra Dinn uses both Bayer dithering and blue noise dithering. Most of the enviro
   <figure>
     <img src="jarvisjudiceninke.png" class="pixelated">
     <figcaption>Jarvis-Judice-Ninke error diffusion.</figcaption>
+  </figure>
+  <figure>
+    <img src="riemersma.png" class="pixelated">
+    <figcaption>Riemersma dither with a 1:8 ratio and list length 8.</figcaption>
   </figure>
 </section>
 
@@ -388,3 +420,7 @@ There is still a question what happens when you have more than two colors availa
 [Gaussian Blur]: https://en.wikipedia.org/wiki/Gaussian_blur
 [CT FFT]: https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm#Data_reordering,_bit_reversal,_and_in-place_algorithms
 [my wrong fft]: https://twitter.com/DasSurma/status/1341203941904834561
+[hilbert curve]: https://en.wikipedia.org/wiki/Hilbert_curve
+[riemersma article]: https://www.compuphase.com/riemer.htm
+[space-filling curve]: https://en.wikipedia.org/wiki/Space-filling_curve
+[lsystem tweet]: https://twitter.com/DasSurma/status/1343569629369786368

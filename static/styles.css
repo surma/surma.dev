@@ -151,7 +151,8 @@ figure > * {
   max-width: 100%;
   height: auto;
 }
-figure > p:first-child {
+figure > p:first-child,
+figcaption > p:first-child {
   display:contents;
 }
 figcaption {
