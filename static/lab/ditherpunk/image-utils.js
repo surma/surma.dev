@@ -225,8 +225,12 @@ function nextOdd(n) {
 }
 
 export class RGBAImageU8 extends Image {
-  static get BUFFER_TYPE() { return Uint8ClampedArray};
-  static get NUM_CHANNELS() { return 4};
+  static get BUFFER_TYPE() {
+    return Uint8ClampedArray;
+  }
+  static get NUM_CHANNELS() {
+    return 4;
+  }
 
   static fromImageData(imgData) {
     return new RGBAImageU8(
@@ -242,28 +246,34 @@ export class RGBAImageU8 extends Image {
 }
 
 export class RGBImageF32N0F8 extends Image {
-  static get BUFFER_TYPE() { return Float32Array};
-  static get NUM_CHANNELS() { return 3};
+  static get BUFFER_TYPE() {
+    return Float32Array;
+  }
+  static get NUM_CHANNELS() {
+    return 3;
+  }
 
   static fromImageData(sourceImage) {
     sourceImage = RGBAImageU8.fromImageData(sourceImage);
 
     const img = new RGBImageF32N0F8(
-      new Float32Array(sourceImage.width * sourceImage.height * this.NUM_CHANNELS),
+      new Float32Array(
+        sourceImage.width * sourceImage.height * this.NUM_CHANNELS
+      ),
       sourceImage.width,
       sourceImage.height
     );
     for (let i = 0; i < sourceImage.width * sourceImage.height; i++) {
-      img.data[3*i + 0] = sourceImage.data[4*i + 0] / 255;
-      img.data[3*i + 1] = sourceImage.data[4*i + 1] / 255;
-      img.data[3*i + 2] = sourceImage.data[4*i + 2] / 255;
+      img.data[3 * i + 0] = sourceImage.data[4 * i + 0] / 255;
+      img.data[3 * i + 1] = sourceImage.data[4 * i + 1] / 255;
+      img.data[3 * i + 2] = sourceImage.data[4 * i + 2] / 255;
     }
     return img;
   }
 
   mapSelf(f) {
-    for(const {x, y, i, pixel} of this.allPixels()) {
-      pixel.set(f(pixel, {x,y,i}));
+    for (const { x, y, i, pixel } of this.allPixels()) {
+      pixel.set(f(pixel, { x, y, i }));
     }
     return this;
   }
@@ -272,10 +282,10 @@ export class RGBImageF32N0F8 extends Image {
     const img = new Uint8ClampedArray(this.width * this.height * 4);
     for (let i = 0; i < this.width * this.height; i++) {
       // Clamping and floor’ing is done implicitly by Uint8ClampedArray
-      img[4*i + 0] =  this.data[3*i + 0] * 255
-      img[4*i + 1] =  this.data[3*i + 1] * 255
-      img[4*i + 2] =  this.data[3*i + 2] * 255
-      img[4*i + 3] = 255
+      img[4 * i + 0] = this.data[3 * i + 0] * 255;
+      img[4 * i + 1] = this.data[3 * i + 1] * 255;
+      img[4 * i + 2] = this.data[3 * i + 2] * 255;
+      img[4 * i + 3] = 255;
     }
     return new ImageData(img, this.width, this.height);
   }
@@ -285,8 +295,12 @@ const gaussCache = new Map();
 const fftGaussCache = new Map();
 
 export class GrayImageF32N0F8 extends Image {
-  static get BUFFER_TYPE() { return Float32Array};
-  static get NUM_CHANNELS() { return 1};
+  static get BUFFER_TYPE() {
+    return Float32Array;
+  }
+  static get NUM_CHANNELS() {
+    return 1;
+  }
 
   static gaussianKernel(
     stdDev,
@@ -400,8 +414,12 @@ export function bitReverse(x, numBits) {
 }
 
 export class ImageComplexF64 extends Image {
-  static get BUFFER_TYPE() {return Float64Array};
-  static get NUM_CHANNELS() {return  2};
+  static get BUFFER_TYPE() {
+    return Float64Array;
+  }
+  static get NUM_CHANNELS() {
+    return 2;
+  }
 
   real() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);

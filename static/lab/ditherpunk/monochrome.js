@@ -4,17 +4,9 @@ import {
   imageToImageData
 } from "./image-utils.js";
 
-import {
-  message
-} from "./worker-utils.js";
+import { message } from "./worker-utils.js";
 
-const {
-  fileinput,
-  log,
-  results,
-  examplebtn,
-  exampleimg,
-} = document.all;
+const { fileinput, log, results, examplebtn, exampleimg } = document.all;
 let worker;
 if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
   worker = new Worker("./monochrome-worker.js");
@@ -115,4 +107,6 @@ const bayerLevels = Array.from({ length: numBayerLevels }, (_, id) => {
   });
   return message(bayerWorker, id).then(m => m.result);
 });
-Promise.all(bayerLevels).then(bayerLevels => worker.postMessage({bayerLevels, id: "bayerlevels"}));
+Promise.all(bayerLevels).then(bayerLevels =>
+  worker.postMessage({ bayerLevels, id: "bayerlevels" })
+);
