@@ -401,7 +401,7 @@ export class GrayImageF32N0F8 extends Image {
   }
 }
 
-const gamma = 2.2;
+const gamma = 2.4;
 
 export function srgbToLinear(v) {
   if (v <= 0.04045) {
