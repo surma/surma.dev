@@ -39,7 +39,7 @@ const pipeline = [
         return grayscale
           .copy()
           .mapSelf((v, { x, y }) =>
-            v + bayerLevel.valueAt({ x, y }, { wrap: true }) - 0.5 > 0.5
+            v > bayerLevel.valueAt({ x, y }, { wrap: true })
               ? 1.0
               : 0.0
           );

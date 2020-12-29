@@ -708,6 +708,7 @@ html.forcedark figure video {
   transform: translateY(0.2em);
 }
 
-.pixelated {
-  image-rendering: pixelated;
+.katex-display {
+  max-width: 100%;
+  overflow: auto;
 }

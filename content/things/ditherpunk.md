@@ -11,10 +11,24 @@ I always loved the visual aesthetic of dithering but never knew how it works exa
 
 ## How did I get here? (You can skip this)
 
+<style>
+  .pixelated {
+    image-rendering: pixelated;
+  }
+
+  .demoimage {
+    max-width: 400px;
+    max-height: 400px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+</style>
+
 I am late to the party, but I finally played [“Return of the Obra Dinn”][Obra Dinn], the most recent game by [Lucas Pope][dukope] of [“Papers Please”][Papers Please] fame. Obra Dinn is a story puzzler that I can only recommend. But what really struck me is that is a 3D game (using the [Unity game engine][Unity]) but rendered using only 2 colors with dithering. Apparently, this has been dubbed “Ditherpunk”, and I love that.
 
 <figure>
-  <img loading="lazy" src="./obradinn.png" class="pixelated">
+  <img loading="lazy" width="1134" height="499" src="./obradinn.png" class="pixelated">
   <figcaption>Screenshot of “Return of the Obra Dinn”.</figcaption>
 </figure>
 
@@ -22,11 +36,11 @@ The fact that I have never seen a 3D game with dithering like this probably stem
 
 <section class="carousel">
   <figure>
-    <img src="./win95.png">
+    <img loading="lazy" width="640" height="480" src="./win95.png">
     <figcaption>Windows 95 configured to use 16 colors. Now spend hours trying to find the right floppy disk with the drivers to get the “256 colors” or, <em>gasp</em>, “True Color” show up.</figcaption>
   </figure>
   <figure>
-    <img src="./monkeyisland16.png" class="pixelated">
+    <img loading="lazy" width="640" height="400" src="./monkeyisland16.png" class="pixelated">
     <figcaption>Screenshot of “The Secret of Monkey Island” using 16 colors.</figcaption>
   </figure>
 </section>
@@ -43,8 +57,13 @@ According to Wikipedia, “Dither is an intentionally applied form of noise used
 ### Quantization 
 
 <figure>
-  <img loading="lazy" src="dark-original.png" class="pixelated">
-  <figcaption>Our example image for this article: A black-and-white photograph of San Francisco’s Golden Gate Bridge, downscaled to 400x267 (<a href="./dark-hires.jpg" target="_blank">higher resolution</a>).</figcaption>
+  <img loading="lazy" src="./dark-original.png" class="pixelated demoimage">
+  <figcaption>Example image #1: A black-and-white photograph of San Francisco’s Golden Gate Bridge, downscaled to 400x267 (<a href="./dark-hires.jpg" target="_blank">higher resolution</a>).</figcaption>
+</figure>
+
+<figure>
+  <img loading="lazy" src="./light-original.png" class="pixelated demoimage">
+  <figcaption>Example image #2: A black-and-white photograph of San Francisco’s Bay Bridge, downscaled to 253x400 (<a href="./light-hires.jpg" target="_blank">higher resolution</a>).</figcaption>
 </figure>
 
 This is black-and-white photo uses 256 different shades of gray. If we wanted to use fewer colors — for example just black and white to achieve monochromaticity — we have to change the pixels that are not already black or white. In this scenario, the colors black and white are called our “color palette” and the process of changing pixels that do not use a color from the palette is called “quantization”. Because not all colors from the original image are in the color palette, this will inevitably introduce an error called the “quantization error”. 
@@ -60,7 +79,7 @@ I had finished writing this article and just wanted to “quickly” look what a
 My [demo] is implemented using web technologies, most notably `<canvas>` and `ImageData`, which are — at the time of writing — specified to use [sRGB]. It’s an old color space specification (from 1996) whose brightness response was modeled along the behavior for CRTs. While barely anyone uses CRTs these days, it’s still considered the color space that is safe to be assumed to be correctly displayed on every display. As such, it is the default on the web platform. However, sRGB is not linear, meaning  that in sRGB $(0.5, 0.5, 0.5)$ is _not_ the color a human sees when you mix 50% of $(0, 0, 0)$ and $(1, 1, 1)$. 
 
 <figure>
-  <img loading="lazy" src="gradient-srgb.png" class="pixelated">
+  <img loading="lazy" width="360" height="40" src="./gradient-srgb.png" class="pixelated">
   <figcaption>A gradient and how it looks when dithered in sRGB color space.</figcaption>
 </figure>
 
@@ -84,7 +103,7 @@ $$
 With these conversions in place, dithering produces (more) accurate results:
 
 <figure>
-  <img loading="lazy" src="gradient-linear.png" class="pixelated">
+  <img loading="lazy" width="360" height="40" src="./gradient-linear.png" class="pixelated">
   <figcaption>A gradient and how it looks when dithered in linear RGB color space.</figcaption>
 </figure>
 
@@ -98,7 +117,7 @@ grayscaleImage.mapSelf(brightness =>
 ```
 
 <figure>
-  <img loading="lazy" src="dark-quantized.png" class="pixelated">
+  <img loading="lazy" width="400" height="267" src="./dark-quantized.png" class="pixelated demoimage">
   <figcaption>Each pixel has been quantized to the either black or white depending on its brightness.</figcaption>
 </figure>
 
@@ -108,12 +127,14 @@ Back to Wikipedia’s definition of dithering: “Intentionally applied form of 
 
 ```js
 grayscaleImage.mapSelf(brightness => 
-  (brightness + Math.random() - 0.5) > 0.5 ? 1.0 : 0.0
+  (brightness + Math.random() - 0.5) > 0.5 
+    ? 1.0 
+    : 0.0
 );
 ```
 
 <figure>
-  <img loading="lazy" src="dark-random.png" class="pixelated">
+  <img loading="lazy" width="400" height="267" src="./dark-random.png" class="pixelated demoimage">
   <figcaption>Random noise [-0.5; 0.5] has been added to each pixel before quantization.</figcaption>
 </figure>
 
@@ -126,12 +147,16 @@ Instead of talking about what kind of noise to add to an image before quantizing
 ```js
 // Adding noise
 grayscaleImage.mapSelf(brightness => 
-  (brightness + Math.random() - 0.5) > 0.5 ? 1.0 : 0.0
+  (brightness + Math.random() - 0.5) > 0.5 
+    ? 1.0 
+    : 0.0
 );
 
 // Adjusting the threshold
 grayscaleImage.mapSelf(brightness => 
-  brightness > Math.random() ? 1.0 : 0.0
+  brightness > Math.random() 
+    ? 1.0 
+    : 0.0
 );
 ```
 
@@ -155,7 +180,7 @@ The upside of this approach is that we can talk about a “threshold maps”. Th
 The threshold map for our random noise is also called “white noise”. The name comes from a term in signal processing where every frequency has the same intensity, just like in white light.
 
 <figure>
-  <img loading="lazy" src="./whitenoise.png" class="pixelated">
+  <img loading="lazy" width="400" height="267" src="./whitenoise.png" class="pixelated demoimage">
   <figcaption>The threshold map for O.G. dithering is, by definition, white noise.</figcaption>
 </figure>
 
@@ -201,7 +226,9 @@ A level $n$ Bayer matrix contains the numbers $0$ to $2^{2n+2}$. To use them as 
 ```js
 const bayer = generateBayerLevel(level);
 grayscaleImage.mapSelf((brightness, {x, y}) => 
-  brightness > bayer.valueAt(x, y, {wrap: true}) ? 1.0 : 0.0
+  brightness > bayer.valueAt(x, y, {wrap: true}) 
+    ? 1.0 
+    : 0.0
 );
 ```
 
@@ -209,23 +236,23 @@ Anything above level 3 barely makes a difference in the resulting visual as far 
 
 <section class="carousel">
   <figure>
-    <img src="bayermaps.png" class="pixelated">
+    <img loading="lazy" width="656" height="128" src="./bayermaps.png" class="pixelated">
     <figcaption>An enlarged view of Bayer threshold maps at increasing levels.</figcaption>
   </figure>
   <figure>
-    <img src="dark-bayer0.png" class="pixelated">
+    <img loading="lazy" width="400" height="267" src="./dark-bayer0.png" class="pixelated demoimage">
     <figcaption>Bayer Dithering Level 0.</figcaption>
   </figure>
   <figure>
-    <img src="dark-bayer1.png" class="pixelated">
+    <img loading="lazy" width="400" height="267" src="./dark-bayer1.png" class="pixelated demoimage">
     <figcaption>Bayer Dithering Level 1.</figcaption>
   </figure>
   <figure>
-    <img src="dark-bayer2.png" class="pixelated">
+    <img loading="lazy" width="400" height="267" src="./dark-bayer2.png" class="pixelated demoimage">
     <figcaption>Bayer Dithering Level 2.</figcaption>
   </figure>
   <figure>
-    <img src="dark-bayer3.png" class="pixelated">
+    <img loading="lazy" width="400" height="267" src="./dark-bayer3.png" class="pixelated demoimage">
     <figcaption>Bayer Dithering Level 3.</figcaption>
   </figure>
 </section>
@@ -235,7 +262,7 @@ Anything above level 3 barely makes a difference in the resulting visual as far 
 Both white noise and Bayer dithering have drawbacks, of course. Bayer dithering, for example, is very structured and will look quite repetitive, especially at lower levels. White noise is random, meaning that there will be clusters of bright pixels and voids of darker pixels. This can be made more obvious by squinting or, if that is too much work for you, through blurring  algorithmically. These clusters and voids are affecting the output of the dithering process as well, as details in darker areas will not get accurately represented if they fall into one of the cluster or brighter areas fall into a void.
 
 <figure>
-  <img loading="lazy" src="whitenoiseblur.png" class="pixelated">
+  <img loading="lazy" width="256" height="128" src="./whitenoiseblur.png" class="pixelated">
   <figcaption>Clear clusters and voids remain visible even after applying a Gaussian blur (σ = 1.5).</figcaption>
 </figure>
 
@@ -250,14 +277,14 @@ My implementation works fine but is not very fast, as I didn’t spend much time
 > **Note:** Of _course_ knowing this nerd-sniped me into implementing it. The reason this optimization is so promising is because convolution (which is the underlying operation of a Gaussian blur filter) has to loop over each field of the Gaussian kernel _for each pixel_ in the image. However, if you convert both the image as well as the Gaussian kernel to the frequency domain (using one of the many Fast Fourier Transform algorithms), convolution becomes an element-wise multiplication. I implemented the [in-place variant of the Cooley-Tukey FFT algorithm][CT FFT] and — after [some initial hickups][my wrong fft] — it did end up cutting the blue noise generation time by 50%. I still wrote pretty garbage-y code, so there’s a lot more to optimize, if anyone wants a challenge.
 
 <figure>
-  <img loading="lazy" src="bluenoiseblur.png" class="pixelated">
+  <img loading="lazy" width="256" height="128" src="./bluenoiseblur.png" class="pixelated">
   <figcaption>A 64×64 blue noise with a Gaussian blur applied (σ = 1.5). No clear structures remain.</figcaption>
 </figure>
 
 As blue noise is based on a Gaussian Blur, which is calculated on a torus (a fancy way of saying that Gaussian blur wraps around at the edges), blue noise will also tile seamlessly. So we can use the 64×64 blue noise and repeat it to cover the entire image. Blue noise dithering has a nice, even distribution without showing any obvious patterns, balancing rendering of details and organic look.
 
 <figure>
-  <img loading="lazy" src="dark-bluenoise.png" class="pixelated">
+  <img loading="lazy" width="400" height="267" src="./dark-bluenoise.png" class="pixelated demoimage">
   <figcaption>Blue noise dithering.</figcaption>
 </figure>
 
@@ -287,14 +314,14 @@ $$
 The diffusion algorithm visits each pixel in the image (in the right order!), quantizes the current pixel and measures the quantization error. Note that the quantization error is signed, i.e. it can be negative if the quantization made the pixel brighter than the original brightness value. We then add fractions of the quantization error to neighboring pixels as specified by the matrix. Rinse and repeat. 
 
 <figure>
-  <video style="max-height: 66vh" src="./errordiffusion.mp4" type="video/mp4" autoplay muted loop controls></video>
+  <video width="1280" height="1280" style="max-height: 66vh" src="./errordiffusion.mp4" type="video/mp4" autoplay muted loop controls></video>
   <figcaption>Error diffusion visualized step by step.</figcaption>
 </figure>
 
 This animation is supposed to visualize the algorithm, rather than showcase it’s effectiveness. 4×4 pixels are hardly enough do diffuse and average out quantization errors. But it does show the idea that if a pixel is made brighter during quantization, neighboring pixels will be made _darker_ to make up for it. 
 
 <figure>
-<img loading="lazy" src="./dark-simple2d.png" class="pixelated">
+<img loading="lazy" width="400" height="267" src="./dark-simple2d.png" class="pixelated demoimage">
 <figcaption>Simple 2D error diffusion applied to our test image. The line-like patterns are typical for this simple diffusion matrix.</figcaption>
 </figure>
 
@@ -320,7 +347,7 @@ $$
 Floyd Steinberg is a big improvement as it prevents a lot of patterns from forming. However, larger areas with little texture can still end up looking a bit unorganic.
 
 <figure>
-<img loading="lazy" src="./dark-floydsteinberg.png" class="pixelated">
+<img loading="lazy" width="400" height="267" src="./dark-floydsteinberg.png" class="pixelated demoimage">
 <figcaption>Floyd-Steinberg Dithering applied to our test image. Large, monotone areas still show repeating patterns.</figcaption>
 </figure>
 
@@ -345,7 +372,7 @@ $$
 Using this diffusion matrix, even larger, monotone areas look organic and lack repeating patterns. However, the borders of the image can appear undithered as only tiny amounts of the error are diffused to the first couple of rows.
 
 <figure>
-<img loading="lazy" src="./dark-jarvisjudiceninke.png" class="pixelated">
+<img loading="lazy" width="400" height="267" src="./dark-jarvisjudiceninke.png" class="pixelated demoimage">
 <figcaption>Jarvis’, Judice’s and Ninke’s dithering matric creates a very organic patterns, but fails at the border of the image.</figcaption>
 </figure>
 
@@ -354,7 +381,7 @@ Using this diffusion matrix, even larger, monotone areas look organic and lack r
 To be completely honest, the Riemersma dither is something I stumbled upon by accident via an [in-depth article][riemersma article] while I was researching the other dithering algorithms in this article. It doesn’t seem to be widely known, but I _really_ like the way it looks and the concept behind it.  Instead of traversing the image row-by-row it traverses the image with a [Hilbert curve]. Technically, any [space-filling curve] would do, but the Hilbert curve works well and is [rather easy to implement using generators][lsystem tweet]. Through this it aims to take the best of both ordered dithering and error diffusion dithering: Limiting the number of pixels a single pixel can influence together with the organic look (and small memory footprint).
 
 <figure>
-<img loading="lazy" src="./hilbertcurve.png" class="pixelated" style="max-height: 50vh; width: auto">
+<img loading="lazy" width="256" height="256" src="./hilbertcurve.png" class="pixelated" style="max-height: 50vh; width: auto">
 <figcaption>Visualization of the 256x256 Hilbert curve by making pixels brighter the later they are visisted.</figcaption>
 </figure>
 
@@ -367,7 +394,7 @@ $$
 The article recommends a ratio of $r = \frac{1}{16}$ and a minimum list length of $n = 16$, but for my test image I found $r = \frac{1}{8}$ and $n = 32$ to be better looking.
 
 <figure>
-  <img loading="lazy" src="./dark-riemersma.png" class="pixelated">
+  <img loading="lazy" width="400" height="267" src="./dark-riemersma.png" class="pixelated demoimage">
   <figcaption>
   
 Riemersma dither with $r = \frac{1}{8}$ and $n = 32$.
@@ -380,65 +407,6 @@ The dithering looks very organic, competing with blue noise and Jarvis-Judice-Ni
 ## That’d be all... for now.
 
 Obra Dinn uses both Bayer dithering and blue noise dithering, as they can run as a shader. Most of the environment is dithered using blue noise, people and other objects of interest are dithered using Bayer. If you are curious how he handled camera movement, read his [forum post][dukope dithering].
-
-<section class="carousel">
-  <figure>
-    <img src="dark-original.png" class="pixelated">
-    <figcaption>The original, unprocessed test image.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-quantized.png" class="pixelated">
-    <figcaption>Quantization.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-random.png" class="pixelated">
-    <figcaption>Random noise / white noise.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-bayer0.png" class="pixelated">
-    <figcaption>Bayer Dithering Level 0.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-bayer0.png" class="pixelated">
-    <figcaption>Bayer Dithering Level 0.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-bayer1.png" class="pixelated">
-    <figcaption>Bayer Dithering Level 1.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-bayer2.png" class="pixelated">
-    <figcaption>Bayer Dithering Level 2.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-bayer3.png" class="pixelated">
-    <figcaption>Bayer Dithering Level 3.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-bluenoise.png" class="pixelated">
-    <figcaption>Blue noise with σ = 1.5.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-simple2d.png" class="pixelated">
-    <figcaption>Simple 2D error diffusion.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-floydsteinberg.png" class="pixelated">
-    <figcaption>Floyd-Steinberg error diffusion.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-jarvisjudiceninke.png" class="pixelated">
-    <figcaption>Jarvis-Judice-Ninke error diffusion.</figcaption>
-  </figure>
-  <figure>
-    <img src="dark-riemersma.png" class="pixelated">
-    <figcaption>
-
-Riemersma dither with $r = \frac{1}{8}$ and $n = 32$.
-
-  </figcaption>
-  </figure>
-</section>
 
 If you want to try different dithering algorithms on one of your own images, take a look at my [demo] that I wrote to generate all the images in this blog post. Keep in mind that these are not the fastest, and if you throw your 20 megapixel camera JPEG at this, it will take a while. 
 
