@@ -17,8 +17,8 @@ I always loved the visual aesthetic of dithering but never knew how it works exa
   }
 
   .demoimage {
-    max-width: 400px;
-    max-height: 400px;
+    max-width: 400px !important;
+    max-height: 400px !important;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -57,12 +57,12 @@ According to Wikipedia, “Dither is an intentionally applied form of noise used
 ### Quantization 
 
 <figure>
-  <img loading="lazy" src="./dark-original.png" class="pixelated demoimage">
+  <img loading="lazy" width="400" height="267" src="./dark-original.png" class="pixelated demoimage">
   <figcaption>Example image #1: A black-and-white photograph of San Francisco’s Golden Gate Bridge, downscaled to 400x267 (<a href="./dark-hires.jpg" target="_blank">higher resolution</a>).</figcaption>
 </figure>
 
 <figure>
-  <img loading="lazy" src="./light-original.png" class="pixelated demoimage">
+  <img loading="lazy" width="253" height="400" src="./light-original.png" class="pixelated demoimage">
   <figcaption>Example image #2: A black-and-white photograph of San Francisco’s Bay Bridge, downscaled to 253x400 (<a href="./light-hires.jpg" target="_blank">higher resolution</a>).</figcaption>
 </figure>
 
@@ -117,7 +117,10 @@ grayscaleImage.mapSelf(brightness =>
 ```
 
 <figure>
-  <img loading="lazy" width="400" height="267" src="./dark-quantized.png" class="pixelated demoimage">
+  <section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-quantized.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-quantized.png" class="pixelated demoimage">
+  </section>
   <figcaption>Each pixel has been quantized to the either black or white depending on its brightness.</figcaption>
 </figure>
 
@@ -134,7 +137,10 @@ grayscaleImage.mapSelf(brightness =>
 ```
 
 <figure>
-  <img loading="lazy" width="400" height="267" src="./dark-random.png" class="pixelated demoimage">
+  <section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-random.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-random.png" class="pixelated demoimage">
+  </section>
   <figcaption>Random noise [-0.5; 0.5] has been added to each pixel before quantization.</figcaption>
 </figure>
 
@@ -234,28 +240,34 @@ grayscaleImage.mapSelf((brightness, {x, y}) =>
 
 Anything above level 3 barely makes a difference in the resulting visual as far as I can tell, and I personally found Level 1 and 3 the most aesthetically pleasing.
 
-<section class="carousel">
-  <figure>
-    <img loading="lazy" width="656" height="128" src="./bayermaps.png" class="pixelated">
-    <figcaption>An enlarged view of Bayer threshold maps at increasing levels.</figcaption>
-  </figure>
-  <figure>
+<figure>
+  <section class="carousel">
     <img loading="lazy" width="400" height="267" src="./dark-bayer0.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-bayer0.png" class="pixelated demoimage">
+  </section>
     <figcaption>Bayer Dithering Level 0.</figcaption>
   </figure>
   <figure>
+  <section class="carousel">
     <img loading="lazy" width="400" height="267" src="./dark-bayer1.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-bayer1.png" class="pixelated demoimage">
+  </section>
     <figcaption>Bayer Dithering Level 1.</figcaption>
   </figure>
   <figure>
+  <section class="carousel">
     <img loading="lazy" width="400" height="267" src="./dark-bayer2.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-bayer2.png" class="pixelated demoimage">
+  </section>
     <figcaption>Bayer Dithering Level 2.</figcaption>
   </figure>
   <figure>
+  <section class="carousel">
     <img loading="lazy" width="400" height="267" src="./dark-bayer3.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-bayer3.png" class="pixelated demoimage">
+  </section>
     <figcaption>Bayer Dithering Level 3.</figcaption>
   </figure>
-</section>
 
 ### Blue noise
 
@@ -284,7 +296,10 @@ My implementation works fine but is not very fast, as I didn’t spend much time
 As blue noise is based on a Gaussian Blur, which is calculated on a torus (a fancy way of saying that Gaussian blur wraps around at the edges), blue noise will also tile seamlessly. So we can use the 64×64 blue noise and repeat it to cover the entire image. Blue noise dithering has a nice, even distribution without showing any obvious patterns, balancing rendering of details and organic look.
 
 <figure>
-  <img loading="lazy" width="400" height="267" src="./dark-bluenoise.png" class="pixelated demoimage">
+<section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-bluenoise.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-bluenoise.png" class="pixelated demoimage">
+  </section>
   <figcaption>Blue noise dithering.</figcaption>
 </figure>
 
@@ -321,7 +336,10 @@ The diffusion algorithm visits each pixel in the image (in the right order!), qu
 This animation is supposed to visualize the algorithm, rather than showcase it’s effectiveness. 4×4 pixels are hardly enough do diffuse and average out quantization errors. But it does show the idea that if a pixel is made brighter during quantization, neighboring pixels will be made _darker_ to make up for it. 
 
 <figure>
-<img loading="lazy" width="400" height="267" src="./dark-simple2d.png" class="pixelated demoimage">
+<section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-simple2d.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-simple2d.png" class="pixelated demoimage">
+  </section>
 <figcaption>Simple 2D error diffusion applied to our test image. The line-like patterns are typical for this simple diffusion matrix.</figcaption>
 </figure>
 
@@ -347,7 +365,10 @@ $$
 Floyd Steinberg is a big improvement as it prevents a lot of patterns from forming. However, larger areas with little texture can still end up looking a bit unorganic.
 
 <figure>
-<img loading="lazy" width="400" height="267" src="./dark-floydsteinberg.png" class="pixelated demoimage">
+<section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-floydsteinberg.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-floydsteinberg.png" class="pixelated demoimage">
+  </section>
 <figcaption>Floyd-Steinberg Dithering applied to our test image. Large, monotone areas still show repeating patterns.</figcaption>
 </figure>
 
@@ -372,7 +393,10 @@ $$
 Using this diffusion matrix, even larger, monotone areas look organic and lack repeating patterns. However, the borders of the image can appear undithered as only tiny amounts of the error are diffused to the first couple of rows.
 
 <figure>
-<img loading="lazy" width="400" height="267" src="./dark-jarvisjudiceninke.png" class="pixelated demoimage">
+<section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-jarvisjudiceninke.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-jarvisjudiceninke.png" class="pixelated demoimage">
+  </section>
 <figcaption>Jarvis’, Judice’s and Ninke’s dithering matric creates a very organic patterns, but fails at the border of the image.</figcaption>
 </figure>
 
@@ -394,7 +418,10 @@ $$
 The article recommends a ratio of $r = \frac{1}{16}$ and a minimum list length of $n = 16$, but for my test image I found $r = \frac{1}{8}$ and $n = 32$ to be better looking.
 
 <figure>
-  <img loading="lazy" width="400" height="267" src="./dark-riemersma.png" class="pixelated demoimage">
+  <section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-riemersma.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-riemersma.png" class="pixelated demoimage">
+  </section>
   <figcaption>
   
 Riemersma dither with $r = \frac{1}{8}$ and $n = 32$.
