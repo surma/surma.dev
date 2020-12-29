@@ -66,7 +66,7 @@ According to Wikipedia, “Dither is an intentionally applied form of noise used
   <figcaption>Example image #2: A black-and-white photograph of San Francisco’s Bay Bridge, downscaled to 253x400 (<a href="./light-hires.jpg" target="_blank">higher resolution</a>).</figcaption>
 </figure>
 
-This is black-and-white photo uses 256 different shades of gray. If we wanted to use fewer colors — for example just black and white to achieve monochromaticity — we have to change the pixels that are not already black or white. In this scenario, the colors black and white are called our “color palette” and the process of changing pixels that do not use a color from the palette is called “quantization”. Because not all colors from the original image are in the color palette, this will inevitably introduce an error called the “quantization error”. 
+Both black-and-white photos use 256 different shades of gray. If we wanted to use fewer colors — for example just black and white to achieve monochromaticity — we have to change the pixels that are not already black or white. In this scenario, the colors black and white are called our “color palette” and the process of changing pixels that do not use a color from the palette is called “quantization”. Because not all colors from the original images are in the color palette, this will inevitably introduce an error called the “quantization error”. 
 
 > **Note**: The code samples in this article are real but built on top of a helper class `GrayImageF32N0F8` I wrote for the [demo] of this article. It’s similar to the web’s [`ImageData`][ImageData], but uses `Float32Array`, only has one color channel, represents values between 0.0 and 1.0 and has a whole bunch of helper functions. The source code is available in [the lab][lab].
 
@@ -238,7 +238,25 @@ grayscaleImage.mapSelf((brightness, {x, y}) =>
 );
 ```
 
-Anything above level 3 barely makes a difference in the resulting visual as far as I can tell, and I personally found Level 1 and 3 the most aesthetically pleasing.
+One thing to note is that the Bayer matrices as defined above will render an image lighter than it originally was. The lower the Bayer level used, the higher the error is. 
+
+<figure>
+  <img loading="lazy" width="400" height="267" src="./bayerbias.png" class="pixelated demoimage">
+  <figcaption>Bayer Dithering Level 0.</figcaption>
+</figure>
+
+For example at level 0, one out of four pixels would render white for any brightness value > 1/255 = 0.004. In our dark test image, the sky is not pure black and is dithered in a very unpleasing and distorting way using Bayer Level 0. Alternatively, we can flip the bias and make images render _darker_ by inverting the way we use the Bayer matrix:
+
+```js
+const bayer = generateBayerLevel(level);
+grayscaleImage.mapSelf((brightness, {x, y}) => 
+  brightness > 1 - bayer.valueAt(x, y, {wrap: true}) 
+    ? 1.0 
+    : 0.0
+);
+```
+
+I have used the original Bayer definition for the light image and the inverted version for the dark image. I personally found Level 1 and 3 the most aesthetically pleasing. 
 
 <figure>
   <section class="carousel">
@@ -271,7 +289,7 @@ Anything above level 3 barely makes a difference in the resulting visual as far 
 
 ### Blue noise
 
-Both white noise and Bayer dithering have drawbacks, of course. Bayer dithering, for example, is very structured and will look quite repetitive, especially at lower levels. White noise is random, meaning that there will be clusters of bright pixels and voids of darker pixels. This can be made more obvious by squinting or, if that is too much work for you, through blurring  algorithmically. These clusters and voids are affecting the output of the dithering process as well, as details in darker areas will not get accurately represented if they fall into one of the cluster or brighter areas fall into a void.
+Both white noise and Bayer dithering have drawbacks, of course. Bayer dithering, for example, is very structured and will look quite repetitive, especially at lower levels. White noise is random, meaning that there will be clusters of bright pixels and voids of darker pixels. This can be made more obvious by squinting or, if that is too much work for you, through blurring the threshold map algorithmically. These clusters and voids are affecting the output of the dithering process as well, as details in darker areas will not get accurately represented if they fall into one of the cluster or brighter areas fall into a void.
 
 <figure>
   <img loading="lazy" width="256" height="128" src="./whitenoiseblur.png" class="pixelated">
