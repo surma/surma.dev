@@ -43,15 +43,53 @@ According to Wikipedia, “Dither is an intentionally applied form of noise used
 ### Quantization 
 
 <figure>
-  <img loading="lazy" src="original.png" class="pixelated">
-  <figcaption>Our example image for this article: A black-and-white photograph of San Francisco’s Golden Gate Bridge, downscaled to 400x267 (<a href="./hires.jpg" target="_blank">higher resolution</a>).</figcaption>
+  <img loading="lazy" src="dark-original.png" class="pixelated">
+  <figcaption>Our example image for this article: A black-and-white photograph of San Francisco’s Golden Gate Bridge, downscaled to 400x267 (<a href="./dark-hires.jpg" target="_blank">higher resolution</a>).</figcaption>
 </figure>
 
 This is black-and-white photo uses 256 different shades of gray. If we wanted to use fewer colors — for example just black and white to achieve monochromaticity — we have to change the pixels that are not already black or white. In this scenario, the colors black and white are called our “color palette” and the process of changing pixels that do not use a color from the palette is called “quantization”. Because not all colors from the original image are in the color palette, this will inevitably introduce an error called the “quantization error”. 
 
 > **Note**: The code samples in this article are real but built on top of a helper class `GrayImageF32N0F8` I wrote for the [demo] of this article. It’s similar to the web’s [`ImageData`][ImageData], but uses `Float32Array`, only has one color channel, represents values between 0.0 and 1.0 and has a whole bunch of helper functions. The source code is available in [the lab][lab].
 
-A straight forward way to quantize an image with a given color palette is to find the closest color in the palette. In our scenario, we can look at the brightness of every pixel. A brightness of 0 means black, a brightness of 1 means white, everything else is in-between, ideally correlating with human perception such that a brightness of 0.5 is a nice mid-gray. To quantize a given color, we only need to check if the color’s brightness is greater or less than 0.5 and quantize to white and black respectively. Applying this quantization to the image above yields an... unsatisfying result.
+A straight forward way to quantize an image with a given color palette is to find the closest color in the palette. In our scenario, we can look at the brightness of every pixel. A brightness of 0 means black, a brightness of 1 means white, everything else is in-between, ideally correlating with human perception such that a brightness of 0.5 is a nice mid-gray. 
+
+### Gamma
+
+I had finished writing this article and just wanted to “quickly” look what a black-to-white gradient looks like with the different dithering algorithms. The results showed me that I had forgotten the thing that _always_ somehow becomes a problem when working with images: color spaces. The sentence “ideally correlating with human perception” from the previous paragraph carries a lot of meaning once you realize that color spaces are involved.
+
+My [demo] is implemented using web technologies, most notably `<canvas>` and `ImageData`, which are — at the time of writing — specified to use [sRGB]. It’s an old color space specification (from 1996) whose brightness response was modeled along the behavior for CRTs. While barely anyone uses CRTs these days, it’s still considered the color space that is safe to be assumed to be correctly displayed on every display. As such, it is the default on the web platform. However, sRGB is not linear, meaning  that in sRGB $(0.5, 0.5, 0.5)$ is _not_ the color a human sees when you mix 50% of $(0, 0, 0)$ and $(1, 1, 1)$. 
+
+<figure>
+  <img loading="lazy" src="gradient-srgb.png" class="pixelated">
+  <figcaption>A gradient and how it looks when dithered in sRGB color space.</figcaption>
+</figure>
+
+As this image shows, the dithered gradient becomes bright way too quickly. If we want 0.5 be the color in the middle of pure black and white (as perceived by a human), we need to convert from sRGB to linear RGB space, which is also called “gamma correction”. Wikipedia lists the following formulas to convert between sRGB and linear RGB.
+
+$$
+\begin{array}{rcl}
+\text{srgbToLinear}(b) & = & \left\{\begin{array}{ll}
+  \frac{b}{12.92} & b \le 0.04045 \\
+  \left( \frac{b + 0.055}{1.055}\right)^{\gamma} & \text{otherwise}
+\end{array}\right.\\
+
+\text{linearToSrgb}(b) & = & \left\{\begin{array}{ll}
+  12.92\cdot b & b \le 0.0031308 \\
+   1.055 \cdot b^\frac{1}{\gamma} - 0.055 & \text{otherwise}
+\end{array}\right.\\
+\text{with}\space\gamma = 2.4
+\end{array}\\
+$$
+
+With these conversions in place, dithering produces (more) accurate results:
+
+<figure>
+  <img loading="lazy" src="gradient-linear.png" class="pixelated">
+  <figcaption>A gradient and how it looks when dithered in linear RGB color space.</figcaption>
+</figure>
+
+### Quantization (cont’d)
+To quantize a given color, we only need to check if the color’s brightness is greater or less than 0.5 and quantize to white and black respectively. Applying this quantization to the image above yields an... unsatisfying result.
 
 ```js
 grayscaleImage.mapSelf(brightness => 
@@ -60,7 +98,7 @@ grayscaleImage.mapSelf(brightness =>
 ```
 
 <figure>
-  <img loading="lazy" src="quantized.png" class="pixelated">
+  <img loading="lazy" src="dark-quantized.png" class="pixelated">
   <figcaption>Each pixel has been quantized to the either black or white depending on its brightness.</figcaption>
 </figure>
 
@@ -75,7 +113,7 @@ grayscaleImage.mapSelf(brightness =>
 ```
 
 <figure>
-  <img loading="lazy" src="random.png" class="pixelated">
+  <img loading="lazy" src="dark-random.png" class="pixelated">
   <figcaption>Random noise [-0.5; 0.5] has been added to each pixel before quantization.</figcaption>
 </figure>
 
@@ -175,19 +213,19 @@ Anything above level 3 barely makes a difference in the resulting visual as far 
     <figcaption>An enlarged view of Bayer threshold maps at increasing levels.</figcaption>
   </figure>
   <figure>
-    <img src="bayer0.png" class="pixelated">
+    <img src="dark-bayer0.png" class="pixelated">
     <figcaption>Bayer Dithering Level 0.</figcaption>
   </figure>
   <figure>
-    <img src="bayer1.png" class="pixelated">
+    <img src="dark-bayer1.png" class="pixelated">
     <figcaption>Bayer Dithering Level 1.</figcaption>
   </figure>
   <figure>
-    <img src="bayer2.png" class="pixelated">
+    <img src="dark-bayer2.png" class="pixelated">
     <figcaption>Bayer Dithering Level 2.</figcaption>
   </figure>
   <figure>
-    <img src="bayer3.png" class="pixelated">
+    <img src="dark-bayer3.png" class="pixelated">
     <figcaption>Bayer Dithering Level 3.</figcaption>
   </figure>
 </section>
@@ -219,7 +257,7 @@ My implementation works fine but is not very fast, as I didn’t spend much time
 As blue noise is based on a Gaussian Blur, which is calculated on a torus (a fancy way of saying that Gaussian blur wraps around at the edges), blue noise will also tile seamlessly. So we can use the 64×64 blue noise and repeat it to cover the entire image. Blue noise dithering has a nice, even distribution without showing any obvious patterns, balancing rendering of details and organic look.
 
 <figure>
-  <img loading="lazy" src="bluenoise.png" class="pixelated">
+  <img loading="lazy" src="dark-bluenoise.png" class="pixelated">
   <figcaption>Blue noise dithering.</figcaption>
 </figure>
 
@@ -256,7 +294,7 @@ The diffusion algorithm visits each pixel in the image (in the right order!), qu
 This animation is supposed to visualize the algorithm, rather than showcase it’s effectiveness. 4×4 pixels are hardly enough do diffuse and average out quantization errors. But it does show the idea that if a pixel is made brighter during quantization, neighboring pixels will be made _darker_ to make up for it. 
 
 <figure>
-<img loading="lazy" src="./simple2d.png" class="pixelated">
+<img loading="lazy" src="./dark-simple2d.png" class="pixelated">
 <figcaption>Simple 2D error diffusion applied to our test image. The line-like patterns are typical for this simple diffusion matrix.</figcaption>
 </figure>
 
@@ -282,7 +320,7 @@ $$
 Floyd Steinberg is a big improvement as it prevents a lot of patterns from forming. However, larger areas with little texture can still end up looking a bit unorganic.
 
 <figure>
-<img loading="lazy" src="./floydsteinberg.png" class="pixelated">
+<img loading="lazy" src="./dark-floydsteinberg.png" class="pixelated">
 <figcaption>Floyd-Steinberg Dithering applied to our test image. Large, monotone areas still show repeating patterns.</figcaption>
 </figure>
 
@@ -307,7 +345,7 @@ $$
 Using this diffusion matrix, even larger, monotone areas look organic and lack repeating patterns. However, the borders of the image can appear undithered as only tiny amounts of the error are diffused to the first couple of rows.
 
 <figure>
-<img loading="lazy" src="./jarvisjudiceninke.png" class="pixelated">
+<img loading="lazy" src="./dark-jarvisjudiceninke.png" class="pixelated">
 <figcaption>Jarvis’, Judice’s and Ninke’s dithering matric creates a very organic patterns, but fails at the border of the image.</figcaption>
 </figure>
 
@@ -329,7 +367,7 @@ $$
 The article recommends a ratio of $r = \frac{1}{16}$ and a minimum list length of $n = 16$, but for my test image I found $r = \frac{1}{8}$ and $n = 32$ to be better looking.
 
 <figure>
-  <img src="riemersma.png" class="pixelated">
+  <img loading="lazy" src="./dark-riemersma.png" class="pixelated">
   <figcaption>
   
 Riemersma dither with $r = \frac{1}{8}$ and $n = 32$.
@@ -345,55 +383,55 @@ Obra Dinn uses both Bayer dithering and blue noise dithering, as they can run as
 
 <section class="carousel">
   <figure>
-    <img src="original.png" class="pixelated">
+    <img src="dark-original.png" class="pixelated">
     <figcaption>The original, unprocessed test image.</figcaption>
   </figure>
   <figure>
-    <img src="quantized.png" class="pixelated">
+    <img src="dark-quantized.png" class="pixelated">
     <figcaption>Quantization.</figcaption>
   </figure>
   <figure>
-    <img src="random.png" class="pixelated">
+    <img src="dark-random.png" class="pixelated">
     <figcaption>Random noise / white noise.</figcaption>
   </figure>
   <figure>
-    <img src="bayer0.png" class="pixelated">
+    <img src="dark-bayer0.png" class="pixelated">
     <figcaption>Bayer Dithering Level 0.</figcaption>
   </figure>
   <figure>
-    <img src="bayer0.png" class="pixelated">
+    <img src="dark-bayer0.png" class="pixelated">
     <figcaption>Bayer Dithering Level 0.</figcaption>
   </figure>
   <figure>
-    <img src="bayer1.png" class="pixelated">
+    <img src="dark-bayer1.png" class="pixelated">
     <figcaption>Bayer Dithering Level 1.</figcaption>
   </figure>
   <figure>
-    <img src="bayer2.png" class="pixelated">
+    <img src="dark-bayer2.png" class="pixelated">
     <figcaption>Bayer Dithering Level 2.</figcaption>
   </figure>
   <figure>
-    <img src="bayer3.png" class="pixelated">
+    <img src="dark-bayer3.png" class="pixelated">
     <figcaption>Bayer Dithering Level 3.</figcaption>
   </figure>
   <figure>
-    <img src="bluenoise.png" class="pixelated">
+    <img src="dark-bluenoise.png" class="pixelated">
     <figcaption>Blue noise with σ = 1.5.</figcaption>
   </figure>
   <figure>
-    <img src="simple2d.png" class="pixelated">
+    <img src="dark-simple2d.png" class="pixelated">
     <figcaption>Simple 2D error diffusion.</figcaption>
   </figure>
   <figure>
-    <img src="floydsteinberg.png" class="pixelated">
+    <img src="dark-floydsteinberg.png" class="pixelated">
     <figcaption>Floyd-Steinberg error diffusion.</figcaption>
   </figure>
   <figure>
-    <img src="jarvisjudiceninke.png" class="pixelated">
+    <img src="dark-jarvisjudiceninke.png" class="pixelated">
     <figcaption>Jarvis-Judice-Ninke error diffusion.</figcaption>
   </figure>
   <figure>
-    <img src="riemersma.png" class="pixelated">
+    <img src="dark-riemersma.png" class="pixelated">
     <figcaption>
 
 Riemersma dither with $r = \frac{1}{8}$ and $n = 32$.
@@ -429,3 +467,4 @@ There is still a question what happens when you have more than two colors availa
 [riemersma article]: https://www.compuphase.com/riemer.htm
 [space-filling curve]: https://en.wikipedia.org/wiki/Space-filling_curve
 [lsystem tweet]: https://twitter.com/DasSurma/status/1343569629369786368
+[srgb]: https://en.wikipedia.org/wiki/SRGB
