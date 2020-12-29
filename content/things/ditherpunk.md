@@ -81,7 +81,7 @@ grayscaleImage.mapSelf(brightness =>
 
 I found this quite surprising! It is by no means _good_ — video games from the 80s have shown us that we can do better — but this is a very low effort and quick way to get more detail into a monochrome image. And if I was to take “dithering” literally, I’d end my article here. But there’s more…
 
-### Threshold maps
+## Ordered Dithering
 
 Instead of talking about what kind of noise to add to an image before quantizing it, we can also change our perspective and talk about adjusting the quantization threshold.
 
@@ -112,17 +112,18 @@ $$
 
 </figure>
 
+The upside of this approach is that we can talk about a “threshold maps”. These maps can make it easier to reason about why a resulting image looks the way it does by visualizing the threshold map itself. Threshold maps can also be precomputed and reused, which makes the dithering process parallelizable per pixel and as a result can be run as a shader on the GPU. This is what Obra Dinn does! There are a couple of different ways to generate these threshold maps, but all of them introduce some kind of order to the noise that is added to the image, hence the name “ordered dithering”.
 
-The upside of this approach is that we can talk about a “threshold maps”. These maps can make it easier to reason about why a resulting image looks the way it does by visualizing the threshold map itself. Threshold maps can also be precomputed and reused, which makes the dithering process parallelizable per pixel and as a result can be run as a shader on the GPU. This is what Obra Dinn does! The threshold map for our random noise is also called “white noise”. The name comes from a term in signal processing where every frequency has the same intensity, just like in white light.
+The threshold map for our random noise is also called “white noise”. The name comes from a term in signal processing where every frequency has the same intensity, just like in white light.
 
 <figure>
   <img loading="lazy" src="./whitenoise.png" class="pixelated">
   <figcaption>The threshold map for O.G. dithering is, by definition, white noise.</figcaption>
 </figure>
 
-## Ordered dithering
+### Bayer Dithering
 
-Ordered dithering, also sometimes called “Bayer dithering”, uses a Bayer matrix as the threshold map. They are named after Bruce Bayer, inventor of the [Bayer filter], which is in use to this day in digital cameras to give brightness sensors the ability to take color images by cleverly arranging colored filters in front of the individual pixel sensors. That same pattern is used in the Bayer dithering threshold map and might look familiar to some of you.
+“Bayer dithering” uses a Bayer matrix as the threshold map. They are named after Bruce Bayer, inventor of the [Bayer filter], which is in use to this day in digital cameras to give brightness sensors the ability to take color images by cleverly arranging colored filters in front of the individual pixel sensors. That same pattern is used in the Bayer dithering threshold map and might look familiar to some of you.
 
 Bayer matrices come in various sizes (which I ended up calling “levels”). Bayer Level 0 is $2 \times 2$ matrix. Bayer Level 1 is a $4 
 \times 4$ matrix. Bayer Level $n$ is a $2^{n+1} \times 2^{n+1}$ matrix. A level $n$ can be recursively generated from level $n-1$ (although Wikipedia also lists an [per-cell algorithm][Bayer wikipedia]) and if your image happens to be bigger than your threshold map, you can tile the threshold map. 
@@ -191,7 +192,7 @@ Anything above level 3 barely makes a difference in the resulting visual as far 
   </figure>
 </section>
 
-## Blue noise
+### Blue noise
 
 Both white noise and Bayer dithering have drawbacks, of course. Bayer dithering, for example, is very structured and will look quite repetitive, especially at lower levels. White noise is random, meaning that there will be clusters of bright pixels and voids of darker pixels. This can be made more obvious by squinting or, if that is too much work for you, through blurring  algorithmically. These clusters and voids are affecting the output of the dithering process as well, as details in darker areas will not get accurately represented if they fall into one of the cluster or brighter areas fall into a void.
 
@@ -312,31 +313,31 @@ Using this diffusion matrix, even larger, monotone areas look organic and lack r
 
 ### Riemersma Dither
 
-Riemersma dither is something I hadn’t heard of before and only stumbled over an [in-depth article][riemersma article] by accident. It doesn’t seem to be widely known, but I _really_ like the way it looks. It aims to find a balance between ordered dithering and error diffusion dithering, and the twist is as simple as it is effective. Instead of traversing the image row-by-row it traverses the image with a [Hilbert curve]. Technically, any [space-filling curve] would do, but the Hilbert curve works well and is [rather easy to implement using generators][lsystem tweet]. 
+To be completely honest, the Riemersma dither is something I stumbled upon by accident via an [in-depth article][riemersma article] while I was researching the other dithering algorithms in this article. It doesn’t seem to be widely known, but I _really_ like the way it looks and the concept behind it.  Instead of traversing the image row-by-row it traverses the image with a [Hilbert curve]. Technically, any [space-filling curve] would do, but the Hilbert curve works well and is [rather easy to implement using generators][lsystem tweet]. Through this it aims to take the best of both ordered dithering and error diffusion dithering: Limiting the number of pixels a single pixel can influence together with the organic look (and small memory footprint).
 
 <figure>
-<img loading="lazy" src="./hilbertcurve.png" class="pixelated">
-<figcaption>Visualization of the Hilbert curve by making pixels brighter the later they are visisted.</figcaption>
+<img loading="lazy" src="./hilbertcurve.png" class="pixelated" style="max-height: 50vh; width: auto">
+<figcaption>Visualization of the 256x256 Hilbert curve by making pixels brighter the later they are visisted.</figcaption>
 </figure>
 
-The Hilbert curve has a strong locality feature, meaning that the pixels that are close together on the curve are also close together in the picture. This way we don’t need to use an error diffusion matrix but rather a diffusion _sequence_ of length $n$. To quantize the current pixel, the last $n$ quantization errors are added to the current pixel with the weights given in the sequence. In the article, it is recommended to define the length $q$ of that list as well as the ratio $r$ between the first and last weight. The $i$th weight is then given by
+The Hilbert curve has a “locality”, meaning that the pixels that are close together on the curve are also close together in the picture. This way we don’t need to use an error diffusion matrix but rather a diffusion _sequence_ of length $n$. To quantize the current pixel, the last $n$ quantization errors are added to the current pixel with the weights given in the sequence. In the article they use an exponential falloff for the weights — the last pixel’s quantization error getting a weight of 1, the oldest quantization error in the list a small, chosen weight $r$. The results in the following formula for the $i$th weight:
 
 $$
-\text{weight}[i] = r^{-\frac{i}{q-1}}
+\text{weight}[i] = r^{-\frac{i}{n-1}}
 $$
 
-The article recommends a ratio of $r = \frac{1}{16}$ and a minimum list length of $q = 16$, but for my test image I found $r = \frac{1}{8}$ and $q = 32$ to be better looking.
+The article recommends a ratio of $r = \frac{1}{16}$ and a minimum list length of $n = 16$, but for my test image I found $r = \frac{1}{8}$ and $n = 32$ to be better looking.
 
 <figure>
   <img src="riemersma.png" class="pixelated">
   <figcaption>
   
-  Riemersma dither with $r = \frac{1}{8}$ and $q = 32$.
+Riemersma dither with $r = \frac{1}{8}$ and $n = 32$.
   
   </figcaption>
 </figure>
 
-The dithering looks very organic, competing with blue noise and Jarvis-Judice-Ninke, but also covers the edges of the image correctly. At the same time it is easier to implement than both of the previous ones. It is, however, still an error diffusion dithering algorithm, meaning it is sequential and not suitable for GPUs.
+The dithering looks very organic, competing with blue noise and Jarvis-Judice-Ninke, but also covers the edges of the image correctly. At the same time it is easier to implement than both of the previous ones. It is, however, still an error diffusion dithering algorithm, meaning it is sequential and not suitable to run on a GPU.
 
 ## That’d be all... for now.
 
@@ -393,7 +394,11 @@ Obra Dinn uses both Bayer dithering and blue noise dithering, as they can run as
   </figure>
   <figure>
     <img src="riemersma.png" class="pixelated">
-    <figcaption>Riemersma dither with a 1:8 ratio and list length 8.</figcaption>
+    <figcaption>
+
+Riemersma dither with $r = \frac{1}{8}$ and $n = 32$.
+
+  </figcaption>
   </figure>
 </section>
 
