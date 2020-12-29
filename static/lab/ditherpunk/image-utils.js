@@ -47,7 +47,9 @@ export function clamp(min, v, max) {
 }
 
 export function brightnessN0F8(r, g, b) {
-  return 0.21 * r + 0.72 * g + 0.07 * b;
+  return (
+    0.21 * srgbToLinear(r) + 0.72 * srgbToLinear(g) + 0.07 * srgbToLinear(b)
+  );
 }
 
 export function brightnessU8(r, g, b) {
@@ -282,9 +284,9 @@ export class RGBImageF32N0F8 extends Image {
     const img = new Uint8ClampedArray(this.width * this.height * 4);
     for (let i = 0; i < this.width * this.height; i++) {
       // Clamping and floor’ing is done implicitly by Uint8ClampedArray
-      img[4 * i + 0] = this.data[3 * i + 0] * 255;
-      img[4 * i + 1] = this.data[3 * i + 1] * 255;
-      img[4 * i + 2] = this.data[3 * i + 2] * 255;
+      img[4 * i + 0] = linearToSrgb(this.data[3 * i + 0]) * 255;
+      img[4 * i + 1] = linearToSrgb(this.data[3 * i + 1]) * 255;
+      img[4 * i + 2] = linearToSrgb(this.data[3 * i + 2]) * 255;
       img[4 * i + 3] = 255;
     }
     return new ImageData(img, this.width, this.height);
@@ -353,9 +355,9 @@ export class GrayImageF32N0F8 extends Image {
   toImageData() {
     const data = new Uint8ClampedArray(this.data.length * 4);
     for (let i = 0; i < this.data.length; i++) {
-      data[i * 4 + 0] = this.data[i] * 255;
-      data[i * 4 + 1] = this.data[i] * 255;
-      data[i * 4 + 2] = this.data[i] * 255;
+      data[i * 4 + 0] = linearToSrgb(this.data[i]) * 255;
+      data[i * 4 + 1] = linearToSrgb(this.data[i]) * 255;
+      data[i * 4 + 2] = linearToSrgb(this.data[i]) * 255;
       data[i * 4 + 3] = 255;
     }
     return new ImageData(data, this.width, this.height);
@@ -397,6 +399,22 @@ export class GrayImageF32N0F8 extends Image {
   clampSelf({ min = 0, max = 1 } = {}) {
     return this.mapSelf(v => clamp(min, v, max));
   }
+}
+
+const gamma = 2.2;
+
+export function srgbToLinear(v) {
+  if (v <= 0.04045) {
+    return v / 12.95;
+  }
+  return Math.pow((v + 0.055) / 1.055, gamma);
+}
+
+export function linearToSrgb(v) {
+  if (v <= 0.0031308) {
+    return 12.95 * v;
+  }
+  return 1.055 * Math.pow(v, 1 / gamma) - 0.055;
 }
 
 export function bitReverse(x, numBits) {
