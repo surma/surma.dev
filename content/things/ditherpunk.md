@@ -250,11 +250,11 @@ grayscaleImage.mapSelf((brightness, { x, y }) =>
 );
 ```
 
-One thing to note is that the Bayer matrices as defined above will render an image lighter than it originally was. For example: If we dither an almost black image, where every pixel has a brightness of \frac{1}{255} = 0.4%$, a level 0 Bayer matrix of size $2\times2$ will make one out of the four pixels white, resulting in an average brightness of $25\%\$. This gets better with higher Bayer level, but a fundamental bias remains.
+One thing to note is that the Bayer matrices as defined above will render an image lighter than it originally was. For example: If we dither an almost black image, where every pixel has a brightness of $\frac{1}{255} = 0.4\%$, a level 0 Bayer matrix of size $2\times2$ will make one out of the four pixels white, resulting in an average brightness of $25\%$. This gets better with higher Bayer level, but a fundamental bias remains.
 
 <figure>
   <img loading="lazy" width="400" height="267" src="./bayerbias.png" class="pixelated demoimage">
-  <figcaption>The image getting noticably brighter through Bayer dithering.</figcaption>
+  <figcaption>The image is getting noticably brighter through Bayer dithering.</figcaption>
 </figure>
 
 In our dark test image, the sky is not pure black and made _significantly_ brighter when using Bayer Level 0. While it gets better with higher levels, an alternative solution is to flip the bias and make images render _darker_ by inverting the way we use the Bayer matrix:
