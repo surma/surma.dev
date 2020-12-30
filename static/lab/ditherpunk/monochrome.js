@@ -6,7 +6,7 @@ import {
 
 import { message } from "./worker-utils.js";
 
-const { fileinput, log, results, examplebtn, exampleimg } = document.all;
+const { fileinput, log, results } = document.all;
 let worker;
 if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
   worker = new Worker("./monochrome-worker.js");
@@ -48,9 +48,14 @@ function dither(image) {
   });
 }
 
-examplebtn.addEventListener("click", async () => {
+document.body.addEventListener("click", async (ev) => {
+  const btn = ev.target.closest(".examplebtn");
+  if(!btn) {
+    return;
+  }
   try {
-    const imgData = await imageToImageData(exampleimg);
+    const img = btn.querySelector("img");
+    const imgData = await imageToImageData(img);
     dither(imgData);
   } catch (e) {
     log.innerHTML += `${e.message}\n`;
