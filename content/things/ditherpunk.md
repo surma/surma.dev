@@ -78,7 +78,11 @@ Both black-and-white photos use 256 different shades of gray. If we wanted to us
 With our palette only consisting of black and white, we can use the brightness of a pixel to decide which color to quantize to. A brightness of 0 means black, a brightness of 1 means white, everything else is in-between, ideally correlating with human perception such that a brightness of 0.5 is a nice mid-gray. To quantize a given color, we only need to check if the color’s brightness is greater or less than 0.5 and quantize to white and black respectively. Applying this quantization to the image above yields an... unsatisfying result.
 
 ```js
-grayscaleImage.mapSelf(brightness => (brightness > 0.5 ? 1.0 : 0.0));
+grayscaleImage.mapSelf(brightness => 
+  brightness > 0.5 
+    ? 1.0 
+    : 0.0
+);
 ```
 
 > **Note**: The code samples in this article are real but built on top of a helper class `GrayImageF32N0F8` I wrote for the [demo] of this article. It’s similar to the web’s [`ImageData`][imagedata], but uses `Float32Array`, only has one color channel, represents values between 0.0 and 1.0 and has a whole bunch of helper functions. The source code is available in [the lab][lab].
@@ -139,7 +143,9 @@ Instead of quantizing each pixel directly, we add noise with a value between -0.
 
 ```js
 grayscaleImage.mapSelf(brightness =>
-  brightness + Math.random() - 0.5 > 0.5 ? 1.0 : 0.0
+  brightness + Math.random() - 0.5 > 0.5 
+    ? 1.0 
+    : 0.0
 );
 ```
 
