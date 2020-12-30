@@ -712,3 +712,9 @@ html.forcedark figure video {
   max-width: 100%;
   overflow: auto;
 }
+.katex-display .katex {
+  font-size: 1.21em !important;
+}
+.katex {
+  font-size: 1em !important;
+}

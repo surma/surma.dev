@@ -5,7 +5,7 @@ socialmediaimage: "social.png"
 live: false
 ---
 
-I always loved the visual aesthetic of dithering but never knew how it works exactly. This article may contain traces of nostaliga and none of Lenna.
+I always loved the visual aesthetic of dithering but never knew how it’s done. So I did some research. This article may contain traces of nostaliga and none of Lena.
 
 <!-- more -->
 
@@ -25,14 +25,16 @@ I always loved the visual aesthetic of dithering but never knew how it works exa
   }
 </style>
 
-I am late to the party, but I finally played [“Return of the Obra Dinn”][Obra Dinn], the most recent game by [Lucas Pope][dukope] of [“Papers Please”][Papers Please] fame. Obra Dinn is a story puzzler that I can only recommend. But what really struck me is that is a 3D game (using the [Unity game engine][Unity]) but rendered using only 2 colors with dithering. Apparently, this has been dubbed “Ditherpunk”, and I love that.
+I am late to the party, but I finally played [“Return of the Obra Dinn”][Obra Dinn], the most recent game by [Lucas Pope][dukope] of [“Papers Please”][Papers Please] fame. Obra Dinn is a story puzzler that I can only recommend. But what really struck me is that is a 3D game (using the [Unity game engine][Unity]) but rendered using only 2 colors with dithering. Apparently, this has been dubbed “Ditherpunk”, and I love that. 
 
 <figure>
   <img loading="lazy" width="1134" height="499" src="./obradinn.png" class="pixelated">
   <figcaption>Screenshot of “Return of the Obra Dinn”.</figcaption>
 </figure>
 
-The fact that I have never seen a 3D game with dithering like this probably stems from the fact that color palettes are mostly a thing of the past. You _may_ remember running Windows 95 with 16 colors or playing games like “Monkey Island” on it.
+Dithering, so my original understanding, was a technique to place pixels using only a _few_ colors from a palette in a clever way to trick your brain into seeing _many_ colors. Like in the picture above it seems that there is multiple brightness levels when in fact there’s only two: Full brightness and black.
+
+The fact that I have never seen a 3D game with dithering like this probably stems from the fact that color palettes are mostly a thing of the past. You _may_ remember running Windows 95 with 16 colors and playing games like “Monkey Island” on it.
 
 <section class="carousel">
   <figure>
@@ -45,16 +47,18 @@ The fact that I have never seen a 3D game with dithering like this probably stem
   </figure>
 </section>
 
-For a long time now, however, we have had 8 bits per channel per pixel, allowing each pixel on your screen to assume one of 16 million colors. With HDR and wide gamut on the horizon, things are moving even further away to ever requiring any form of dithering. _But I like the way it looks,_ and Obra Dinn rekindled that love for me. Knowing a tiny bit about dithering from my work on [Squoosh], I was especially impressed with Obra Dinn’s ability to keep the dithering stable while I moved and rotated the camera through 3D space.
+For a long time now, however, we have had 8 bits per channel per pixel, allowing each pixel on your screen to assume one of 16 million colors. With HDR and wide gamut on the horizon, things are moving even further away to ever requiring any form of dithering. And yet Obra Dinn used it anyway and rekindled a long forgotten love for me. Knowing a tiny bit about dithering from my work on [Squoosh], I was especially impressed with Obra Dinn’s ability to keep the dithering stable while I moved and rotated the camera through 3D space and I wanted to understand how it all worked.
 
-> **Note**: As it turns out, Lucas Pope put extensive work into finding a way to make his dithering visually stable. He wrote about his attempts in a [forum blog post][dukope dithering], which features some of the dithering techniques in this article.
+As it turns out, Lucas Pope wrote a [forum blog post][dukope dithering] where he explains which dithering techniques he uses and how he applies them to 3D space. He put extensive work into making the dithering stable wrt camera movements and I can only recommend giving that forum post a read, as it kicked me down the rabbit hole, which this blog post tries to summarize.
 
 ## Dithering
 ### What is Dithering?
 
-According to Wikipedia, “Dither is an intentionally applied form of noise used to randomize quantization error”, and is a technique not only limited to images. It is actually a technique used to this day on audio recordings, but that is a rabbit hole to fall into another time. Let’s dissect this in the context of images.
+According to Wikipedia, “Dither is an intentionally applied form of noise used to randomize quantization error”, and is a technique not only limited to images. It is actually a technique used to this day on audio recordings, but that is yet another rabbit hole to fall into another time. Let’s dissect that definition in the context of images. First up: Quantization.
 
 ### Quantization 
+
+Quantization is the process of mapping a large set of values to a smaller set of values. For the remainder of this article, I am going to use two images as examples:
 
 <figure>
   <img loading="lazy" width="400" height="267" src="./dark-original.png" class="pixelated demoimage">
@@ -66,24 +70,44 @@ According to Wikipedia, “Dither is an intentionally applied form of noise used
   <figcaption>Example image #2: A black-and-white photograph of San Francisco’s Bay Bridge, downscaled to 253x400 (<a href="./light-hires.jpg" target="_blank">higher resolution</a>).</figcaption>
 </figure>
 
-Both black-and-white photos use 256 different shades of gray. If we wanted to use fewer colors — for example just black and white to achieve monochromaticity — we have to change the pixels that are not already black or white. In this scenario, the colors black and white are called our “color palette” and the process of changing pixels that do not use a color from the palette is called “quantization”. Because not all colors from the original images are in the color palette, this will inevitably introduce an error called the “quantization error”. 
+Both black-and-white photos use 256 different shades of gray. If we wanted to use fewer colors — for example just black and white to achieve monochromaticity — we have to change the pixels to only either be pure black or pure white. In this scenario, the colors black and white are called our “color palette” and the process of changing pixels that do not use a color from the palette is called “quantization”. Because not all colors from the original images are in the color palette, this will inevitably introduce an error called the “quantization error”. 
+
+A straight forward way to quantize an image with a given color palette is to find the closest color in the palette. In our scenario with only two colors, we can look at the brightness of every pixel. A brightness of 0 means black, a brightness of 1 means white, everything else is in-between, ideally correlating with human perception such that a brightness of 0.5 is a nice mid-gray. 
+
+> **Note:** The “closest color in the palette” is open to interpretation wrt how you measure the distance between two colors. I suppose ideally we’d measure distance in a psycho-visual way, but most of the articles I found simply used the euclidian distance in the RGB cube, i.e. $\sqrt{\Delta\text{red}^2 + \Delta\text{green}^2 + \Delta\text{blue}^2}$.
+
+To quantize a given color, we only need to check if the color’s brightness is greater or less than 0.5 and quantize to white and black respectively. Applying this quantization to the image above yields an... unsatisfying result.
+
+```js
+grayscaleImage.mapSelf(brightness => 
+  brightness > 0.5 ? 1.0 : 0.0
+);
+```
 
 > **Note**: The code samples in this article are real but built on top of a helper class `GrayImageF32N0F8` I wrote for the [demo] of this article. It’s similar to the web’s [`ImageData`][ImageData], but uses `Float32Array`, only has one color channel, represents values between 0.0 and 1.0 and has a whole bunch of helper functions. The source code is available in [the lab][lab].
 
-A straight forward way to quantize an image with a given color palette is to find the closest color in the palette. In our scenario, we can look at the brightness of every pixel. A brightness of 0 means black, a brightness of 1 means white, everything else is in-between, ideally correlating with human perception such that a brightness of 0.5 is a nice mid-gray. 
+<figure>
+  <section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-quantized.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-quantized.png" class="pixelated demoimage">
+  </section>
+  <figcaption>Each pixel has been quantized to the either black or white depending on its brightness.</figcaption>
+</figure>
 
 ### Gamma
 
-I had finished writing this article and just wanted to “quickly” look what a black-to-white gradient looks like with the different dithering algorithms. The results showed me that I had forgotten the thing that _always_ somehow becomes a problem when working with images: color spaces. The sentence “ideally correlating with human perception” from the previous paragraph carries a lot of meaning once you realize that color spaces are involved.
+I had finished writing this article and just wanted to “quickly” look what a black-to-white gradient looks like with the different dithering algorithms. The results showed me that I failed to include _the thing_ that always somehow becomes a problem when working with images: color spaces. I wrote the sentence “ideally correlating with human perception” without realizing that it has a fundamental implication.
 
-My [demo] is implemented using web technologies, most notably `<canvas>` and `ImageData`, which are — at the time of writing — specified to use [sRGB]. It’s an old color space specification (from 1996) whose brightness response was modeled along the behavior for CRTs. While barely anyone uses CRTs these days, it’s still considered the color space that is safe to be assumed to be correctly displayed on every display. As such, it is the default on the web platform. However, sRGB is not linear, meaning  that in sRGB $(0.5, 0.5, 0.5)$ is _not_ the color a human sees when you mix 50% of $(0, 0, 0)$ and $(1, 1, 1)$. 
+My [demo] is implemented using web technologies, most notably `<canvas>` and `ImageData`, which are — at the time of writing — specified to use [sRGB]. It’s an old color space specification (from 1996) whose value-to-color mapping was modeled to mirror the behavior of CRT monitors. While barely anyone uses CRTs these days, it’s still considered the color space that is safe to be assumed to be correctly displayed on every display. As such, it is the default on the web platform. However, sRGB is not linear, meaning  that $(0.5, 0.5, 0.5)$ in sRGB is _not_ the color a human sees when you mix 50% of $(0, 0, 0)$ and $(1, 1, 1)$. Instead, it’s the color you get when you pump half the power of full white through your Cathod-Ray Tube (CRT).
 
 <figure>
   <img loading="lazy" width="360" height="40" src="./gradient-srgb.png" class="pixelated">
-  <figcaption>A gradient and how it looks when dithered in sRGB color space.</figcaption>
+  <figcaption>A gradient and how it looks when dithered in sRGB color space. 🙄</figcaption>
 </figure>
 
-As this image shows, the dithered gradient becomes bright way too quickly. If we want 0.5 be the color in the middle of pure black and white (as perceived by a human), we need to convert from sRGB to linear RGB space, which is also called “gamma correction”. Wikipedia lists the following formulas to convert between sRGB and linear RGB.
+As this image shows, the dithered gradient becomes bright way too quickly. If we want 0.5 be the color in the middle of pure black and white (as perceived by a human), we need to convert from sRGB to linear RGB space, which can be done with a process called “gamma correction”. Wikipedia lists the following formulas to convert between sRGB and linear RGB.
+
+<figure>
 
 $$
 \begin{array}{rcl}
@@ -100,6 +124,9 @@ $$
 \end{array}\\
 $$
 
+<figcaption>Formulas to convert between sRGB and linear RGB color space. What beauties they are 🙄. So intuitive.</figcaption>
+</figure>
+
 With these conversions in place, dithering produces (more) accurate results:
 
 <figure>
@@ -107,26 +134,11 @@ With these conversions in place, dithering produces (more) accurate results:
   <figcaption>A gradient and how it looks when dithered in linear RGB color space.</figcaption>
 </figure>
 
-### Quantization (cont’d)
-To quantize a given color, we only need to check if the color’s brightness is greater or less than 0.5 and quantize to white and black respectively. Applying this quantization to the image above yields an... unsatisfying result.
-
-```js
-grayscaleImage.mapSelf(brightness => 
-  brightness > 0.5 ? 1.0 : 0.0
-);
-```
-
-<figure>
-  <section class="carousel">
-    <img loading="lazy" width="400" height="267" src="./dark-quantized.png" class="pixelated demoimage">
-    <img loading="lazy" width="253" height="400" src="./light-quantized.png" class="pixelated demoimage">
-  </section>
-  <figcaption>Each pixel has been quantized to the either black or white depending on its brightness.</figcaption>
-</figure>
-
 ### Random noise
 
-Back to Wikipedia’s definition of dithering: “Intentionally applied form of noise used to randomize quantization error”. Instead of quantizing each pixel directly, we add noise with a value between -0.5 and 0.5 to each pixel. The idea is that some pixels will now be quantized to the “wrong” color, but how often that happens depends on the pixel’s original brightness. Black will _always_ remain black, white will _always_ remain white, a mid-gray will be black only roughly 50% of the time. The average brightness of an area in the quantized image should be close to the average brightness of the same area in the original image. Statistically, the overall quantization error is reduced and our brains are quite eager to do the rest and help you see the, uh, big picture.
+Back to Wikipedia’s definition of dithering: “Intentionally applied form of noise used to randomize quantization error”. We go the quantization down, and now it says to add noise. Intentionally.
+
+Instead of quantizing each pixel directly, we add noise with a value between -0.5 and 0.5 to each pixel. The idea is that some pixels will now be quantized to the “wrong” color, but how often that happens depends on the pixel’s original brightness. Black will _always_ remain black, white will _always_ remain white, a mid-gray will be dithered to black roughly 50% of the time. Statistically, the overall quantization error is reduced and our brains are quite eager to do the rest and help you see the, uh, big picture.
 
 ```js
 grayscaleImage.mapSelf(brightness => 
@@ -144,7 +156,7 @@ grayscaleImage.mapSelf(brightness =>
   <figcaption>Random noise [-0.5; 0.5] has been added to each pixel before quantization.</figcaption>
 </figure>
 
-I found this quite surprising! It is by no means _good_ — video games from the 80s have shown us that we can do better — but this is a very low effort and quick way to get more detail into a monochrome image. And if I was to take “dithering” literally, I’d end my article here. But there’s more…
+I found this quite surprising! It is by no means _good_ — video games from the 90s have shown us that we can do better — but this is a very low effort and quick way to get more detail into a monochrome image. And if I was to take “dithering” literally, I’d end my article here. But there’s more…
 
 ## Ordered Dithering
 
@@ -181,9 +193,9 @@ $$
 
 </figure>
 
-The upside of this approach is that we can talk about a “threshold maps”. These maps can make it easier to reason about why a resulting image looks the way it does by visualizing the threshold map itself. Threshold maps can also be precomputed and reused, which makes the dithering process parallelizable per pixel and as a result can be run as a shader on the GPU. This is what Obra Dinn does! There are a couple of different ways to generate these threshold maps, but all of them introduce some kind of order to the noise that is added to the image, hence the name “ordered dithering”.
+The upside of this approach is that we can talk about a “threshold map”. Threshold maps can be visualized to make it easier to reason about why a resulting image looks the way it does. They can also be precomputed and reused, which makes the dithering process parallelizable per pixel and as a result can be run as a shader on the GPU. This is what Obra Dinn does! There are a couple of different ways to generate these threshold maps, but all of them introduce some kind of order to the noise that is added to the image, hence the name “ordered dithering”.
 
-The threshold map for our random noise is also called “white noise”. The name comes from a term in signal processing where every frequency has the same intensity, just like in white light.
+The threshold map for random dithering, literally random brightness values, is also called “white noise”. The name comes from a term in signal processing where every frequency has the same intensity, just like in white light.
 
 <figure>
   <img loading="lazy" width="400" height="267" src="./whitenoise.png" class="pixelated demoimage">
@@ -192,10 +204,10 @@ The threshold map for our random noise is also called “white noise”. The nam
 
 ### Bayer Dithering
 
-“Bayer dithering” uses a Bayer matrix as the threshold map. They are named after Bruce Bayer, inventor of the [Bayer filter], which is in use to this day in digital cameras to give brightness sensors the ability to take color images by cleverly arranging colored filters in front of the individual pixel sensors. That same pattern is used in the Bayer dithering threshold map and might look familiar to some of you.
+“Bayer dithering” uses a Bayer matrix as the threshold map. They are named after Bruce Bayer, inventor of the [Bayer filter], which is in use to this day in digital cameras. The pixel sensors can only detect brightness, but by cleverly arranging colored filters in front of the individual sensors, we can construct color images through [demosaicing]. That same pattern is used in the Bayer dithering threshold map and might look familiar to some of you.
 
-Bayer matrices come in various sizes (which I ended up calling “levels”). Bayer Level 0 is $2 \times 2$ matrix. Bayer Level 1 is a $4 
-\times 4$ matrix. Bayer Level $n$ is a $2^{n+1} \times 2^{n+1}$ matrix. A level $n$ can be recursively generated from level $n-1$ (although Wikipedia also lists an [per-cell algorithm][Bayer wikipedia]) and if your image happens to be bigger than your threshold map, you can tile the threshold map. 
+Bayer matrices come in various sizes which I ended up calling “levels”. Bayer Level 0 is $2 \times 2$ matrix. Bayer Level 1 is a $4 
+\times 4$ matrix. Bayer Level $n$ is a $2^{n+1} \times 2^{n+1}$ matrix. A level $n$ matrix can be recursively calcuated from level $n-1$ (although Wikipedia also lists an [per-cell algorithm][Bayer wikipedia]). If your image happens to be bigger than your bayer matrix, you can tile the threshold map. 
 
 <figure>
 
@@ -227,7 +239,7 @@ $$
 <figcaption>Recursive definition of Bayer matrices.</figcaption>
 </figure>
 
-A level $n$ Bayer matrix contains the numbers $0$ to $2^{2n+2}$. To use them as a threshold map, you need to normalize them, i.e. divide by $2^{2n+2}$. 
+A level $n$ Bayer matrix contains the numbers $0$ to $2^{2n+2}$. To use them as a threshold map, you need to normalize them, i.e. divide by $2^{2n+2}$. Then you can use the values in the Bayer matrix as your thresholds:
 
 ```js
 const bayer = generateBayerLevel(level);
@@ -238,14 +250,16 @@ grayscaleImage.mapSelf((brightness, {x, y}) =>
 );
 ```
 
-One thing to note is that the Bayer matrices as defined above will render an image lighter than it originally was. The lower the Bayer level used, the higher the error is. 
+One thing to note is that the Bayer matrices as defined above will render an image lighter than it originally was. For example at level 0, a $2\times2$ matrix, one out of four pixels would render white (averaging $25\%$ brightness) for any input value between $\frac{1}{255} = 0.4\%$ brightness and $\frac{63}{255} = 24.7\%$ brightness.
+
+ The lower the Bayer level used, the higher the error is. 
 
 <figure>
   <img loading="lazy" width="400" height="267" src="./bayerbias.png" class="pixelated demoimage">
   <figcaption>Bayer Dithering Level 0.</figcaption>
 </figure>
 
-For example at level 0, one out of four pixels would render white for any brightness value > 1/255 = 0.004. In our dark test image, the sky is not pure black and is dithered in a very unpleasing and distorting way using Bayer Level 0. Alternatively, we can flip the bias and make images render _darker_ by inverting the way we use the Bayer matrix:
+ In our dark test image, the sky is not pure black and is dithered in a very unpleasing and distorting way using Bayer Level 0. Alternatively, we can flip the bias and make images render _darker_ by inverting the way we use the Bayer matrix:
 
 ```js
 const bayer = generateBayerLevel(level);
@@ -481,3 +495,4 @@ There is still a question what happens when you have more than two colors availa
 [space-filling curve]: https://en.wikipedia.org/wiki/Space-filling_curve
 [lsystem tweet]: https://twitter.com/DasSurma/status/1343569629369786368
 [srgb]: https://en.wikipedia.org/wiki/SRGB
+[demosaicing]: https://en.wikipedia.org/wiki/Demosaicing
