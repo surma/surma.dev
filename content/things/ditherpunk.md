@@ -469,6 +469,8 @@ If you want to try different dithering algorithms on one of your own images, tak
 
 There is still a question what happens when you have more than two colors available for quantization, but that is a story for another time.
 
+<script src="/carousel-reset.js" type="module"></script>
+
 [obra dinn]: https://obradinn.com/
 [dukope]: https://twitter.com/dukope
 [papers please]: https://papersplea.se/
