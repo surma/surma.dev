@@ -1,8 +1,7 @@
 ---
 title: "Ditherpunk — The article I wish I had about monochrome image dithering"
-date: "2020-12-15"
+date: "2021-01-04"
 socialmediaimage: "social.png"
-live: false
 ---
 
 I always loved the visual aesthetic of dithering but never knew how it’s done. So I did some research. This article may contain traces of nostaliga and none of Lena.

@@ -1,8 +1,9 @@
----json
-{
-  "title": "Ditherpunk II",
-  "date": "2020-12-18"
-}
+---
+title: "Ditherpunk II"
+date: "2021-01-31"
+live: false
 ---
 
 ???
+
+<!-- more -->
