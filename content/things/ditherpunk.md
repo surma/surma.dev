@@ -477,6 +477,12 @@ If you want to try different dithering algorithms on one of your own images, tak
 
 I am sure this super niche, but I enjoyed this rabbit hole. If you have any opinions or experiences with dithering, I’d love to hear them.
 
+## Thanks & other sources
+
+Thanks to [Lucas Pope] for his games and the visual inspiration.
+
+Thanks to [Christoph Peter] (@momentsinch) for his excellent [article on blue noise generation][cp blue noise].
+
 <script src="/carousel-reset.js" type="module"></script>
 
 [obra dinn]: https://obradinn.com/
