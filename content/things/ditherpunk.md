@@ -481,7 +481,7 @@ I am sure this super niche, but I enjoyed this rabbit hole. If you have any opin
 
 Thanks to [Lucas Pope][dukope] for his games and the visual inspiration.
 
-Thanks to [Christoph Peter] (@momentsincg) for his excellent [article on blue noise generation][cp blue noise].
+Thanks to [Christoph Peter] for his excellent [article on blue noise generation][cp blue noise].
 
 <script src="/carousel-reset.js" type="module"></script>
 
