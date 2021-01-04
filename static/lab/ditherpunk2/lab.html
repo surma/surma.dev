@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<meta name="viewport" content="minimum-scale=1, width=device-width" />
+<style>
+img {
+  image-rendering: pixelated;
+}
+table {
+  text-align: center;
+}
+td {
+  padding: 1em;
+}
+</style>
+<!-- Invisible image to Parcel is aware of it and we can use it-->
+<img src="./bluenoise.png" id="bluenoiseimg" style="display: none">
+<input type="file" id="fileinput" />
+<button id="examplebtn">
+  <img src="./color-image.png" id="exampleimg" height="40" />
+</button>
+<script type="module" src="./color.js"></script>
+<pre id="log"></pre>
+<table id="results">
+</table>
