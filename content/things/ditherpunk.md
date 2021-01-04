@@ -469,7 +469,7 @@ The dithering looks extremely organic, almost as good as blue noise dithering. A
 
 As a 3D game, Obra Dinn _had_ to use ordered dithering to be able to run it as a shader. It uses both Bayer dithering and blue noise dithering which I also think are the most aesthetically pleasing choices. Bayer dithering shows a bit more structure while blue noise looks very natural and organic. I am also particularly fond of the Riemersma dither and I want to explore how it holds up when there are multiple colors in the palette.
 
-Obra Dinn uses blue noise dithering for most of th environment. People and other objects of interest are dithered using Bayer, which forms a nice visual contrast and makes them stand out without breaking the games overall aesthetic. Again, more on his reasoning as well his solution to handling camera movement in his [forum post][dukope dithering].
+Obra Dinn uses blue noise dithering for most of the environment. People and other objects of interest are dithered using Bayer, which forms a nice visual contrast and makes them stand out without breaking the games overall aesthetic. Again, more on his reasoning as well his solution to handling camera movement in his [forum post][dukope dithering].
 
 If you want to try different dithering algorithms on one of your own images, take a look at my [demo] that I wrote to generate all the images in this blog post. Keep in mind that these are not the fastest. If you decide to throw your 20 megapixel camera JPEG at this, it will take a while.
 
@@ -479,9 +479,9 @@ I am sure this super niche, but I enjoyed this rabbit hole. If you have any opin
 
 ## Thanks & other sources
 
-Thanks to [Lucas Pope] for his games and the visual inspiration.
+Thanks to [Lucas Pope][dukope] for his games and the visual inspiration.
 
-Thanks to [Christoph Peter] (@momentsinch) for his excellent [article on blue noise generation][cp blue noise].
+Thanks to [Christoph Peter] (@momentsincg) for his excellent [article on blue noise generation][cp blue noise].
 
 <script src="/carousel-reset.js" type="module"></script>
 
