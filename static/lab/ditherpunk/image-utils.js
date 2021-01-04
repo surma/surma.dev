@@ -256,8 +256,6 @@ export class RGBImageF32N0F8 extends Image {
   }
 
   static fromImageData(sourceImage) {
-    sourceImage = RGBAImageU8.fromImageData(sourceImage);
-
     const img = new RGBImageF32N0F8(
       new Float32Array(
         sourceImage.width * sourceImage.height * this.NUM_CHANNELS
@@ -266,9 +264,9 @@ export class RGBImageF32N0F8 extends Image {
       sourceImage.height
     );
     for (let i = 0; i < sourceImage.width * sourceImage.height; i++) {
-      img.data[3 * i + 0] = sourceImage.data[4 * i + 0] / 255;
-      img.data[3 * i + 1] = sourceImage.data[4 * i + 1] / 255;
-      img.data[3 * i + 2] = sourceImage.data[4 * i + 2] / 255;
+      img.data[3 * i + 0] = srgbToLinear(sourceImage.data[4 * i + 0] / 255);
+      img.data[3 * i + 1] = srgbToLinear(sourceImage.data[4 * i + 1] / 255);
+      img.data[3 * i + 2] = srgbToLinear(sourceImage.data[4 * i + 2] / 255);
     }
     return img;
   }

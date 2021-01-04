@@ -4,6 +4,7 @@ import {
   GrayImageF32N0F8,
   clamp
 } from "../ditherpunk/image-utils.js";
+import {hilbertCurveGenerator, weightGenerator} from "../ditherpunk/curve-utils.js";
 
 const numBayerLevels = 4;
 let bayerWorker;
@@ -136,6 +137,19 @@ const pipeline = [
         }
       },
       {
+        id: `riemersma:${n}`,
+        title: `Riemersma (${n} colors)`,
+        async process(color) {
+          return curveErrorDiffusion(
+            color.copy(),
+            hilbertCurveGenerator,
+            weightGenerator(32, 1 / 8),
+            (p1, p2) => new Float32Array([p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]]),
+            q,
+          );
+        }
+      },
+      {
         id: `bluenoise:${n}`,
         title: `Blue Noise (${n} colors)`,
         async process(color) {
@@ -154,6 +168,24 @@ const pipeline = [
     ];
   }).flat()
 ];
+
+function curveErrorDiffusion(img, curve, weights, distance, quantF) {
+  const curveIt = curve(img.width, img.height);
+  const errors = Array.from(weights, () => new Float32Array([0, 0, 0]));
+  for (const p of curveIt) {
+    if (!img.isInBounds(p.x, p.y)) {
+      continue;
+    }
+    const original = img.pixelAt(p.x, p.y);
+    const quantized = quantF(
+      original.map((p, ch) => p + errors.map(v => v[ch]).reduce((sum, c, i) => sum + c * weights[i]))
+    );
+    errors.pop();
+    errors.unshift(original.map((v,i) => v-  quantized[i]));
+    original.set(quantized);
+  }
+  return img;
+}
 
 function errorDiffusion(img, diffusor, quantizeFunc) {
   diffusor.normalizeSelf();
