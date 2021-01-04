@@ -84,6 +84,22 @@ const pipeline = [
     }
   },
   {
+    id: "atkinson",
+    title: "Atkinson Dither",
+    async process(grayscale) {
+      return matrixErrorDiffusion(
+        grayscale.copy(),
+        new GrayImageF32N0F8(
+          new Float32Array([0, 0, 1/8, 1/8, 1/8, 1/8, 1/8, 0, 0, 1/8, 0, 0]),
+          4,
+          3
+        ),
+        v => (v > 0.5 ? 1.0 : 0.0),
+        {normalize: false}
+      );
+    }
+  },
+  {
     id: "riemersma",
     title: "Riemersma Dither",
     async process(grayscale) {
@@ -184,8 +200,10 @@ function curveErrorDiffusion(img, curve, weights, quantF) {
   return img;
 }
 
-function matrixErrorDiffusion(img, diffusor, quantizeFunc) {
-  diffusor.normalizeSelf();
+function matrixErrorDiffusion(img, diffusor, quantizeFunc, {normalize = true} = {}) {
+  if(normalize) {
+    diffusor.normalizeSelf();
+  }
   for (const { x, y, pixel } of img.allPixels()) {
     const original = pixel[0];
     const quantized = quantizeFunc(original);

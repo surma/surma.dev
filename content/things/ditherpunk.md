@@ -435,6 +435,34 @@ Using this diffusion matrix, patterns are even less likely to emerge. While the 
 <figcaption>Jarvis’, Judice’s and Ninke’s dithering.</figcaption>
 </figure>
 
+### Atkinson Dither
+
+Atkinson dithering was developed at Apple by Bill Atkinson and gained notoriety on on early Macintosh computers.
+
+<figure>
+
+$$
+\frac{1}{8} \cdot \left(\begin{array}{}
+ & * & 1 & 1 \\
+1 & 1 & 1 &  \\
+ & 1 &   & \\
+\end{array}
+\right)
+$$
+
+<figcaption>Diffusion matrix by Bill Atkinson.</figcaption>
+</figure>
+
+It’s worth nothing that the Atkinson diffusion matrix contains six ones, but is normalized using $\frac{1}{8}$, meaning it doesn’t diffuse the _entire_ error to neighboring pixels, increasing the perceived contrast of the image.
+
+<figure>
+<section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-atkinson.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-atkinson.png" class="pixelated demoimage">
+  </section>
+<figcaption>Atkinson Dithering.</figcaption>
+</figure>
+
 ### Riemersma Dither
 
 To be completely honest, the Riemersma dither is something I stumbled upon by accident. I found an [in-depth article][riemersma article] while I was researching the other dithering algorithms. It doesn’t seem to be widely known, but I _really_ like the way it looks and the concept behind it. Instead of traversing the image row-by-row it traverses the image with a [Hilbert curve]. Technically, any [space-filling curve] would do, but the Hilbert curve came recommended and is [rather easy to implement using generators][lsystem tweet]. Through this it aims to take the best of both ordered dithering and error diffusion dithering: Limiting the number of pixels a single pixel can influence together with the organic look (and small memory footprint).
