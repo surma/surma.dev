@@ -256,8 +256,8 @@ export class RGBImageF32N0F8 extends Image {
   }
 
   static fromImageData(sourceImage) {
-    const img = new RGBImageF32N0F8(
-      new Float32Array(
+    const img = new this(
+      new this.BUFFER_TYPE(
         sourceImage.width * sourceImage.height * this.NUM_CHANNELS
       ),
       sourceImage.width,
@@ -267,6 +267,9 @@ export class RGBImageF32N0F8 extends Image {
       img.data[3 * i + 0] = srgbToLinear(sourceImage.data[4 * i + 0] / 255);
       img.data[3 * i + 1] = srgbToLinear(sourceImage.data[4 * i + 1] / 255);
       img.data[3 * i + 2] = srgbToLinear(sourceImage.data[4 * i + 2] / 255);
+      // img.data[3 * i + 0] = (sourceImage.data[4 * i + 0] / 255);
+      // img.data[3 * i + 1] = (sourceImage.data[4 * i + 1] / 255);
+      // img.data[3 * i + 2] = (sourceImage.data[4 * i + 2] / 255);
     }
     return img;
   }
@@ -285,6 +288,9 @@ export class RGBImageF32N0F8 extends Image {
       img[4 * i + 0] = linearToSrgb(this.data[3 * i + 0]) * 255;
       img[4 * i + 1] = linearToSrgb(this.data[3 * i + 1]) * 255;
       img[4 * i + 2] = linearToSrgb(this.data[3 * i + 2]) * 255;
+      // img[4 * i + 0] = (this.data[3 * i + 0]) * 255;
+      // img[4 * i + 1] = (this.data[3 * i + 1]) * 255;
+      // img[4 * i + 2] = (this.data[3 * i + 2]) * 255;
       img[4 * i + 3] = 255;
     }
     return new ImageData(img, this.width, this.height);

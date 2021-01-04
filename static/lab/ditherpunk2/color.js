@@ -4,6 +4,7 @@ import {
   imageToImageData,
   GrayImageF32N0F8
 } from "../ditherpunk/image-utils.js";
+import {message} from "../ditherpunk/worker-utils.js";
 
 const {
   fileinput,
@@ -82,3 +83,27 @@ bluenoiseimg.decode().then(() => {
   const mask = GrayImageF32N0F8.fromImageData(imageToImageData(bluenoiseimg));
   worker.postMessage({ mask, id: "bluenoise" });
 });
+
+const numBayerLevels = 4;
+let bayerWorker;
+if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
+  bayerWorker = new Worker("../ditherpunk/bayer-worker.js", { name: "bayer" });
+} else {
+  bayerWorker = new Worker("../ditherpunk/bayer-worker.js", {
+    name: "bayer",
+    type: "module"
+  });
+}
+bayerWorker.addEventListener("error", () =>
+  console.error("Something went wrong in the Bayer worker")
+);
+const bayerLevels = Array.from({ length: numBayerLevels }, (_, id) => {
+  bayerWorker.postMessage({
+    level: id,
+    id
+  });
+  return message(bayerWorker, id).then(m => m.result);
+});
+Promise.all(bayerLevels).then(bayerLevels =>
+  worker.postMessage({ bayerLevels, id: "bayerlevels" })
+);

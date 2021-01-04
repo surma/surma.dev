@@ -3,45 +3,31 @@ import {
   RGBImageF32N0F8,
   GrayImageF32N0F8,
   clamp,
-  linearToSrgb,
-  srgbToLinear
+  srgbToLinear,
+  linearToSrgb
 } from "../ditherpunk/image-utils.js";
 import {
   hilbertCurveGenerator,
   weightGenerator
 } from "../ditherpunk/curve-utils.js";
 
-const numBayerLevels = 4;
-let bayerWorker;
-if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  bayerWorker = new Worker("../ditherpunk/bayer-worker.js", { name: "bayer" });
-} else {
-  bayerWorker = new Worker("../ditherpunk/bayer-worker.js", {
-    name: "bayer",
-    type: "module"
-  });
-}
-bayerWorker.addEventListener("error", () =>
-  console.error("Something went wrong in the Bayer worker")
-);
-const bayerLevels = Array.from({ length: numBayerLevels }, (_, id) => {
-  bayerWorker.postMessage({
-    level: id,
-    id
-  });
-  return message(bayerWorker, id).then(m =>
-    Object.setPrototypeOf(m.result, GrayImageF32N0F8.prototype)
-  );
-});
-
 const myBluenoisePromise = message(self, "bluenoise").then(({ mask }) => {
   Object.setPrototypeOf(mask, GrayImageF32N0F8.prototype);
+  mask.mapSelf(v => srgbToLinear(v));
   return mask;
 });
 
+let bayerLevels = message(self, "bayerlevels").then(({ bayerLevels }) =>
+  bayerLevels.map(bl => {
+    Object.setPrototypeOf(bl, GrayImageF32N0F8.prototype);
+    bl.mapSelf(v => srgbToLinear(v));
+    return bl;
+  })
+);
+
 function createEvenPaletteQuantizer(n) {
   n = clamp(2, n, 255) - 1;
-  return p => p.map(p => clamp(0, srgbToLinear(Math.round(p * n) / n), 1));
+  return p => p.map(p => clamp(0, Math.round(p * n) / n, 1));
 }
 
 function remap(a, b) {
@@ -76,7 +62,7 @@ const pipeline = [
         id: `bayer1:${n}`,
         title: `Bayer Level 1 (${n} colors)`,
         async process(color, { bayerLevels }) {
-          const bayerLevel = await bayerLevels[1];
+          const bayerLevel = (await bayerLevels)[1];
           return color
             .copy()
             .mapSelf((v, { x, y }) =>
@@ -92,7 +78,7 @@ const pipeline = [
         id: `bayer3:${n}`,
         title: `Bayer Level 3 (${n} colors)`,
         async process(color, { bayerLevels }) {
-          const bayerLevel = await bayerLevels[3];
+          const bayerLevel = (await bayerLevels)[3];
           return color
             .copy()
             .mapSelf((v, { x, y }) =>
