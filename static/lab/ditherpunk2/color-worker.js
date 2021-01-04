@@ -2,9 +2,14 @@ import { MessageStream, message } from "../ditherpunk/worker-utils.js";
 import {
   RGBImageF32N0F8,
   GrayImageF32N0F8,
-  clamp
+  clamp,
+  linearToSrgb,
+  srgbToLinear
 } from "../ditherpunk/image-utils.js";
-import {hilbertCurveGenerator, weightGenerator} from "../ditherpunk/curve-utils.js";
+import {
+  hilbertCurveGenerator,
+  weightGenerator
+} from "../ditherpunk/curve-utils.js";
 
 const numBayerLevels = 4;
 let bayerWorker;
@@ -36,7 +41,7 @@ const myBluenoisePromise = message(self, "bluenoise").then(({ mask }) => {
 
 function createEvenPaletteQuantizer(n) {
   n = clamp(2, n, 255) - 1;
-  return p => p.map(p => clamp(0, Math.round(p * n) / n, 1), 1);
+  return p => p.map(p => clamp(0, srgbToLinear(Math.round(p * n) / n), 1));
 }
 
 function remap(a, b) {
@@ -144,8 +149,9 @@ const pipeline = [
             color.copy(),
             hilbertCurveGenerator,
             weightGenerator(32, 1 / 8),
-            (p1, p2) => new Float32Array([p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]]),
-            q,
+            (p1, p2) =>
+              new Float32Array([p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]]),
+            q
           );
         }
       },
@@ -178,10 +184,13 @@ function curveErrorDiffusion(img, curve, weights, distance, quantF) {
     }
     const original = img.pixelAt(p.x, p.y);
     const quantized = quantF(
-      original.map((p, ch) => p + errors.map(v => v[ch]).reduce((sum, c, i) => sum + c * weights[i]))
+      original.map(
+        (p, ch) =>
+          p + errors.map(v => v[ch]).reduce((sum, c, i) => sum + c * weights[i])
+      )
     );
     errors.pop();
-    errors.unshift(original.map((v,i) => v-  quantized[i]));
+    errors.unshift(original.map((v, i) => v - quantized[i]));
     original.set(quantized);
   }
   return img;
