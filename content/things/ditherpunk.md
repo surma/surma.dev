@@ -105,6 +105,8 @@ My [demo] is implemented using web technologies, most notably `<canvas>` and `Im
   <figcaption>A gradient and how it looks when dithered in sRGB color space.</figcaption>
 </figure>
 
+> **Warning:** I set `image-rendering: pixelated;` on most of the images in this article. This allows you to zoom in and truly see the pixels. However, on devices with fraction `devicePixelRatio`, this might introduce artifacts. If in doubt, open the image separate in a new tab.
+
 As this image shows, the dithered gradient gets bright way too quickly. If we want 0.5 be the color in the middle of pure black and white (as perceived by a human), we need to convert from sRGB to linear RGB space, which can be done with a process called “gamma correction”. Wikipedia lists the following formulas to convert between sRGB and linear RGB.
 
 <figure>
