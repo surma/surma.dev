@@ -460,7 +460,7 @@ $$
 <figcaption>Diffusion matrix by Bill Atkinson.</figcaption>
 </figure>
 
-It’s worth nothing that the Atkinson diffusion matrix contains six ones, but is normalized using $\frac{1}{8}$, meaning it doesn’t diffuse the _entire_ error to neighboring pixels, increasing the perceived contrast of the image.
+It’s worth noting that the Atkinson diffusion matrix contains six ones, but is normalized using $\frac{1}{8}$, meaning it doesn’t diffuse the _entire_ error to neighboring pixels, increasing the perceived contrast of the image.
 
 <figure>
 <section class="carousel">
