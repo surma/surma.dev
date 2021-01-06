@@ -157,7 +157,7 @@
         <%= author.name %>
       </h3>
       <p class="info">
-        <%= author.bio %>
+        <%- author.bio.replace(/\n/g, "<br>") %>
       </p>
     </div>
     <% 
