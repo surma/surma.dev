@@ -46,14 +46,20 @@ export function clamp(min, v, max) {
   return v;
 }
 
-export function brightnessN0F8(r, g, b) {
-  return (
-    0.21 * srgbToLinear(r) + 0.72 * srgbToLinear(g) + 0.07 * srgbToLinear(b)
+export function linearBrightnessN0F8(r, g, b) {
+  return 0.21 * r + 0.72 * g + 0.07 * b;
+}
+
+export function srgbBrightnessN0F8(r, g, b) {
+  return linearBrightnessN0F8(
+    srgbToLinear(r),
+    srgbToLinear(g),
+    srgbToLinear(b)
   );
 }
 
-export function brightnessU8(r, g, b) {
-  return brightnessN0F8(r / 255, g / 255, b / 255);
+export function srgbBrightnessU8(r, g, b) {
+  return srgbBrightnessN0F8(r / 255, g / 255, b / 255);
 }
 
 export class Image {
@@ -281,9 +287,6 @@ export class RGBImageF32N0F8 extends Image {
       img.data[3 * i + 0] = srgbToLinear(sourceImage.data[4 * i + 0] / 255);
       img.data[3 * i + 1] = srgbToLinear(sourceImage.data[4 * i + 1] / 255);
       img.data[3 * i + 2] = srgbToLinear(sourceImage.data[4 * i + 2] / 255);
-      // img.data[3 * i + 0] = (sourceImage.data[4 * i + 0] / 255);
-      // img.data[3 * i + 1] = (sourceImage.data[4 * i + 1] / 255);
-      // img.data[3 * i + 2] = (sourceImage.data[4 * i + 2] / 255);
     }
     return img;
   }
@@ -302,9 +305,6 @@ export class RGBImageF32N0F8 extends Image {
       img[4 * i + 0] = linearToSrgb(this.data[3 * i + 0]) * 255;
       img[4 * i + 1] = linearToSrgb(this.data[3 * i + 1]) * 255;
       img[4 * i + 2] = linearToSrgb(this.data[3 * i + 2]) * 255;
-      // img[4 * i + 0] = (this.data[3 * i + 0]) * 255;
-      // img[4 * i + 1] = (this.data[3 * i + 1]) * 255;
-      // img[4 * i + 2] = (this.data[3 * i + 2]) * 255;
       img[4 * i + 3] = 255;
     }
     return new ImageData(img, this.width, this.height);
@@ -313,7 +313,7 @@ export class RGBImageF32N0F8 extends Image {
   toGray() {
     const img = GrayImageF32N0F8.empty(this.width, this.height);
     for (const { x, y, pixel } of this.allPixels()) {
-      img.setValueAt({ x, y }, brightnessN0F8(...pixel));
+      img.setValueAt({ x, y }, linearBrightnessN0F8(...pixel));
     }
     return img;
   }
@@ -359,6 +359,7 @@ export class GrayImageF32N0F8 extends Image {
   }
 
   static fromImageData(sourceImage) {
+    console.log("OMG");
     sourceImage = RGBAImageU8.fromImageData(sourceImage);
 
     const img = new GrayImageF32N0F8(
@@ -367,7 +368,7 @@ export class GrayImageF32N0F8 extends Image {
       sourceImage.height
     );
     for (let i = 0; i < sourceImage.width * sourceImage.height; i++) {
-      img.data[i] = brightnessU8(...sourceImage.pixel(i));
+      img.data[i] = srgbBrightnessU8(...sourceImage.pixel(i));
     }
     return img;
   }

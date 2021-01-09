@@ -13,26 +13,24 @@ import {
 
 const myBluenoisePromise = message(self, "bluenoise").then(({ mask }) => {
   Object.setPrototypeOf(mask, GrayImageF32N0F8.prototype);
-  mask.mapSelf(v => srgbToLinear(v));
   return mask;
 });
 
 let bayerLevels = message(self, "bayerlevels").then(({ bayerLevels }) =>
   bayerLevels.map(bl => {
     Object.setPrototypeOf(bl, GrayImageF32N0F8.prototype);
-    bl.mapSelf(v => srgbToLinear(v));
     return bl;
   })
 );
 
 function createEvenPaletteQuantizer(n) {
   n = clamp(2, n, 255) - 1;
-  return p => p.map(p => clamp(0, Math.round(p * n) / n, 1));
-}
-
-function createEvenGrayPaletteQuantizer(n) {
-  n -= 1;
-  return p => clamp(0, Math.round(p * n) / n, 1);
+  return p => {
+    if (typeof p === "number") {
+      p = [p];
+    }
+    return p.map(p => clamp(0, Math.round(p * n) / n, 1));
+  };
 }
 
 function remap(a, b) {
@@ -43,7 +41,7 @@ const numColors = 3;
 const pipeline = [
   ...Array.from({ length: numColors }, (_, i) => {
     const n = 2 ** (i + 1);
-    const q = createEvenGrayPaletteQuantizer(n);
+    const q = createEvenPaletteQuantizer(n);
     const vmap = remap(-1 / (2 * (n - 1)), 1 / (2 * (n - 1)));
     const scheme = "gray";
     return [
@@ -58,11 +56,7 @@ const pipeline = [
         id: `${scheme}:${n}:dither`,
         title: `Dithering (${n} colors)`,
         async process(color) {
-          return color
-            .toGray()
-            .toSrgbSelf()
-            .mapSelf(v => q(v + vmap(Math.random())))
-            .toLinearSelf();
+          return color.toGray().mapSelf(v => q(v + vmap(Math.random())));
         }
       },
       {
@@ -72,11 +66,9 @@ const pipeline = [
           const bayerLevel = (await bayerLevels)[1];
           return color
             .toGray()
-            .toSrgbSelf()
             .mapSelf((v, { x, y }) =>
               q(v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true })))
-            )
-            .toLinearSelf();
+            );
         }
       },
       {
@@ -86,19 +78,17 @@ const pipeline = [
           const bayerLevel = (await bayerLevels)[3];
           return color
             .toGray()
-            .toSrgbSelf()
             .mapSelf((v, { x, y }) =>
               q(v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true })))
-            )
-            .toLinearSelf();
+            );
         }
       },
-      /*{
+      {
         id: `${scheme}:${n}:fsed`,
-        title: `Floyd-Steinberg Error Diffusion (${n} colors)`,
+        title: `Floyd-Steinberg (${n} colors)`,
         async process(color) {
           return errorDiffusion(
-            color.copy(),
+            color.toGray(),
             new GrayImageF32N0F8(new Float32Array([0, 0, 7, 1, 5, 3]), 3, 2),
             q
           );
@@ -109,15 +99,13 @@ const pipeline = [
         title: `Riemersma (${n} colors)`,
         async process(color) {
           return curveErrorDiffusion(
-            color.copy(),
+            color.toGray(),
             hilbertCurveGenerator,
             weightGenerator(32, 1 / 8),
-            (p1, p2) =>
-              new Float32Array([p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]]),
             q
           );
         }
-      },*/
+      },
       {
         id: `${scheme}:${n}:bluenoise`,
         title: `Blue Noise (${n} colors)`,
@@ -125,11 +113,9 @@ const pipeline = [
           const bluenoise = await myBluenoisePromise;
           return color
             .toGray()
-            .toSrgbSelf()
             .mapSelf((v, { x, y }) =>
               q(v + vmap(bluenoise.valueAt({ x, y }, { wrap: true })))
-            )
-            .toLinearSelf();
+            );
         }
       }
     ];
@@ -190,7 +176,7 @@ const pipeline = [
       },
       {
         id: `even:${n}:fsed`,
-        title: `Floyd-Steinberg Error Diffusion (${n} colors)`,
+        title: `Floyd-Steinberg (${n} colors)`,
         async process(color) {
           return errorDiffusion(
             color.copy(),
@@ -207,8 +193,6 @@ const pipeline = [
             color.copy(),
             hilbertCurveGenerator,
             weightGenerator(32, 1 / 8),
-            (p1, p2) =>
-              new Float32Array([p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]]),
             q
           );
         }
@@ -233,9 +217,12 @@ const pipeline = [
   }).flat()
 ];
 
-function curveErrorDiffusion(img, curve, weights, distance, quantF) {
+function curveErrorDiffusion(img, curve, weights, quantF) {
   const curveIt = curve(img.width, img.height);
-  const errors = Array.from(weights, () => new Float32Array([0, 0, 0]));
+  const errors = Array.from(
+    weights,
+    () => new Float32Array(img.constructor.NUM_CHANNELS)
+  );
   for (const p of curveIt) {
     if (!img.isInBounds(p.x, p.y)) {
       continue;
@@ -287,14 +274,14 @@ async function init() {
       continue;
     }
 
+    const color = RGBImageF32N0F8.fromImageData(image);
+
     postMessage({
       type: "result",
       id: "original:1:g",
       title: "Original",
-      imageData: image
+      imageData: color.toImageData()
     });
-
-    const color = RGBImageF32N0F8.fromImageData(image);
 
     postMessage({
       type: "result",
