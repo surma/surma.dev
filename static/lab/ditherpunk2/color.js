@@ -4,7 +4,7 @@ import {
   imageToImageData,
   GrayImageF32N0F8
 } from "../ditherpunk/image-utils.js";
-import {message} from "../ditherpunk/worker-utils.js";
+import { message } from "../ditherpunk/worker-utils.js";
 
 const {
   fileinput,
@@ -22,12 +22,18 @@ if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
 }
 worker.addEventListener("message", async ev => {
   const { id, type, title, imageData } = ev.data;
-  const [algo, numColor] = id.split(":");
-  let container = document.getElementById(algo);
+  const [scheme, numColor, algo] = id.split(":");
+  let table = document.querySelector(`#${scheme}`);
+  if (!table) {
+    table = document.createElement("table");
+    table.id = scheme;
+    results.append(table);
+  }
+  let container = table.querySelector(`#${algo}`);
   if (!container) {
     container = document.createElement("tr");
     container.id = algo;
-    results.append(container);
+    table.append(container);
   }
   let cell = container.getElementsByClassName(numColor)[0];
   if (!cell) {

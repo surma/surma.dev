@@ -1,6 +1,6 @@
 import { MessageStream, message } from "./worker-utils.js";
 import { GrayImageF32N0F8 } from "./image-utils.js";
-import {hilbertCurveGenerator, weightGenerator} from "./curve-utils.js";
+import { hilbertCurveGenerator, weightGenerator } from "./curve-utils.js";
 
 let myBluenoiseDuration;
 const myBluenoisePromise = message(self, "bluenoise").then(
@@ -40,9 +40,7 @@ const pipeline = [
         return grayscale
           .copy()
           .mapSelf((v, { x, y }) =>
-            v > bayerLevel.valueAt({ x, y }, { wrap: true })
-              ? 1.0
-              : 0.0
+            v > bayerLevel.valueAt({ x, y }, { wrap: true }) ? 1.0 : 0.0
           );
       }
     };

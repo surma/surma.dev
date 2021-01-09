@@ -48,9 +48,9 @@ function dither(image) {
   });
 }
 
-document.body.addEventListener("click", async (ev) => {
+document.body.addEventListener("click", async ev => {
   const btn = ev.target.closest(".examplebtn");
-  if(!btn) {
+  if (!btn) {
     return;
   }
   try {

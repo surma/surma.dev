@@ -152,6 +152,20 @@ export class Image {
     return this.pixel(i);
   }
 
+  toSrgbSelf() {
+    for (const { pixel } of this.allPixels()) {
+      pixel.set(pixel.map(linearToSrgb));
+    }
+    return this;
+  }
+
+  toLinearSelf() {
+    for (const { pixel } of this.allPixels()) {
+      pixel.set(pixel.map(srgbToLinear));
+    }
+    return this;
+  }
+
   *allCoordinates() {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
@@ -294,6 +308,14 @@ export class RGBImageF32N0F8 extends Image {
       img[4 * i + 3] = 255;
     }
     return new ImageData(img, this.width, this.height);
+  }
+
+  toGray() {
+    const img = GrayImageF32N0F8.empty(this.width, this.height);
+    for (const { x, y, pixel } of this.allPixels()) {
+      img.setValueAt({ x, y }, brightnessN0F8(...pixel));
+    }
+    return img;
   }
 }
 

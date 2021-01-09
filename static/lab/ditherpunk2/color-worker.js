@@ -30,6 +30,11 @@ function createEvenPaletteQuantizer(n) {
   return p => p.map(p => clamp(0, Math.round(p * n) / n, 1));
 }
 
+function createEvenGrayPaletteQuantizer(n) {
+  n -= 1;
+  return p => clamp(0, Math.round(p * n) / n, 1);
+}
+
 function remap(a, b) {
   return v => v * (b - a) + a;
 }
@@ -37,20 +42,113 @@ function remap(a, b) {
 const numColors = 3;
 const pipeline = [
   ...Array.from({ length: numColors }, (_, i) => {
+    const n = 2 ** (i + 1);
+    const q = createEvenGrayPaletteQuantizer(n);
+    const vmap = remap(-1 / (2 * (n - 1)), 1 / (2 * (n - 1)));
+    const scheme = "gray";
+    return [
+      {
+        id: `${scheme}:${n}:quantized`,
+        title: `Quantized (${n} colors)`,
+        async process(color) {
+          return color.toGray().mapSelf(q);
+        }
+      },
+      {
+        id: `${scheme}:${n}:dither`,
+        title: `Dithering (${n} colors)`,
+        async process(color) {
+          return color
+            .toGray()
+            .toSrgbSelf()
+            .mapSelf(v => q(v + vmap(Math.random())))
+            .toLinearSelf();
+        }
+      },
+      {
+        id: `${scheme}:${n}:bayer1`,
+        title: `Bayer Level 1 (${n} colors)`,
+        async process(color, { bayerLevels }) {
+          const bayerLevel = (await bayerLevels)[1];
+          return color
+            .toGray()
+            .toSrgbSelf()
+            .mapSelf((v, { x, y }) =>
+              q(v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true })))
+            )
+            .toLinearSelf();
+        }
+      },
+      {
+        id: `${scheme}:${n}:bayer3`,
+        title: `Bayer Level 3 (${n} colors)`,
+        async process(color, { bayerLevels }) {
+          const bayerLevel = (await bayerLevels)[3];
+          return color
+            .toGray()
+            .toSrgbSelf()
+            .mapSelf((v, { x, y }) =>
+              q(v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true })))
+            )
+            .toLinearSelf();
+        }
+      },
+      /*{
+        id: `${scheme}:${n}:fsed`,
+        title: `Floyd-Steinberg Error Diffusion (${n} colors)`,
+        async process(color) {
+          return errorDiffusion(
+            color.copy(),
+            new GrayImageF32N0F8(new Float32Array([0, 0, 7, 1, 5, 3]), 3, 2),
+            q
+          );
+        }
+      },
+      {
+        id: `${scheme}:${n}:riemersma`,
+        title: `Riemersma (${n} colors)`,
+        async process(color) {
+          return curveErrorDiffusion(
+            color.copy(),
+            hilbertCurveGenerator,
+            weightGenerator(32, 1 / 8),
+            (p1, p2) =>
+              new Float32Array([p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]]),
+            q
+          );
+        }
+      },*/
+      {
+        id: `${scheme}:${n}:bluenoise`,
+        title: `Blue Noise (${n} colors)`,
+        async process(color) {
+          const bluenoise = await myBluenoisePromise;
+          return color
+            .toGray()
+            .toSrgbSelf()
+            .mapSelf((v, { x, y }) =>
+              q(v + vmap(bluenoise.valueAt({ x, y }, { wrap: true })))
+            )
+            .toLinearSelf();
+        }
+      }
+    ];
+  }).flat(),
+  ...Array.from({ length: numColors }, (_, i) => {
     const colorsPerAxis = i + 2;
     const n = colorsPerAxis ** 3;
     const q = createEvenPaletteQuantizer(colorsPerAxis);
     const vmap = remap(-1 / colorsPerAxis, 1 / colorsPerAxis);
     return [
       {
-        id: `quantized:${n}`,
+        id: `even:${n}:quantized`,
         title: `Quantized (${n} colors)`,
         async process(color) {
           return color.copy().mapSelf(q);
         }
       },
       {
-        id: `dither:${n}`,
+        id: `even:${n}:dither`,
         title: `Dithering (${n} colors)`,
         async process(color) {
           return color
@@ -59,7 +157,7 @@ const pipeline = [
         }
       },
       {
-        id: `bayer1:${n}`,
+        id: `even:${n}:bayer1`,
         title: `Bayer Level 1 (${n} colors)`,
         async process(color, { bayerLevels }) {
           const bayerLevel = (await bayerLevels)[1];
@@ -75,7 +173,7 @@ const pipeline = [
         }
       },
       {
-        id: `bayer3:${n}`,
+        id: `even:${n}:bayer3`,
         title: `Bayer Level 3 (${n} colors)`,
         async process(color, { bayerLevels }) {
           const bayerLevel = (await bayerLevels)[3];
@@ -91,18 +189,7 @@ const pipeline = [
         }
       },
       {
-        id: `2ded:${n}`,
-        title: `Simple Error Diffusion (${n} colors)`,
-        async process(color) {
-          return errorDiffusion(
-            color.copy(),
-            new GrayImageF32N0F8(new Float32Array([0, 1, 1, 0]), 2, 2),
-            q
-          );
-        }
-      },
-      {
-        id: `fsed:${n}`,
+        id: `even:${n}:fsed`,
         title: `Floyd-Steinberg Error Diffusion (${n} colors)`,
         async process(color) {
           return errorDiffusion(
@@ -113,22 +200,7 @@ const pipeline = [
         }
       },
       {
-        id: `jjned:${n}`,
-        title: `Jarvis-Judice-Ninke Error Diffusion (${n} colors)`,
-        async process(color) {
-          return errorDiffusion(
-            color.copy(),
-            new GrayImageF32N0F8(
-              new Float32Array([0, 0, 0, 7, 5, 3, 5, 7, 5, 3, 1, 3, 5, 3, 1]),
-              5,
-              3
-            ),
-            q
-          );
-        }
-      },
-      {
-        id: `riemersma:${n}`,
+        id: `even:${n}:riemersma`,
         title: `Riemersma (${n} colors)`,
         async process(color) {
           return curveErrorDiffusion(
@@ -142,7 +214,7 @@ const pipeline = [
         }
       },
       {
-        id: `bluenoise:${n}`,
+        id: `even:${n}:bluenoise`,
         title: `Blue Noise (${n} colors)`,
         async process(color) {
           const bluenoise = await myBluenoisePromise;
@@ -217,12 +289,19 @@ async function init() {
 
     postMessage({
       type: "result",
-      id: "original",
+      id: "original:1:g",
       title: "Original",
       imageData: image
     });
 
     const color = RGBImageF32N0F8.fromImageData(image);
+
+    postMessage({
+      type: "result",
+      id: "original:2:g",
+      title: "Grayscale",
+      imageData: color.toGray().toImageData()
+    });
 
     for (const step of pipeline) {
       let title = step.title;
