@@ -81,8 +81,14 @@
       return this.copy().addSelf(other);
     }
 
-    length() {
-      return Math.sqrt(this.x ** 2 + this.y ** 2);
+    negateSelf() {
+      this.x *= -1;
+      this.y *= -1;
+      return this;
+    }
+
+    negate() {
+      return this.copy().negateSelf();
     }
 
     normalizeSelf() {
@@ -96,6 +102,10 @@
       return this.copy().normalizeSelf();
     }
 
+    length() {
+      return Math.sqrt(this.x ** 2 + this.y ** 2);
+    }
+
     render() {
       return svg`<circle cx=${this.x} cy=${
         this.y
@@ -106,6 +116,10 @@
 
     isInVicinity(x, y, delta = 5) {
       return Math.abs(x - this.x) < delta && Math.abs(y - this.y) < delta;
+    }
+
+    distanceTo(other) {
+      return this.difference(other).length();
     }
   }
 
@@ -135,26 +149,71 @@
         " "
       )} data-type="line" data-name=${this.name} />`;
     }
+
+    intersect(other) {
+      const p1 = this.point.copy();
+      const p2 = this.point.add(this.direction);
+      const p3 = other.point.copy();
+      const p4 = other.point.add(other.direction);
+
+      const tn = (p1.x - p3.x) * (p3.y - p4.y) - (p1.y - p3.y) * (p3.x - p4.x);
+      const td = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x);
+      const t = tn / td;
+      return this.point.add(this.direction.scalar(t));
+    }
+  }
+
+  class Segment extends Line {
+    constructor(p1, p2) {
+      super(p1, p2.difference(p1));
+      this.p1 = p1;
+      this.p2 = p2;
+    }
+    render() {
+      return svg`<line x1=${this.p1.x} x2=${this.p2.x} y1=${this.p1.y} y2=${
+        this.p2.y
+      } stroke=black class=${this.cssClasses.join(
+        " "
+      )} data-type="line" data-name=${this.name} />`;
+    }
+  }
+
+  class HalfSegment extends Segment {
+    constructor(p1, p2) {
+      super(p1, p2);
+    }
+
+    static withDirection(p1, direction) {
+      return new HalfSegment(p1, p1.add(direction));
+    }
+    render() {
+      const p2 = this.p1.add(this.direction.scalar(1000));
+      return svg`<line x1=${this.p1.x} x2=${p2.x} y1=${this.p1.y} y2=${
+        p2.y
+      } stroke=black class=${this.cssClasses.join(
+        " "
+      )} data-type="line" data-name=${this.name} />`;
+    }
   }
 
   class Lens extends Line {
-    constructor(point, direction, focalLength) {
+    constructor(point, direction, focalLength, aperture) {
       super(point, direction);
       this.focalLength = focalLength;
+      this.aperture = aperture;
     }
 
-    static fromLine(line, focalLength) {
-      return new Lens(line.point, line.direction, focalLength);
-    }
-
-    focalPoint() {
+    focalPoint({ mirrored = false } = {}) {
       return this.point.add(
-        this.direction.orthogonal().scalarSelf(this.focalLength)
+        this.direction
+          .orthogonal()
+          .scalarSelf(this.focalLength * (mirrored ? -1 : 1))
       );
     }
 
     render() {
-      const fp = this.focalPoint();
+      const fp1 = this.focalPoint();
+      const fp2 = this.focalPoint({ mirrored: true });
       const p1 = this.point.add(this.direction.copy().scalarSelf(-1000));
       const p2 = this.point.add(this.direction.copy().scalarSelf(1000));
       return svg`
@@ -162,9 +221,27 @@
           <line x1=${p1.x} x2=${p2.x} y1=${p1.y} y2=${
         p2.y
       } stroke=black class=${this.cssClasses.join(" ")} data-subtype="plane" />
-          ${fp.render()}
+          ${fp1.render()} ${fp2.render()}
         </g>
       `;
+    }
+
+    lensProject(p) {
+      let fp = this.focalPoint();
+      let otherFp = this.focalPoint({ mirrored: true });
+      if (p.distanceTo(otherFp) < p.distanceTo(fp)) {
+        [fp, otherFp] = [otherFp, fp];
+      }
+      const ray1a = new Segment(p, this.project(p));
+      const ray1b = new HalfSegment(this.intersect(ray1a), otherFp);
+      const lensp = new HalfSegment(p, fp).intersect(this);
+      const ray2a = new Segment(p, lensp);
+      const ray2b = HalfSegment.withDirection(
+        lensp,
+        otherFp.difference(fp).normalizeSelf()
+      );
+      const point = ray2b.intersect(ray1b);
+      return { point, ray1a, ray1b, ray2a, ray2b };
     }
   }
 
@@ -181,12 +258,12 @@
       p: new Point(200, 20).setName("p"),
     },
     recalculate() {
-      const lens = Lens.fromLine(
-        Line.throughPoints(new Point(0, 1), new Point(0, -1)),
-        50
-      ).setName("lensplane");
-      const p = lens.project(this.handles.p);
-      return [p, lens];
+      const lens = new Lens(new Point(0, 0), new Point(0, 1), 50, 50).setName(
+        "lensplane"
+      );
+      const projection = lens.lensProject(this.handles.p);
+      projection.point.setName("p'");
+      return [...Object.values(projection), lens];
     },
   };
 
