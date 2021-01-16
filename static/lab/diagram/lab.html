@@ -1,4 +1,14 @@
 <!DOCTYPE html>
+<style>
+  [data-type="lens"] .lens {
+    stroke: hsla(240, 100%, 50%, 0.6);
+    fill: hsla(240, 100%, 50%, 0.2);
+  }
+  [data-type="lens"] .lensplane {
+    stroke: hsla(0, 0%, 0%, 0.4);
+    stroke-dasharray: 4 1;
+  }
+</style>
 <div id="target"></div>
 <script type="importmap">
   {
@@ -121,6 +131,18 @@
     distanceTo(other) {
       return this.difference(other).length();
     }
+
+    mirrorOnSelf(other) {
+      return this.differenceSelf(other).negate().addSelf(other);
+    }
+
+    mirrorOn(other) {
+      return this.copy().mirrorOnSelf(other);
+    }
+
+    toSVG(withComma = true) {
+      return [this.x, this.y].join(withComma ? "," : " ");
+    }
   }
 
   class Line extends Geometry {
@@ -196,45 +218,65 @@
     }
   }
 
-  class Lens extends Line {
-    constructor(point, direction, focalLength, aperture) {
-      super(point, direction);
-      this.focalLength = focalLength;
+  class Lens extends Geometry {
+    constructor(center, fp, aperture) {
+      super();
+      this.center = center;
+      this.fp = fp;
       this.aperture = aperture;
     }
 
-    focalPoint({ mirrored = false } = {}) {
-      return this.point.add(
-        this.direction
-          .orthogonal()
-          .scalarSelf(this.focalLength * (mirrored ? -1 : 1))
-      );
+    asLine() {
+      const direction = this.fp.difference(this.center).orthogonalSelf();
+      return new Line(this.center, direction);
+    }
+
+    otherFocalPoint() {
+      return this.fp.mirrorOn(this.center);
     }
 
     render() {
-      const fp1 = this.focalPoint();
-      const fp2 = this.focalPoint({ mirrored: true });
-      const p1 = this.point.add(this.direction.copy().scalarSelf(-1000));
-      const p2 = this.point.add(this.direction.copy().scalarSelf(1000));
+      const lensPlane = this.asLine().addClass("lensplane");
+      const fp1 = this.fp;
+      const fp2 = this.otherFocalPoint();
+      const dir = this.fp.difference(this.center).normalizeSelf();
+
+      const top = this.center.add(
+        lensPlane.direction.scalar(this.aperture / 2)
+      );
+      const bottom = top.mirrorOn(this.center);
+      const r = this.aperture * 3;
+      const thickness = 10;
       return svg`
-        <g data-name=${this.name} data-type="lens">
-          <line x1=${p1.x} x2=${p2.x} y1=${p1.y} y2=${
-        p2.y
-      } stroke=black class=${this.cssClasses.join(" ")} data-subtype="plane" />
-          ${fp1.render()} ${fp2.render()}
+        <g data-name=${this.name} data-type="lens" class=${this.cssClasses.join(
+        " "
+      )}>
+          <path class="lens" d="M ${top.toSVG()} l ${dir
+        .scalar(thickness / 2)
+        .toSVG()} A ${r} ${r} 0 0 1 ${bottom
+        .add(dir.scalar(thickness / 2))
+        .toSVG()} l ${dir
+        .scalar(-thickness)
+        .toSVG()} A ${r} ${r} 0 0 1 ${top
+        .add(dir.scalar(-thickness / 2))
+        .toSVG()} z" />
+          ${lensPlane.render()}
+          ${fp1.render()}
+          ${fp2.render()}
         </g>
       `;
     }
 
     lensProject(p) {
-      let fp = this.focalPoint();
-      let otherFp = this.focalPoint({ mirrored: true });
+      const lensPlane = this.asLine();
+      let fp = this.fp;
+      let otherFp = this.otherFocalPoint();
       if (p.distanceTo(otherFp) < p.distanceTo(fp)) {
         [fp, otherFp] = [otherFp, fp];
       }
-      const ray1a = new Segment(p, this.project(p));
-      const ray1b = new HalfSegment(this.intersect(ray1a), otherFp);
-      const lensp = new HalfSegment(p, fp).intersect(this);
+      const ray1a = new Segment(p, lensPlane.project(p));
+      const ray1b = new HalfSegment(lensPlane.intersect(ray1a), otherFp);
+      const lensp = new HalfSegment(p, fp).intersect(lensPlane);
       const ray2a = new Segment(p, lensp);
       const ray2b = HalfSegment.withDirection(
         lensp,
@@ -256,9 +298,10 @@
     },
     handles: {
       p: new Point(200, 20).setName("p"),
+      fp: new Point(50, 0).setName("fp"),
     },
     recalculate() {
-      const lens = new Lens(new Point(0, 0), new Point(0, 1), 50, 50).setName(
+      const lens = new Lens(new Point(0, 0), this.handles.fp, 150).setName(
         "lensplane"
       );
       const projection = lens.lensProject(this.handles.p);
