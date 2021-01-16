@@ -1,29 +1,253 @@
-<!doctype html>
+<!DOCTYPE html>
+<div id="target"></div>
 <script type="importmap">
-{
-  "imports": {
-    "lit1.3.0/": "/node_modules/lit1.3.0/"
+  {
+    "imports": {
+      "lit1.3.0/": "/node_modules/lit1.3.0/"
+    }
   }
-}
 </script>
 <script type="module">
+  import { html, render, svg } from "lit1.3.0/lit-html.js";
+
+  const { target } = document.all;
+
+  class Geometry {
+    name = "";
+    cssClasses = [];
+
+    addClass(...classes) {
+      this.cssClasses.push(...classes);
+      return this;
+    }
+
+    setName(name) {
+      this.name = name;
+      return this;
+    }
+  }
+
+  class Point extends Geometry {
+    constructor(x, y) {
+      super();
+      this.x = x;
+      this.y = y;
+    }
+
+    differenceSelf(other) {
+      this.x -= other.x;
+      this.y -= other.y;
+      return this;
+    }
+
+    copy() {
+      return new Point(this.x, this.y);
+    }
+
+    difference(other) {
+      return this.copy().differenceSelf(other);
+    }
+
+    orthogonalSelf() {
+      [this.x, this.y] = [this.y, -this.x];
+      return this;
+    }
+
+    orthogonal() {
+      return this.copy().orthogonalSelf();
+    }
+
+    dotProduct(other) {
+      return this.x * other.x + this.y * other.y;
+    }
+
+    scalarSelf(f) {
+      this.x *= f;
+      this.y *= f;
+      return this;
+    }
+
+    scalar(f) {
+      return this.copy().scalarSelf(f);
+    }
+
+    addSelf(other) {
+      this.x += other.x;
+      this.y += other.y;
+      return this;
+    }
+
+    add(other) {
+      return this.copy().addSelf(other);
+    }
+
+    length() {
+      return Math.sqrt(this.x ** 2 + this.y ** 2);
+    }
+
+    normalizeSelf() {
+      const l = this.length();
+      this.x /= l;
+      this.y /= l;
+      return this;
+    }
+
+    normalize() {
+      return this.copy().normalizeSelf();
+    }
+
+    render() {
+      return svg`<circle cx=${this.x} cy=${
+        this.y
+      } r=5 class=${this.cssClasses.join(" ")} data-type="point" data-name=${
+        this.name
+      } />`;
+    }
+
+    isInVicinity(x, y, delta = 5) {
+      return Math.abs(x - this.x) < delta && Math.abs(y - this.y) < delta;
+    }
+  }
+
+  class Line extends Geometry {
+    constructor(point, direction) {
+      super();
+      this.point = point;
+      this.direction = direction.normalizeSelf();
+    }
+
+    static throughPoints(p1, p2) {
+      return new Line(p1, p1.difference(p2));
+    }
+
+    project(p) {
+      return this.direction.scalar(
+        p.dotProduct(this.direction) / this.direction.dotProduct(this.direction)
+      );
+    }
+
+    render() {
+      const p1 = this.point.add(this.direction.copy().scalarSelf(-1000));
+      const p2 = this.point.add(this.direction.copy().scalarSelf(1000));
+      return svg`<line x1=${p1.x} x2=${p2.x} y1=${p1.y} y2=${
+        p2.y
+      } stroke=black class=${this.cssClasses.join(
+        " "
+      )} data-type="line" data-name=${this.name} />`;
+    }
+  }
+
+  class Lens extends Line {
+    constructor(point, direction, focalLength) {
+      super(point, direction);
+      this.focalLength = focalLength;
+    }
+
+    static fromLine(line, focalLength) {
+      return new Lens(line.point, line.direction, focalLength);
+    }
+
+    focalPoint() {
+      return this.point.add(
+        this.direction.orthogonal().scalarSelf(this.focalLength)
+      );
+    }
+
+    render() {
+      const fp = this.focalPoint();
+      const p1 = this.point.add(this.direction.copy().scalarSelf(-1000));
+      const p2 = this.point.add(this.direction.copy().scalarSelf(1000));
+      return svg`
+        <g data-name=${this.name} data-type="lens">
+          <line x1=${p1.x} x2=${p2.x} y1=${p1.y} y2=${
+        p2.y
+      } stroke=black class=${this.cssClasses.join(" ")} data-subtype="plane" />
+          ${fp.render()}
+        </g>
+      `;
+    }
+  }
+
   const diagram = {
     width: 500,
     height: 500,
     viewBox: {
       leftX: -250,
       rightX: 250,
-      topY: 250,
-      bottomY: 250
+      topY: -250,
+      bottomY: 250,
     },
     handles: {
-      "p": {
-        x: 200,
-        y: 0
-      }
+      p: new Point(200, 20).setName("p"),
     },
     recalculate() {
-
-    }
+      const lens = Lens.fromLine(
+        Line.throughPoints(new Point(0, 1), new Point(0, -1)),
+        50
+      ).setName("lensplane");
+      const p = lens.project(this.handles.p);
+      return [p, lens];
+    },
   };
+
+  function serializeViewBox(vb) {
+    return `${vb.leftX} ${vb.topY} ${vb.rightX - vb.leftX} ${
+      vb.bottomY - vb.topY
+    }`;
+  }
+
+  // function flipsFromVie
+
+  function instantiateDiagram(diagram) {
+    let draggedHandle = null;
+    function screenToSvgCoordinates(svg, x, y) {
+      const pt = svg.createSVGPoint();
+      pt.x = x;
+      pt.y = y;
+      const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+      return [svgP.x, svgP.y];
+    }
+    function mousedown(ev) {
+      const svg = ev.target.closest("svg");
+      const [x, y] = screenToSvgCoordinates(svg, ev.clientX, ev.clientY);
+      const itemName = Object.entries(diagram.handles).find(([name, item]) =>
+        item.isInVicinity(x, y)
+      )?.[0];
+      if (itemName) {
+        draggedHandle = itemName;
+      }
+    }
+    function mousemove(ev) {
+      if (!draggedHandle) {
+        return;
+      }
+      const svg = ev.target.closest("svg");
+      const pt = diagram.handles[draggedHandle];
+      [pt.x, pt.y] = screenToSvgCoordinates(svg, ev.clientX, ev.clientY);
+      rerender();
+    }
+    function mouseup(ev) {
+      draggedHandle = null;
+    }
+    function rerender() {
+      render(
+        html`
+          <svg
+            @mousedown=${mousedown}
+            @mousemove=${mousemove}
+            @mouseup=${mouseup}
+            width=${diagram.width}
+            height=${diagram.height}
+            viewBox=${serializeViewBox(diagram.viewBox)}
+          >
+            ${Object.values(diagram.handles).map((item) => item.render())}
+            ${diagram.recalculate().map((item) => item.render())}
+          </svg>
+        `,
+        target
+      );
+    }
+    rerender();
+  }
+  instantiateDiagram(diagram);
 </script>
