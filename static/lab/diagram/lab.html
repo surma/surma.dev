@@ -9,8 +9,9 @@
     stroke-dasharray: 4 1;
   }
   .light {
-    stroke: none;
-    fill: hsla(60, 100%, 60%, 0.4);
+    stroke-dasharray: 3 6;
+    stroke: hsl(20deg 100% 60% / 76%);
+    stroke-width: 3px;
   }
 </style>
 <div id="target"></div>
@@ -22,7 +23,14 @@
   }
 </script>
 <script type="module">
-  import { Lens, Point, Polygon, instantiateDiagram } from "./geometry.js";
+  import {
+    Lens,
+    Segment,
+    HalfSegment,
+    Point,
+    Polygon,
+    instantiateDiagram,
+  } from "./geometry.js";
 
   const { target } = document.all;
 
@@ -43,16 +51,27 @@
       this.handles.fp.y = 0;
       const lens = new Lens(new Point(0, 0), this.handles.fp, 150);
       const lensplane = lens.asLine().addClass("lensplane");
-      const projection = lens.lensProject(this.handles.p);
-      const light = new Polygon(
-        projection.point,
-        lens.top(),
-        this.handles.p,
-        lens.bottom()
-      ).addClass("light");
-
-      delete projection.point;
-      return [...Object.values(projection), lens, lensplane, light];
+      const { point, ray1a, ray1b, ray2a, ray2b } = lens.lensProject(
+        this.handles.p
+      );
+      const light1a = new Segment(this.handles.p, lens.top()).addClass("light");
+      const light1b = new HalfSegment(lens.top(), point).addClass("light");
+      const light2a = new Segment(this.handles.p, lens.bottom()).addClass(
+        "light"
+      );
+      const light2b = new HalfSegment(lens.bottom(), point).addClass("light");
+      return [
+        ray1a,
+        ray1b,
+        ray2a,
+        ray2b,
+        lens,
+        lensplane,
+        light1a,
+        light1b,
+        light2a,
+        light2b,
+      ];
     },
   };
 
