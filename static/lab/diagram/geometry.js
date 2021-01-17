@@ -161,6 +161,10 @@ export class Line extends Geometry {
     const t = tn / td;
     return this.point.add(this.direction.scalar(t));
   }
+
+  pointAtDistance(d) {
+    return this.point.add(this.direction.normalize().scalarSelf(d));
+  }
 }
 
 export class Segment extends Line {

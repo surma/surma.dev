@@ -12,6 +12,7 @@
     stroke-dasharray: 3 6;
     stroke: hsl(20deg 100% 60% / 76%);
     stroke-width: 3px;
+    fill: hsl(20deg 100% 60% / 26%);
   }
 </style>
 <div id="target"></div>
@@ -45,40 +46,33 @@
     width: 500,
     height: 300,
     viewBox: {
-      leftX: -250,
-      rightX: 250,
+      leftX: -300,
+      rightX: 200,
       topY: -150,
       bottomY: 150,
     },
     handles: {
-      p: new Point(200, 20).setName("p"),
+      p: new Point(150, 20).setName("p"),
       fp: new Point(50, 0).setName("fp"),
     },
     recalculate() {
       this.handles.fp.y = 0;
+      this.handles.p.x = Math.max(this.handles.p.x, this.handles.fp.x + 1);
       const lens = new Lens(new Point(0, 0), this.handles.fp, 150);
       const lensplane = lens.asLine().addClass("lensplane");
       const { point, ray1a, ray1b, ray2a, ray2b } = lens.lensProject(
         this.handles.p
       );
-      const light1a = new Segment(this.handles.p, lens.top()).addClass("light");
-      const light1b = new HalfSegment(lens.top(), point).addClass("light");
-      const light2a = new Segment(this.handles.p, lens.bottom()).addClass(
-        "light"
-      );
-      const light2b = new HalfSegment(lens.bottom(), point).addClass("light");
-      return [
-        ray1a,
-        ray1b,
-        ray2a,
-        ray2b,
-        lens,
-        lensplane,
-        light1a,
-        light1b,
-        light2a,
-        light2b,
-      ];
+      const top = lens.top();
+      const bottom = lens.bottom();
+      const light = new Polygon(
+        this.handles.p,
+        top,
+        new HalfSegment(top, point).pointAtDistance(1000),
+        new HalfSegment(bottom, point).pointAtDistance(1000),
+        bottom
+      ).addClass("light");
+      return [ray1a, ray1b, ray2a, ray2b, lens, lensplane, light];
     },
   };
 
