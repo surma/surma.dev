@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <style>
-  [data-type="lens"] .lens {
+  [data-type="lens"] {
     stroke: hsla(240, 100%, 50%, 0.6);
     fill: hsla(240, 100%, 50%, 0.2);
   }
-  [data-type="lens"] .lensplane {
+  .lensplane {
     stroke: hsla(0, 0%, 0%, 0.4);
     stroke-dasharray: 4 1;
+  }
+  .light {
+    stroke: none;
+    fill: hsla(60, 100%, 60%, 0.4);
   }
 </style>
 <div id="target"></div>
@@ -18,18 +22,18 @@
   }
 </script>
 <script type="module">
-  import {Lens, Point, instantiateDiagram} from "./geometry.js";
+  import { Lens, Point, Polygon, instantiateDiagram } from "./geometry.js";
 
   const { target } = document.all;
 
   const diagram = {
     width: 500,
-    height: 500,
+    height: 300,
     viewBox: {
       leftX: -250,
       rightX: 250,
-      topY: -250,
-      bottomY: 250,
+      topY: -150,
+      bottomY: 150,
     },
     handles: {
       p: new Point(200, 20).setName("p"),
@@ -37,15 +41,20 @@
     },
     recalculate() {
       this.handles.fp.y = 0;
-      const lens = new Lens(new Point(0, 0), this.handles.fp, 150).setName(
-        "lensplane"
-      );
+      const lens = new Lens(new Point(0, 0), this.handles.fp, 150);
+      const lensplane = lens.asLine().addClass("lensplane");
       const projection = lens.lensProject(this.handles.p);
-      projection.point.setName("p'");
-      return [...Object.values(projection), lens];
+      const light = new Polygon(
+        projection.point,
+        lens.top(),
+        this.handles.p,
+        lens.bottom()
+      ).addClass("light");
+
+      delete projection.point;
+      return [...Object.values(projection), lens, lensplane, light];
     },
   };
 
-  
   instantiateDiagram(diagram, target);
 </script>

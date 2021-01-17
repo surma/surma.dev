@@ -202,6 +202,8 @@ export class Lens extends Geometry {
     this.center = center;
     this.fp = fp;
     this.aperture = aperture;
+    this.thickness = 10;
+    this.r = aperture * 3;
   }
 
   asLine() {
@@ -213,36 +215,31 @@ export class Lens extends Geometry {
     return this.fp.mirrorOn(this.center);
   }
 
+  top() {
+    return this.center.add(this.asLine().direction.scalar(this.aperture / 2));
+  }
+
+  bottom() {
+    return this.top().mirrorOnSelf(this.center);
+  }
+
   render() {
-    const lensPlane = this.asLine().addClass("lensplane");
-    const fp1 = this.fp;
-    const fp2 = this.otherFocalPoint();
     const dir = this.fp.difference(this.center).normalizeSelf();
 
-    const top = this.center.add(
-      lensPlane.direction.scalar(this.aperture / 2)
-    );
-    const bottom = top.mirrorOn(this.center);
-    const r = this.aperture * 3;
-    const thickness = 10;
+    const top = this.top();
+    const bottom = this.bottom();
     return svg`
-      <g data-name=${this.name} data-type="lens" class=${this.cssClasses.join(
-      " "
-    )}>
         <path class="lens" d="M ${top.toSVG()} l ${dir
-      .scalar(thickness / 2)
-      .toSVG()} A ${r} ${r} 0 0 1 ${bottom
-      .add(dir.scalar(thickness / 2))
-      .toSVG()} l ${dir
-      .scalar(-thickness)
-      .toSVG()} A ${r} ${r} 0 0 1 ${top
-      .add(dir.scalar(-thickness / 2))
-      .toSVG()} z" />
-        ${lensPlane.render()}
-        ${fp1.render()}
-        ${fp2.render()}
-      </g>
-    `;
+      .scalar(this.thickness / 2)
+      .toSVG()} A ${this.r} ${this.r} 0 0 1 ${bottom
+      .add(dir.scalar(this.thickness / 2))
+      .toSVG()} l ${dir.scalar(-this.thickness).toSVG()} A ${this.r} ${
+      this.r
+    } 0 0 1 ${top.add(dir.scalar(-this.thickness / 2)).toSVG()} z" 
+      data-name=${this.name}
+      data-type="lens"
+      class=${this.cssClasses.join(" ")}
+      />`;
   }
 
   lensProject(p) {
@@ -262,6 +259,24 @@ export class Lens extends Geometry {
     );
     const point = ray2b.intersect(ray1b);
     return { point, ray1a, ray1b, ray2a, ray2b };
+  }
+}
+
+export class Polygon extends Geometry {
+  constructor(...points) {
+    super();
+    this.points = points;
+  }
+
+  render() {
+    return svg`
+      <path 
+        data-type="polygon" 
+        data-name=${this.name} 
+        class=${this.cssClasses.join(" ")} 
+        d="M ${this.points.map((p) => p.toSVG()).join(" L ")} z" 
+      />
+    `;
   }
 }
 
