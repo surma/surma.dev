@@ -348,6 +348,7 @@ export function instantiateDiagram(diagram, target, { html, svg, render }) {
           width="${diagram.width}"
           height="${diagram.height}"
           viewBox="${serializeViewBox(diagram.viewBox)}"
+          class="lensdiagram"
         >
           ${diagram.recalculate().map((item) => item.render({ html, svg }))}
           ${Object.values(diagram.handles).map((item) =>
@@ -365,11 +366,19 @@ export function instantiateDiagram(diagram, target, { html, svg, render }) {
 const filteredRawString = (strings, ...vals) =>
   String.raw(strings, ...vals.map((v) => (typeof v === "function" ? '""' : v)));
 export function renderToString(diagram) {
-  return new Promise((resolve) => {
-    instantiateDiagram(diagram, null, {
-      html: filteredRawString,
-      svg: filteredRawString,
-      render: (v) => resolve(v),
-    });
-  });
+  const mocks = {
+    html: filteredRawString,
+    svg: filteredRawString,
+  };
+  return mocks.html`
+        <svg
+          width="${diagram.width}"
+          height="${diagram.height}"
+          viewBox="${serializeViewBox(diagram.viewBox)}"
+          class="lensdiagram"
+        >
+          ${diagram.recalculate().map((item) => item.render(mocks))}
+          ${Object.values(diagram.handles).map((item) => item.render(mocks))}
+        </svg>
+      `;
 }

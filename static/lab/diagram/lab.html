@@ -1,28 +1,6 @@
 <!DOCTYPE html>
 <meta name="viewport" content="minimum-scale=1, width=device-width" />
-<style>
-  svg {
-    width: 100%;
-    height: auto;
-  }
-  .lens {
-    stroke: hsla(240, 100%, 50%, 0.6);
-    fill: hsla(240, 100%, 50%, 0.2);
-  }
-  .lensplane {
-    stroke: hsla(0, 0%, 0%, 0.4);
-    stroke-dasharray: 4 1;
-  }
-  .light {
-    stroke-dasharray: 3 6;
-    stroke: hsl(20deg 100% 60% / 76%);
-    stroke-width: 3px;
-    fill: hsl(20deg 100% 60% / 26%);
-  }
-  .type-line {
-    stroke: black;
-  }
-</style>
+<link rel="stylesheet" href="./geometry.css" />
 <div id="target"></div>
 <script>
   document.write(
@@ -40,15 +18,7 @@
 </script>
 <script type="module">
   import * as lit from "lit1.3.0/lit-html.js";
-  import {
-    Lens,
-    Segment,
-    HalfSegment,
-    Point,
-    Polygon,
-    instantiateDiagram,
-    renderToString,
-  } from "./geometry.js";
+  import * as geometry from "./geometry.mjs";
 
   const { target } = document.all;
 
@@ -62,31 +32,33 @@
       bottomY: 150,
     },
     handles: {
-      p: new Point(150, 20).setName("p"),
-      fp: new Point(50, 0).setName("fp"),
+      p: new geometry.Point(150, 20).setName("p"),
+      fp: new geometry.Point(50, 0).setName("fp"),
     },
     recalculate() {
       this.handles.fp.y = 0;
       this.handles.p.x = Math.max(this.handles.p.x, this.handles.fp.x + 1);
-      const lens = new Lens(new Point(0, 0), this.handles.fp, 150).addClass(
-        "lens"
-      );
+      const lens = new geometry.Lens(
+        new geometry.Point(0, 0),
+        this.handles.fp,
+        150
+      ).addClass("lens");
       const lensplane = lens.asLine().addClass("lensplane");
       const { point, ray1a, ray1b, ray2a, ray2b } = lens.lensProject(
         this.handles.p
       );
       const top = lens.top();
       const bottom = lens.bottom();
-      const light = new Polygon(
+      const light = new geometry.Polygon(
         this.handles.p,
         top,
-        new HalfSegment(top, point).pointAtDistance(1000),
-        new HalfSegment(bottom, point).pointAtDistance(1000),
+        new geometry.HalfSegment(top, point).pointAtDistance(1000),
+        new geometry.HalfSegment(bottom, point).pointAtDistance(1000),
         bottom
       ).addClass("light");
       return [ray1a, ray1b, ray2a, ray2b, lens, lensplane, light];
     },
   };
 
-  instantiateDiagram(diagram, target, lit);
+  geometry.instantiateDiagram(diagram, target, lit);
 </script>

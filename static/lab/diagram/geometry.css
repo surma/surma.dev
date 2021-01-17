@@ -1,0 +1,23 @@
+svg.lensdiagram {
+  width: 100%;
+  height: auto;
+  background: white;
+  padding: 1em;
+}
+.lens {
+  stroke: hsla(240, 100%, 50%, 0.6);
+  fill: hsla(240, 100%, 50%, 0.2);
+}
+.lensplane {
+  stroke: hsla(0, 0%, 0%, 0.4);
+  stroke-dasharray: 4 1;
+}
+.light {
+  stroke-dasharray: 3 6;
+  stroke: hsl(20deg 100% 60% / 76%);
+  stroke-width: 3px;
+  fill: hsl(20deg 100% 60% / 26%);
+}
+.type-line {
+  stroke: black;
+}
