@@ -19,6 +19,9 @@
     stroke-width: 3px;
     fill: hsl(20deg 100% 60% / 26%);
   }
+  .type-line {
+    stroke: black;
+  }
 </style>
 <div id="target"></div>
 <script>
@@ -36,6 +39,7 @@
   );
 </script>
 <script type="module">
+  import * as lit from "lit1.3.0/lit-html.js";
   import {
     Lens,
     Segment,
@@ -43,6 +47,7 @@
     Point,
     Polygon,
     instantiateDiagram,
+    renderToString,
   } from "./geometry.js";
 
   const { target } = document.all;
@@ -83,5 +88,5 @@
     },
   };
 
-  instantiateDiagram(diagram, target);
+  instantiateDiagram(diagram, target, lit);
 </script>

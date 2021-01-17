@@ -1,5 +1,3 @@
-import { html, render, svg } from "lit1.3.0/lit-html.js";
-
 export class Geometry {
   name = "";
   cssClasses = [];
@@ -95,14 +93,6 @@ export class Point extends Geometry {
     return Math.sqrt(this.x ** 2 + this.y ** 2);
   }
 
-  render() {
-    return svg`<circle cx=${this.x} cy=${
-      this.y
-    } r=5 class=${this.cssClasses.join(" ")} data-type="point" data-name=${
-      this.name
-    } />`;
-  }
-
   isInVicinity(x, y) {
     return (
       Math.abs(x - this.x) < this.vicinity &&
@@ -125,6 +115,14 @@ export class Point extends Geometry {
   toSVG(withComma = true) {
     return [this.x, this.y].join(withComma ? "," : " ");
   }
+
+  render({ svg }) {
+    return svg`<circle cx="${this.x}" cy="${
+      this.y
+    }" r="5" class="type-point ${this.cssClasses.join(" ")}" data-name="${
+      this.name
+    }" />`;
+  }
 }
 
 export class Line extends Geometry {
@@ -144,16 +142,6 @@ export class Line extends Geometry {
     );
   }
 
-  render() {
-    const p1 = this.point.add(this.direction.copy().scalarSelf(-1000));
-    const p2 = this.point.add(this.direction.copy().scalarSelf(1000));
-    return svg`<line x1=${p1.x} x2=${p2.x} y1=${p1.y} y2=${
-      p2.y
-    } stroke=black class=${this.cssClasses.join(
-      " "
-    )} data-type="line" data-name=${this.name} />`;
-  }
-
   intersect(other) {
     const p1 = this.point.copy();
     const p2 = this.point.add(this.direction);
@@ -169,6 +157,16 @@ export class Line extends Geometry {
   pointAtDistance(d) {
     return this.point.add(this.direction.normalize().scalarSelf(d));
   }
+
+  render({ svg }) {
+    const p1 = this.point.add(this.direction.copy().scalarSelf(-1000));
+    const p2 = this.point.add(this.direction.copy().scalarSelf(1000));
+    return svg`<line x1="${p1.x}" x2="${p2.x}" y1="${p1.y}" y2="${
+      p2.y
+    }" class="${this.cssClasses.join(" ")}" data-type="line" data-name="${
+      this.name
+    }" />`;
+  }
 }
 
 export class Segment extends Line {
@@ -177,12 +175,12 @@ export class Segment extends Line {
     this.p1 = p1;
     this.p2 = p2;
   }
-  render() {
-    return svg`<line x1=${this.p1.x} x2=${this.p2.x} y1=${this.p1.y} y2=${
-      this.p2.y
-    } stroke=black class=${this.cssClasses.join(
+  render({ svg }) {
+    return svg`<line x1="${this.p1.x}" x2="${this.p2.x}" y1="${
+      this.p1.y
+    }" y2="${this.p2.y}" class="type-line type-segment ${this.cssClasses.join(
       " "
-    )} data-type="line" data-name=${this.name} />`;
+    )}" data-name="${this.name}" />`;
   }
 }
 
@@ -194,13 +192,13 @@ export class HalfSegment extends Segment {
   static withDirection(p1, direction) {
     return new HalfSegment(p1, p1.add(direction));
   }
-  render() {
+  render({ svg }) {
     const p2 = this.p1.add(this.direction.scalar(1000));
-    return svg`<line x1=${this.p1.x} x2=${p2.x} y1=${this.p1.y} y2=${
+    return svg`<line x1="${this.p1.x}" x2="${p2.x}" y1="${this.p1.y}" y2="${
       p2.y
-    } stroke=black class=${this.cssClasses.join(
+    }" class="type-line type-segment type-halfsegment ${this.cssClasses.join(
       " "
-    )} data-type="line" data-name=${this.name} />`;
+    )}" data-type="line" data-name="${this.name}" />`;
   }
 }
 
@@ -231,7 +229,7 @@ export class Lens extends Geometry {
     return this.top().mirrorOnSelf(this.center);
   }
 
-  render() {
+  render({ svg }) {
     const dir = this.fp.difference(this.center).normalizeSelf();
 
     const top = this.top();
@@ -244,9 +242,8 @@ export class Lens extends Geometry {
       .toSVG()} l ${dir.scalar(-this.thickness).toSVG()} A ${this.r} ${
       this.r
     } 0 0 1 ${top.add(dir.scalar(-this.thickness / 2)).toSVG()} z" 
-      data-name=${this.name}
-      data-type="lens"
-      class=${this.cssClasses.join(" ")}
+      data-name="${this.name}"
+      class="type-lens ${this.cssClasses.join(" ")}"
       />`;
   }
 
@@ -276,12 +273,12 @@ export class Polygon extends Geometry {
     this.points = points;
   }
 
-  render() {
+  render({ svg }) {
     return svg`
       <path 
         data-type="polygon" 
-        data-name=${this.name} 
-        class=${this.cssClasses.join(" ")} 
+        data-name="${this.name}"
+        class="${this.cssClasses.join(" ")}"
         d="M ${this.points.map((p) => p.toSVG()).join(" L ")} z" 
       />
     `;
@@ -296,7 +293,7 @@ function serializeViewBox(vb) {
 
 // function flipsFromVie
 
-export function instantiateDiagram(diagram, target) {
+export function instantiateDiagram(diagram, target, { html, svg, render }) {
   let draggedHandle = null;
   function screenToSvgCoordinates(svg, x, y) {
     const pt = svg.createSVGPoint();
@@ -336,7 +333,6 @@ export function instantiateDiagram(diagram, target) {
   }
   function end(ev) {
     ev.preventDefault();
-    console.log("end");
     draggedHandle = null;
   }
   function rerender() {
@@ -349,16 +345,31 @@ export function instantiateDiagram(diagram, target) {
           @touchmove=${drag}
           @mouseup=${end}
           @touchend=${end}
-          width=${diagram.width}
-          height=${diagram.height}
-          viewBox=${serializeViewBox(diagram.viewBox)}
+          width="${diagram.width}"
+          height="${diagram.height}"
+          viewBox="${serializeViewBox(diagram.viewBox)}"
         >
-          ${diagram.recalculate().map((item) => item.render())}
-          ${Object.values(diagram.handles).map((item) => item.render())}
+          ${diagram.recalculate().map((item) => item.render({ html, svg }))}
+          ${Object.values(diagram.handles).map((item) =>
+            item.render({ html, svg })
+          )}
         </svg>
       `,
       target
     );
   }
   rerender();
+}
+
+// Removes functions from the value list so they don’t get serialized.
+const filteredRawString = (strings, ...vals) =>
+  String.raw(strings, ...vals.map((v) => (typeof v === "function" ? '""' : v)));
+export function renderToString(diagram) {
+  return new Promise((resolve) => {
+    instantiateDiagram(diagram, null, {
+      html: filteredRawString,
+      svg: filteredRawString,
+      render: (v) => resolve(v),
+    });
+  });
 }
