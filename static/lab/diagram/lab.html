@@ -15,12 +15,19 @@
   }
 </style>
 <div id="target"></div>
-<script type="importmap">
-  {
-    "imports": {
-      "lit1.3.0/": "/node_modules/lit1.3.0/"
-    }
-  }
+<script>
+  document.write(
+    `  
+    <script type="importmap">
+      {
+        "imports": {
+          "lit1.3.0/": "/node_modules/lit1.3.0/"
+        }
+      }
+    <` +
+      `/script>
+  `
+  );
 </script>
 <script type="module">
   import {
