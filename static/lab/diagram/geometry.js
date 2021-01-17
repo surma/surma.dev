@@ -20,6 +20,7 @@ export class Point extends Geometry {
     super();
     this.x = x;
     this.y = y;
+    this.vicinity = 10;
   }
 
   differenceSelf(other) {
@@ -102,8 +103,11 @@ export class Point extends Geometry {
     } />`;
   }
 
-  isInVicinity(x, y, delta = 5) {
-    return Math.abs(x - this.x) < delta && Math.abs(y - this.y) < delta;
+  isInVicinity(x, y) {
+    return (
+      Math.abs(x - this.x) < this.vicinity &&
+      Math.abs(y - this.y) < this.vicinity
+    );
   }
 
   distanceTo(other) {
@@ -301,9 +305,14 @@ export function instantiateDiagram(diagram, target) {
     const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
     return [svgP.x, svgP.y];
   }
-  function mousedown(ev) {
+  function start(ev) {
+    ev.preventDefault();
     const svg = ev.target.closest("svg");
-    const [x, y] = screenToSvgCoordinates(svg, ev.clientX, ev.clientY);
+    const [x, y] = screenToSvgCoordinates(
+      svg,
+      ev.clientX ?? ev.touches[0].clientX,
+      ev.clientY ?? ev.touches[0].clientY
+    );
     const itemName = Object.entries(diagram.handles).find(([name, item]) =>
       item.isInVicinity(x, y)
     )?.[0];
@@ -311,25 +320,35 @@ export function instantiateDiagram(diagram, target) {
       draggedHandle = itemName;
     }
   }
-  function mousemove(ev) {
+  function drag(ev) {
     if (!draggedHandle) {
       return;
     }
+    ev.preventDefault();
     const svg = ev.target.closest("svg");
     const pt = diagram.handles[draggedHandle];
-    [pt.x, pt.y] = screenToSvgCoordinates(svg, ev.clientX, ev.clientY);
+    [pt.x, pt.y] = screenToSvgCoordinates(
+      svg,
+      ev.clientX ?? ev.touches[0].clientX,
+      ev.clientY ?? ev.touches[0].clientY
+    );
     rerender();
   }
-  function mouseup(ev) {
+  function end(ev) {
+    ev.preventDefault();
+    console.log("end");
     draggedHandle = null;
   }
   function rerender() {
     render(
       html`
         <svg
-          @mousedown=${mousedown}
-          @mousemove=${mousemove}
-          @mouseup=${mouseup}
+          @mousedown=${start}
+          @touchstart=${start}
+          @mousemove=${drag}
+          @touchmove=${drag}
+          @mouseup=${end}
+          @touchend=${end}
           width=${diagram.width}
           height=${diagram.height}
           viewBox=${serializeViewBox(diagram.viewBox)}

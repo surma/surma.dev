@@ -1,6 +1,11 @@
 <!DOCTYPE html>
+<meta name="viewport" content="minimum-scale=1, width=device-width" />
 <style>
-  [data-type="lens"] {
+  svg {
+    width: 100%;
+    height: auto;
+  }
+  .lens {
     stroke: hsla(240, 100%, 50%, 0.6);
     fill: hsla(240, 100%, 50%, 0.2);
   }
@@ -58,7 +63,9 @@
     recalculate() {
       this.handles.fp.y = 0;
       this.handles.p.x = Math.max(this.handles.p.x, this.handles.fp.x + 1);
-      const lens = new Lens(new Point(0, 0), this.handles.fp, 150);
+      const lens = new Lens(new Point(0, 0), this.handles.fp, 150).addClass(
+        "lens"
+      );
       const lensplane = lens.asLine().addClass("lensplane");
       const { point, ray1a, ray1b, ray2a, ray2b } = lens.lensProject(
         this.handles.p
