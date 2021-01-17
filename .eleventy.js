@@ -9,26 +9,34 @@ const options = {
 const markdownLib = markdownIt(options).use(markdownItKatex);
 // Would you like some race conditions with your wine?
 let geometry;
-import("./static/lab/diagram/geometry.mjs").then(m => geometry = m);
+import("./static/lab/diagram/geometry.mjs").then((m) => (geometry = m));
 
-module.exports = function(config) {
+module.exports = function (config) {
   // Copy /static to /
-  config.addPassthroughCopy({ 
-    static: "/"
+  config.addPassthroughCopy({
+    static: "/",
   });
   config.setLibrary("md", markdownLib);
   config.addPlugin(syntaxhighlight);
   config.addMarkdownHighlighter((str, lang) => {
-    if(lang !== "geometry") {
+    if (lang !== "geometry") {
       return;
     }
-    const geometryDescriptor = (new Function("geometry", `return (${str})`))(geometry);
-    // const uid = Array.from({l})
+    const geometryDescriptor = new Function("geometry", `return (${str})`)(
+      geometry
+    );
+    const uid = Array.from({ length: 16 }, () =>
+      Math.floor(Math.random() * 256).toString(16)
+    ).join("");
     return `
+      <div id="${uid}">
       ${geometry.renderToString(geometryDescriptor)}
+      </div>
       <script type="module">
         import * as geometry from "/lab/diagram/geometry.mjs";
+        import * as lit from "lit1.3.0/lit-html.js";
         const descriptor = ${str};
+        geometry.instantiateDiagram(descriptor, document.getElementById("${uid}"), lit);
       </script>
     `;
   });
@@ -37,7 +45,7 @@ module.exports = function(config) {
       input: "content",
       output: ".tmp",
       includes: "../_includes",
-      data: "../_data"
-    }
+      data: "../_data",
+    },
   };
 };
