@@ -1,10 +1,14 @@
 export class Geometry {
   name = "";
-  cssClasses = [];
+  cssClasses = new Set();
 
   addClass(...classes) {
-    this.cssClasses.push(...classes);
+    this.cssClasses.add(...classes);
     return this;
+  }
+
+  classList() {
+    return [...this.cssClasses].join(" ");
   }
 
   setName(name) {
@@ -119,7 +123,7 @@ export class Point extends Geometry {
   render({ svg }) {
     return svg`<circle cx="${this.x}" cy="${
       this.y
-    }" r="5" class="type-point ${this.cssClasses.join(" ")}" data-name="${
+    }" r="5" class="type-point ${this.classList()}" data-name="${
       this.name
     }" />`;
   }
@@ -163,7 +167,7 @@ export class Line extends Geometry {
     const p2 = this.point.add(this.direction.copy().scalarSelf(1000));
     return svg`<line x1="${p1.x}" x2="${p2.x}" y1="${p1.y}" y2="${
       p2.y
-    }" class="${this.cssClasses.join(" ")}" data-type="line" data-name="${
+    }" class="${this.classList()}" data-type="line" data-name="${
       this.name
     }" />`;
   }
@@ -178,9 +182,11 @@ export class Segment extends Line {
   render({ svg }) {
     return svg`<line x1="${this.p1.x}" x2="${this.p2.x}" y1="${
       this.p1.y
-    }" y2="${this.p2.y}" class="type-line type-segment ${this.cssClasses.join(
-      " "
-    )}" data-name="${this.name}" />`;
+    }" y2="${
+      this.p2.y
+    }" class="type-line type-segment ${this.classList()}" data-name="${
+      this.name
+    }" />`;
   }
 }
 
@@ -196,9 +202,9 @@ export class HalfSegment extends Segment {
     const p2 = this.p1.add(this.direction.scalar(1000));
     return svg`<line x1="${this.p1.x}" x2="${p2.x}" y1="${this.p1.y}" y2="${
       p2.y
-    }" class="type-line type-segment type-halfsegment ${this.cssClasses.join(
-      " "
-    )}" data-type="line" data-name="${this.name}" />`;
+    }" class="type-line type-segment type-halfsegment ${this.classList()}" data-type="line" data-name="${
+      this.name
+    }" />`;
   }
 }
 
@@ -215,6 +221,10 @@ export class Lens extends Geometry {
   asLine() {
     const direction = this.fp.difference(this.center).orthogonalSelf();
     return new Line(this.center, direction);
+  }
+
+  axis() {
+    return new Line(this.center, this.fp.difference(this.center));
   }
 
   otherFocalPoint() {
@@ -243,7 +253,7 @@ export class Lens extends Geometry {
       this.r
     } 0 0 1 ${top.add(dir.scalar(-this.thickness / 2)).toSVG()} z" 
       data-name="${this.name}"
-      class="type-lens ${this.cssClasses.join(" ")}"
+      class="type-lens ${this.classList()}"
       />`;
   }
 
@@ -273,13 +283,16 @@ export class Lens extends Geometry {
     }
     const top = this.top();
     const bottom = this.bottom();
-    return new Polygon(
+    const ray1 = new HalfSegment(top, projectedP);
+    const ray2 = new HalfSegment(bottom, projectedP);
+    const polygon = new Polygon(
       p,
       top,
-      new HalfSegment(top, projectedP).pointAtDistance(distance),
-      new HalfSegment(bottom, projectedP).pointAtDistance(distance),
+      ray1.pointAtDistance(distance),
+      ray2.pointAtDistance(distance),
       bottom
     );
+    return { polygon, projectedP, ray1, ray2 };
   }
 }
 
@@ -294,7 +307,7 @@ export class Polygon extends Geometry {
       <path 
         data-type="polygon" 
         data-name="${this.name}"
-        class="${this.cssClasses.join(" ")}"
+        class="${this.classList()}"
         d="M ${this.points.map((p) => p.toSVG()).join(" L ")} z" 
       />
     `;
@@ -368,7 +381,7 @@ export function instantiateDiagram(diagram, target, { html, svg, render }) {
         >
           ${diagram.recalculate().map((item) => item.render({ html, svg }))}
           ${Object.values(diagram.handles).map((item) =>
-            item.render({ html, svg })
+            item.addClass("handle").render({ html, svg })
           )}
         </svg>
       `,

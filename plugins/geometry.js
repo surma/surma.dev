@@ -35,7 +35,7 @@ module.exports = (md, options) => {
       Math.floor(Math.random() * 256).toString(16)
     ).join("");
     return `
-      <div id="${uid}">
+      <div id="${uid}" class="geometrycontainer">
       ${geometry.renderToString(geometryDescriptor)}
       </div>
       <script type="module">

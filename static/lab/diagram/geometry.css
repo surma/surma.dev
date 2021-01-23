@@ -1,3 +1,8 @@
+.geometrycontainer {
+  display: flex;
+  justify-content: center;
+}
+
 svg.lensdiagram {
   background: white;
   padding: 1em;
@@ -6,16 +11,32 @@ svg.lensdiagram {
   stroke: hsla(240, 100%, 50%, 0.6);
   fill: hsla(240, 100%, 50%, 0.2);
 }
-.lensplane {
-  stroke: hsla(0, 0%, 0%, 0.4);
+.lensplane, .axis, .focalplane, .sensorplane {
+  stroke: hsla(240deg 100% 50% / 40%);
   stroke-dasharray: 4 1;
 }
-.light {
-  stroke-dasharray: 3 6;
-  stroke: hsl(20deg 100% 60% / 76%);
-  stroke-width: 3px;
-  fill: hsl(20deg 100% 60% / 26%);
-}
-.type-line {
+.sensor {
   stroke: black;
+  stroke-width: 3px;
+}
+.constructionray {
+  stroke-dasharray: 2 2;
+  stroke-width: 2px;
+  stroke: hsla(0, 0%, 0%, 0.4);
+}
+.light {
+  stroke: hsl(40deg 100% 70%);
+  stroke-width: 1px;
+  fill: hsl(40deg 100% 60% / 26%);
+}
+.image {
+  stroke-width: 3px;
+  stroke: hsl(12 100% 60% / 100%);
+}
+
+.type-point {
+  fill: hsl(0deg 0% 40%);
+}
+.handle {
+  fill: hsl(12 100% 60%);
 }
