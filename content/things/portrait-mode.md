@@ -76,8 +76,9 @@ The two most important parameters of a lens for this excursion is its focal leng
 <figcaption>Rays that enter the lens parallel to the lens axis will intersect the focal point.<br>(Orange points are interactive!)</figcaption>
 </figure>
 
+Since we are talking about thin lenses here, the reverse works as well: Rays that enter the lens by crossing the focal point when exit the lens parallel to the lens axis. This rule is surprisingly powerful and was my main tool while working all of this out. 
 
-
+Light in real life is barely ever parallel, but rather radiating out into all directions from a light source. Let’s imagine we have a point light that sends light rays into all directions, and we put it on one side of our lens. Where would we have to hold a piece of paper to see the light re-focused into a single point? There will be light rays hitting every part of our lens, but all we need to focus on is two of them: The one light ray that is parallel to the lens axis, and the other ray that intersects the focal point on that side of the lens. We know exactly how these rays will behave and they will (most likely) also intersect on the _other_ side of the lens. And where these two lines cross, all other rays will also join in.
 
 <figure>
 
@@ -86,20 +87,21 @@ The two most important parameters of a lens for this excursion is its focal leng
     width: 500,
     height: 300,
     viewBox: {
-      leftX: -300,
-      rightX: 200,
+      leftX: -200,
+      rightX: 300,
       topY: -150,
       bottomY: 150,
     },
     handles: {
-      p: new geometry.Point(150, 0.01).setName("p"),
+      p: new geometry.Point(-150, -20).setName("p"),
       fp: new geometry.Point(50, 0).setName("fp"),
     },
     recalculate() {
-      this.handles.fp.y = 0;
-      this.handles.p.x = Math.max(this.handles.p.x, this.handles.fp.x + 1);
       const lensCenter = new geometry.Point(0, 0);
+      this.handles.fp.y = 0;
       const lens = new geometry.Lens(lensCenter, this.handles.fp.difference(lensCenter), 150);
+
+      this.handles.p.x = Math.min(this.handles.p.x, lens.otherFocalPoint().x - 1);
       const lensplane = lens.asLine()
       const otherFp = lens.otherFocalPoint();
       const axis = lens.axis();
@@ -114,8 +116,6 @@ The two most important parameters of a lens for this excursion is its focal leng
         polygon.addClass("light"),
         otherFp,
         axis.addClass("axis"),
-        new geometry.Text(axis.pointAtDistance(-280), "Lens Axis"),
-        new geometry.Text(lensplane.pointAtDistance(120), "Lens Plane"),
         new geometry.Text(this.handles.fp.add(new geometry.Point(10, -5)), "Focal point"),
       ];
     },

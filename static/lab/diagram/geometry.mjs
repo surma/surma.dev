@@ -327,7 +327,9 @@ export class Lens extends Geometry {
     let otherFp = this.otherFocalPoint();
     // swap fp and otherFp if p is closer to otherFp.
     // aka ensure that fp is the focal point that is closer to p.
+    let factor = -1;
     if (p.distanceTo(otherFp) < p.distanceTo(fp)) {
+      factor = 1;
       [fp, otherFp] = [otherFp, fp];
     }
     const ray1a = new Segment(p, lensPlane.project(p));
@@ -336,7 +338,7 @@ export class Lens extends Geometry {
     const ray2a = new Segment(p, lensp);
     const ray2b = HalfSegment.withDirection(
       lensp,
-      this.axisDirection().scalarSelf(-1)
+      this.axisDirection().scalarSelf(factor)
     );
     const point = ray2b.intersect(ray1b);
     return {
