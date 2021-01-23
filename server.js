@@ -5,7 +5,7 @@ const node_modules = superstatic({
   config: {
     public: "node_modules"
   }
-}); 
+});
 const site = superstatic({
   config: {
     public: ".tmp"
@@ -13,6 +13,7 @@ const site = superstatic({
 });
 const app = connect();
 app.use("/node_modules", node_modules);
-app.use(site)
+app.use(site);
 
-app.listen(8080);
+const port = 8080;
+app.listen(port, () => console.log(`Listening on http://localhost:${port}`));

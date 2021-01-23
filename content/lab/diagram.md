@@ -1,5 +1,4 @@
 ---
-title: "Diagram maker"
 date: "2021-01-15"
 live: false
 ---
@@ -12,7 +11,7 @@ live: false
 console.log('asd');
 ```
 
-```geometry
+|||geometry
  {
     width: 500,
     height: 300,
@@ -48,4 +47,4 @@ console.log('asd');
       return [ray1a, ray1b, ray2a, ray2b, lens, lensplane, light];
     },
   }
-```
+|||

@@ -1,6 +1,7 @@
 const baseData = {
   name: "Surma",
-  bio: "Web Advocate @Google.\nCraving simplicity, finding it nowhere.\n“A bit of a ‘careless eager student’ archetype” according to HN.\nInternetrovert 🏳️‍🌈 He/him.",
+  bio:
+    "Web Advocate @Google.\nCraving simplicity, finding it nowhere.\n“A bit of a ‘careless eager student’ archetype” according to HN.\nInternetrovert 🏳️‍🌈 He/him.",
   avatar: "surma.jpg",
   socials: {
     twitter: "https://twitter.com/dassurma",

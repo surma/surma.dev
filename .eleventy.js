@@ -4,17 +4,17 @@ require("prismjs/components");
 const markdownIt = require("markdown-it");
 const markdownItKatex = require("./plugins/markdown-it-katex");
 const options = {
-  html: true,
+  html: true
 };
-const markdownLib = markdownIt(options).use(markdownItKatex);
-// Would you like some race conditions with your wine?
-let geometry;
-import("./static/lab/diagram/geometry.mjs").then((m) => (geometry = m));
+const geometryPlugin = require("./plugins/geometry");
+const markdownLib = markdownIt(options)
+  .use(markdownItKatex)
+  .use(geometryPlugin);
 
-module.exports = function (config) {
+module.exports = function(config) {
   // Copy /static to /
   config.addPassthroughCopy({
-    static: "/",
+    static: "/"
   });
   config.setLibrary("md", markdownLib);
   config.addPlugin(syntaxhighlight);
@@ -45,7 +45,7 @@ module.exports = function (config) {
       input: "content",
       output: ".tmp",
       includes: "../_includes",
-      data: "../_data",
-    },
+      data: "../_data"
+    }
   };
 };
