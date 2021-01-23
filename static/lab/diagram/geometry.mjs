@@ -265,6 +265,22 @@ export class Lens extends Geometry {
     const point = ray2b.intersect(ray1b);
     return { point, ray1a, ray1b, ray2a, ray2b };
   }
+
+  lightRays(p, { projectedP = null, distance = 1000 } = {}) {
+    if (!projectedP) {
+      const { point } = this.lensProject(p);
+      projectedP = point;
+    }
+    const top = this.top();
+    const bottom = this.bottom();
+    return new Polygon(
+      p,
+      top,
+      new HalfSegment(top, projectedP).pointAtDistance(distance),
+      new HalfSegment(bottom, projectedP).pointAtDistance(distance),
+      bottom
+    );
+  }
 }
 
 export class Polygon extends Geometry {

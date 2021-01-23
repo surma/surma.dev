@@ -35,16 +35,11 @@ console.log('asd');
       const { point, ray1a, ray1b, ray2a, ray2b } = lens.lensProject(
         this.handles.p
       );
-      const top = lens.top();
-      const bottom = lens.bottom();
-      const light = new geometry.Polygon(
-        this.handles.p,
-        top,
-        new geometry.HalfSegment(top, point).pointAtDistance(1000),
-        new geometry.HalfSegment(bottom, point).pointAtDistance(1000),
-        bottom
-      ).addClass("light");
-      return [ray1a, ray1b, ray2a, ray2b, lens, lensplane, light];
+      return [
+        ray1a, ray1b, ray2a, ray2b, 
+        lens, lensplane, 
+        lens.lightRays(this.handles.p, {projectedP: point}).addClass("light")
+      ];
     },
   }
 |||
