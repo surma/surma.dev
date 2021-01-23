@@ -1,16 +1,21 @@
 .geometrycontainer {
-  display: flex;
-  justify-content: center;
   font-size: 16px;
   color: black;
-}
-[data-type="text"] {
-  fill: black;
+  --light-color: hsl(40deg 100% 70%);
 }
 
-svg.lensdiagram {
+.type-text {
+  fill: black;
+}
+.type-measure {
+  stroke: black;
+}
+
+svg.geometry {
   background: white;
   padding: 1em;
+  width: 100%;
+  box-sizing: border-box;
 }
 .lens {
   stroke: hsla(240, 100%, 50%, 0.6);
@@ -44,4 +49,11 @@ svg.lensdiagram {
 }
 .handle {
   fill: hsl(12 100% 60%);
+}
+.ray {
+  stroke: var(--light-color);
+  fill: var(--light-color);
+}
+.focallength {
+  stroke-width: 2px;
 }

@@ -22,7 +22,7 @@ export class Point extends Geometry {
     super();
     this.x = x;
     this.y = y;
-    this.vicinity = 10;
+    this.vicinity = 20;
   }
 
   differenceSelf(other) {
@@ -235,6 +235,30 @@ export class Arrow extends Segment {
   }
 }
 
+export class MeasureLine extends Segment {
+  size = 10;
+
+  render({ svg }) {
+    const barDir = this.direction.orthogonal();
+    return svg`
+      <g class="type-line type-measure type-segment ${this.classList()}" data-name="${
+      this.name
+    }">
+        <line x1="${this.p1.x}" x2="${this.p2.x}" y1="${this.p1.y}" y2="${
+      this.p2.y
+    }" />
+        <path d="M ${this.p1
+          .add(barDir.scalar(-this.size / 2))
+          .toSVG()} L ${this.p1
+      .add(barDir.scalar(this.size / 2))
+      .toSVG()} M ${this.p2
+      .add(barDir.scalar(-this.size / 2))
+      .toSVG()} L ${this.p2.add(barDir.scalar(this.size / 2)).toSVG()}" />
+      </g>
+      `;
+  }
+}
+
 export class Lens extends Geometry {
   constructor(center, fp, aperture) {
     super();
@@ -372,9 +396,8 @@ export class Text extends Geometry {
   render({ svg }) {
     return svg`
       <text 
-        data-type="text" 
         data-name="${this.name}"
-        class="${this.classList()}"
+        class="type-text ${this.classList()}"
       x="${this.point.x}" y="${this.point.y}">${this.text}</text>
     `;
   }
@@ -396,7 +419,6 @@ export function instantiateDiagram(diagram, target, { html, svg, render }) {
     return [svgP.x, svgP.y];
   }
   function start(ev) {
-    ev.preventDefault();
     const svg = ev.target.closest("svg");
     const [x, y] = screenToSvgCoordinates(
       svg,
@@ -408,6 +430,7 @@ export function instantiateDiagram(diagram, target, { html, svg, render }) {
     )?.[0];
     if (itemName) {
       draggedHandle = itemName;
+      ev.preventDefault();
     }
   }
   function drag(ev) {
@@ -441,7 +464,7 @@ export function instantiateDiagram(diagram, target, { html, svg, render }) {
           width="${diagram.width}"
           height="${diagram.height}"
           viewBox="${serializeViewBox(diagram.viewBox)}"
-          class="lensdiagram"
+          class="geometry"
         >
           ${diagram.recalculate().map((item) => item.render({ html, svg }))}
           ${Object.values(diagram.handles).map((item) =>
@@ -468,7 +491,7 @@ export function renderToString(diagram) {
           width="${diagram.width}"
           height="${diagram.height}"
           viewBox="${serializeViewBox(diagram.viewBox)}"
-          class="lensdiagram"
+          class="geometry"
         >
           ${diagram.recalculate().map((item) => item.render(mocks))}
           ${Object.values(diagram.handles).map((item) => item.render(mocks))}
