@@ -141,9 +141,13 @@ export class Line extends Geometry {
   }
 
   project(p) {
-    return this.direction.scalar(
-      p.dotProduct(this.direction) / this.direction.dotProduct(this.direction)
-    );
+    const direction = this.direction.normalize();
+    return direction
+      .scalar(
+        p.difference(this.point).dotProduct(direction) /
+          direction.dotProduct(direction)
+      )
+      .addSelf(this.point);
   }
 
   intersect(other) {
@@ -215,24 +219,34 @@ export class Lens extends Geometry {
     this.fp = fp;
     this.aperture = aperture;
     this.thickness = 10;
-    this.r = aperture * 3;
+  }
+
+  planeDirection() {
+    return this.fp.normalize().orthogonalSelf();
+  }
+
+  axisDirection() {
+    return this.fp.normalize();
   }
 
   asLine() {
-    const direction = this.fp.difference(this.center).orthogonalSelf();
-    return new Line(this.center, direction);
+    return new Line(this.center, this.planeDirection());
   }
 
   axis() {
-    return new Line(this.center, this.fp.difference(this.center));
+    return new Line(this.center, this.axisDirection());
+  }
+
+  focalPoint() {
+    return this.center.add(this.fp);
   }
 
   otherFocalPoint() {
-    return this.fp.mirrorOn(this.center);
+    return this.focalPoint().mirrorOnSelf(this.center);
   }
 
   top() {
-    return this.center.add(this.asLine().direction.scalar(this.aperture / 2));
+    return this.center.add(this.planeDirection().scalar(this.aperture / 2));
   }
 
   bottom() {
@@ -240,18 +254,21 @@ export class Lens extends Geometry {
   }
 
   render({ svg }) {
-    const dir = this.fp.difference(this.center).normalizeSelf();
+    const dir = this.fp.normalize();
 
+    const r = this.r ?? Math.max(this.fp.length() ** 1.2, this.aperture);
     const top = this.top();
     const bottom = this.bottom();
     return svg`
         <path class="lens" d="M ${top.toSVG()} l ${dir
       .scalar(this.thickness / 2)
-      .toSVG()} A ${this.r} ${this.r} 0 0 1 ${bottom
+      .toSVG()} A ${r} ${r} 0 0 1 ${bottom
       .add(dir.scalar(this.thickness / 2))
-      .toSVG()} l ${dir.scalar(-this.thickness).toSVG()} A ${this.r} ${
-      this.r
-    } 0 0 1 ${top.add(dir.scalar(-this.thickness / 2)).toSVG()} z" 
+      .toSVG()} l ${dir
+      .scalar(-this.thickness)
+      .toSVG()} A ${r} ${r} 0 0 1 ${top
+      .add(dir.scalar(-this.thickness / 2))
+      .toSVG()} z" 
       data-name="${this.name}"
       class="type-lens ${this.classList()}"
       />`;
@@ -259,8 +276,10 @@ export class Lens extends Geometry {
 
   lensProject(p) {
     const lensPlane = this.asLine();
-    let fp = this.fp;
+    let fp = this.focalPoint();
     let otherFp = this.otherFocalPoint();
+    // swap fp and otherFp if p is closer to otherFp.
+    // aka ensure that fp is the focal point that is closer to p.
     if (p.distanceTo(otherFp) < p.distanceTo(fp)) {
       [fp, otherFp] = [otherFp, fp];
     }
@@ -270,10 +289,16 @@ export class Lens extends Geometry {
     const ray2a = new Segment(p, lensp);
     const ray2b = HalfSegment.withDirection(
       lensp,
-      otherFp.difference(fp).normalizeSelf()
+      this.axisDirection().scalarSelf(-1)
     );
     const point = ray2b.intersect(ray1b);
-    return { point, ray1a, ray1b, ray2a, ray2b };
+    return {
+      point,
+      ray1a,
+      ray1b,
+      ray2a,
+      ray2b,
+    };
   }
 
   lightRays(p, { projectedP = null, distance = 1000 } = {}) {
@@ -319,8 +344,6 @@ function serializeViewBox(vb) {
     vb.bottomY - vb.topY
   }`;
 }
-
-// function flipsFromVie
 
 export function instantiateDiagram(diagram, target, { html, svg, render }) {
   let draggedHandle = null;

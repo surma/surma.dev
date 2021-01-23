@@ -20,13 +20,14 @@ live: false
       bottomY: 150,
     },
     handles: {
-      p: new geometry.Point(150, 20).setName("p"),
+      p: new geometry.Point(150, 0.01).setName("p"),
       fp: new geometry.Point(50, 0).setName("fp"),
     },
     recalculate() {
       this.handles.fp.y = 0;
       this.handles.p.x = Math.max(this.handles.p.x, this.handles.fp.x + 1);
-      const lens = new geometry.Lens(new geometry.Point(0, 0), this.handles.fp, 150);
+      const lensCenter = new geometry.Point(0, 0);
+      const lens = new geometry.Lens(lensCenter, this.handles.fp.difference(lensCenter), 150);
       const lensplane = lens.asLine()
       const otherFp = lens.otherFocalPoint();
       const axis = lens.axis();
@@ -63,11 +64,11 @@ live: false
       bottomY: 150,
     },
     handles: {
-      p: new geometry.Point(150, 20).setName("p"),
+      p: new geometry.Point(150, -120).setName("p"),
       op: new geometry.Point(400, 10).setName("l"),
     },
     recalculate() {
-      this.handles.p.y = 0;
+      this.handles.p.y = -120;
       const f = 50;
       const lens = new geometry.Lens(new geometry.Point(0, 0), new geometry.Point(f, 0), 3*f);
 
@@ -80,7 +81,6 @@ live: false
       const dlp = pointToSensor/2 + Math.sqrt(pointToSensor**2/4 - pointToSensor * f);
       const dsl = pointToSensor - dlp;
       lens.center.x = sensor.point.x + dsl;
-      lens.fp.x = lens.center.x + f;
 
       const {polygon, ray1, ray2} = lens.lightRays(this.handles.op);
       const p1 = sensorplane.intersect(ray1);
