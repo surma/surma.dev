@@ -212,6 +212,29 @@ export class HalfSegment extends Segment {
   }
 }
 
+export class Arrow extends Segment {
+  size = 10;
+
+  render({ svg }) {
+    return svg`
+      <g class="type-line type-segment ${this.classList()}" data-name="${
+      this.name
+    }">
+        <line x1="${this.p1.x}" x2="${this.p2.x}" y1="${this.p1.y}" y2="${
+      this.p2.y
+    }" />
+        <path d="M ${this.p1.toSVG()} L ${this.p1
+      .difference(this.direction.scalar(-this.size))
+      .addSelf(this.direction.orthogonal().scalarSelf(-this.size / 2))
+      .toSVG()} L ${this.p1
+      .difference(this.direction.scalar(-this.size))
+      .addSelf(this.direction.orthogonal().scalarSelf(this.size / 2))
+      .toSVG()} z" />
+      </g>
+      `;
+  }
+}
+
 export class Lens extends Geometry {
   constructor(center, fp, aperture) {
     super();

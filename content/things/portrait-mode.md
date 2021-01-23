@@ -128,15 +128,15 @@ live: false
       this.handles.fp = this.handles.fp.difference(lensCenter).normalizeSelf().scalarSelf(3*f).addSelf(lensCenter);
       const lens = new geometry.Lens(lensCenter, this.handles.fp.difference(lensCenter).normalizeSelf().scalarSelf(f), 2*f);
 
-      const sensorplane = new geometry.Line(new geometry.Point(0, 0), new geometry.Point(0, 1));
+      const sensorplane = new geometry.Line(new geometry.Point(0, 0), new geometry.Point(0, -1));
       const sensorTop = sensorplane.pointAtDistance(20);
       const sensorBottom = sensorplane.pointAtDistance(-20);
-      const sensor = new geometry.Segment(sensorTop, sensorBottom);
+      const sensor = new geometry.Arrow(sensorTop, sensorBottom);
 
       const {point: projectedSensorTop} = lens.lensProject(sensorTop);
       const {point: projectedSensorBottom} = lens.lensProject(sensorBottom);
       const projectedSensorPlane = geometry.Line.throughPoints(projectedSensorTop, projectedSensorBottom);
-      const projectedSensor = new geometry.Segment(projectedSensorTop, projectedSensorBottom);
+      const projectedSensor = new geometry.Arrow(projectedSensorTop, projectedSensorBottom);
 
       const topLine = new geometry.Line(new geometry.Point(0, -70), new geometry.Point(1, 0));
       return [
