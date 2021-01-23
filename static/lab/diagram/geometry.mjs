@@ -339,6 +339,24 @@ export class Polygon extends Geometry {
   }
 }
 
+export class Text extends Geometry {
+  constructor(point, text) {
+    super();
+    this.point = point;
+    this.text = text;
+  }
+
+  render({ svg }) {
+    return svg`
+      <text 
+        data-type="text" 
+        data-name="${this.name}"
+        class="${this.classList()}"
+      x="${this.point.x}" y="${this.point.y}">${this.text}</text>
+    `;
+  }
+}
+
 function serializeViewBox(vb) {
   return `${vb.leftX} ${vb.topY} ${vb.rightX - vb.leftX} ${
     vb.bottomY - vb.topY
