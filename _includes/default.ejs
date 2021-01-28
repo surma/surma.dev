@@ -176,15 +176,17 @@
 </footer>
 </body>
 <script>
-  window.ga = window.ga || ((...args) => (ga.q = ga.q || []).push(args));
-  ga("create", "UA-69989029-1", "auto");
-  ga("set", "transport", "beacon");
-  ga("send", "pageview");
-  // Load the GA script
-  const s = document.createElement("script");
-  s.src = "https://www.google-analytics.com/analytics.js";
-  document.head.appendChild(s);
+  window._gaID = "UA-69989029-1"
+  // Send page view immediately.
+  fetch('https://google-analytics.com/collect?' + new URLSearchParams([
+    ['v', '1'],
+    ['t', 'pageview'],
+    ['tid', _gaID],
+    ['cid', Math.random()],
+    ['dl', location]
+  ]));
 </script>
+<script src="/vitals.js" type="module"></script>
 <% if(typeof disableNoise !== "boolean" || !disableNoise) { %>
 <script src="/noise.js" type="module"></script>
 <% } %>

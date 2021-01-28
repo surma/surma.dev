@@ -14,7 +14,8 @@
     "parcel": "^2.0.0-nightly.486",
     "rimraf": "^3.0.0",
     "rollup": "^1.27.9",
-    "rollup-plugin-node-resolve": "^5.2.0"
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "web-vitals": "^1.1.0"
   },
   "scripts": {
     "clean": "rm -rf build .tmp .parcel-cache",
