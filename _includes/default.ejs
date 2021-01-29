@@ -184,6 +184,7 @@
       tid: "UA-69989029-1", // Tracking ID.
       cid: `${Date.now()}${Math.random()}`, // Client ID.
       dl: location.href, // Document location.
+      aip: 1, // Anonymize IP
     },
     send(additionalParams) {
       navigator.sendBeacon(
