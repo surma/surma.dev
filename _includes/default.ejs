@@ -176,15 +176,26 @@
 </footer>
 </body>
 <script>
-  window._gaID = "UA-69989029-1"
-  // Send page view immediately.
-  fetch('https://google-analytics.com/collect?' + new URLSearchParams([
-    ['v', '1'],
-    ['t', 'pageview'],
-    ['tid', _gaID],
-    ['cid', Math.random()],
-    ['dl', location]
-  ]));
+  self._ga = {
+    // Full Measurement Protocol param reference:
+    // https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters
+    data: {
+      v: "1", // Measurement Protocol version.
+      tid: "UA-69989029-1", // Tracking ID.
+      cid: `${Date.now()}${Math.random()}`, // Client ID.
+      dl: location.href, // Document location.
+    },
+    send(additionalParams) {
+      navigator.sendBeacon(
+        "https://google-analytics.com/collect",
+        new URLSearchParams({
+          ...this.data,
+          ...additionalParams,
+        }).toString()
+      );
+    },
+  };
+  _ga.send({ t: "pageview" });
 </script>
 <script src="/vitals.js" type="module"></script>
 <% if(typeof disableNoise !== "boolean" || !disableNoise) { %>
