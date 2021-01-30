@@ -14,9 +14,9 @@ Portrait mode blurs out the part of the image that is in the background to make 
 Alright, I will admit: The titular question is not actually the question that prompted me to write this article. What I was trying to figure out if the [significantly bigger sensor in the Ricoh GR III will give let me use a thinner depth of field than the Canon PowerShot G7 X Mark III][camera comparison]. I started researching to understand Depth of Field (DoF), which is the area in your camera’s view that is considered “in focus”. The more I got into it, the more I realized that the underlying physics also explain why on your phone’s camera pretty much _everything_ is in focus. But before we can talk about cameras and sensors, we have to go back to high school and catch up on some basic optics!
 
 ## Lenses and light rays
-_Real_ lenses, and especially real _camera_ lenses are quite complicated. To keep it somewhat manageable, I wil assume that we are working with “perfect” lenses throughout this article. They don’t have any chromatic abberation (i.e. they don’t bend different wave lengths differently), they don’t have vignetting (i.e. the don’t lose light at the edges) and they are “thin” lenses (i.e. they can be modeled with simplified formulas). I will also only look at bi-convex lenses. While real camera lenses contain all kinds of lenses (concave, convex-concave, aspherical, etc), they aim to behave like a single biconvex lens.
+In the earlier days of photography, lenses were simple. Today’s lenses, on the other hand, are quite complicated. They fulfil the same purpose, but with a whole bunch of benefits over their earlier counterparts. To keep this article somewhat manageable, I will focus on the earlier simpler lenses. Not only that, but I will assume that we are working with “perfect” lenses throughout this article. They don’t have any chromatic abberation (i.e. they don’t bend different wave lengths differently), they don’t have vignetting (i.e. the don’t lose light at the edges) and they are “thin” lenses (i.e. they can be modeled with simplified formulas). I will also only look at bi-convex lenses. Contemporary camera lenses contain all kinds of lenses (concave, convex-concave, aspherical, etc), but they only do that get all these benefits that they have over their predecessors.
 
-The two most important parameters of a lens for this excursion is its focal length $f$ and diameter $D$. The diameter is literally that, determining the size of the piece of glass. The smaller focal length $f$, the more the light rays are bent. The bigger the focal length $f$, the less they get bent. In the our case of “thin lenses”, the focal length forms a tool for us to _geometrically_ construct where light rays get focused. The rule is that rays that enter the lens parallel to the lens axis, will intersect in the focal point.
+The two most important parameters of a lens for this excursion is its focal length $f$ and diameter $D$. The diameter is literally that, determining the size of the piece of glass. The smaller focal length $f$, the more the light rays are bent when they pass through the lens. The bigger the focal length $f$, the less they get bent. In the our case of “thin lenses”, the focal length describe the distance of the focal point from the center of the lens. The rule is that rays that enter the lens parallel to the lens axis, will intersect the focal point.
 
 <figure>
 
@@ -76,9 +76,11 @@ The two most important parameters of a lens for this excursion is its focal leng
 <figcaption>Rays that enter the lens parallel to the lens axis will intersect the focal point.<br>(Orange points are interactive!)</figcaption>
 </figure>
 
-Since we are talking about thin lenses here, the reverse works as well: Rays that enter the lens by crossing the focal point when exit the lens parallel to the lens axis. This rule is surprisingly powerful and was my main tool while working all of this out. 
+The reverse works as well: Rays that enter the lens by crossing the focal point when exit the lens parallel to the lens axis. This rule is surprisingly powerful and will allow us to figure a whole lot of interesting facts.
 
-Light in real life is barely ever parallel, but rather radiating out into all directions from a light source. Let’s imagine we have a point light that sends light rays into all directions, and we put it on one side of our lens. Where would we have to hold a piece of paper to see the light re-focused into a single point? There will be light rays hitting every part of our lens, but all we need to focus on is two of them: The one light ray that is parallel to the lens axis, and the other ray that intersects the focal point on that side of the lens. We know exactly how these rays will behave and they will (most likely) also intersect on the _other_ side of the lens. And where these two lines cross, all other rays will also join in.
+Light in real life is barely ever parallel, but rather radiating out into all directions. More specifically, apart from a few notable exceptions (like mirrors), every material reflects the light that it is hit by evenly into all directions. Let’s imagine we have a point that sends light rays into all directions and we put it on one side of our lens. Considering that people were able to take pictures with these simple lenses, there has to be a place on the other side of the lens where all the light rays geet focused back into a single point. 
+
+While there will be light rays hitting every part of our lens, we only need to focus on two of them to figure this out: The one light ray that is parallel to the lens axis, and the other ray that intersects the focal point. We know how these rays will behave and they will (most likely) also intersect on the _other_ side of the lens. And where these two lines cross, all other rays will intersect as well.
 
 <figure>
 
@@ -109,6 +111,7 @@ Light in real life is barely ever parallel, but rather radiating out into all di
         this.handles.p
       );
       const {polygon, ray1, ray2} = lens.lightRays(this.handles.p, {projectedP: point});
+      const bottomLine = new geometry.Line(new geometry.Point(0, 120), new geometry.Point(1, 0));
       return [
         ...[ray1a, ray1b, ray2a, ray2b].map(v => v.addClass("constructionray")),
         lens.addClass("lens"), 
@@ -117,6 +120,11 @@ Light in real life is barely ever parallel, but rather radiating out into all di
         otherFp,
         axis.addClass("axis"),
         new geometry.Text(this.handles.fp.add(new geometry.Point(10, -5)), "Focal point"),
+        point,
+        new geometry.MeasureLine(bottomLine.project(lensCenter), bottomLine.project(this.handles.p)).addClass("focallength"),
+        new geometry.MeasureLine(bottomLine.project(lensCenter), bottomLine.project(point)).addClass("focallength"),
+        new geometry.Text(bottomLine.project(lensCenter).add(new geometry.Point(-20, -5)), "s"),
+        new geometry.Text(bottomLine.project(lensCenter).add(new geometry.Point(20, -5)), "s'"),
       ];
     },
   }
@@ -125,6 +133,71 @@ Light in real life is barely ever parallel, but rather radiating out into all di
 <figcaption>A lens focuses light rays onto a point.</figcaption>
 
 </figure>
+
+The point on the left is often just called “object”, while point on the right is called the “image”. From this _geometric_ construction we can derive a nice formula describing the relationship between the object’s distance and the image’s distance from the center of the lens:
+
+$$
+\frac{1}{s} + \frac{1}{s'} = \frac{1}{f}
+$$
+
+### Image planes
+
+Now that we can figure out where light from a single point will be focused on the other side of the lens, we can start talking about photography. To take a picture we have to have something that... takes the picture. Yes. Very good explanation. In analogue photography, that is the film or photo paper, in digital cameras — and for the remainder of this article — it’s the sensor. The distance of the sensor to the lens determines which part of the world is “in focus”. The size of the sensor, combined with the focal length of the lens determines the angle of view that will be capture.
+
+Note that in all the previous diagrams the direction of the light is actually irrellevant. The roles of object and image can be reversed and not change the outcome of the geometric construction. This comes in useful: We can place our sensor on one side of the lens, and project them through the lens. The “image” of the sensor is the area of the real world that will be projected onto the sensor.
+
+<figure>
+
+|||geometry
+ {
+    width: 800,
+    height: 300,
+    viewBox: {
+      leftX: -150,
+      rightX: 650,
+      topY: -150,
+      bottomY: 150,
+    },
+    handles: {
+      l: new geometry.Point(0, 0),
+      s: new geometry.Point(-80, -50),
+      fp: new geometry.Point(50, 0),
+    },
+    recalculate() {
+      this.handles.l.y = 0;
+      this.handles.s.x = this.viewBox.leftX + 20;
+      this.handles.s.y = Math.min(this.handles.s.y, 0);
+      this.handles.fp.y = 0;
+      this.handles.fp.x = Math.max(20, this.handles.fp.x);
+      const lensCenter = this.handles.l;
+      const fp = this.handles.fp.difference(lensCenter);
+      const lens = new geometry.Lens(lensCenter, fp, 150);
+
+      const sensorplane = new geometry.Line(this.handles.s, new geometry.Point(0, 1));
+      const sensorTop = this.handles.s
+      const sensorBottom = this.handles.s.mirrorOn(sensorplane.project(lensCenter));
+      const sensor = new geometry.Arrow(sensorTop, sensorBottom);
+
+      const {point: sensorTopP} = lens.lensProject(sensorTop);
+      const {point: sensorBottomP} = lens.lensProject(sensorBottom);
+      const sensorP = new geometry.Arrow(sensorTopP, sensorBottomP);
+      const angle = new geometry.Polygon(this.handles.fp, sensorTopP, sensorBottomP);
+      return [
+        sensorplane.addClass("sensorplane"),
+        sensor.addClass("sensor"),
+        lens.addClass("lens"),
+        new geometry.Text(new geometry.Point(this.viewBox.leftX + 30, -120), "Sensor plane"),
+        sensorP.addClass("sensor"),
+        angle.addClass("fov")
+      ];
+    },
+  }
+|||
+
+<figcaption>A lens focuses light rays onto a point.</figcaption>
+
+</figure>
+
 
 <figure>
 

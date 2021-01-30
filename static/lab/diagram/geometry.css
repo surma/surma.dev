@@ -30,14 +30,16 @@ svg.geometry {
   stroke-width: 3px;
 }
 .constructionray {
-  stroke-dasharray: 2 2;
-  stroke-width: 2px;
-  stroke: hsla(0, 0%, 0%, 0.4);
+  stroke-width: 3px;
+  stroke: hsl(40deg 100% 70%);
 }
 .light {
   stroke: hsl(40deg 100% 70%);
   stroke-width: 1px;
   fill: hsl(40deg 100% 60% / 26%);
+}
+.fov {
+  fill: hsl(230deg 100% 60% / 26%);
 }
 .image {
   stroke-width: 3px;
