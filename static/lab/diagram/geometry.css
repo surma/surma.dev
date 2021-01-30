@@ -50,7 +50,7 @@ svg.geometry {
   fill: hsl(0deg 0% 40%);
 }
 .handle {
-  fill: hsl(12 100% 60%);
+  fill: hsl(12deg 100% 60%);
 }
 .ray {
   stroke: var(--light-color);

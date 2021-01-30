@@ -314,4 +314,6 @@ This journey started in the context of camera lenses, but camera lenses are comp
 
 For most intents and purposes, these series of individual lenses
 
+<script src="/lab/diagram/geometry-intromate.js" type="module"></script>
+
 [camera comparison]: https://www.dpreview.com/products/compare/side-by-side?products=ricoh_griii&products=canon_g7xiii
