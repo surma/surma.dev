@@ -280,6 +280,10 @@ export class Lens extends Geometry {
     return new Line(this.center, this.planeDirection());
   }
 
+  plane() {
+    return this.asLine();
+  }
+
   axis() {
     return new Line(this.center, this.axisDirection());
   }
@@ -301,20 +305,14 @@ export class Lens extends Geometry {
   }
 
   render({ svg }) {
-    const dir = this.fp.normalize();
 
-    const r = this.r ?? Math.max(this.fp.length() ** 1.2, this.aperture);
+    // const r = this.r ?? Math.max(this.fp.length() ** 1.2, this.aperture);
     const top = this.top();
     const bottom = this.bottom();
+    const r = top.difference(this.focalPoint()).length();
     return svg`
-        <path class="lens" d="M ${top.toSVG()} l ${dir
-      .scalar(this.thickness / 2)
-      .toSVG()} A ${r} ${r} 0 0 1 ${bottom
-      .add(dir.scalar(this.thickness / 2))
-      .toSVG()} l ${dir
-      .scalar(-this.thickness)
+        <path class="lens" d="M ${top.toSVG()} A ${r} ${r} 0 0 1 ${bottom
       .toSVG()} A ${r} ${r} 0 0 1 ${top
-      .add(dir.scalar(-this.thickness / 2))
       .toSVG()} z" 
       data-name="${this.name}"
       class="type-lens ${this.classList()}"

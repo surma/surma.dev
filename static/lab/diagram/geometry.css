@@ -59,3 +59,9 @@ svg.geometry {
 .focallength {
   stroke-width: 2px;
 }
+
+.dashed {
+  stroke-dasharray: 2 2;
+  stroke-width: 1px;
+  stroke:  hsla(0, 0%, 0%, 0.4);
+}

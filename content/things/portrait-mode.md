@@ -78,6 +78,8 @@ The two most important parameters of a lens for this excursion is its focal leng
 
 The reverse works as well: Rays that enter the lens by crossing the focal point when exit the lens parallel to the lens axis. This rule is surprisingly powerful and will allow us to figure a whole lot of interesting facts.
 
+> **Note:** You’ll notice that lenses with a short focal length are anything but thin. We’ll still pretend that they fall into the “thin lens” category for the remainder of this article.
+
 Light in real life is barely ever parallel, but rather radiating out into all directions. More specifically, apart from a few notable exceptions (like mirrors), every material reflects the light that it is hit by evenly into all directions. Let’s imagine we have a point that sends light rays into all directions and we put it on one side of our lens. Considering that people were able to take pictures with these simple lenses, there has to be a place on the other side of the lens where all the light rays geet focused back into a single point. 
 
 While there will be light rays hitting every part of our lens, we only need to focus on two of them to figure this out: The one light ray that is parallel to the lens axis, and the other ray that intersects the focal point. We know how these rays will behave and they will (most likely) also intersect on the _other_ side of the lens. And where these two lines cross, all other rays will intersect as well.
@@ -136,15 +138,26 @@ While there will be light rays hitting every part of our lens, we only need to f
 
 The point on the left is often just called “object”, while point on the right is called the “image”. From this _geometric_ construction we can derive a nice formula describing the relationship between the object’s distance and the image’s distance from the center of the lens:
 
+<figure>
+
 $$
 \frac{1}{s} + \frac{1}{s'} = \frac{1}{f}
 $$
 
-### Image planes
+<figcaption>
 
-Now that we can figure out where light from a single point will be focused on the other side of the lens, we can start talking about photography. To take a picture we have to have something that... takes the picture. Yes. Very good explanation. In analogue photography, that is the film or photo paper, in digital cameras — and for the remainder of this article — it’s the sensor. The distance of the sensor to the lens determines which part of the world is “in focus”. The size of the sensor, combined with the focal length of the lens determines the angle of view that will be capture.
+The “thin lens equation” describes the relationship between the object’s distance $s$, and the image’s distance $s'$ and the lens’ focal length $f$.
 
-Note that in all the previous diagrams the direction of the light is actually irrellevant. The roles of object and image can be reversed and not change the outcome of the geometric construction. This comes in useful: We can place our sensor on one side of the lens, and project them through the lens. The “image” of the sensor is the area of the real world that will be projected onto the sensor.
+</figcaption>
+</figure>
+
+### The image plane & the focus plane
+
+You’ll notice that if you move the object parallel to the lens plane, the image will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. Secondly, instead of talking about individual points and where their image is, we can talk about the “image plane” and the “focus plane”. We have now entered the territory of photography.
+
+To take a picture we have to have something that... takes the picture. Yes. Very good explanation. In analogue photography, that is the film or photo paper, in digital cameras — and for the remainder of this article — it’s the sensor. The distance of the sensor to the lens determines which part of the world is “in focus”. The size of the sensor, combined with the focal length of the lens determines the angle of view that will be capture. While some cameras and lenses allow you to have arbitrary angles between image plane and lens plane, we will keep them parallel to each other. For now.
+
+Note that in all the previous diagrams the direction of the light is actually irrellevant. The roles of object and image can be reversed and the diagrams wouldn’t change. With this observation, we can answer the question where the focus plane is. We can place our sensor on one side of the lens, and project it through the lens. The “image” of the sensor is the area of the real world that is in focus; the part of the world that will be projected onto the sensor.
 
 <figure>
 
@@ -182,13 +195,19 @@ Note that in all the previous diagrams the direction of the light is actually ir
       const {point: sensorBottomP} = lens.lensProject(sensorBottom);
       const sensorP = new geometry.Arrow(sensorTopP, sensorBottomP);
       const angle = new geometry.Polygon(this.handles.fp, sensorTopP, sensorBottomP);
+      const lensTop = lens.plane().project(sensorTop);
+      const lensBottom = lens.plane().project(sensorBottom);
       return [
         sensorplane.addClass("sensorplane"),
         sensor.addClass("sensor"),
         lens.addClass("lens"),
         new geometry.Text(new geometry.Point(this.viewBox.leftX + 30, -120), "Sensor plane"),
         sensorP.addClass("sensor"),
-        angle.addClass("fov")
+        angle.addClass("fov"),
+        new geometry.Segment(sensorTop, lensTop).addClass("dashed"),
+        new geometry.Segment(sensorBottom, lensBottom).addClass("dashed"),
+        new geometry.HalfSegment(lensBottom, this.handles.fp).addClass("dashed"),
+        new geometry.HalfSegment(lensTop, this.handles.fp).addClass("dashed"),
       ];
     },
   }
@@ -198,6 +217,14 @@ Note that in all the previous diagrams the direction of the light is actually ir
 
 </figure>
 
+<figure>
+  <img src="intrepid.jpg" width="609" height="457" style="max-width: 609px">
+  <figcaption>
+  
+  The [Intrepid Mk 4][intrepid] is a contemporary large-format camera, but works in the same way the first cameras did.
+
+  </figcaption>
+</figure>
 
 <figure>
 
@@ -317,3 +344,4 @@ For most intents and purposes, these series of individual lenses
 <script src="/lab/diagram/geometry-intromate.js" type="module"></script>
 
 [camera comparison]: https://www.dpreview.com/products/compare/side-by-side?products=ricoh_griii&products=canon_g7xiii
+[intrepid]: https://intrepidcamera.co.uk/
