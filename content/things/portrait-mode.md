@@ -11,12 +11,23 @@ Portrait mode blurs out the part of the image that is in the background to make 
 
 <link rel="stylesheet" href="/lab/diagram/geometry.css" />
 
-Alright, I will admit: The titular question is not actually the question that prompted me to write this article. What I was trying to figure out if the [significantly bigger sensor in the Ricoh GR III will give let me use a thinner depth of field than the Canon PowerShot G7 X Mark III][camera comparison]. I started researching to understand Depth of Field (DoF), which is the area in your camera’s view that is considered “in focus”. The more I got into it, the more I realized that the underlying physics also explain why on your phone’s camera pretty much _everything_ is in focus. But before we can talk about cameras and sensors, we have to go back to high school and catch up on some basic optics!
+Alright, I will admit: The titular question is not actually the question that prompted me to write this article. What I was trying to figure out if the [significantly bigger sensor in the Ricoh GR III will give let me use a thinner depth of field than the Canon PowerShot G7 X Mark III][camera comparison]. I started researching to understand Depth of Field (DoF), which is the area in your camera’s view that is considered “in focus”. The more I got into it, the more I realized that the underlying physics also explain why on your phone’s camera pretty much _everything_ is in focus. 
+
+<figure>
+  <img src="./comparison.jpg" width="1280" height="563">
+  <figcaption>
+    Left: Picture taken in “Portrait mode” on my Pixel 5, without the blur effect.<br>
+    Middle: The same picture, with the blur effect.<br>
+    Right: A picture taken with my (full-frame) Canon EOS R with my zoom lens at 48mm at f/2.8.<br>
+    All pictures cropped to the same aspect ratio (2:3) and slightly color-graded.
+</figure>
+
+But before we can talk about cameras and sensors and what these numbers mean, we have to go back to high school and catch up on some basic optics!
 
 ## Lenses and light rays
-In the earlier days of photography, lenses were simple. Today’s lenses, on the other hand, are quite complicated. They fulfil the same purpose, but with a whole bunch of benefits over their earlier counterparts. To keep this article somewhat manageable, I will focus on the earlier simpler lenses. Not only that, but I will assume that we are working with “perfect” lenses throughout this article. They don’t have any chromatic abberation (i.e. they don’t bend different wave lengths differently), they don’t have vignetting (i.e. the don’t lose light at the edges) and they are “thin” lenses (i.e. they can be modeled with simplified formulas). I will also only look at bi-convex lenses. Contemporary camera lenses contain all kinds of lenses (concave, convex-concave, aspherical, etc), but they only do that get all these benefits that they have over their predecessors.
+In the earlier days of photography, lenses were simple. Today’s lenses, on the other hand, are quite complicated. They fulfil the same purpose, but with a whole bunch of benefits over their earlier counterparts. To keep this article somewhat manageable, I will focus on the earlier simpler lenses. Not only that, but I will assume that we are working with “perfect” lenses throughout this article. They don’t have any chromatic abberation (i.e. they don’t bend different wave lengths differently), they don’t have vignetting (i.e. the don’t lose light at the edges) and they are “thin” lenses (i.e. they can be modeled with simplified formulas). I will also only look at spherical, bi-convex lenses. Those lenses are convex on both sides (have a belly-like shape) and their curvature is that of a sphere. Contemporary camera lenses contain all kinds of lenses (concave, convex-concave, aspherical, etc).
 
-The two most important parameters of a lens for this excursion is its focal length $f$ and diameter $D$. The diameter is literally that, determining the size of the piece of glass. The smaller focal length $f$, the more the light rays are bent when they pass through the lens. The bigger the focal length $f$, the less they get bent. In the our case of “thin lenses”, the focal length describe the distance of the focal point from the center of the lens. The rule is that rays that enter the lens parallel to the lens axis, will intersect the focal point.
+The two most important parameters of a lens for this excursion is its focal length $f$ and diameter $A$. The diameter is literally that, determining the size of the piece of glass. The focal length describes the distance of the center of the lens to the focal point, which also the center of the circle (or sphere, rather) that gives the lens its curvature. The smaller the focal length, the more the light rays are bent torwards the focal point when they pass through the lens. The bigger the focal length $f$, the less they get bent. For thin lenses, rule is that rays that enter the lens parallel to the lens axis, will intersect the focal point.
 
 <figure>
 
@@ -35,10 +46,11 @@ The two most important parameters of a lens for this excursion is its focal leng
     },
     recalculate() {
       const rayGap = 14;
+      const aperture = 150;
       this.handles.fp.y = 0;
-      this.handles.fp.x = Math.max(this.handles.fp.x, 5);
+      this.handles.fp.x = Math.max(this.handles.fp.x, aperture/3);
       const lensCenter = new geometry.Point(0, 0);
-      const lens = new geometry.Lens(lensCenter, this.handles.fp.difference(lensCenter), 150);
+      const lens = new geometry.Lens(lensCenter, this.handles.fp.difference(lensCenter), aperture);
       const lensplane = lens.asLine();
       const lensaxis = lens.axis();
       const fp = lens.focalPoint();
@@ -76,7 +88,7 @@ The two most important parameters of a lens for this excursion is its focal leng
 <figcaption>Rays that enter the lens parallel to the lens axis will intersect the focal point.<br>(Orange points are interactive!)</figcaption>
 </figure>
 
-The reverse works as well: Rays that enter the lens by crossing the focal point when exit the lens parallel to the lens axis. This rule is surprisingly powerful and will allow us to figure a whole lot of interesting facts.
+The reverse works as well: Rays that enter the lens by crossing the focal point will exit the lens parallel to the lens axis. This rule is surprisingly powerful and will allow us to derive a whole lot of interesting facts.
 
 > **Note:** You’ll notice that lenses with a short focal length are anything but thin. We’ll still pretend that they fall into the “thin lens” category for the remainder of this article.
 
