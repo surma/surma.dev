@@ -65,3 +65,10 @@ svg.geometry {
   stroke-width: 1px;
   stroke:  hsla(0, 0%, 0%, 0.4);
 }
+.arc {
+  fill: none;
+  stroke: black;
+}
+.text-middle {
+  alignment-baseline: middle;
+}

@@ -183,6 +183,15 @@ export class Segment extends Line {
     this.p1 = p1;
     this.p2 = p2;
   }
+
+  line() {
+    return new Line(this.point, this.direction);
+  }
+
+  middle() {
+    return this.p1.add(this.p2).scalarSelf(0.5);
+  }
+
   render({ svg }) {
     return svg`<line x1="${this.p1.x}" x2="${this.p2.x}" y1="${
       this.p1.y
@@ -381,6 +390,29 @@ export class Polygon extends Geometry {
         data-name="${this.name}"
         class="${this.classList()}"
         d="M ${this.points.map((p) => p.toSVG()).join(" L ")} z" 
+      />
+    `;
+  }
+}
+
+export class Arc extends Geometry {
+  constructor(c, r, p1, p2) {
+    super();
+    this.c = c;
+    this.r = r;
+    this.p1 = p1;
+    this.p2 = p2;
+  }
+
+  render({ svg }) {
+    const p1 = this.p1.difference(this.c).normalizeSelf().scalarSelf(this.r).addSelf(this.c);
+    const p2 = this.p2.difference(this.c).normalizeSelf().scalarSelf(this.r).addSelf(this.c);
+    return svg`
+      <path 
+        data-type="arc" 
+        data-name="${this.name}"
+        class="${this.classList()}"
+        d="M ${p1.toSVG()} A ${this.r} ${this.r} 0 0 1 ${p2.toSVG()}" 
       />
     `;
   }

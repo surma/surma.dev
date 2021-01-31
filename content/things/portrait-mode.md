@@ -151,13 +151,13 @@ The “thin lens equation” describes the relationship between the object’s d
 </figcaption>
 </figure>
 
-### The image plane & the focus plane
+### The image plane & the focal plane
 
-You’ll notice that if you move the object parallel to the lens plane, the image will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. Secondly, instead of talking about individual points and where their image is, we can talk about the “image plane” and the “focus plane”. We have now entered the territory of photography.
+You’ll notice that if you move the object parallel to the lens plane, the image will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. Secondly, instead of talking about individual points and where their image is, we can talk about the “image plane” and the focal plane”. We have now entered the territory of photography.
 
 To take a picture we have to have something that... takes the picture. Yes. Very good explanation. In analogue photography, that is the film or photo paper, in digital cameras — and for the remainder of this article — it’s the sensor. The distance of the sensor to the lens determines which part of the world is “in focus”. The size of the sensor, combined with the focal length of the lens determines the angle of view that will be capture. While some cameras and lenses allow you to have arbitrary angles between image plane and lens plane, we will keep them parallel to each other. For now.
 
-Note that in all the previous diagrams the direction of the light is actually irrellevant. The roles of object and image can be reversed and the diagrams wouldn’t change. With this observation, we can answer the question where the focus plane is. We can place our sensor on one side of the lens, and project it through the lens. The “image” of the sensor is the area of the real world that is in focus; the part of the world that will be projected onto the sensor.
+Note that in all the previous diagrams the direction of the light is actually irrellevant. The roles of object and image can be reversed and the diagrams wouldn’t change. With this observation, we can answer the question where the focal plane is. We can place our sensor on one side of the lens, and project it through the lens. The “image” of the sensor is the area of the real world that is in focus; the part of the world that will be projected onto the sensor.
 
 <figure>
 
@@ -172,42 +172,57 @@ Note that in all the previous diagrams the direction of the light is actually ir
       bottomY: 150,
     },
     handles: {
-      l: new geometry.Point(0, 0),
+      l: new geometry.Point(100, 0),
       s: new geometry.Point(-80, -50),
-      fp: new geometry.Point(50, 0),
+      fp: new geometry.Point(220, 0),
     },
     recalculate() {
-      this.handles.l.y = 0;
       this.handles.s.x = this.viewBox.leftX + 20;
-      this.handles.s.y = Math.min(this.handles.s.y, 0);
+      this.handles.s.y = Math.min(this.handles.s.y, 1);
+      this.handles.l.y = 0;
+      this.handles.l.x = Math.max((this.handles.fp.x + this.handles.s.x) / 2 + 1, this.handles.l.x);
       this.handles.fp.y = 0;
-      this.handles.fp.x = Math.max(20, this.handles.fp.x);
+      this.handles.fp.x = Math.max(this.handles.l.x + 10, this.handles.fp.x);
       const lensCenter = this.handles.l;
       const fp = this.handles.fp.difference(lensCenter);
       const lens = new geometry.Lens(lensCenter, fp, 150);
 
       const sensorplane = new geometry.Line(this.handles.s, new geometry.Point(0, 1));
-      const sensorTop = this.handles.s
+      const sensorTop = this.handles.s;
       const sensorBottom = this.handles.s.mirrorOn(sensorplane.project(lensCenter));
       const sensor = new geometry.Arrow(sensorTop, sensorBottom);
 
       const {point: sensorTopP} = lens.lensProject(sensorTop);
       const {point: sensorBottomP} = lens.lensProject(sensorBottom);
       const sensorP = new geometry.Arrow(sensorTopP, sensorBottomP);
+      const focalPlane = sensorP.line();
       const angle = new geometry.Polygon(this.handles.fp, sensorTopP, sensorBottomP);
       const lensTop = lens.plane().project(sensorTop);
       const lensBottom = lens.plane().project(sensorBottom);
+      const ray1 = new geometry.HalfSegment(lensBottom, this.handles.fp);
+      const ray2 = new geometry.HalfSegment(lensTop, this.handles.fp);
+      const topline = new geometry.Line(new geometry.Point(0, -120), new geometry.Point(1, 0));
+      const bottomline = new geometry.Line(new geometry.Point(0, 120), new geometry.Point(1, 0));
+      const gap = new geometry.Point(10, 0);
+      const focallength = new geometry.MeasureLine(bottomline.project(this.handles.l), bottomline.project(this.handles.fp))
       return [
         sensorplane.addClass("sensorplane"),
+        focalPlane.addClass("focalplane"),
         sensor.addClass("sensor"),
         lens.addClass("lens"),
-        new geometry.Text(new geometry.Point(this.viewBox.leftX + 30, -120), "Sensor plane"),
+        new geometry.Text(topline.project(this.handles.s).addSelf(gap), "Sensor plane"),
+        new geometry.Text(sensorTop.add(sensorBottom).scalarSelf(1/2).addSelf(gap), "D"),
+        new geometry.Text(topline.project(sensorTopP).addSelf(gap), "Focal plane"),
+        new geometry.Text(this.handles.fp.add(gap.scalar(3)), "α").addClass("text-middle"),
         sensorP.addClass("sensor"),
         angle.addClass("fov"),
         new geometry.Segment(sensorTop, lensTop).addClass("dashed"),
         new geometry.Segment(sensorBottom, lensBottom).addClass("dashed"),
-        new geometry.HalfSegment(lensBottom, this.handles.fp).addClass("dashed"),
-        new geometry.HalfSegment(lensTop, this.handles.fp).addClass("dashed"),
+        ray1.addClass("dashed"),
+        ray2.addClass("dashed"),
+        new geometry.Arc(this.handles.fp, 50, ray1.pointAtDistance(900), ray2.pointAtDistance(900)).addClass("arc"),
+        focallength,
+        new geometry.Text(focallength.middle().addSelf(gap.orthogonal()), "f"),
       ];
     },
   }
@@ -216,6 +231,24 @@ Note that in all the previous diagrams the direction of the light is actually ir
 <figcaption>A lens focuses light rays onto a point.</figcaption>
 
 </figure>
+
+This leads us to two conclusions: The focal length is directly related to the angle of view. A longer focal length has a smaller angle of view, effectively creating a zoomed-in picture. Similarly, the same lens on a larger will yield a larger angle of view. More specifically, the relationship between sensor size, focal length and angle of view can be described as follows:
+
+<figure>
+
+$$
+
+\frac{D}{2f} = \tan \alpha
+
+$$
+
+<figcaption>
+
+The formula describing the relationship between angle of view $\alpha$, the sensor size $D$ and the focal length $f$.
+
+</figcaption>
+</figure>
+
 
 <figure>
   <img src="intrepid.jpg" width="609" height="457" style="max-width: 609px">
@@ -243,10 +276,10 @@ Note that in all the previous diagrams the direction of the light is actually ir
       op: new geometry.Point(480, 10).setName("l"),
     },
     recalculate() {
-      const f = 50;
+      const f = 100;
       this.handles.p.y = -120;
       this.handles.p.x = Math.max(4*f, this.handles.p.x);
-      const lens = new geometry.Lens(new geometry.Point(0, 0), new geometry.Point(f, 0), 3*f);
+      const lens = new geometry.Lens(new geometry.Point(0, 0), new geometry.Point(f, 0), 130);
 
       const focalplane = new geometry.Line(this.handles.p, new geometry.Point(0, 1));
       const sensorplane = new geometry.Line(new geometry.Point(0, 0), new geometry.Point(0, 1));
