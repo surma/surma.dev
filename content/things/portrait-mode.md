@@ -24,8 +24,10 @@ Alright, I will admit: The titular question is not actually the question that pr
 
 But before we can talk about cameras and sensors and what these numbers mean, we have to go back to high school and catch up on some basic optics!
 
-## Lenses and light rays
+## Optics
 In the earlier days of photography, lenses were simple. Today’s lenses, on the other hand, are quite complicated. They fulfil the same purpose, but with a whole bunch of benefits over their earlier counterparts. To keep this article somewhat manageable, I will focus on the earlier simpler lenses. Not only that, but I will assume that we are working with “perfect” lenses throughout this article. They don’t have any chromatic abberation (i.e. they don’t bend different wave lengths differently), they don’t have vignetting (i.e. the don’t lose light at the edges) and they are “thin” lenses (i.e. they can be modeled with simplified formulas). I will also only look at spherical, bi-convex lenses. Those lenses are convex on both sides (have a belly-like shape) and their curvature is that of a sphere. Contemporary camera lenses contain all kinds of lenses (concave, convex-concave, aspherical, etc).
+
+### Lenses
 
 The two most important parameters of a lens for this excursion is its focal length $f$ and diameter $A$. The diameter is literally that, determining the size of the piece of glass. The focal length describes the distance of the center of the lens to the focal point, which also the center of the circle (or sphere, rather) that gives the lens its curvature. The smaller the focal length, the more the light rays are bent torwards the focal point when they pass through the lens. The bigger the focal length $f$, the less they get bent. For thin lenses, rule is that rays that enter the lens parallel to the lens axis, will intersect the focal point.
 
@@ -261,6 +263,33 @@ The formula describing the relationship between angle of view $\alpha$, the sens
 </figcaption>
 </figure>
 
+### Focusing
+
+In the demo above, you can move the lens and change the lens’ focal length to see how it affects the focal plane. However in photography you don’t move the lens and see where our focus plane ends up, you have something that you want to focus _on_, and want to position your lens accordingly. If we know the distance $S$ between our sensor plane and our desired focal plane, we can use the thin lens equation to figure where to place the lens:
+
+$$
+\begin{array}{rc}
+  & \frac{1}{f} = \frac{1}{s} + \frac{1}{s'} \\
+  \Leftrightarrow & \frac{1}{f} = \frac{1}{s} + \frac{1}{S - s} \\
+  \Leftrightarrow & ... \\
+  \Rightarrow & s = \frac{S}{2} \pm \sqrt{\frac{S^2}{4} - Sf} \\
+\end{array}
+$$
+
+Apologies for skipping the math there in the middle, but it’s really just a bunch of transformations until you can use the [quadratic formula]. The majority of cameras don’t use this formula as they don’t measure the distance to the target, but go by other means. But something interesting can be derived from this result: For the result to exist, the expressing in the square root must be positive, i.e:
+
+$$
+\begin{array}{rcl}
+  \frac{S^2}{4} - Sf & > & 0 \\
+  \Leftrightarrow S & > & 4f \\
+\end{array}
+$$
+
+That means, to be able to focus on a subject with lens with focal lens $f$, the subject needs to be at least four times the focal length away from the sensor.
+
+### Out of focus
+
+Now that we know what is in view and what is in focus, we can take a look what happens when something is _out_ of focus.
 
 <figure>
   <img src="intrepid.jpg" width="609" height="457" style="max-width: 609px">
@@ -390,3 +419,4 @@ For most intents and purposes, these series of individual lenses
 
 [camera comparison]: https://www.dpreview.com/products/compare/side-by-side?products=ricoh_griii&products=canon_g7xiii
 [intrepid]: https://intrepidcamera.co.uk/
+[quadratic formula]: https://en.wikipedia.org/wiki/Quadratic_formula

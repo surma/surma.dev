@@ -691,6 +691,7 @@ html.forcedark blockquote code {
   color: var(--lightblue);
 }
 html.forcedark figure img,
+html.forcedark figure svg,
 html.forcedark figure picture,
 html.forcedark figure video {
   filter: saturate(0.8) brightness(0.8);
