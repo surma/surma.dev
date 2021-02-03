@@ -518,7 +518,7 @@ I am sure this super niche, but I enjoyed this rabbit hole. If you have any opin
 
 Thanks to [Lucas Pope][dukope] for his games and the visual inspiration.
 
-Thanks to [Christoph Peter] for his excellent [article on blue noise generation][cp blue noise].
+Thanks to [Christoph Peters] for his excellent [article on blue noise generation][cp blue noise].
 
 <script src="/carousel-reset.js" type="module"></script>
 
@@ -534,7 +534,7 @@ Thanks to [Christoph Peter] for his excellent [article on blue noise generation]
 [bayer wikipedia]: https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps
 [bayer filter]: https://en.wikipedia.org/wiki/Bayer_filter
 [imagedata]: https://developer.mozilla.org/en-US/docs/Web/API/ImageData
-[christoph peter]: https://twitter.com/momentsincg
+[christoph peters]: https://twitter.com/momentsincg
 [cp blue noise]: http://momentsingraphics.de/BlueNoise.html
 [robert ulichney]: http://ulichney.com/
 [gaussian blur]: https://en.wikipedia.org/wiki/Gaussian_blur
