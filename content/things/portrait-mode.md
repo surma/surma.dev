@@ -305,8 +305,8 @@ Now that we know how to focus, determine the focal plane and even dtermine lens 
     },
     handles: {
       p: new geometry.Point(350, -120),
-      fp: new geometry.Point(0, 120),
-      op: new geometry.Point(480, 10),
+      fp: new geometry.Point(400, 120),
+      op: new geometry.Point(780, 10),
     },
     recalculate() {
       const center = (this.viewBox.leftX + this.viewBox.rightX) / 2;
@@ -334,7 +334,6 @@ Now that we know how to focus, determine the focal plane and even dtermine lens 
       const fp = lens.focalPoint();
       const ofp = lens.otherFocalPoint();
       this.handles.op.x = Math.max(Math.max(fp.x + 1, ofp.x + 1), this.handles.op.x);
-      console.log(this.handles.op.x);
 
       const {polygon, ray1, ray2} = lens.lightRays(this.handles.op);
       const p1 = sensorplane.intersect(ray1);
