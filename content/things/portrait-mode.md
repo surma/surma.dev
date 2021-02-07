@@ -16,8 +16,8 @@ Alright, I will admit: The titular question is not actually the question that pr
 <figure>
   <img src="./comparison.jpg" width="1280" height="563">
   <figcaption>
-    Left: Picture taken in “Portrait mode” on my Pixel 5, without the blur effect.<br>
-    Middle: The same picture, with the blur effect.<br>
+    Left: Picture taken  on my Pixel 5.<br>
+    Middle: The same picture, but in “Portrait mode”.<br>
     Right: A picture taken with my (full-frame) Canon EOS R with my zoom lens at 48mm at f/2.8.<br>
     All pictures cropped to the same aspect ratio (2:3) and slightly color-graded.
 </figure>
@@ -289,35 +289,34 @@ That means, to be able to focus on a subject with lens with focal lens $f$, the 
 
 ### Out of focus
 
-Now that we know what is in view and what is in focus, we can take a look what happens when something is _out_ of focus.
-
-<figure>
-  <img src="intrepid.jpg" width="609" height="457" style="max-width: 609px">
-  <figcaption>
-  
-  The [Intrepid Mk 4][intrepid] is a contemporary large-format camera, but works in the same way the first cameras did.
-
-  </figcaption>
-</figure>
+Now that we know how to focus, determine the focal plane and even dtermine lens position with a given focal plane, we can take a look what happens when something is _out_ of focus.
 
 <figure>
 
 |||geometry
  {
-    width: 500,
+    width: 800,
     height: 300,
     viewBox: {
       leftX: 0,
-      rightX: 500,
+      rightX: 800,
       topY: -150,
       bottomY: 150,
     },
     handles: {
-      p: new geometry.Point(350, -120).setName("p"),
-      op: new geometry.Point(480, 10).setName("l"),
+      p: new geometry.Point(350, -120),
+      fp: new geometry.Point(0, 120),
+      op: new geometry.Point(480, 10),
     },
     recalculate() {
-      const f = 100;
+      const center = (this.viewBox.leftX + this.viewBox.rightX) / 2;
+      const slider = new geometry.MeasureLine(
+        new geometry.Point(center - 100, this.viewBox.bottomY - 30),
+        new geometry.Point(center + 100, this.viewBox.bottomY - 30)
+      );
+      const ffactor = geometry.clamp(0, slider.whereIs(this.handles.fp)/slider.length(), 1);
+      this.handles.fp = slider.pointAtDistance(ffactor*slider.length());
+      const f = geometry.remap(0, 1, 50, 180)(ffactor);
       this.handles.p.y = -120;
       this.handles.p.x = Math.max(4*f, this.handles.p.x);
       const lens = new geometry.Lens(new geometry.Point(0, 0), new geometry.Point(f, 0), 130);
@@ -332,6 +331,11 @@ Now that we know what is in view and what is in focus, we can take a look what h
       const dsl = pointToSensor - dlp;
       lens.center.x = sensor.point.x + dsl;
 
+      const fp = lens.focalPoint();
+      const ofp = lens.otherFocalPoint();
+      this.handles.op.x = Math.max(Math.max(fp.x + 1, ofp.x + 1), this.handles.op.x);
+      console.log(this.handles.op.x);
+
       const {polygon, ray1, ray2} = lens.lightRays(this.handles.op);
       const p1 = sensorplane.intersect(ray1);
       const p2 = sensorplane.intersect(ray2);
@@ -345,6 +349,10 @@ Now that we know what is in view and what is in focus, we can take a look what h
         p.addClass("image"),
         new geometry.Text(this.handles.p.add(new geometry.Point(10, 0)), "Focal plane"),
         new geometry.Text(new geometry.Point(10, -120), "Sensor plane"),
+        fp,
+        ofp,
+        new geometry.Text(slider.middle().addSelf(new geometry.Point(0, 20)), "Focal length").addClass("text-hmiddle"),
+        slider
       ];
     },
   }
@@ -353,6 +361,18 @@ Now that we know what is in view and what is in focus, we can take a look what h
 <figcaption>A lens focuses light rays onto a point.</figcaption>
 
 </figure>
+
+Strictly speaking, a point is in focus if and only if it is on the focal plane. Any deviation to either side makes the point out of focus.
+
+<figure>
+  <img src="intrepid.jpg" width="609" height="457" style="max-width: 609px">
+  <figcaption>
+  
+  The [Intrepid Mk 4][intrepid] is a contemporary large-format camera, but works in the same way the first cameras did.
+
+  </figcaption>
+</figure>
+
 
 <figure>
 

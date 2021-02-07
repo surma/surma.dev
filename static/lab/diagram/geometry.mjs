@@ -192,6 +192,21 @@ export class Segment extends Line {
     return this.p1.add(this.p2).scalarSelf(0.5);
   }
 
+  whereIs(p) {
+    p = this.project(p).differenceSelf(this.point);
+    const samesignx = Math.sign(p.x) == Math.sign(this.direction.x);
+    const samesigny = Math.sign(p.y) == Math.sign(this.direction.y);
+    let factor = 1;
+    if(samesignx != samesigny) {
+      factor = -1;
+    }
+    return factor * p.length() / this.direction.length();
+  }
+
+  length() {
+    return this.p1.difference(this.p2).length();
+  }
+
   render({ svg }) {
     return svg`<line x1="${this.p1.x}" x2="${this.p2.x}" y1="${
       this.p1.y
@@ -529,4 +544,19 @@ export function renderToString(diagram) {
           ${Object.values(diagram.handles).map((item) => item.render(mocks))}
         </svg>
       `;
+}
+
+export function clamp(min, v, max) {
+  if(v < min) {
+    return min;
+  }
+  if(v > max) {
+    return max;
+  }
+  return v;
+}
+
+export function remap(minin, maxin, minout, maxout) {
+  return v => 
+    (v - minin) / (maxin - minin) * (maxout - minout) + minout;
 }
