@@ -18,7 +18,7 @@
     "web-vitals": "^1.1.0"
   },
   "scripts": {
-    "clean": "rm -rf build .tmp .parcel-cache",
+    "clean": "rm -rf build _site .tmp .parcel-cache",
     "build": "./full-build.sh",
     "serve": "eleventy --serve",
     "fmt": "prettier --write '{./,./{_includes,_data}/**/}*.{json,md,js,css}'"
