@@ -304,11 +304,11 @@ Now that we know how to focus, determine the focal plane and even dtermine lens 
       bottomY: 150,
     },
     handles: {
-      p: new geometry.Point(350, -120),
-      fp: new geometry.Point(400, 120),
-      op: new geometry.Point(780, 10),
+      p: new geometry.Point(0, -120),
+      fp: new geometry.Point(0, 120),
     },
     recalculate() {
+      const op = new geometry.Point(780, 10);
       const center = (this.viewBox.leftX + this.viewBox.rightX) / 2;
       const slider = new geometry.MeasureLine(
         new geometry.Point(center - 100, this.viewBox.bottomY - 30),
@@ -333,13 +333,13 @@ Now that we know how to focus, determine the focal plane and even dtermine lens 
 
       const fp = lens.focalPoint();
       const ofp = lens.otherFocalPoint();
-      this.handles.op.x = Math.max(Math.max(fp.x + 1, ofp.x + 1), this.handles.op.x);
 
-      const {polygon, ray1, ray2} = lens.lightRays(this.handles.op);
+      const {polygon, ray1, ray2} = lens.lightRays(op);
       const p1 = sensorplane.intersect(ray1);
       const p2 = sensorplane.intersect(ray2);
       const p = new geometry.Segment(p1, p2);
       return [
+        op,
         sensorplane.addClass("sensorplane"),
         focalplane.addClass("focalplane"),
         sensor.addClass("sensor"),
@@ -361,7 +361,20 @@ Now that we know how to focus, determine the focal plane and even dtermine lens 
 
 </figure>
 
-Strictly speaking, a point is in focus if and only if it is on the focal plane. Any deviation to either side makes the point out of focus.
+The further a point is away from the focus plane, the more area it will consume on the sensor. Technically, a point will only be projected into a point when it is _exactly_ on the focal plane. Any deviation to either side makes the point turn into a circle, which is what is called being out of focus. Of course, a very small circle is humanly indistinguishable from a circle. The biggest circle that is perceived as a point which is called the [circle of confusion], but I won’t talk about that here, but it plays a key role in calculating how big the “focus area” around the focal plane is, i.e. how much you can deviate from the focal plane and still be considered in focus and be “acceptably sharp”.
+
+> **I lied:** One thing I _will_ say about the circle of confusion and photography. I found articles list different diameters for the circle of confusion depending on sensor size (e.g. 0.029mm for full frame cameras). However, these are based on printing the whole picture on a piece of paper on a certain size and looking at it from a certain distance. But in the digital age, we crop, we zoom, and something that looks in-focus on the back of the camera (or Instagram) can look completely out of focus once zoomed in. If you want to have something in focus even after zooming in, your diameter for the circle of confusion is the size of a single pixel on the sensor. However, you’ll also find that this will leave you very little room for error. A “traditional” focus area of 1.5m will shrink to just ~28cm with this method.
+
+From the diagram we can also learn a short focal length will create a bigger circle than a long focal length at the minimal focal distance. However, moving the focal plane ever so slightly away from the minimal focal length will make the circle shrink much quicker than a comparable focus shift on a longer focal length.
+
+ How much area? Well I’m glad you asked! Our friend the thin lenses equation combined with the [intercept theorem] will let us answer this question. Given a lens with focal length $f$ and diameter $D$, a focal plane at distance $S$ from the sensor and a point at distance $P$ from the sensor, we can calculate the area $B$ that the point will be projected on:
+
+$$
+\begin{array}{c}
+l = \frac{S}{2} - \sqrt{\frac{S^2}{4} - Sf} \\
+D \div (S-l) = B \div l
+\end{array}
+$$
 
 <figure>
   <img src="intrepid.jpg" width="609" height="457" style="max-width: 609px">
@@ -439,3 +452,5 @@ For most intents and purposes, these series of individual lenses
 [camera comparison]: https://www.dpreview.com/products/compare/side-by-side?products=ricoh_griii&products=canon_g7xiii
 [intrepid]: https://intrepidcamera.co.uk/
 [quadratic formula]: https://en.wikipedia.org/wiki/Quadratic_formula
+[intercept theorem]: https://en.wikipedia.org/wiki/Intercept_theorem
+[circle of confusion]: https://en.wikipedia.org/wiki/Circle_of_confusion
