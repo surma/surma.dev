@@ -189,15 +189,29 @@
 </footer>
 </body>
 <script>
-  window.ga = window.ga || ((...args) => (ga.q = ga.q || []).push(args));
-  ga("create", "UA-69989029-1", "auto");
-  ga("set", "transport", "beacon");
-  ga("send", "pageview");
-  // Load the GA script
-  const s = document.createElement("script");
-  s.src = "https://www.google-analytics.com/analytics.js";
-  document.head.appendChild(s);
+  self._ga = {
+    // Full Measurement Protocol param reference:
+    // https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters
+    data: {
+      v: "1", // Measurement Protocol version.
+      tid: "UA-69989029-1", // Tracking ID.
+      cid: `${Date.now()}${Math.random()}`, // Client ID.
+      dl: location.href, // Document location.
+      aip: 1, // Anonymize IP
+    },
+    send(additionalParams) {
+      navigator.sendBeacon(
+        "https://google-analytics.com/collect",
+        new URLSearchParams({
+          ...this.data,
+          ...additionalParams,
+        }).toString()
+      );
+    },
+  };
+  _ga.send({ t: "pageview" });
 </script>
+<script src="/vitals.js" type="module"></script>
 <% if(typeof disableNoise !== "boolean" || !disableNoise) { %>
 <script src="/noise.js" type="module"></script>
 <% } %>
