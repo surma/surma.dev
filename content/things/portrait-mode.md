@@ -165,9 +165,11 @@ The “thin lens equation” describes the relationship between the object’s d
 </figcaption>
 </figure>
 
-### The image plane & the focal plane
+## Photography
 
 You’ll notice that if you move the object parallel to the lens plane, the image will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. Secondly, instead of talking about individual points and where their image is, we can talk about the “image plane” and the focal plane”. We have now entered the territory of photography.
+
+### The image plane & the focal plane
 
 To take a picture we have to have something that... takes the picture. Yes. Very good explanation. In analogue photography, that is the film or photo paper, in digital cameras — and for the remainder of this article — it’s the sensor. The distance of the sensor to the lens determines which part of the world is “in focus”. The size of the sensor, combined with the focal length of the lens determines the angle of view that will be capture. While some cameras and lenses allow you to have arbitrary angles between image plane and lens plane, we will keep them parallel to each other. For now.
 
@@ -306,6 +308,7 @@ Now that we know how to focus, determine the focal plane and even dtermine lens 
     handles: {
       p: new geometry.Point(0, -120),
       fp: new geometry.Point(0, 120),
+      d: new geometry.Point(0, -20),
     },
     recalculate() {
       const op = new geometry.Point(780, 10);
@@ -330,6 +333,10 @@ Now that we know how to focus, determine the focal plane and even dtermine lens 
       const dlp = pointToSensor/2 + Math.sqrt(pointToSensor**2/4 - pointToSensor * f);
       const dsl = pointToSensor - dlp;
       lens.center.x = sensor.point.x + dsl;
+
+      this.handles.d.x = lens.center.x;
+      this.handles.d.y = -geometry.clamp(20, -this.handles.d.y, 120);
+      lens.aperture = Math.abs(this.handles.d.y * 2);
 
       const fp = lens.focalPoint();
       const ofp = lens.otherFocalPoint();
@@ -365,6 +372,15 @@ The further a point is away from the focus plane, the more area it will consume 
 
 > **I lied:** One thing I _will_ say about the circle of confusion and photography. I found articles list different diameters for the circle of confusion depending on sensor size (e.g. 0.029mm for full frame cameras). However, these are based on printing the whole picture on a piece of paper on a certain size and looking at it from a certain distance. But in the digital age, we crop, we zoom, and something that looks in-focus on the back of the camera (or Instagram) can look completely out of focus once zoomed in. If you want to have something in focus even after zooming in, your diameter for the circle of confusion is the size of a single pixel on the sensor. However, you’ll also find that this will leave you very little room for error. A “traditional” focus area of 1.5m will shrink to just ~28cm with this method.
 
+The other takeaway from the diagram above is that the lens diameter $A$ is directly influencing the size of the circle.
+
+### f-stops
+
+I said that the two most important parameters of a lens for this excursion is its focal length $f$ and diameter $A$. However, the diameter of a lens is rarely talked about directly in photography. Instead, we talk about the focal lens $f$ and the _aperture_, which is given as a $f$-Number. For example, the picture at the beginning of the blog post that I took was taken with a lens where $f = 48mm$ and an aperture of $f/2.8$. This $f$-Number _is_ the lens diameter, just given as a fraction of the focal length $f$. So in this case $A = \frac{f}{2.8} = 17.1mm$. The reason for this is that photographers care about the amount of light that hits their <strikethrough>film</strikethrough> sensor, and a $50mm$ lens with a diameter of 25mm ($f/2.0$) lets in the same amount of light as a $100mm$ lens with a diameter of 50mm ($f/2.0$).
+
+
+## LEFTOVERS
+
 From the diagram we can also learn a short focal length will create a bigger circle than a long focal length at the minimal focal distance. However, moving the focal plane ever so slightly away from the minimal focal length will make the circle shrink much quicker than a comparable focus shift on a longer focal length.
 
  How much area? Well I’m glad you asked! Our friend the thin lenses equation combined with the [intercept theorem] will let us answer this question. Given a lens with focal length $f$ and diameter $D$, a focal plane at distance $S$ from the sensor and a point at distance $P$ from the sensor, we can calculate the area $B$ that the point will be projected on:
@@ -377,7 +393,7 @@ D \div (S-l) = B \div l
 $$
 
 <figure>
-  <img src="intrepid.jpg" width="609" height="457" style="max-width: 609px">
+  <img src="intrepid.jpg" loading="lazy" width="609" height="457" style="max-width: 609px">
   <figcaption>
   
   The [Intrepid Mk 4][intrepid] is a contemporary large-format camera, but works in the same way the first cameras did.
@@ -385,6 +401,11 @@ $$
   </figcaption>
 </figure>
 
+
+<figure>
+  <img src="sherlock.jpg" loading="lazy" width="1280" height="719" style="max-width: 1280px">
+  <figcaption> A screenshot from the pilot episode of Sherlock (2010). The lights in the background are out of focus and their jagged outline lets us count the number of blades used for the iris of the lens. </figcaption>
+</figure>
 
 <figure>
 
