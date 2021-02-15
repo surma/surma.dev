@@ -31,12 +31,20 @@ export class Point extends Geometry {
     return this;
   }
 
+  subtractSelf(other) {
+    return this.differenceSelf(other);
+  }
+
   copy() {
     return new Point(this.x, this.y);
   }
 
   difference(other) {
     return this.copy().differenceSelf(other);
+  }
+
+  subtract(other) {
+    return this.difference(other);
   }
 
   orthogonalSelf() {
@@ -186,6 +194,14 @@ export class Segment extends Line {
 
   line() {
     return new Line(this.point, this.direction);
+  }
+
+  shrinkSelf(delta) {
+    const d = this.direction.scalar(delta);
+    this.p1.addSelf(d);
+    this.point.addSelf(d);
+    this.p2.subtractSelf(d);
+    return this;
   }
 
   middle() {
@@ -440,12 +456,12 @@ export class Text extends Geometry {
     this.text = text;
   }
 
-  render({ svg }) {
+  render({ svg, unsafeSVG }) {
     return svg`
       <text 
         data-name="${this.name}"
         class="type-text ${this.classList()}"
-      x="${this.point.x}" y="${this.point.y}">${this.text}</text>
+      x="${this.point.x}" y="${this.point.y}">${unsafeSVG(this.text)}</text>
     `;
   }
 }
@@ -456,7 +472,7 @@ function serializeViewBox(vb) {
   }`;
 }
 
-export function instantiateDiagram(diagram, target, { html, svg, render }) {
+export function instantiateDiagram(diagram, target, lit) {
   let draggedHandle = null;
   function screenToSvgCoordinates(svg, x, y) {
     const pt = svg.createSVGPoint();
@@ -499,8 +515,8 @@ export function instantiateDiagram(diagram, target, { html, svg, render }) {
     draggedHandle = null;
   }
   function rerender() {
-    render(
-      html`
+    lit.render(
+      lit.html`
         <svg
           @mousedown=${start}
           @touchstart=${start}
@@ -513,9 +529,9 @@ export function instantiateDiagram(diagram, target, { html, svg, render }) {
           viewBox="${serializeViewBox(diagram.viewBox)}"
           class="geometry"
         >
-          ${diagram.recalculate().map((item) => item.render({ html, svg }))}
+          ${diagram.recalculate().map((item) => item.render(lit))}
           ${Object.values(diagram.handles).map((item) =>
-            item.addClass("handle").render({ html, svg })
+            item.addClass("handle").render(lit)
           )}
         </svg>
       `,
@@ -532,6 +548,8 @@ export function renderToString(diagram) {
   const mocks = {
     html: filteredRawString,
     svg: filteredRawString,
+    unsafeSVG: x => x,
+    unsafeHTML: x => x,
   };
   return mocks.html`
         <svg

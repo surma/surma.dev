@@ -297,30 +297,34 @@ Now that we know how to focus, determine the focal plane and even determine lens
 
 |||geometry
  {
-    width: 800,
-    height: 300,
+    width: 830,
+    height: 360,
     viewBox: {
-      leftX: 0,
+      leftX: -30,
       rightX: 800,
-      topY: -150,
-      bottomY: 150,
+      topY: -180,
+      bottomY: 180,
     },
     handles: {
       p: new geometry.Point(0, -120),
       fp: new geometry.Point(0, 120),
-      d: new geometry.Point(0, -20),
+      d: new geometry.Point(0, -40),
     },
     recalculate() {
       const op = new geometry.Point(780, 10);
       const center = (this.viewBox.leftX + this.viewBox.rightX) / 2;
+      const topLine = new geometry.Line(new geometry.Point(0, this.viewBox.topY + 20), new geometry.Point(1, 0));
+      const topLineB = new geometry.Line(new geometry.Point(0, this.viewBox.topY + 40), new geometry.Point(1, 0));
+      const topLineC = new geometry.Line(new geometry.Point(0, this.viewBox.topY + 80), new geometry.Point(1, 0));
+      const bottomLine = new geometry.Line(new geometry.Point(0, this.viewBox.bottomY - 10), new geometry.Point(1, 0));
       const slider = new geometry.MeasureLine(
-        new geometry.Point(center - 100, this.viewBox.bottomY - 30),
-        new geometry.Point(center + 100, this.viewBox.bottomY - 30)
+        bottomLine.project(new geometry.Point(center - 100, 0)),
+        bottomLine.project(new geometry.Point(center + 100, 0)),
       );
       const ffactor = geometry.clamp(0, slider.whereIs(this.handles.fp)/slider.length(), 1);
       this.handles.fp = slider.pointAtDistance(ffactor*slider.length());
-      const f = geometry.remap(0, 1, 50, 180)(ffactor);
-      this.handles.p.y = -120;
+      const f = geometry.remap(0, 1, 50, 140)(ffactor);
+      this.handles.p = topLine.project(this.handles.p);
       this.handles.p.x = Math.max(4*f, this.handles.p.x);
       const lens = new geometry.Lens(new geometry.Point(0, 0), new geometry.Point(f, 0), 130);
 
@@ -341,12 +345,20 @@ Now that we know how to focus, determine the focal plane and even determine lens
       const fp = lens.focalPoint();
       const ofp = lens.otherFocalPoint();
 
-      const {polygon, ray1, ray2} = lens.lightRays(op);
+      const {polygon, ray1, ray2, projectedP} = lens.lightRays(op);
       const p1 = sensorplane.intersect(ray1);
       const p2 = sensorplane.intersect(ray2);
       const p = new geometry.Segment(p1, p2);
       const gap = new geometry.Point(10, 0);
       const lensSize = new geometry.MeasureLine(lens.top().addSelf(gap.scalar(-2)), lens.bottom().addSelf(gap.scalar(-2)));
+      const Df = new geometry.MeasureLine(sensorplane.intersect(topLineB), topLineB.project(this.handles.p)).shrinkSelf(2);
+      const DL = new geometry.MeasureLine(sensorplane.intersect(topLineC), topLineC.project(op)).shrinkSelf(2);
+      const bottomLineB = new geometry.Line(new geometry.Point(0, this.viewBox.bottomY - 60), new geometry.Point(1, 0));
+      const bottomLineC = new geometry.Line(new geometry.Point(0, this.viewBox.bottomY - 120), new geometry.Point(1, 0));
+      const sfp = new geometry.MeasureLine(sensorplane.intersect(bottomLineB), bottomLineB.project(lens.bottom())).shrinkSelf(2);
+      const sf = new geometry.MeasureLine(bottomLineB.project(lens.bottom()), bottomLineB.intersect(focalplane)).shrinkSelf(2);
+      const slp = new geometry.MeasureLine(bottomLineC.project(projectedP), bottomLineC.project(lens.bottom())).shrinkSelf(2);
+      const sl = new geometry.MeasureLine(bottomLineC.project(lens.bottom()), bottomLineC.project(op)).shrinkSelf(2);
       return [
         op,
         sensorplane.addClass("sensorplane"),
@@ -355,14 +367,27 @@ Now that we know how to focus, determine the focal plane and even determine lens
         lens.addClass("lens"),
         polygon.addClass("light"),
         p.addClass("image"),
-        new geometry.Text(this.handles.p.add(new geometry.Point(10, 0)), "Focal plane"),
-        new geometry.Text(new geometry.Point(10, -120), "Sensor plane"),
+        new geometry.Text(this.handles.p.add(gap), "Focal plane"),
+        new geometry.Text(sensorplane.intersect(topLine).addSelf(gap), "Sensor plane"),
         fp,
         ofp,
         new geometry.Text(slider.middle().addSelf(gap.orthogonal()), "Focal length").addClass("text-hmiddle"),
         slider,
         lensSize,
-        new geometry.Text(lens.top().addSelf(gap.scalar(-3)), "A").addClass("text-hmiddle"),
+        new geometry.Text(lens.top().addSelf(gap.scalar(-4)), "A").addClass("text-hmiddle"),
+        Df,
+        new geometry.Text(Df.middle().addSelf(gap.orthogonal().scalarSelf(-2)), "D<tspan baseline-shift=sub>focal</tspan>"),
+        DL,
+        new geometry.Text(DL.middle().addSelf(gap.orthogonal().scalarSelf(-2)), "D<tspan baseline-shift=sub>light</tspan>"),
+        sfp,
+        new geometry.Text(sfp.middle().addSelf(gap.orthogonal().scalarSelf(-2)), "s'<tspan baseline-shift=sub>focal</tspan>"),
+        sf,
+        new geometry.Text(sf.middle().addSelf(gap.orthogonal().scalarSelf(-2)), "s<tspan baseline-shift=sub>focal</tspan>"),
+        slp,
+        new geometry.Text(slp.middle().addSelf(gap.orthogonal().scalarSelf(-2)), "s'<tspan baseline-shift=sub>light</tspan>"),
+        sl,
+        new geometry.Text(sl.middle().addSelf(gap.orthogonal().scalarSelf(-2)), "s<tspan baseline-shift=sub>light</tspan>"),
+        lens.asLine().addClass("lensplane"),
       ];
     },
   }
@@ -387,7 +412,7 @@ Lenses are made of glass, so you can’t just change their size. But we just lea
   <img src="iris.jpg" loading="lazy" width="800" height="800" style="max-width: 800px">
   <figcaption>
   
-  The iris of a lens.
+  The iris of a lens, consisting of 16 blades.
 
   </figcaption>
 </figure>
@@ -415,7 +440,11 @@ We have talked about the lens diameter, but the diameter of a lens is rarely tal
 
 ### Bokeh size
 
-How big?
+How big is the circle on the sensor given a certain constellation? Looking at the diagram above, we can use the good ol’ [intercept theorem], we can establish the following relationship between the lens aperture $A$, the focus distance $s'$, the bokeh circle size $c$ and distance between sensor and lens $\overline{SL}$:
+
+$$
+  \frac{s'}{A} = \frac{c}{\overline{SL} - s'}
+$$
 
 
 
