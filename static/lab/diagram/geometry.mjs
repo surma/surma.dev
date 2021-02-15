@@ -124,6 +124,15 @@ export class Point extends Geometry {
     return this.copy().mirrorOnSelf(other);
   }
 
+  mirrorOnLineSelf(line) {
+    const p = line.project(this);
+    return this.mirrorOnSelf(p);
+  }
+
+  mirrorOnLine(line) {
+    return this.copy().mirrorOnLineSelf(line);
+  }
+    
   toSVG(withComma = true) {
     return [this.x, this.y].join(withComma ? "," : " ");
   }
@@ -142,6 +151,14 @@ export class Line extends Geometry {
     super();
     this.point = point;
     this.direction = direction.normalizeSelf();
+  }
+
+  static xAxis() {
+    return new Line(new Point(0, 0), new Point(1, 0));
+  }
+
+  static yAxis() {
+    return new Line(new Point(0, 0), new Point(0, 1));
   }
 
   static throughPoints(p1, p2) {
