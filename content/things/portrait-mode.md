@@ -293,6 +293,8 @@ That means, to be able to focus on a subject with lens with focal lens $f$, the 
 
 Now that we know how to focus, determine the focal plane and even determine lens position with a given focal plane, we can take a look what happens when something is _out_ of focus. Looking at the image at the start of the article, you can see the fairly lights turning into larger circles of light, often refferred to as “Bokeh”. Bokeh is Japanese for “blur”, and as such _technically_ refers to anything that is out of focus, but depending on context, it can also be used to refer to point lights specifically.
 
+To figure this one out, we’ll have to introduce a bunch of variables and measurements. First, we have to separate our focal plane from where the light source is located. In our scenario, the focal plane is fairly close to the sensor, while the light source is further away. Through that, we can now figure out where the lens needs to located and which point the light from the light source will be focused on.
+
 <figure>
 
 |||geometry
@@ -308,7 +310,6 @@ Now that we know how to focus, determine the focal plane and even determine lens
     handles: {
       p: new geometry.Point(0, -120),
       fp: new geometry.Point(0, 120),
-      d: new geometry.Point(0, -40),
     },
     recalculate() {
       const op = new geometry.Point(this.viewBox.rightX-20, 10);
@@ -326,7 +327,7 @@ Now that we know how to focus, determine the focal plane and even determine lens
       const f = geometry.remap(0, 1, 80, 140)(ffactor);
       this.handles.p = topLine.project(this.handles.p);
       this.handles.p.x = Math.max(4*f, this.handles.p.x);
-      const lens = new geometry.Lens(new geometry.Point(0, 0), new geometry.Point(f, 0), 130);
+      const lens = new geometry.Lens(new geometry.Point(0, 0), new geometry.Point(f, 0), 80);
 
       const focalplane = new geometry.Line(this.handles.p, new geometry.Point(0, 1));
       const sensorplane = new geometry.Line(new geometry.Point(0, 0), new geometry.Point(0, 1));
@@ -337,10 +338,6 @@ Now that we know how to focus, determine the focal plane and even determine lens
       const dlp = pointToSensor/2 + Math.sqrt(pointToSensor**2/4 - pointToSensor * f);
       const dsl = pointToSensor - dlp;
       lens.center.x = sensor.point.x + dsl;
-
-      this.handles.d.x = lens.center.x;
-      this.handles.d.y = -geometry.clamp(20, -this.handles.d.y, 120);
-      lens.aperture = Math.abs(this.handles.d.y * 2);
 
       const fp = lens.focalPoint();
       const ofp = lens.otherFocalPoint();
@@ -388,6 +385,8 @@ Now that we know how to focus, determine the focal plane and even determine lens
         sl,
         new geometry.Text(sl.middle().addSelf(gap.orthogonal().scalarSelf(-2)), "s<tspan baseline-shift=sub>light</tspan>"),
         lens.asLine().addClass("lensplane"),
+        new geometry.MeasureLine(p1.subtract(gap), p2.subtract(gap)),
+        new geometry.Text(p.middle().subtract(gap.scalar(2.5)), "c")
       ];
     },
   }
@@ -397,68 +396,33 @@ Now that we know how to focus, determine the focal plane and even determine lens
 
 </figure>
 
-The further a point is away from the focus plane, the more area it will consume on the sensor. Technically, a point will only be projected into a point when it is _exactly_ on the focal plane. Even the smallest deviation to either of the focal plane makes the point turn into a circle, which is what is called being “out of focus”. Of course, a tiny small circle is humanly indistinguishable from a point. The area around the focal plane that every point _appears_ in focus to a human is called the focus area.
-
-> **Circle of confusion:** I won’t cover this topic in depth, but the biggest circle that is perceived as a point by a human is called the [circle of confusion]. It plays a central role in calculating the focus area. One thing I _will_ say about the circle of confusion, though: Many articles list “traditional” diameters for the circle of confusion depending on sensor size (e.g. 0.029mm for a full frame sensor). These are based on printing the a picture on a piece of paper on a certain size and looking at it from a certain distance. In the digital age, however, we crop and we zoom. Something that looks in-focus on Instagram can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your diameter for the circle of confusion is the size of a single pixel on the sensor — because any circle that is at most the size of a pixel will still be captured as a single pixel. This has implications: You’ll find that this leaves you very little room for error as a photograpgher. Using the “traditional” circle of confusion yields a focus area of 1.5m, while the pixel-based circle of confusion makes it shrink to just ~28cm.
-
-The main takeaway from the diagram above is that there are two factors influencing the size of a circle on the sensor: The lens diameter $A$ and the point’s distance from the focal plane. Keeping everything else constant, a smaller lens diameter will create a smaller circle on the sensor, which in turn makes it _appear_ sharper. Or to phrase it another way: A smaller diameter creates a bigger focus area.
-
-### Lens size & shape
-
-Lenses are made of glass, so you can’t just change their size. But we just learned that a smaller lens diameter will increase sharpness (technically, it increases the focus area), so it’s a useful variable to be able to change. To address this, lenses have an iris to artifically change the size of a lens.
-
-<figure>
-  <img src="iris.jpg" loading="lazy" width="800" height="800" style="max-width: 800px">
-  <figcaption>
-  
-  The iris of a lens, consisting of 16 blades.
-
-  </figcaption>
-</figure>
-
-The diagrams are not really good at visualizing it, but the shape of a lens will determine what a point light will look like when it’s out of focus. Pretty much all photography lenses are circular, which is why point lights turn into circles. The iris, however, is made of blades and is not _perfectly_ circular. The iris shown above is a 16-blade iris, which is rare. Most lenses I know have between 7 and 9 blades, and you can see the the not-quite-perfectly-circular iris affecting the look of light circles, for example in movies.
-
-<figure>
-  <img src="sherlock.jpg" loading="lazy" width="1280" height="719" style="max-width: 1280px">
-  <figcaption> A screenshot from the pilot episode of BBC’s “Sherlock” (2010). The lights in the background are out of focus and their jagged outline lets us count the number of blades used for the iris of the lens. </figcaption>
-</figure>
-
-Lensbaby takse advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shapes inbetween the lens and sensor:
-
-<figure>
-  <img src="#lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
-  <figcaption>Lensbaby lens using a nice swirl or something. Waiting for Ingrid.</figcaption>
-</figure>
-
-### f-stops
-
-We have talked about the lens diameter, but the diameter of a lens is rarely talked about directly in photography. Instead, they talk about the focal lens $f$ and the _aperture_, which is given as a $f$-Number. For example, the picture at the beginning of the blog post I took with a lens where $f = 46mm$ and an aperture of $f/2.8$. This $f$-Number _is_ the lens diameter, just given as a fraction of the focal length $f$. So in this case $A = \frac{f}{2.8} = 17.1mm$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit their <strike>film</strike> sensor, if they have the same aperature — regardless of focal length. For example, $50mm$ lens with a diameter of 25mm ($f/2.0$) lets in the same amount of light as a $100mm$ lens with a diameter of 50mm ($f/2.0$) and produces an equally bright image.
+The further away the light soruce is from the focus plane, the bigger the bokeh circle on the sensor will be. How big exactly it is will not be pretty, but will yield some interesting insight.
 
 ### Bokeh size
 
-How big is the circle on the sensor given a certain constellation? Looking at the rays on the left side of lens in diagram above, we can use the law of similar triangles (or more specifically the [intercept theorem]) to establish the following relationship between the lens aperture $A$ and the bokeh circle size $c$:
+Looking at the rays on the left side of lens in diagram above, we can use the law of similar triangles (or more specifically the [intercept theorem]) to establish the following relationship between the lens aperture $A$ and the bokeh circle size $c$:
 
 $$
   \frac{A}{s'_{\text{light}}} = \frac{c}{s'_{\text{focal}} - s'_{\text{light}}}
 $$
 
-To get the values for $s'_\text{light}$ and $s'_\text{focal}$ we can use the focusing equation above to parameterize the formula with the distance $D_\text{focal}$ of sensor plane and focal plane, and distance $D_\text{light}$ of sensor plane and point light:
+To get the values for $s'_\text{light}$ and $s'_\text{focal}$ we can use the focusing equation from above, and then we solve for $c$:
 
 $$
   c = A \left( \frac{\frac{D_\text{focal}}{2} + \sqrt{\frac{D_\text{focal}^2}{4} - D_\text{focal}\cdot f}}{\frac{D_\text{light}}{2} - \sqrt{\frac{D_\text{light}^2}{4} - D_\text{light}\cdot f}} - 1 \right)
 $$
 
-Admittedly, this formula isn’t very helpful or even allows us to build an intuition. So let’s look at the extreme case: The focal plane as close as possible to the lens ($D_\text{focal} = 4f$), while the point light is inifitely far away ($D_\text{light} \rightarrow \infty$). In this scenario, the formula drastically simplifies (provided you can [calculate the limit][limit], which I couldn’t without help):
+Admittedly, this formula isn’t simple, intuitive or, honestly, even that helpful. But let’s look at this in an extreme configuration: Let’s move the focal plane as close as possible to the sensor ($D_\text{focal} = 4f$) and move the light source inifitely far away ($D_\text{light} \rightarrow \infty$). In this scenario, the formula drastically simplifies (provided you can calculate the limit, which I couldn’t without [help][limit]):
 
 $$
-c = 2\cdot A
+c = A
 $$
 
 I found this _fascinating_. In the extreme case, the focal length actually has _no_ influence over the size of the bokeh circles. Aperture and aperture alone dictates how big the circle on the sensor is.
 
 ### Realistic scenario for bokeh size
 
-While focal length doesn’t matter in that extreme case, it _does_ matter for realistic scenarios. After all, we were trying to figure out the differences between to cameras _given the same scenario_, i.e same distance to subject (focal plane) and same angle of view.
+While focal length doesn’t matter in that extreme case, it _does_ matter for realistic scenarios. After all, we were trying to figure out why two cameras take different photos _given the same scenario_. That is, the  distance to the subject (focal plane) as well as the angle of view are equivalent, while sensor size, focal length and lens diameter are different.
 
 <figure>
 
@@ -527,7 +491,49 @@ While focal length doesn’t matter in that extreme case, it _does_ matter for r
 
 </figure>
 
-A smaller sensor requires a shorter focal length to achieve the same angle of view, resulting in smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor? The diagram also answers this, at least qualitatively: No! If the sensor gets smaller, the bokeh circle shrinks even quicker and that’s while we keep the lens diameter constant!
+We know from earlier that making the sensor smaller will also decrease the angle of view. Since we want to keep angle of view constant, we need to correct for the shrinking sensor with a shrinking focal length, which we know results in smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor? The diagram also answers this, at least qualitatively: No! If the sensor gets smaller, the bokeh circle shrinks even quicker and that’s while we keep the lens diameter constant!
+
+Something that is interesting is that a smaller lens diameter will also create a smaller bokeh circle on the sensor. This has interesting implications: Any point that is not _exactly_ on the focal plane will create a circle on the sensor, which means that the point is technically out of focus. Of course, a tiny circle is _humanly_ indistinguishable from a point, so there is an area around the focal plane that is called the focus _area_, as everything inside will _appear_ as points — and therefore in focus — to a human. So to keep a bokeh circle small (aka. make it more in focus), we can either move the focal plane or make the lens diameter smaller!
+
+### Lens size & shape
+
+Lenses are made of glass, so you can’t just change their size. But we just figured out that a smaller lens diameter will increase the focus area (often also called “sharpness”), so lenses usually have an adjustable iris to change the size of a lens.
+
+<figure>
+  <img src="iris.jpg" loading="lazy" width="800" height="800" style="max-width: 800px">
+  <figcaption>
+  
+  The iris of a lens, consisting of 16 blades.
+
+  </figcaption>
+</figure>
+
+The diagrams are not really good at visualizing it, but the shape of a lens will determine what a point light will look like when it’s out of focus. Pretty much all photography lenses are circular, which is why point lights turn into circles. The iris, however, is made of blades and is not _perfectly_ circular. The iris shown above is a 16-blade iris, which is rare. Most lenses I know have between 7 and 9 blades, and you can see the the not-quite-perfectly-circular iris affecting the look of light circles, for example in movies.
+
+<figure>
+  <img src="sherlock.jpg" loading="lazy" width="1280" height="719" style="max-width: 1280px">
+  <figcaption> A screenshot from the pilot episode of BBC’s “Sherlock” (2010). The lights in the background are out of focus and their jagged outline lets us count the number of blades used for the iris of the lens. </figcaption>
+</figure>
+
+Lensbaby takse advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shapes inbetween the lens and sensor:
+
+<figure>
+  <img src="#lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
+  <figcaption>Lensbaby lens using a nice swirl or something. Waiting for Ingrid.</figcaption>
+</figure>
+
+### f-stops
+
+We have talked about the lens diameter, but the diameter of a lens is rarely talked about directly in photography. Instead, they talk about the focal lens $f$ and the _aperture_, which is given as a $f$-Number. For example, the picture at the beginning of the blog post I took with a lens where $f = 46mm$ and an aperture of $f/2.8$. This $f$-Number _is_ the lens diameter, just given as a fraction of the focal length $f$. So in this case $A = \frac{f}{2.8} = 17.1mm$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit their <strike>film</strike> sensor, if they have the same aperature — regardless of focal length. For example, $50mm$ lens with a diameter of 25mm ($f/2.0$) lets in the same amount of light as a $100mm$ lens with a diameter of 50mm ($f/2.0$) and produces an equally bright image.
+
+This explains what small aperture (high $f$-Numbers) make images sharper! By limiting how big the bokeh circles can grow for out-of-focus elements in the photograph, more things will appear in focus to humans.
+
+> **Circle of confusion:** I won’t cover this part of the topic in depth, but the [circle of confusion] (CoC) plays a central role in calculating the focus area. The biggest circle that is perceived as a point by a human is called the circle of confusion, and the diameter of this circle of confusion depends on your eyesight, but also how big an image is shown and from what distance you look at it. That’s why I found it surprising and confusing that many articles list a single CoC diameter for for each sensor size (e.g. 0.029mm for a full frame sensor). These are apparently based on printing the a picture on a piece of paper on a specific size and looking at it from a specific distance with 20/20 vision. 
+>
+> In the digital age, however, we crop and we zoom. Something that looks in-focus on Instagram can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your diameter for the circle of confusion is the size of a single pixel on the sensor — because any circle that is at most the size of a pixel will still be captured as a single pixel. This has implications: You’ll find that this leaves you very little room for error as a photograpgher. Using the “traditional” circle of confusion yields a focus area of 1.5m, while the pixel-based circle of confusion makes it shrink to just ~28cm.
+
+The main takeaway from the diagram above is that there are two factors influencing the size of a circle on the sensor: The lens diameter $A$ and the point’s distance from the focal plane. Keeping everything else constant, a smaller lens diameter will create a smaller circle on the sensor, which in turn makes it _appear_ sharper. Or to phrase it another way: A smaller diameter creates a bigger focus area.
+
 
 ## Pixel 5 vs Digital Camera
 
@@ -542,10 +548,6 @@ f=4380/1000 A=173/100
 ```
 
 This says that my digital camera image was taken with $f=46mm$ and $f/2.8$ ($A=16.4mm$). The Pixel 5 used $f=4.38mm$ and $f/1.73$ ($A=2.5mm$). 
-
-
-
-
 
 <figure>
   <img src="#lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
