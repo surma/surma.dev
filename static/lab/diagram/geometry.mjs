@@ -25,6 +25,10 @@ export class Point extends Geometry {
     this.vicinity = 20;
   }
 
+  angle() {
+    return rad2deg(Math.atan(this.y / this.x));
+  }
+
   differenceSelf(other) {
     this.x -= other.x;
     this.y -= other.y;
@@ -132,7 +136,7 @@ export class Point extends Geometry {
   mirrorOnLine(line) {
     return this.copy().mirrorOnLineSelf(line);
   }
-    
+
   toSVG(withComma = true) {
     return [this.x, this.y].join(withComma ? "," : " ");
   }
@@ -153,6 +157,10 @@ export class Line extends Geometry {
     this.direction = direction.normalizeSelf();
   }
 
+  copy() {
+    return new Line(this.point, this.direction);
+  }
+
   static xAxis() {
     return new Line(new Point(0, 0), new Point(1, 0));
   }
@@ -163,6 +171,12 @@ export class Line extends Geometry {
 
   static throughPoints(p1, p2) {
     return new Line(p1, p1.difference(p2));
+  }
+
+  parallelThroughPoint(p) {
+    const newLine = this.copy();
+    newLine.point = p;
+    return newLine;
   }
 
   project(p) {
@@ -230,10 +244,10 @@ export class Segment extends Line {
     const samesignx = Math.sign(p.x) == Math.sign(this.direction.x);
     const samesigny = Math.sign(p.y) == Math.sign(this.direction.y);
     let factor = 1;
-    if(samesignx != samesigny) {
+    if (samesignx != samesigny) {
       factor = -1;
     }
-    return factor * p.length() / this.direction.length();
+    return (factor * p.length()) / this.direction.length();
   }
 
   length() {
@@ -362,15 +376,12 @@ export class Lens extends Geometry {
   }
 
   render({ svg }) {
-
     // const r = this.r ?? Math.max(this.fp.length() ** 1.2, this.aperture);
     const top = this.top();
     const bottom = this.bottom();
     const r = top.difference(this.focalPoint()).length();
     return svg`
-        <path class="lens" d="M ${top.toSVG()} A ${r} ${r} 0 0 1 ${bottom
-      .toSVG()} A ${r} ${r} 0 0 1 ${top
-      .toSVG()} z" 
+        <path class="lens" d="M ${top.toSVG()} A ${r} ${r} 0 0 1 ${bottom.toSVG()} A ${r} ${r} 0 0 1 ${top.toSVG()} z" 
       data-name="${this.name}"
       class="type-lens ${this.classList()}"
       />`;
@@ -443,18 +454,72 @@ export class Polygon extends Geometry {
   }
 }
 
+export function deg2rad(deg) {
+  return (deg / 360) * 2 * Math.PI;
+}
+
+export function rad2deg(rad) {
+  return (rad / (2 * Math.PI)) * 360;
+}
+
 export class Arc extends Geometry {
   constructor(c, r, p1, p2) {
     super();
     this.c = c;
     this.r = r;
-    this.p1 = p1;
-    this.p2 = p2;
+    this.p1 = p1.difference(c).normalizeSelf().scalarSelf(r).addSelf(c);
+    this.p2 = p2.difference(c).normalizeSelf().scalarSelf(r).addSelf(c);
+  }
+
+  static fromAngle(c, r, zeroAngle, angle) {
+    return new Arc(
+      c,
+      r,
+      c.add(
+        new Point(
+          Math.cos(deg2rad(zeroAngle - angle)) * r,
+          Math.sin(deg2rad(zeroAngle - angle)) * r
+        )
+      ),
+      c.add(
+        new Point(
+          Math.cos(deg2rad(zeroAngle + angle)) * r,
+          Math.sin(deg2rad(zeroAngle + angle)) * r
+        )
+      )
+    );
+  }
+
+  minAngle() {
+    return Math.min(this.p1.angle(), this.p2.angle());
+  }
+
+  maxAngle() {
+    return Math.max(this.p1.angle(), this.p2.angle());
+  }
+
+  clipPointToArc(p) {
+    p = p.difference(this.c).normalizeSelf();
+    const p1 = this.p1.difference(this.c).normalizeSelf();
+    const p2 = this.p2.difference(this.c).normalizeSelf();
+    const isInAngleRange = p.angle() > p1.angle() && p.angle() < p2.angle();
+    const hasSameSignX =
+      Math.sign(p.x) == Math.sign(p1.x) || Math.sign(p.x) == Math.sign(p2.x);
+    const hasSameSignY =
+      Math.sign(p.y) == Math.sign(p1.y) || Math.sign(p.y) == Math.sign(p2.y);
+    const hasSameSigns = hasSameSignX && hasSameSignY;
+    if (!isInAngleRange || !hasSameSigns) {
+      // If p is outside the arc, snap to the end point thats closer.
+      p = [p1, p2]
+        .sort((a, b) => a.difference(p).length() - b.difference(p).length())[0]
+        .copy();
+    }
+    return p.scalarSelf(this.r).addSelf(this.c);
   }
 
   render({ svg }) {
-    const p1 = this.p1.difference(this.c).normalizeSelf().scalarSelf(this.r).addSelf(this.c);
-    const p2 = this.p2.difference(this.c).normalizeSelf().scalarSelf(this.r).addSelf(this.c);
+    const p1 = this.clipPointToArc(this.p1);
+    const p2 = this.clipPointToArc(this.p2);
     return svg`
       <path 
         data-type="arc" 
@@ -565,8 +630,8 @@ export function renderToString(diagram) {
   const mocks = {
     html: filteredRawString,
     svg: filteredRawString,
-    unsafeSVG: x => x,
-    unsafeHTML: x => x,
+    unsafeSVG: (x) => x,
+    unsafeHTML: (x) => x,
   };
   return mocks.html`
         <svg
@@ -582,16 +647,15 @@ export function renderToString(diagram) {
 }
 
 export function clamp(min, v, max) {
-  if(v < min) {
+  if (v < min) {
     return min;
   }
-  if(v > max) {
+  if (v > max) {
     return max;
   }
   return v;
 }
 
 export function remap(minin, maxin, minout, maxout) {
-  return v => 
-    (v - minin) / (maxin - minin) * (maxout - minout) + minout;
+  return (v) => ((v - minin) / (maxin - minin)) * (maxout - minout) + minout;
 }

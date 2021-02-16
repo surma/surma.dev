@@ -254,7 +254,7 @@ This leads us to two conclusions: The focal length is directly related to the an
 
 $$
 
-\frac{D}{2f} = \tan \alpha
+\frac{D}{2f} = \tan \frac{\alpha}{2}
 
 $$
 
@@ -456,19 +456,9 @@ $$
 
 I found this _fascinating_. In the extreme case, the focal length actually has _no_ influence over the size of the bokeh circles. Aperture and aperture alone dictates how big the circle on the sensor is.
 
-## Sensor size
+### Realistic scenario for bokeh size
 
-Let’s return at the original comparison image from the start of the article. What kind of lens does a Pixel 5 have exactly? And what kind of sensor? Luckily, some of this data is embedded in the EXIF data of the images and can be extracted using `identify` from ImageMagick:
-
-```
-$ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' cam_image.jpg
-f=46/1 A=28/10
-
-$ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' pixel5_image.jpg
-f=4380/1000 A=173/100
-```
-
-This says that my digital camera image was taken with $f=46mm$ and $f/2.8$ ($A=16.4mm$). The Pixel 5 used $f=4.38mm$ and $f/1.73$ ($A=2.5mm$). 
+While focal length doesn’t matter in that extreme case, it _does_ matter for realistic scenarios. After all, we were trying to figure out the differences between to cameras _given the same scenario_, i.e same distance to subject (focal plane) and same angle of view.
 
 <figure>
 
@@ -484,27 +474,50 @@ This says that my digital camera image was taken with $f=46mm$ and $f/2.8$ ($A=1
     },
     handles: {
       s: new geometry.Point(0, -50),
-      fp: new geometry.Point(220, 0),
+      lensSize: new geometry.Point(0, -20),
     },
     recalculate() {
-      this.handles.s.x = this.viewBox.leftX + 20;
-      this.handles.s.y = geometry.clamp(-100, this.handles.s.y, -10);
-      this.handles.fp.y = 0;
-      this.handles.fp.x = Math.max(400, this.handles.fp.x);
-      const alpha = 50;
-      const f = Math.abs(this.handles.s.y)*2 / (2* Math.tan(alpha /360 * 2 *Math.PI));
-      const lensCenter = new geometry.Point(this.handles.fp.x/2 - Math.sqrt(this.handles.fp.x**2/4 - this.handles.fp.x *f), 0);
-      const lens = new geometry.Lens(lensCenter, new geometry.Point(f, 0), 50);
+      const fp = new geometry.Point(390, 0);
+      this.handles.s.x = 0;
+      this.handles.s.y = geometry.clamp(-80, this.handles.s.y, -40);
+      const alpha = 80;
+      const f = Math.abs(this.handles.s.y)*2 / (2* Math.tan(geometry.deg2rad(alpha/2)));
+      const lensCenter = new geometry.Point(fp.x/2 - Math.sqrt(fp.x**2/4 - fp.x *f), 0);
+      this.handles.lensSize.y = geometry.clamp(-70, this.handles.lensSize.y, -20);
+      const lens = new geometry.Lens(lensCenter, new geometry.Point(f, 0), -this.handles.lensSize.y*2);
+      this.handles.lensSize.x = lensCenter.x;
 
       const sensorplane = new geometry.Line(this.handles.s, new geometry.Point(0, 1));
       const sensorTop = this.handles.s;
       const sensorBottom = this.handles.s.mirrorOnLine(geometry.Line.xAxis());
       const sensor = new geometry.Segment(sensorTop, sensorBottom);
 
+      const focalPlane = geometry.Line.yAxis().parallelThroughPoint(fp);
+      const {point: sensorTopP} = lens.lensProject(sensorTop);
+      const {point: sensorBottomP} = lens.lensProject(sensorBottom);
+      const lfp = lens.focalPoint();
+      const fov = new geometry.Polygon(
+        lfp, 
+        new geometry.HalfSegment(lfp, sensorTopP).pointAtDistance(9999), 
+        new geometry.HalfSegment(lfp, sensorBottomP).pointAtDistance(9999)
+      );
+
+      const gap = new geometry.Point(10, 0);
+      const topline = new geometry.Line(new geometry.Point(0, this.viewBox.topY + 20), new geometry.Point(1, 0));
+
+      const lightSource = new geometry.Point(this.viewBox.rightX - 20, 0.01);
+      const {polygon: light} = lens.lightRays(lightSource);
+
       return [
         sensorplane.addClass("sensorplane"),
         sensor.addClass("sensor"),
         lens.addClass("lens"),
+        focalPlane.addClass("focalplane"),
+        new geometry.Text(topline.project(sensorTopP).addSelf(gap), "Focal plane"),
+        lfp,
+        fov.addClass("fov"),
+        lightSource,
+        light.addClass("light"),
       ];
     },
   }
@@ -513,6 +526,24 @@ This says that my digital camera image was taken with $f=46mm$ and $f/2.8$ ($A=1
 <figcaption>A lens focuses light rays onto a point.</figcaption>
 
 </figure>
+
+A smaller sensor requires a shorter focal length to achieve the same angle of view, resulting in smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor? The diagram also answers this, at least qualitatively: No! If the sensor gets smaller, the bokeh circle shrinks even quicker and that’s while we keep the lens diameter constant!
+
+## Pixel 5 vs Digital Camera
+
+Let’s return at the original comparison image from the start of the article. What kind of lens does a Pixel 5 have exactly? And what kind of sensor? Luckily, some of this data is embedded in the EXIF data of the images and can be extracted using `identify` from ImageMagick:
+
+```
+$ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' cam_image.jpg
+f=46/1 A=28/10
+
+$ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' pixel5_image.jpg
+f=4380/1000 A=173/100
+```
+
+This says that my digital camera image was taken with $f=46mm$ and $f/2.8$ ($A=16.4mm$). The Pixel 5 used $f=4.38mm$ and $f/1.73$ ($A=2.5mm$). 
+
+
 
 
 
