@@ -426,7 +426,7 @@ The diagrams are not really good at visualizing it, but the shape of a lens will
 Lensbaby takse advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shapes inbetween the lens and sensor:
 
 <figure>
-  <img src="lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
+  <img src="#lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
   <figcaption>Lensbaby lens using a nice swirl or something. Waiting for Ingrid.</figcaption>
 </figure>
 
@@ -548,7 +548,7 @@ This says that my digital camera image was taken with $f=46mm$ and $f/2.8$ ($A=1
 
 
 <figure>
-  <img src="lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
+  <img src="#lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
   <figcaption>The same image cropped in to emulate a smaller sensor. The bokeh appears to be bigger.</figcaption>
 </figure>
 

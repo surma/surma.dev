@@ -1,6 +1,8 @@
 export class Geometry {
-  name = "";
-  cssClasses = new Set();
+  constructor() {
+    this.name = "";
+    this.cssClasses = new Set();
+  }
 
   addClass(...classes) {
     this.cssClasses.add(...classes);
@@ -284,7 +286,10 @@ export class HalfSegment extends Segment {
 }
 
 export class Arrow extends Segment {
-  size = 10;
+  constructor(p1, p2) {
+    super(p1, p2);
+    this.size = 10;
+  }
 
   render({ svg }) {
     return svg`
@@ -307,7 +312,10 @@ export class Arrow extends Segment {
 }
 
 export class MeasureLine extends Segment {
-  size = 10;
+  constructor(p1, p2) {
+    super(p1, p2);
+    this.size = 10;
+  }
 
   render({ svg }) {
     const barDir = this.direction.orthogonal();
