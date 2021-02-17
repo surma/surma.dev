@@ -505,14 +505,20 @@ We know from earlier that making the sensor smaller will also decrease the angle
 
 <figure>
   <img src="constant-aperture.svg" width=600 height=400>
-  <figcaption>Keeping everything but the sensor size constant, bokeh only slightly increases with increasing sensor size.</figcaption>
+  <figcaption>When keeping everything but the sensor size constant, bokeh only slightly increases with bigger sensors.</figcaption>
 </figure>
 
-Something that is interesting is that a smaller lens diameter will also create a smaller bokeh circle on the sensor. This has interesting implications. As we have established, any point that is not _exactly_ on the focal plane will create a circle on the sensor, which means that the point is technically out of focus. However, a tiny circle is _humanly_ indistinguishable from a point, so there is an area around the focal plane that is called the focus _area_, as everything inside will _appear_ in focus to a human, as their bokeh circles are small. If we could make the lens diameter smaller, we could keep bokeh circles from becoming too big. Or another way: With a smaller lens diameter, more things will appear in focus because bokeh circles don’t grows as quickly, effectively making the focus area is bigger.
+Something that is interesting is that making the lens small will also create a smaller bokeh circle on the sensor. However, a tiny circle is _humanly_ indistinguishable from a point, so a until a certain circle size, a human can’t tell the difference between perfectly in focus and slightly out of focus. That means that there a bit of leeway around the focal plane to either side, which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye.
+
+> **Circle of confusion:** The biggest circle that is perceived as a point by a human is called the [circle of confusion] (CoC),and it plays a central role in calculating the focus area. The diameter of the CoC depends on your eyesight, obviously, but also how big an image is displayed and from what distance you are looking at it. It’s confusing that many source on the internet list a single CoC diameter for any given each sensor size, like 0.029mm for a full frame sensor. These are apparently based on printing the a picture on a piece of paper on a specific size and looking at it from a specific distance with 20/20 vision. 
+>
+> I won’t go into this with more detail, but these numbers seem unfit for the digital age, where we crop and we zoom. Something that looks in-focus on Instagram can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your circle of confusion is the size of a single pixel on the sensor. Any circle that is at most the size of a pixel will still be captured as a single pixel. No matter how much you zoom in. This has implications. I did the math to compare how big the focus are is with traditional CoCs vs the pixel-based CoC, and the pixel-based CoC leaves you very little room for error as a photograpgher: A traditional focus area of 1.5m, for example, shrinks to just ~28cm.
+
+In summary that means that a smaller lens creates a bigger focus area. But, alas, lenses are made of glass and can’t just change their size.
 
 ### Lens size & shape
 
-Lenses are made of glass, so you can’t just change their size. But we just figured out that a smaller lens diameter will increase the focus area (often also called “sharpness”), so lenses usually have an adjustable iris to change the size of a lens.
+The fact that smaller lens diameters create sharper images has been known since the age of pinhole cameras, which is why lenses usually have an adjustable iris, a bunch of metal blades, to change the apparent size of a lens.
 
 <figure>
   <img src="iris.jpg" loading="lazy" width="800" height="800" style="max-width: 800px">
@@ -523,14 +529,14 @@ Lenses are made of glass, so you can’t just change their size. But we just fig
   </figcaption>
 </figure>
 
-The diagrams are not really good at visualizing it, but the shape of a lens will determine what a point light will look like when it’s out of focus. Pretty much all photography lenses are circular, which is why point lights turn into circles. The iris, however, is made of blades and is not _perfectly_ circular. The iris shown above is a 16-blade iris, which is rare. Most lenses I know have between 7 and 9 blades, and you can see the the not-quite-perfectly-circular iris affecting the look of light circles, for example in movies.
+The diagrams are not really good at visualizing it, but the _shape_ of a lens will determine what a point light will look like when it’s out of focus. We have been talking about bokeh circles because pretty much all photography lenses are circular. The iris, mostly, but not quite _perfectly_ circular. In movies you can sometimes tell that a lens’ iris was closed down a bit because the bokeh circles are slightly jagged.
 
 <figure>
   <img src="sherlock.jpg" loading="lazy" width="1280" height="719" style="max-width: 1280px">
   <figcaption> A screenshot from the pilot episode of BBC’s “Sherlock” (2010). The lights in the background are out of focus and their jagged outline lets us count the number of blades used for the iris of the lens. </figcaption>
 </figure>
 
-Lensbaby takse advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shapes inbetween the lens and sensor:
+Lensbaby lenses actively take advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shape plates inbetween the lens and sensor:
 
 <figure>
   <img src="#lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
@@ -539,21 +545,7 @@ Lensbaby takse advantage of the fact that out-of-focus spot lights take the shap
 
 ### f-stops
 
-We have talked about the lens diameter, but the diameter of a lens is rarely talked about directly in photography. Instead, they talk about the focal lens $f$ and the _aperture_, which is given as a $f$-Number. For example, the picture at the beginning of the blog post I took with a lens where $f = 46mm$ and an aperture of $f/2.8$. This $f$-Number _is_ the lens diameter, just given as a fraction of the focal length $f$. So in this case $A = \frac{f}{2.8} = 17.1mm$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit their <strike>film</strike> sensor, if they have the same aperature — regardless of focal length. For example, $50mm$ lens with a diameter of 25mm ($f/2.0$) lets in the same amount of light as a $100mm$ lens with a diameter of 50mm ($f/2.0$) and produces an equally bright image.
-
-This explains what small aperture (high $f$-Numbers) make images sharper! By limiting how big the bokeh circles can grow for out-of-focus elements in the photograph, more things will appear in focus to humans.
-
-> **Circle of confusion:** I won’t cover this part of the topic in depth, but the [circle of confusion] (CoC) plays a central role in calculating the focus area. The biggest circle that is perceived as a point by a human is called the circle of confusion, and the diameter of this circle of confusion depends on your eyesight, but also how big an image is shown and from what distance you look at it. That’s why I found it surprising and confusing that many articles list a single CoC diameter for for each sensor size (e.g. 0.029mm for a full frame sensor). These are apparently based on printing the a picture on a piece of paper on a specific size and looking at it from a specific distance with 20/20 vision. 
->
-> In the digital age, however, we crop and we zoom. Something that looks in-focus on Instagram can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your diameter for the circle of confusion is the size of a single pixel on the sensor — because any circle that is at most the size of a pixel will still be captured as a single pixel. This has implications: You’ll find that this leaves you very little room for error as a photograpgher. Using the “traditional” circle of confusion yields a focus area of 1.5m, while the pixel-based circle of confusion makes it shrink to just ~28cm.
-
-The main takeaway from the diagram above is that there are two factors influencing the size of a circle on the sensor: The lens diameter $A$ and the point’s distance from the focal plane. Keeping everything else constant, a smaller lens diameter will create a smaller circle on the sensor, which in turn makes it _appear_ sharper. Or to phrase it another way: A smaller diameter creates a bigger focus area.
-
-<figure>
-  <img src="fstop-aperture.svg" width=600 height=400>
-  <figcaption>???</figcaption>
-</figure>
-
+We have talked about the lens diameter, and how the iris allows you to effectively adjust a lenses size. However, the lens diameter is rarely talked about directly in photography. Instead, they talk about the _aperture_, which is given as a $f$-Number. For example, the picture at the beginning of the blog post I took with a lens where $f = 46mm$ and an aperture of $f/2.8$. This $f$-Number _is_ the lens diameter, just given as a fraction of the focal length $f$. So in this case $A = \frac{f}{2.8} = 17.1mm$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit their <strike>film</strike> sensor, when they are set to the same $f$-Number — regardless of their focal lengths. For example, $50mm$ lens with the iris set to $f/2.0$ ($A=25mm$) lets in the same amount of light as a $100mm$ lens set to $f/2.0$ ($A=50mm$).
 
 ## Pixel 5 vs Digital Camera
 
@@ -568,11 +560,6 @@ f=4380/1000 A=173/100
 ```
 
 This says that my digital camera image was taken with $f=46mm$ and $f/2.8$ ($A=16.4mm$). The Pixel 5 used $f=4.38mm$ and $f/1.73$ ($A=2.5mm$). 
-
-<figure>
-  <img src="#lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
-  <figcaption>The same image cropped in to emulate a smaller sensor. The bokeh appears to be bigger.</figcaption>
-</figure>
 
 > **More lies:** I am ignoring the fact that the Pixel 5’s portrait mode crops in, effectively zooming in and giving the phone a longer focal length. Longer focal lenses are typically deemed more flattering for portraits as they have less perspective distortion. Whether this is a technical limitation or a technique to force people to literally take a step back when taking picrtures, is unclear to me.
 
