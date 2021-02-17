@@ -229,6 +229,11 @@ export class Segment extends Line {
     return new Line(this.point, this.direction);
   }
 
+  clipPoint(p) {
+    p = this.project(p);
+    return this.pointAtDistance(clamp(0, this.whereIs(p), this.length()));
+  }
+
   shrinkSelf(delta) {
     const d = this.direction.scalar(delta);
     this.p1.addSelf(d);

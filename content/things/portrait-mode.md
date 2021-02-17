@@ -398,15 +398,18 @@ To figure this one out, we’ll have to introduce a bunch of variables and measu
 
 The further away the light soruce is from the focus plane, the bigger the bokeh circle on the sensor will be. How big exactly it is will not be pretty, but will yield some interesting insight.
 
-### Bokeh size
+### Deriving a formula
 
 Looking at the rays on the left side of lens in diagram above, we can use the law of similar triangles (or more specifically the [intercept theorem]) to establish the following relationship between the lens aperture $A$ and the bokeh circle size $c$:
 
 $$
-  \frac{A}{s'_{\text{light}}} = \frac{c}{s'_{\text{focal}} - s'_{\text{light}}}
+  \begin{array}{rrcl}
+    & \frac{A}{s'_{\text{light}}} & = & \frac{c}{s'_{\text{focal}} - s'_{\text{light}}} \\
+    \Leftrightarrow & c & = & A \left( \frac{s'_\text{focal}}{s'_\text{light}} -1 \right) \\
+  \end{array}
 $$
 
-To get the values for $s'_\text{light}$ and $s'_\text{focal}$ we can use the focusing equation from above, and then we solve for $c$:
+To get the values for $s'_\text{light}$ and $s'_\text{focal}$ we can use the focusing equation from above:
 
 $$
   c = A \left( \frac{\frac{D_\text{focal}}{2} + \sqrt{\frac{D_\text{focal}^2}{4} - D_\text{focal}\cdot f}}{\frac{D_\text{light}}{2} - \sqrt{\frac{D_\text{light}^2}{4} - D_\text{light}\cdot f}} - 1 \right)
@@ -418,11 +421,11 @@ $$
 c = A
 $$
 
-I found this _fascinating_. In the extreme case, the focal length actually has _no_ influence over the size of the bokeh circles. Aperture and aperture alone dictates how big the circle on the sensor is.
+I found this _fascinating_. In the extreme case, the focal length actually has _no_ influence over the size of the bokeh circles. Lens size alone dictates how big the circle on the sensor is.
 
-### Realistic scenario for bokeh size
+### Comparable scenario
 
-While focal length doesn’t matter in that extreme case, it _does_ matter for realistic scenarios. After all, we were trying to figure out why two cameras take different photos _given the same scenario_. That is, the  distance to the subject (focal plane) as well as the angle of view are equivalent, while sensor size, focal length and lens diameter are different.
+While focal length doesn’t matter in that extreme case, maybe it does matter for... realistic scenarios? After all, we were trying to figure out why two cameras take different photos _given the same scenario_. That is, we have the same scene with the exact same field of view and same focal plane, while sensor size, position, focal length and lens diameter can change.
 
 <figure>
 
@@ -438,50 +441,57 @@ While focal length doesn’t matter in that extreme case, it _does_ matter for r
     },
     handles: {
       s: new geometry.Point(0, -50),
-      lensSize: new geometry.Point(0, -20),
+      lensSize: new geometry.Point(0, -40),
     },
     recalculate() {
-      const fp = new geometry.Point(390, 0);
-      this.handles.s.x = 0;
-      this.handles.s.y = geometry.clamp(-80, this.handles.s.y, -40);
       const alpha = 80;
-      const f = Math.abs(this.handles.s.y)*2 / (2* Math.tan(geometry.deg2rad(alpha/2)));
-      const lensCenter = new geometry.Point(fp.x/2 - Math.sqrt(fp.x**2/4 - fp.x *f), 0);
-      this.handles.lensSize.y = geometry.clamp(-70, this.handles.lensSize.y, -20);
-      const lens = new geometry.Lens(lensCenter, new geometry.Point(f, 0), -this.handles.lensSize.y*2);
-      this.handles.lensSize.x = lensCenter.x;
-
-      const sensorplane = new geometry.Line(this.handles.s, new geometry.Point(0, 1));
-      const sensorTop = this.handles.s;
-      const sensorBottom = this.handles.s.mirrorOnLine(geometry.Line.xAxis());
-      const sensor = new geometry.Segment(sensorTop, sensorBottom);
-
-      const focalPlane = geometry.Line.yAxis().parallelThroughPoint(fp);
-      const {point: sensorTopP} = lens.lensProject(sensorTop);
-      const {point: sensorBottomP} = lens.lensProject(sensorBottom);
-      const lfp = lens.focalPoint();
-      const fov = new geometry.Polygon(
-        lfp, 
-        new geometry.HalfSegment(lfp, sensorTopP).pointAtDistance(9999), 
-        new geometry.HalfSegment(lfp, sensorBottomP).pointAtDistance(9999)
-      );
-
       const gap = new geometry.Point(10, 0);
       const topline = new geometry.Line(new geometry.Point(0, this.viewBox.topY + 20), new geometry.Point(1, 0));
+      const centerX = (this.viewBox.rightX + this.viewBox.leftX) / 2;
 
+      const sensorSizeSlider = new geometry.MeasureLine(
+        new geometry.Point(centerX - 100, this.viewBox.bottomY - 20),
+        new geometry.Point(centerX + 100, this.viewBox.bottomY - 20),
+      );
+      this.handles.s = sensorSizeSlider.clipPoint(this.handles.s);
+      const sensorSize = geometry.remap(0, sensorSizeSlider.length(), 40, 80)(sensorSizeSlider.whereIs(this.handles.s));
+
+      const focalPlaneCenter = new geometry.Point(390, 0);
+      const focalPlane = geometry.Line.yAxis().parallelThroughPoint(focalPlaneCenter);
+      const focalPoint = focalPlaneCenter.subtract(new geometry.Point(Math.cos(geometry.deg2rad(alpha/2))*(this.viewBox.bottomY - this.viewBox.topY)*0.9/2, 0));
+      const f = sensorSize*2 / (2* Math.tan(geometry.deg2rad(alpha/2)));
+      const lensCenter = focalPoint.subtract(new geometry.Point(f, 0));
+      this.handles.lensSize.y = geometry.clamp(-70, this.handles.lensSize.y, -20);
+      const lens = new geometry.Lens(lensCenter, new geometry.Point(f, 0), -this.handles.lensSize.y*2);
+      const otherFocalPoint = lens.otherFocalPoint();
+      this.handles.lensSize.x = lensCenter.x;
+      const sensorX = lens.lensProject(focalPlane.pointAtDistance(10)).point;
+      const sensorplane = geometry.Line.yAxis().parallelThroughPoint(sensorX);
+      const sensorTop = sensorplane.project(new geometry.Point(0, -sensorSize));
+      const sensorBottom = sensorTop.mirrorOnLine(geometry.Line.xAxis());
+      const sensor = new geometry.Segment(sensorTop, sensorBottom);
+      const {point: sensorTopP} = lens.lensProject(sensorTop);
+      const {point: sensorBottomP} = lens.lensProject(sensorBottom);
+      const fov = new geometry.Polygon(
+        focalPoint, 
+        new geometry.HalfSegment(focalPoint, sensorTopP).pointAtDistance(9999), 
+        new geometry.HalfSegment(focalPoint, sensorBottomP).pointAtDistance(9999)
+      );
       const lightSource = new geometry.Point(this.viewBox.rightX - 20, 0.01);
       const {polygon: light} = lens.lightRays(lightSource);
-
       return [
+        lens.addClass("lens"), 
+        focalPoint,
+        otherFocalPoint,
+        focalPlane.addClass("focalplane"), 
         sensorplane.addClass("sensorplane"),
         sensor.addClass("sensor"),
-        lens.addClass("lens"),
-        focalPlane.addClass("focalplane"),
-        new geometry.Text(topline.project(sensorTopP).addSelf(gap), "Focal plane"),
-        lfp,
         fov.addClass("fov"),
         lightSource,
         light.addClass("light"),
+        new geometry.Text(topline.project(sensorTopP).addSelf(gap), "Focal plane"),
+        sensorSizeSlider,
+        new geometry.Text(sensorSizeSlider.middle().add(gap.orthogonal()), "Sensor size").addClass("text-hmiddle"),
       ];
     },
   }
@@ -491,9 +501,14 @@ While focal length doesn’t matter in that extreme case, it _does_ matter for r
 
 </figure>
 
-We know from earlier that making the sensor smaller will also decrease the angle of view. Since we want to keep angle of view constant, we need to correct for the shrinking sensor with a shrinking focal length, which we know results in smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor? The diagram also answers this, at least qualitatively: No! If the sensor gets smaller, the bokeh circle shrinks even quicker and that’s while we keep the lens diameter constant!
+We know from earlier that making the sensor smaller will also decrease the angle of view. Since we want to keep angle of view constant, we need to correct for the shrinking sensor with a shrinking focal length, which we know results in smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor, yielding the exact same image? It’s hard to tell from the diagramm, so I guess I have nothing left to do than to use that horrible formula from earlier. But I’ll have [Julia] do the work for me:
 
-Something that is interesting is that a smaller lens diameter will also create a smaller bokeh circle on the sensor. This has interesting implications: Any point that is not _exactly_ on the focal plane will create a circle on the sensor, which means that the point is technically out of focus. Of course, a tiny circle is _humanly_ indistinguishable from a point, so there is an area around the focal plane that is called the focus _area_, as everything inside will _appear_ as points — and therefore in focus — to a human. So to keep a bokeh circle small (aka. make it more in focus), we can either move the focal plane or make the lens diameter smaller!
+<figure>
+  <img src="constant-aperture.svg" width=600 height=400>
+  <figcaption>Keeping everything but the sensor size constant, bokeh only slightly increases with increasing sensor size.</figcaption>
+</figure>
+
+Something that is interesting is that a smaller lens diameter will also create a smaller bokeh circle on the sensor. This has interesting implications. As we have established, any point that is not _exactly_ on the focal plane will create a circle on the sensor, which means that the point is technically out of focus. However, a tiny circle is _humanly_ indistinguishable from a point, so there is an area around the focal plane that is called the focus _area_, as everything inside will _appear_ in focus to a human, as their bokeh circles are small. If we could make the lens diameter smaller, we could keep bokeh circles from becoming too big. Or another way: With a smaller lens diameter, more things will appear in focus because bokeh circles don’t grows as quickly, effectively making the focus area is bigger.
 
 ### Lens size & shape
 
@@ -533,6 +548,11 @@ This explains what small aperture (high $f$-Numbers) make images sharper! By lim
 > In the digital age, however, we crop and we zoom. Something that looks in-focus on Instagram can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your diameter for the circle of confusion is the size of a single pixel on the sensor — because any circle that is at most the size of a pixel will still be captured as a single pixel. This has implications: You’ll find that this leaves you very little room for error as a photograpgher. Using the “traditional” circle of confusion yields a focus area of 1.5m, while the pixel-based circle of confusion makes it shrink to just ~28cm.
 
 The main takeaway from the diagram above is that there are two factors influencing the size of a circle on the sensor: The lens diameter $A$ and the point’s distance from the focal plane. Keeping everything else constant, a smaller lens diameter will create a smaller circle on the sensor, which in turn makes it _appear_ sharper. Or to phrase it another way: A smaller diameter creates a bigger focus area.
+
+<figure>
+  <img src="fstop-aperture.svg" width=600 height=400>
+  <figcaption>???</figcaption>
+</figure>
 
 
 ## Pixel 5 vs Digital Camera
@@ -670,3 +690,4 @@ For most intents and purposes, these series of individual lenses
 [circle of confusion]: https://en.wikipedia.org/wiki/Circle_of_confusions
 [limit]: https://twitter.com/DasSurma/status/1361293594435403778
 [pixel5 sensor]: https://www.dxomark.com/google-pixel-5-camera-review-software-power/
+[julia]: https://julialang.org/
