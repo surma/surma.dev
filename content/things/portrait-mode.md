@@ -508,17 +508,19 @@ We know from earlier that making the sensor smaller will also decrease the angle
   <figcaption>When keeping everything but the sensor size constant, bokeh only slightly increases with bigger sensors.</figcaption>
 </figure>
 
-Something that is interesting is that making the lens small will also create a smaller bokeh circle on the sensor. However, a tiny circle is _humanly_ indistinguishable from a point, so a until a certain circle size, a human can’t tell the difference between perfectly in focus and slightly out of focus. That means that there a bit of leeway around the focal plane to either side, which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye.
+Overall, the bokeh _slightly_ increases with bigger sensor size. But overall two differently sized sensors should take roughly the same picture if angle of view and lens diameter are kept constant.
+
+Something that is interesting is that making the lens diameter smaller will also shrink bokeh circle on the sensor. A very small circle, however, is _humanly_ indistinguishable from a point. Or to phrase it another way: Up until a certain circle size, a human can’t tell the difference between something being perfectly in focus and slightly out of focus. Practically, there is a bit of leeway around the focal plane to either side which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye. And because a smaller lens diameter will create smaller bokeh circles, the focus area is bigger when the lens is smaller.
 
 > **Circle of confusion:** The biggest circle that is perceived as a point by a human is called the [circle of confusion] (CoC),and it plays a central role in calculating the focus area. The diameter of the CoC depends on your eyesight, obviously, but also how big an image is displayed and from what distance you are looking at it. It’s confusing that many source on the internet list a single CoC diameter for any given each sensor size, like 0.029mm for a full frame sensor. These are apparently based on printing the a picture on a piece of paper on a specific size and looking at it from a specific distance with 20/20 vision. 
 >
 > I won’t go into this with more detail, but these numbers seem unfit for the digital age, where we crop and we zoom. Something that looks in-focus on Instagram can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your circle of confusion is the size of a single pixel on the sensor. Any circle that is at most the size of a pixel will still be captured as a single pixel. No matter how much you zoom in. This has implications. I did the math to compare how big the focus are is with traditional CoCs vs the pixel-based CoC, and the pixel-based CoC leaves you very little room for error as a photograpgher: A traditional focus area of 1.5m, for example, shrinks to just ~28cm.
 
-In summary that means that a smaller lens creates a bigger focus area. But, alas, lenses are made of glass and can’t just change their size.
+In summary that means that a smaller lens creates a bigger focus area. But, alas, lenses are made of glass and can’t just change their size, now can the?
 
 ### Lens size & shape
 
-The fact that smaller lens diameters create sharper images has been known since the age of pinhole cameras, which is why lenses usually have an adjustable iris, a bunch of metal blades, to change the apparent size of a lens.
+The fact that smaller lens diameters create sharper images has been known since the age of pinhole cameras, which is why photographers came up with mechanisms to adjust a lens’ size. Most lenses do this via an adjustable iris, a bunch of metal blades.
 
 <figure>
   <img src="iris.jpg" loading="lazy" width="800" height="800" style="max-width: 800px">
@@ -546,6 +548,18 @@ Lensbaby lenses actively take advantage of the fact that out-of-focus spot light
 ### f-stops
 
 We have talked about the lens diameter, and how the iris allows you to effectively adjust a lenses size. However, the lens diameter is rarely talked about directly in photography. Instead, they talk about the _aperture_, which is given as a $f$-Number. For example, the picture at the beginning of the blog post I took with a lens where $f = 46mm$ and an aperture of $f/2.8$. This $f$-Number _is_ the lens diameter, just given as a fraction of the focal length $f$. So in this case $A = \frac{f}{2.8} = 17.1mm$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit their <strike>film</strike> sensor, when they are set to the same $f$-Number — regardless of their focal lengths. For example, $50mm$ lens with the iris set to $f/2.0$ ($A=25mm$) lets in the same amount of light as a $100mm$ lens set to $f/2.0$ ($A=50mm$).
+
+That all was just to say that photographers use $f$-Numbers to compare lens configurations, so we should redo the graph above with a constant $f$-Number instead of a constant lens diameter. The result we get is more drastic: Smaller sensors have significantly smaller bokeh circles than their bigger counterparts.
+
+<figure>
+  <img src="fstop-aperture.svg" width=600 height=400>
+  <figcaption>
+  
+  Keeping the $f$-Number constant instead of the lens diameter, gives a more realistic and expected outcome of the experiment.
+  
+  </figcaption>
+</figure>
+
 
 ## Pixel 5 vs Digital Camera
 
