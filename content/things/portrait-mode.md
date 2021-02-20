@@ -324,10 +324,13 @@ Now that we know how to focus, determine the focal plane and even determine lens
 
 <figure>
   <img src="bokeh.jpg" loading="lazy" width="1280" height="720" style="max-width: 1280px">
-  <figcaption>A screenshot from season 5 episode 8 of “Suits”. The lights in the background are out of focus and have turned into big circles.</figcaption>
+  <figcaption>
+  The lights in the background are out of focus and have turned into big circles.<br>
+  Screenshot taken from season 5 episode 8 of “Suits”. 
+  </figcaption>
 </figure>
 
-  To figure out how big the circle will be, we’ll have to introduce a couple of variables. First, we have to separate our distance to the focal plane from the distance to our light source. The focal plane is fairly close to the sensor, while the light source is further away. We can now figure out where the lens needs to located to set the right focus, and which point the light from the light source will be focused on.
+To figure out how big the circle will be, we’ll have to introduce a couple of variables. First, we have to separate our distance to the focal plane from the distance to our light source. The focal plane is fairly close to the sensor, while the light source is further away. We can now figure out where the lens needs to located to set the right focus, and which point the light from the light source will be focused on.
 
 <figure>
 
@@ -457,20 +460,9 @@ $$
 
 I found this _fascinating_. In the extreme case, the focal length actually has _no_ influence over the size of the bokeh circles. Lens size alone dictates how big the circle on the sensor is.
 
-## Realistic comparison
+### Same-picture comparison
 
-While focal length doesn’t matter in that extreme case, maybe it does matter for... realistic scenarios? I took a picture with my Pixel 5 and then tried to take the exact same picture with my Canon EOS R.
-
-<figure>
-  <img src="./comparison.jpg" loading="lazy" width=2048 height=767>
-  <figcaption>
-    Left: Photo taken with my Pixel 5, main camera lens.<br>
-    Right: Photo taken with my Canon EOS R, with a zoom lens set to 27mm.<br>
-    (Images cropped to match aspect ratio, slight color grading.)
-  </figcaption>
-</figure>
-
-So what did I really do here? My Pixel 5 has a fixed lens, so I took a photo with it first. I then tried to exactly match field of view with my DSLR, using land marks in the photo to align as close as possible. Specifically, we have the same scene with the exact same field of view and same focal plane, while sensor size, sensor position, focal length and lens diameter can change.
+While focal length doesn’t matter in that extreme case, the extreme case is different per lens and effectively creates a different photo. What if we tried to “keep the photo constant”. That way only lens diameter and sensor size are the only variables we have: 
 
 <figure>
 
@@ -546,20 +538,20 @@ So what did I really do here? My Pixel 5 has a fixed lens, so I took a photo wit
 
 </figure>
 
-We know from earlier that making the sensor bigger will also increase the angle of view. Since we want to keep angle of view constant, we need to correct for the larger sensor in the DSLR with a longer focal length, which we know results in bigger bokeh circle on the sensor. But wait, the sensor is also bigger, so maybe it covers the same _percentage_ of the sensor as before, yielding the exact same image? It’s hard to tell from the diagram, so I guess the only way to tell is use that horrible formula from earlier. But I’ll have [Julia] do the work for me:
+We know from earlier that making the sensor bigger will also increase the angle of view. Since we want to keep angle of view constant, we need to correct for smaller sensor size with shorter focal length, which we know results in a smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor as before, yielding the exact same image? It’s hard to tell from the diagram, so I guess the only way to tell is use that horrible formula from earlier. But I’ll have [Julia] do the work for me:
 
 <figure>
   <img src="constant-aperture.svg" width=600 height=400>
-  <figcaption>When keeping everything but the sensor size constant, bokeh only slightly increases with bigger sensors.</figcaption>
+  <figcaption>When keeping everything but the sensor size constant, the bokeh stays the same.</figcaption>
 </figure>
 
-Overall, the bokeh _slightly_ increases with bigger sensor size (and the resulting longer focal length). But overall two differently sized sensors should take roughly the same picture if angle of view and lens diameter are kept constant. Clearly, lens diameter plays a big role when looking at the test picture and the _huge_ difference in bokeh.
+The bokeh stays the same? This goes against everything I found on the internet. There must be something else causing the vast majority of articles to claim the opposite of what I just found — and $f$-Numbers are what’s to blame.
 
-### Acceptable sharpness
+## Aperture
 
-Something that is interesting is that making the lens diameter smaller will also shrink bokeh circle on the sensor. A very small circle, however, is _humanly_ indistinguishable from a point. Or to phrase it another way: Up until a certain circle size, a human can’t tell the difference between something being perfectly in focus and slightly out of focus. That means that there is a bit of leeway around the focal plane to either side which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye and is “acceptably sharp”. And because a smaller lens diameter will create smaller bokeh circles, the focus area is bigger when the lens is smaller.
+What the diagram above does make clear is that making the lens diameter smaller will also shrink bokeh circle on the sensor. A very small circle, however, is _humanly_ indistinguishable from a point. Or to interpret that another  way: Up until a certain circle size, a human can’t tell the difference between something being perfectly in focus and slightly out of focus. That means that there is a bit of leeway around the focal plane to either side which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye and is “acceptably sharp”. How much leeway depends on how fast a point grows into a circle the further away it is from the focal plane, and that growth is determined by lens diameter.
 
-> **Circle of confusion:** The biggest circle that is perceived as a point by a human is called the [circle of confusion] (CoC), and it plays a central role in calculating the focus area. The diameter of the CoC depends on your eyesight, obviously, but also how big an image is displayed and from what distance you are looking at it. It’s confusing that many source on the internet list a single CoC diameter for any given sensor size, like listing 0.029mm for a full frame sensor. These are old values, based on printing the a picture on a piece of paper on a specific size and looking at it from a specific distance with 20/20 vision. 
+> **Circle of confusion:** The biggest circle that is perceived as a point by a human is called the [circle of confusion] (CoC), and it plays a central role in calculating the focus area. The diameter of the CoC depends on your eyesight, obviously, but also how big an image is displayed and from what distance you are looking at it. It’s confusing that many source on the internet list a single CoC diameter for any given sensor size, like listing 0.029mm for a full frame sensor. These are old values, based on printing the a picture on a piece of paper on a specific size (~$26\text{cm} \times 17\text{cm}$) and looking at it from a specific distance (~$25\text{cm}$) with 20/20 vision. 
 >
 > I won’t go into this with more detail, but these numbers seem unfit for the digital age, where we crop and we zoom. Something that looks in-focus at Instagram-size, can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your circle of confusion is the size of a single pixel on the sensor. Any bokeh circle that is at most the size of a pixel will still be captured as a single pixel. No matter how much you zoom in. This, however, has implications. I did the math to compare how big the focus area is with traditional CoCs and the pixel-based CoC. The pixel-based CoC leaves you very little room for error as a photograpgher: If the traditional focus area in a portrait setting is 1.5m, it shrinks to just ~28cm with the pixel-based CoC.
 
@@ -578,11 +570,14 @@ The fact that smaller lens diameters create sharper images has been known since 
   </figcaption>
 </figure>
 
-The diagrams are not really good at visualizing it, but the _shape_ of a lens will determine what a point light will look like when it’s out of focus. We have been talking about bokeh circles because pretty much all photography lenses are circular. The iris, mostly, but not quite _perfectly_ circular. In movies you can sometimes tell that a lens’ iris was closed down a bit because the bokeh circles are slightly jagged.
+The 2d diagrams can’t visualize the circle on the sensor, but the _shape_ of a lens will determine what a point light will look like when it’s out of focus. We have been talking about bokeh circles because pretty much all photography lenses are circular. The opening created by the iris is also circular, although no _perfectly_ so. This can be seen in movies, where you can sometimes count how many blades a lens’ iris had because of how bokeh circles look.
 
 <figure>
   <img src="irisbokeh.jpg" loading="lazy" width="1280" height="720" style="max-width: 1280px">
-  <figcaption>A screenshot from season 5 episode 11 of “Suits”. The bokeh circles look like hexagons, implying a 6-blade iris.</figcaption>
+  <figcaption>
+    The bokeh circles look like hexagons, implying a 6-blade iris.<br>
+    Screenshot taken from season 5 episode 11 of “Suits”. 
+  </figcaption>
 </figure>
 
 Lensbaby lenses actively take advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shape plates inbetween the lens and sensor:
@@ -594,11 +589,13 @@ Lensbaby lenses actively take advantage of the fact that out-of-focus spot light
 
 ### f-stops 
 
-We have talked about the lens diameter, and how the iris allows you to effectively adjust a lens’ size. However, the lens diameter is rarely talked about directly in photography. Instead, they talk about the _aperture_, which is given as a $f$-Number. For example, the picture at the beginning of the blog post I took with a lens where $f = 46mm$ and an aperture of $f/2.8$. This $f$-Number _is_ the lens diameter, just given as a fraction of the focal length $f$. So in this case $A = \frac{f}{2.8} = 17.1mm$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit their <strike>film</strike> sensor, when they are set to the same $f$-Number — regardless of their focal lengths. For example, $50mm$ lens with the iris set to $f/2.0$ ($A=25mm$) lets in the same amount of light as a $100mm$ lens set to $f/2.0$ ($A=50mm$).
+We have talked about the lens diameter, and how the iris allows you to effectively adjust a lens’ size. However, the lens diameter is rarely talked about directly in photography. Instead, they talk about the _aperture_, which is given as a $f$-Number. If you need to refer to the actual lens diameter (or the opening formed by the iris), you talk about the “absolute aperture”. 
 
-That all was just to say that photographers use $f$-Numbers to compare lens configurations. I found a lot of photoraphy articles comparing photos taken with different sensors and equivalent lenses _at the same $f$-Number_ to show that a smaller sensor will create less background blur. However, we now know that the chain of causality is more complex than that: A smaller sensor requires a shorter focal length to keep the same field of view. A shorter focal length has a smaller apertures given the same $f$-Number. A smaller aperture keeps bokeh circles smaller, which we perceive as sharper images. Blaming less background blur with smaller sensors on the sensor alone is ignoring a whole bunch of other factors.
+The $f$-Number is called $f$-Number because it describes the iris opening as a fraction of the focal length $f$. So for example, a 50mm lens set to $f/2.8$ means the absolute aperture is $A = \frac{f}{2.8} = 17.9mm$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit their <strike>film</strike> sensor, when they are set to the same $f$-Number — regardless of their focal lengths.
 
-For completeness’ sake, let’s redo the graph above with a constant $f$-Number instead of a constant lens diameter. The result we get is more drastic:
+That all was just to say that photographers use $f$-Numbers to compare lens configurations. Most articles that were trying to give the “definitive answer” on whether sensor size affects depth of field, do so by taking photos with different sensors and equivalent lenses _at the same $f$-Number_. In that scenario, smaller sensors will yield less bokeh.
+
+For completeness’ sake, let’s redo the graph above with a constant $f$-Number instead of a constant lens diameter, so we can replicate the results from these approaches:
 
 <figure>
   <img src="fstop-aperture.svg" width=600 height=400>
@@ -609,8 +606,23 @@ For completeness’ sake, let’s redo the graph above with a constant $f$-Numbe
   </figcaption>
 </figure>
 
+If we keep the $f$-Number constant, bokeh _drastically_ increases with bigger sensors. However, we know that the chain of causality is more complex than that: A smaller sensor requires a shorter focal length to keep the same field of view. A shorter focal length has a smaller aperture given the same $f$-Number. A smaller aperture keeps bokeh circles smaller, which we perceive as sharper images. Blaming less background blur with smaller sensors on the sensor alone is ignoring a whole bunch of other factors.
 
 ## Pixel 5 vs Digital Camera
+
+I took a picture with my Pixel 5 and then tried to take the exact same picture with my Canon EOS R.
+
+<figure>
+  <img src="./comparison.jpg" loading="lazy" width=2048 height=767>
+  <figcaption>
+    Left: Photo taken with my Pixel 5, main camera lens.<br>
+    Right: Photo taken with my Canon EOS R, with a zoom lens set to 27mm.<br>
+    (Images cropped to match aspect ratio, slight color grading.)
+  </figcaption>
+</figure>
+
+So what did I really do here? My Pixel 5 has a fixed lens, so I took a photo with it first. I then tried to exactly match field of view with my DSLR, using land marks in the photo to align as close as possible. Specifically, we have the same scene with the exact same field of view and same focal plane, while sensor size, sensor position, focal length and lens diameter can change.
+
 
 Let’s return at the original comparison image from the start of the article. What kind of lens does a Pixel 5 have exactly? And what kind of sensor? Luckily, some of this data is embedded in the EXIF data of the images and can be extracted using `identify` from ImageMagick:
 

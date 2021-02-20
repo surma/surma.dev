@@ -4,13 +4,13 @@ using Printf;
 alpha = 40;
 f(D) = D/(2*tan(deg2rad(alpha/2)));
 fpd = 300;
-sfp(f) = 1/(1/f - 1/fpd);
+sfp(f) = 1/(1/f - 1/(fpd+f));
 sl = 10*1000;
-slp(f) = 1/(1/f - 1/sl);
+slp(f) = 1/(1/f - 1/(sl+f));
 c(A, D) = A * (sfp(f(D)) / slp(f(D)) - 1);
 
 As = 10:10:50;
-x=10:35; 
+x=5:5:35; 
 y=[(x->c(A, x)/x*100).(x) for A in As];
 plot(
   x,y,
