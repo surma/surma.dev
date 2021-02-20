@@ -11,25 +11,41 @@ Portrait mode blurs out the part of the image that is in the background to make 
 
 <link rel="stylesheet" href="/lab/diagram/geometry.css" />
 
-Alright, I will admit: The titular question is not actually the question that prompted me to write this article. Originally, I wanted to understand why smaller apertures (i.e. higher $f$-Numbers) make your image sharper. Later I wanted to figure out if the [significantly bigger sensor in the Ricoh GR III will get me better background blur than the Canon PowerShot G7 X Mark III][camera comparison]. Researching this I realized that I can now also answer the question why phones add the background blur artifically.
+> **Before we start:** I am not a lens expert. Nor am I physicist or an optician. I tried my best to do my due diligence and be upfront when I’m simplifying things, but I might still have gotten things wrong. If you find something, please give me a shout
+
+Alright, I will admit: The titular question is not actually the question that prompted me to write this article. Originally, I wanted to understand why smaller apertures (i.e. higher $f$-Numbers) make your image sharper. Later I wanted to figure out if the [significantly bigger sensor in the Ricoh GR III will get me better background blur than the Canon PowerShot G7 X Mark III][camera comparison]. It turns out that both these questions have closely related answers and they also explain why the background blur that recently got added to most camera phones is fake.
+
+## Portrait mode
+
+Having a blurry background is a common technique in photography to make the viewer focus the subject and not get distracted by elements in the background. Photographers calls this a “shallow depth of field”, because the field (i.e. area) that is in-focus is shallow and introduces “separation” between the foreground subject and background elements. 
 
 <figure>
-  <img src="./comparison.jpg" width="1280" height="563">
-  <figcaption>
-    Left: Picture taken  on my Pixel 5.<br>
-    Middle: The same picture, but in “Portrait mode”.<br>
-    Right: A picture taken with my (full-frame) Canon EOS R with my zoom lens at 46mm at f/2.8.<br>
-    All pictures cropped to the same aspect ratio (2:3) and slightly color-graded.
+  <img src="./depth-of-field.jpg" width="1280" height="1275">
+  <figcaption>The start and end of depth of field is clearly visible.</figcaption>
 </figure>
 
-Before we can talk about cameras and sensors and what an $f$-Number is, we have to go back to school and catch up on some basic optics!
+If you look up how to achieve this shallow depth of field, most photography resources will say “use a wide aperture” and “use a long lens”. And that is somewhat true, and we will figure out why!
+
+> **Be warned!** Photography terminology is a mess and correlation established in experiments is often mistaken for causation. One of my goals for this article is to clear up as much as possible.
+
+Recently, camera phones have gotten a new feature called “portrait mode”, that adds this background blur. It’s called portrait mode because the shallow depth of field is especially popular for portraits. However, the phone’s background blur is fake — it’s added during post-processing and often you can even remove or adjust the background blur after the fact. By visualizing sharp edges in the image, you can see that the blurriness sets in quite abruptly. That’s not how real background blur would behave.
+
+<figure>
+  <img src="./portrait-mode.jpg" width="1280" height="960">
+  <figcaption>
+    Left: Picture taken in “portrait mode” on a Pixel 5.<br>
+    Right: The same picture with Photoshop’s “Find Edges” filter applied.
+  </figcaption>
+</figure>
+
+Why do phones do that? Can’t they just do it _right_? To answer that, we have to go back to school and catch up on some basic optics!
 
 ## Optics
-In the earlier days of photography, lenses were simple. Today’s lenses, on the other hand, are quite complicated. They fulfil the same purpose, but with a whole bunch of benefits over their earlier counterparts. To keep this article somewhat manageable, I will focus on the earlier simpler lenses. Not only that, but I will assume that we are working with “perfect” lenses throughout this article. They don’t have any chromatic abberation (i.e. they don’t bend different wave lengths differently), they don’t have vignetting (i.e. the don’t lose light at the edges) and they are “thin” lenses (i.e. they can be modeled with simplified formulas). I will also only look at spherical, bi-convex lenses. Those lenses are convex on both sides (have a belly-like shape) and their curvature is that of a sphere. Contemporary camera lenses contain all kinds of lenses (concave, convex-concave, aspherical, etc).
+In the earlier days of photography, lenses were simple. A single glass lens and a shutter. Today’s lenses, on the other hand, are quite complicated. They fulfil the same purpose based on the same underlying principles, but with a whole bunch of benefits over their primitive counterparts. To keep this article somewhat manageable, I will focus on simple lenses. Not only that, but I will assume that we are working with “perfect” lenses throughout this article. They don’t have any chromatic abberation (i.e. they don’t bend different wave lengths differently), they don’t have vignetting (i.e. the don’t lose light at the edges) and they are “thin” lenses (i.e. they can be modeled with simplified formulas). I will also only look at spherical, bi-convex lenses. That means the lenses are convex (a belly-like shape) on both sides and their curvature is that of a sphere. Contemporary camera lenses contain all kinds of lenses (concave, convex-concave, aspherical, etc).
 
 ### Lenses
 
-The two most important parameters of a lens for this excursion is its focal length $f$ and diameter $A$. The diameter is literally that, determining the size of the piece of glass. The focal length describes the distance of the center of the lens to the focal point, which also the center of the circle (or sphere, rather) that gives the lens its curvature. The smaller the focal length, the more the light rays are bent torwards the focal point when they pass through the lens. The bigger the focal length $f$, the less they get bent. For thin lenses, rule is that rays that enter the lens parallel to the lens axis, will intersect the focal point.
+The two most important parameters of a lens for this excursion is its focal length $f$ and diameter $A$. The diameter is literally that, determining the size of the piece of glass. The focal _length_ describes the distance from the center of the lens to the focal _point_, which also the center of the circle (or sphere, rather) that gives the lens its curvature. The smaller the focal length, the more the light rays get bent towards the focal point when they pass through the lens. The bigger the focal length $f$, the less they get bent. For thin lenses, rule is that rays that enter the lens parallel to the lens axis, will intersect the focal point.
 
 <figure>
 
@@ -48,6 +64,7 @@ The two most important parameters of a lens for this excursion is its focal leng
     },
     recalculate() {
       const rayGap = 14;
+      const gap = new geometry.Point(rayGap, 0);
       const aperture = 150;
       this.handles.fp.y = 0;
       this.handles.fp.x = Math.max(this.handles.fp.x, aperture/3);
@@ -71,6 +88,8 @@ The two most important parameters of a lens for this excursion is its focal leng
       }).flat();
       const bottomLine = new geometry.Line(new geometry.Point(0, 120), new geometry.Point(1, 0));
       const focalLengthStart = bottomLine.project(lens.bottom());
+      const A = new geometry.MeasureLine(lens.top().addSelf(gap), lens.bottom().addSelf(gap));
+        
       return [
         ...rays.map(r => r.addClass("ray")),
         lens.addClass("lens"), 
@@ -81,7 +100,10 @@ The two most important parameters of a lens for this excursion is its focal leng
         new geometry.Text(this.handles.fp.add(new geometry.Point(10, -5)), "Focal point"),
         new geometry.Text(lensplane.pointAtDistance(120), "Lens plane"),
         new geometry.Text(axis.pointAtDistance(-180), "Lens axis"),
-        new geometry.Text(focalLengthStart.add(new geometry.Point(5, -5)), "Focal length"),
+        new geometry.Text(focalLengthStart.add(new geometry.Point(5, -5)), "Focal length f"),
+        new geometry.Circle(fp, lens.top().subtractSelf(fp).length()).addClass("dashed"),
+        A,
+        new geometry.Text(A.middle().addSelf(gap), "A"),
       ];
     },
   }
@@ -90,13 +112,13 @@ The two most important parameters of a lens for this excursion is its focal leng
 <figcaption>Rays that enter the lens parallel to the lens axis will intersect the focal point.<br>(Orange points are interactive!)</figcaption>
 </figure>
 
-The reverse works as well: Rays that enter the lens by crossing the focal point will exit the lens parallel to the lens axis. This rule is surprisingly powerful and will allow us to derive a whole lot of interesting facts.
+The tracing the rays in reverse yields another rule: Rays that enter the lens by intersecting the focal point will exit the lens parallel to the lens axis. These two rules are very powerful and will allow us to derive pretty much everything we need to answer all our questions.
 
-> **Note:** You’ll notice that lenses with a short focal length are anything but thin. We’ll still pretend that they fall into the “thin lens” category for the remainder of this article.
+> **Thicc:** You’ll notice that lenses with a short focal length are anything but thin. I’ll still pretend that they fall into the “thin lens” category for the remainder of this article.
 
-Light in real life is barely ever parallel, but rather radiating out into all directions. More specifically, apart from a few notable exceptions (like mirrors), every material reflects the light that it is hit by evenly into all directions. Let’s imagine we have a point that sends light rays into all directions and we put it on one side of our lens. Considering that people were able to take pictures with these simple lenses, there has to be a place on the other side of the lens where all the light rays geet focused back into a single point. 
+Light in real life is barely ever parallel, but rather radiating out from a point into all directions. More specifically, apart from a few notable exceptions (like mirrors), every material reflects the light that it is hit by evenly into all directions on every point of its surface. So let’s focus on one individual point light source, knowing that any bigger object or surface is just a collection of many of such point light sources.
 
-While there will be light rays hitting every part of our lens, we only need to focus on two of them to figure this out: The one light ray that is parallel to the lens axis, and the other ray that intersects the focal point. We know how these rays will behave and they will (most likely) also intersect on the _other_ side of the lens. And where these two lines cross, all other rays will intersect as well.
+We have a point that sends light rays into all directions and we put it on one side of our lens. Considering that people were able to take pictures with these simple lenses, there has to be a place on the other side of the lens where all the light rays get focused back into a single point. While the from our point light source will be hitting every part of our lens, we only need to focus on two specific light rays to figure this out: The one light ray that is parallel to the lens axis, and the other ray that intersects the focal point. We know how these rays will behave according to our two rules from above and they will (most likely) also intersect on the _other_ side of the lens. And where these two lines cross, all other rays will intersect as well.
 
 <figure>
 
@@ -150,7 +172,7 @@ While there will be light rays hitting every part of our lens, we only need to f
 
 </figure>
 
-The point on the left is often just called “object”, while point on the right is called the “image”. From this _geometric_ construction we can derive a nice formula describing the relationship between the object’s distance and the image’s distance from the center of the lens:
+The point on the left is often just called “object”, while point on the right is called the “image”. From this _geometric_ construction of where the image will be, we can derive a nice formula describing the relationship between the object’s distance and the image’s distance from the center of the lens:
 
 <figure>
 
@@ -160,20 +182,18 @@ $$
 
 <figcaption>
 
-The “thin lens equation” describes the relationship between the object’s distance $s$, and the image’s distance $s'$ and the lens’ focal length $f$.
+The “thin lens equation” describes the relationship between the object’s distance $s$, the image’s distance $s'$ and the lens’ focal length $f$.
 
 </figcaption>
 </figure>
 
 ## Photography
 
-You’ll notice that if you move the object parallel to the lens plane, the image will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. Secondly, instead of talking about individual points and where their image is, we can talk about the “image plane” and the focal plane”. We have now entered the territory of photography.
+You’ll notice that if you move the object parallel to the lens plane, the image will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. What is above the lens axis on one side of the lens, is below the lens axis on the other. Secondly, and more importantly, if a bunch of objects form a parallel to the lens plane, their images will also form a parallel to the lens plane. Instead of talking about individual points, we can talk about the “image plane” and the “focal plane”. We have now entered the territory of photography.
 
 ### The image plane & the focal plane
 
-To take a picture we have to have something that... takes the picture. Yes. Very good explanation. In analogue photography, that is the film or photo paper, in digital cameras — and for the remainder of this article — it’s the sensor. The distance of the sensor to the lens determines which part of the world is “in focus”. The size of the sensor, combined with the focal length of the lens determines the angle of view that will be capture. While some cameras and lenses allow you to have arbitrary angles between image plane and lens plane, we will keep them parallel to each other. For now.
-
-Note that in all the previous diagrams the direction of the light is actually irrellevant. The roles of object and image can be reversed and the diagrams wouldn’t change. With this observation, we can answer the question where the focal plane is. We can place our sensor on one side of the lens, and project it through the lens. The “image” of the sensor is the area of the real world that is in focus; the part of the world that will be projected onto the sensor.
+To take a picture we have to have something that... takes the picture. Yes. Very good explanation. In analogue photography, that is the film or photo paper. In digital cameras — and for the remainder of this article — it’s the sensor. The distance of the sensor to the lens determines which part of the world is “in focus”. The size of the sensor determines the angle of view that will be captured. Focal length affects both focal plane position and angle of view.
 
 <figure>
 
@@ -190,65 +210,70 @@ Note that in all the previous diagrams the direction of the light is actually ir
     handles: {
       l: new geometry.Point(100, 0),
       s: new geometry.Point(-80, -50),
-      fp: new geometry.Point(220, 0),
+      fp: new geometry.Point(-200, 0),
     },
     recalculate() {
+      const gap = new geometry.Point(1, 0);
+      const topline = new geometry.Line(new geometry.Point(0, -120), new geometry.Point(1, 0));
+      const bottomline = new geometry.Line(new geometry.Point(0, 120), new geometry.Point(1, 0));
+
       this.handles.s.x = this.viewBox.leftX + 20;
       this.handles.s.y = Math.min(this.handles.s.y, 1);
+
+      const focalLengthSlider = new geometry.ArrowLine(
+        bottomline.project(gap.scalar((this.viewBox.leftX + this.viewBox.rightX)/2-120)), 
+        bottomline.project(gap.scalar((this.viewBox.leftX + this.viewBox.rightX)/2+120)), 
+      );
+      this.handles.fp = focalLengthSlider.clipPoint(this.handles.fp)
+      const f = geometry.remap(0, 1, 60, 200)(focalLengthSlider.whereIs(this.handles.fp)/focalLengthSlider.length());
       this.handles.l.y = 0;
-      this.handles.l.x = Math.max((this.handles.fp.x + this.handles.s.x) / 2 + 1, this.handles.l.x);
-      this.handles.fp.y = 0;
-      this.handles.fp.x = Math.max(this.handles.l.x + 10, this.handles.fp.x);
+      this.handles.l.x = Math.max(this.handles.l.x - this.handles.s.x, f+1)+this.handles.s.x;
       const lensCenter = this.handles.l;
-      const fp = this.handles.fp.difference(lensCenter);
-      const lens = new geometry.Lens(lensCenter, fp, 150);
+      const lens = new geometry.Lens(lensCenter, gap.scalar(f), 150);
 
       const sensorplane = new geometry.Line(this.handles.s, new geometry.Point(0, 1));
       const sensorTop = this.handles.s;
       const sensorBottom = this.handles.s.mirrorOn(sensorplane.project(lensCenter));
       const sensor = new geometry.Arrow(sensorTop, sensorBottom);
+      const fp = lens.focalPoint();
 
       const {point: sensorTopP} = lens.lensProject(sensorTop);
       const {point: sensorBottomP} = lens.lensProject(sensorBottom);
       const sensorP = new geometry.Arrow(sensorTopP, sensorBottomP);
       const focalPlane = sensorP.line();
-      const angle = new geometry.Polygon(this.handles.fp, sensorTopP, sensorBottomP);
+      const angle = new geometry.Polygon(fp, sensorTopP, sensorBottomP);
       const lensTop = lens.plane().project(sensorTop);
       const lensBottom = lens.plane().project(sensorBottom);
-      const ray1 = new geometry.HalfSegment(lensBottom, this.handles.fp);
-      const ray2 = new geometry.HalfSegment(lensTop, this.handles.fp);
-      const topline = new geometry.Line(new geometry.Point(0, -120), new geometry.Point(1, 0));
-      const bottomline = new geometry.Line(new geometry.Point(0, 120), new geometry.Point(1, 0));
-      const gap = new geometry.Point(10, 0);
-      const focallength = new geometry.MeasureLine(bottomline.project(this.handles.l), bottomline.project(this.handles.fp))
+      const ray1 = new geometry.HalfSegment(lensBottom, fp);
+      const ray2 = new geometry.HalfSegment(lensTop, fp);
       return [
         sensorplane.addClass("sensorplane"),
         focalPlane.addClass("focalplane"),
         sensor.addClass("sensor"),
         lens.addClass("lens"),
-        new geometry.Text(topline.project(this.handles.s).addSelf(gap), "Sensor plane"),
+        new geometry.Text(topline.project(this.handles.s).addSelf(gap.scalar(10)), "Sensor plane"),
         new geometry.Text(sensorTop.add(sensorBottom).scalarSelf(1/2).addSelf(gap), "D"),
-        new geometry.Text(topline.project(sensorTopP).addSelf(gap), "Focal plane"),
-        new geometry.Text(this.handles.fp.add(gap.scalar(3)), "α").addClass("text-middle"),
+        new geometry.Text(topline.project(sensorTopP).addSelf(gap.scalar(10)), "Focal plane"),
+        new geometry.Text(fp.add(gap.scalar(30)), "α").addClass("text-middle"),
         sensorP.addClass("sensor"),
         angle.addClass("fov"),
         new geometry.Segment(sensorTop, lensTop).addClass("dashed"),
         new geometry.Segment(sensorBottom, lensBottom).addClass("dashed"),
         ray1.addClass("dashed"),
         ray2.addClass("dashed"),
-        new geometry.Arc(this.handles.fp, 50, ray1.pointAtDistance(900), ray2.pointAtDistance(900)).addClass("arc"),
-        focallength,
-        new geometry.Text(focallength.middle().addSelf(gap.orthogonal()), "f"),
+        new geometry.Arc(fp, 50, ray1.pointAtDistance(900), ray2.pointAtDistance(900)).addClass("arc"),
+        focalLengthSlider,
+        new geometry.Text(focalLengthSlider.middle().addSelf(gap.orthogonal().scalar(10)), "f"),
       ];
     },
   }
 |||
 
-<figcaption>A lens focuses light rays onto a point.</figcaption>
+<figcaption>The distance between sensor and lens determines the position of the focal plane. The size of the sensor determines the angle of view.</figcaption>
 
 </figure>
 
-This leads us to two conclusions: The focal length is directly related to the angle of view. A longer focal length has a smaller angle of view, effectively creating a zoomed-in picture. Similarly, the same lens on a larger will yield a larger angle of view. More specifically, the relationship between sensor size, focal length and angle of view can be described as follows:
+This leads us to two conclusions: The focal length is directly related to the angle of view. A longer focal length has a smaller angle of view, effectively creating a zoomed-in picture. Similarly, the same lens on a larger sensor will yield a larger angle of view. More specifically, the relationship between sensor size, focal length and angle of view can be described as follows:
 
 <figure>
 
@@ -267,7 +292,9 @@ The formula describing the relationship between angle of view $\alpha$, the sens
 
 ### Focusing
 
-In the demo above, you can move the lens and change the lens’ focal length to see how it affects the focal plane. However in photography you don’t move the lens and see where our focus plane ends up, you have something that you want to focus _on_, and want to position your lens accordingly. If we know the distance $S$ between our sensor plane and our desired focal plane, we can use the thin lens equation to figure where to place the lens:
+In the diagram above, you can move the lens and change the lens’ focal length to see how it affects the focal plane. However in photography you don’t move the lens and see where our focus plane ends up, you have something that you want to focus _on_, and want to position your lens accordingly. If we know the distance $S$ between our sensor plane and our desired focal plane, we can use the thin lens equation to figure where to place the lens:
+
+<figure>
 
 $$
 \begin{array}{rc}
@@ -277,8 +304,10 @@ $$
   \Rightarrow & s = \frac{S}{2} \pm \sqrt{\frac{S^2}{4} - Sf} \\
 \end{array}
 $$
+<figcaption>The “focusing equation” (not an official name) determines the lens’ position based on focal length and desired focal plane distance.</figcaption>
+</figure>
 
-Apologies for skipping the math there in the middle, but it’s really just a bunch of transformations until you can use the [quadratic formula]. The majority of cameras don’t use this formula as they don’t measure the distance to the target, but go by other means. But something interesting can be derived from this result: For the result to exist, the expressing in the square root must be positive, i.e:
+Apologies for skipping the math there in the middle, but it’s really just a bunch of transformations until you can use the [quadratic formula]. The majority of cameras don’t use this formula, of course, as they can’t measure the distance to the target, but [use phase detection or contrast detection][autofocus]. But something interesting can be derived from the formula: For the result to even exist, the expression in the square root must be positive.
 
 $$
 \begin{array}{rcl}
@@ -291,9 +320,14 @@ That means, to be able to focus on a subject with lens with focal lens $f$, the 
 
 ## Bokeh
 
-Now that we know how to focus, determine the focal plane and even determine lens position with a given focal plane, we can take a look what happens when something is _out_ of focus. Looking at the image at the start of the article, you can see the fairly lights turning into larger circles of light, often refferred to as “Bokeh”. Bokeh is Japanese for “blur”, and as such _technically_ refers to anything that is out of focus, but depending on context, it can also be used to refer to point lights specifically.
+Now that we know how to focus, determine the focal plane and even determine lens position with a given focal plane, we can take a look what happens when something is _out_ of focus. Looking at the image at the start of the article, you can see the fairly lights turning into larger circles of light, often refferred to as “Bokeh”. Bokeh is Japanese for “blur”, and as such _technically_ refers to anything that is out of focus, but depending on context, it can also be used to refer to the look of out-of-focus point lights specifically.
 
-To figure this one out, we’ll have to introduce a bunch of variables and measurements. First, we have to separate our focal plane from where the light source is located. In our scenario, the focal plane is fairly close to the sensor, while the light source is further away. Through that, we can now figure out where the lens needs to located and which point the light from the light source will be focused on.
+<figure>
+  <img src="bokeh.jpg" loading="lazy" width="1280" height="720" style="max-width: 1280px">
+  <figcaption>A screenshot from season 5 episode 8 of “Suits”. The lights in the background are out of focus and have turned into big circles.</figcaption>
+</figure>
+
+  To figure out how big the circle will be, we’ll have to introduce a couple of variables. First, we have to separate our distance to the focal plane from the distance to our light source. The focal plane is fairly close to the sensor, while the light source is further away. We can now figure out where the lens needs to located to set the right focus, and which point the light from the light source will be focused on.
 
 <figure>
 
@@ -318,7 +352,7 @@ To figure this one out, we’ll have to introduce a bunch of variables and measu
       const topLineB = new geometry.Line(new geometry.Point(0, this.viewBox.topY + 40), new geometry.Point(1, 0));
       const topLineC = new geometry.Line(new geometry.Point(0, this.viewBox.topY + 80), new geometry.Point(1, 0));
       const bottomLine = new geometry.Line(new geometry.Point(0, this.viewBox.bottomY - 10), new geometry.Point(1, 0));
-      const slider = new geometry.MeasureLine(
+      const slider = new geometry.ArrowLine(
         bottomLine.project(new geometry.Point(center - 100, 0)),
         bottomLine.project(new geometry.Point(center + 100, 0)),
       );
@@ -392,11 +426,11 @@ To figure this one out, we’ll have to introduce a bunch of variables and measu
   }
 |||
 
-<figcaption>A lens focuses light rays onto a point.</figcaption>
+<figcaption>A lens sets focus on the focal plane, but focuses the light from a light source to a different point, causing the bokeh circle on the sensor.</figcaption>
 
 </figure>
 
-The further away the light soruce is from the focus plane, the bigger the bokeh circle on the sensor will be. How big exactly it is will not be pretty, but will yield some interesting insight.
+The further away the light source is from the focus plane, the bigger the bokeh circle on the sensor will be. Let’s try and get some hard numbers.
 
 ### Deriving a formula
 
@@ -415,7 +449,7 @@ $$
   c = A \left( \frac{\frac{D_\text{focal}}{2} + \sqrt{\frac{D_\text{focal}^2}{4} - D_\text{focal}\cdot f}}{\frac{D_\text{light}}{2} - \sqrt{\frac{D_\text{light}^2}{4} - D_\text{light}\cdot f}} - 1 \right)
 $$
 
-Admittedly, this formula isn’t simple, intuitive or, honestly, even that helpful. But let’s look at this in an extreme configuration: Let’s move the focal plane as close as possible to the sensor ($D_\text{focal} = 4f$) and move the light source inifitely far away ($D_\text{light} \rightarrow \infty$). In this scenario, the formula drastically simplifies (provided you can calculate the limit, which I couldn’t without [help][limit]):
+Admittedly, this formula isn’t simple, intuitive or, honestly, even that helpful. But let’s look at this in an extreme configuration: Let’s move the focal plane as close as possible to the sensor ($D_\text{focal} = 4f$) and move the light source infinitelyz far away ($D_\text{light} \rightarrow \infty$). In this scenario, the formula drastically simplifies (provided you can calculate the limit, which I couldn’t without [help][limit]):
 
 $$
 c = A
@@ -423,9 +457,20 @@ $$
 
 I found this _fascinating_. In the extreme case, the focal length actually has _no_ influence over the size of the bokeh circles. Lens size alone dictates how big the circle on the sensor is.
 
-### Comparable scenario
+## Realistic comparison
 
-While focal length doesn’t matter in that extreme case, maybe it does matter for... realistic scenarios? After all, we were trying to figure out why two cameras take different photos _given the same scenario_. That is, we have the same scene with the exact same field of view and same focal plane, while sensor size, position, focal length and lens diameter can change.
+While focal length doesn’t matter in that extreme case, maybe it does matter for... realistic scenarios? I took a picture with my Pixel 5 and then tried to take the exact same picture with my Canon EOS R.
+
+<figure>
+  <img src="./comparison.jpg" loading="lazy" width=2048 height=767>
+  <figcaption>
+    Left: Photo taken with my Pixel 5, main camera lens.<br>
+    Right: Photo taken with my Canon EOS R, with a zoom lens set to 27mm.<br>
+    (Images cropped to match aspect ratio, slight color grading.)
+  </figcaption>
+</figure>
+
+So what did I really do here? My Pixel 5 has a fixed lens, so I took a photo with it first. I then tried to exactly match field of view with my DSLR, using land marks in the photo to align as close as possible. Specifically, we have the same scene with the exact same field of view and same focal plane, while sensor size, sensor position, focal length and lens diameter can change.
 
 <figure>
 
@@ -449,7 +494,7 @@ While focal length doesn’t matter in that extreme case, maybe it does matter f
       const topline = new geometry.Line(new geometry.Point(0, this.viewBox.topY + 20), new geometry.Point(1, 0));
       const centerX = (this.viewBox.rightX + this.viewBox.leftX) / 2;
 
-      const sensorSizeSlider = new geometry.MeasureLine(
+      const sensorSizeSlider = new geometry.ArrowLine(
         new geometry.Point(centerX - 100, this.viewBox.bottomY - 20),
         new geometry.Point(centerX + 100, this.viewBox.bottomY - 20),
       );
@@ -501,22 +546,25 @@ While focal length doesn’t matter in that extreme case, maybe it does matter f
 
 </figure>
 
-We know from earlier that making the sensor smaller will also decrease the angle of view. Since we want to keep angle of view constant, we need to correct for the shrinking sensor with a shrinking focal length, which we know results in smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor, yielding the exact same image? It’s hard to tell from the diagramm, so I guess I have nothing left to do than to use that horrible formula from earlier. But I’ll have [Julia] do the work for me:
+We know from earlier that making the sensor bigger will also increase the angle of view. Since we want to keep angle of view constant, we need to correct for the larger sensor in the DSLR with a longer focal length, which we know results in bigger bokeh circle on the sensor. But wait, the sensor is also bigger, so maybe it covers the same _percentage_ of the sensor as before, yielding the exact same image? It’s hard to tell from the diagram, so I guess the only way to tell is use that horrible formula from earlier. But I’ll have [Julia] do the work for me:
 
 <figure>
   <img src="constant-aperture.svg" width=600 height=400>
   <figcaption>When keeping everything but the sensor size constant, bokeh only slightly increases with bigger sensors.</figcaption>
 </figure>
 
-Overall, the bokeh _slightly_ increases with bigger sensor size. But overall two differently sized sensors should take roughly the same picture if angle of view and lens diameter are kept constant.
+Overall, the bokeh _slightly_ increases with bigger sensor size (and the resulting longer focal length). But overall two differently sized sensors should take roughly the same picture if angle of view and lens diameter are kept constant. Clearly, lens diameter plays a big role when looking at the test picture and the _huge_ difference in bokeh.
 
-Something that is interesting is that making the lens diameter smaller will also shrink bokeh circle on the sensor. A very small circle, however, is _humanly_ indistinguishable from a point. Or to phrase it another way: Up until a certain circle size, a human can’t tell the difference between something being perfectly in focus and slightly out of focus. Practically, there is a bit of leeway around the focal plane to either side which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye. And because a smaller lens diameter will create smaller bokeh circles, the focus area is bigger when the lens is smaller.
+### Acceptable sharpness
 
-> **Circle of confusion:** The biggest circle that is perceived as a point by a human is called the [circle of confusion] (CoC),and it plays a central role in calculating the focus area. The diameter of the CoC depends on your eyesight, obviously, but also how big an image is displayed and from what distance you are looking at it. It’s confusing that many source on the internet list a single CoC diameter for any given each sensor size, like 0.029mm for a full frame sensor. These are apparently based on printing the a picture on a piece of paper on a specific size and looking at it from a specific distance with 20/20 vision. 
+Something that is interesting is that making the lens diameter smaller will also shrink bokeh circle on the sensor. A very small circle, however, is _humanly_ indistinguishable from a point. Or to phrase it another way: Up until a certain circle size, a human can’t tell the difference between something being perfectly in focus and slightly out of focus. That means that there is a bit of leeway around the focal plane to either side which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye and is “acceptably sharp”. And because a smaller lens diameter will create smaller bokeh circles, the focus area is bigger when the lens is smaller.
+
+> **Circle of confusion:** The biggest circle that is perceived as a point by a human is called the [circle of confusion] (CoC), and it plays a central role in calculating the focus area. The diameter of the CoC depends on your eyesight, obviously, but also how big an image is displayed and from what distance you are looking at it. It’s confusing that many source on the internet list a single CoC diameter for any given sensor size, like listing 0.029mm for a full frame sensor. These are old values, based on printing the a picture on a piece of paper on a specific size and looking at it from a specific distance with 20/20 vision. 
 >
-> I won’t go into this with more detail, but these numbers seem unfit for the digital age, where we crop and we zoom. Something that looks in-focus on Instagram can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your circle of confusion is the size of a single pixel on the sensor. Any circle that is at most the size of a pixel will still be captured as a single pixel. No matter how much you zoom in. This has implications. I did the math to compare how big the focus are is with traditional CoCs vs the pixel-based CoC, and the pixel-based CoC leaves you very little room for error as a photograpgher: A traditional focus area of 1.5m, for example, shrinks to just ~28cm.
+> I won’t go into this with more detail, but these numbers seem unfit for the digital age, where we crop and we zoom. Something that looks in-focus at Instagram-size, can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your circle of confusion is the size of a single pixel on the sensor. Any bokeh circle that is at most the size of a pixel will still be captured as a single pixel. No matter how much you zoom in. This, however, has implications. I did the math to compare how big the focus area is with traditional CoCs and the pixel-based CoC. The pixel-based CoC leaves you very little room for error as a photograpgher: If the traditional focus area in a portrait setting is 1.5m, it shrinks to just ~28cm with the pixel-based CoC.
 
-In summary that means that a smaller lens creates a bigger focus area. But, alas, lenses are made of glass and can’t just change their size, now can the?
+In summary that means that a smaller lens creates a bigger focus area. But, alas, lenses are made of glass and can’t just change their size, now can they?
+
 ### Lens size & shape
 
 The fact that smaller lens diameters create sharper images has been known since the age of pinhole cameras, which is why photographers came up with mechanisms to adjust a lens’ size. Most lenses do this via an adjustable iris, a bunch of metal blades.
@@ -533,8 +581,8 @@ The fact that smaller lens diameters create sharper images has been known since 
 The diagrams are not really good at visualizing it, but the _shape_ of a lens will determine what a point light will look like when it’s out of focus. We have been talking about bokeh circles because pretty much all photography lenses are circular. The iris, mostly, but not quite _perfectly_ circular. In movies you can sometimes tell that a lens’ iris was closed down a bit because the bokeh circles are slightly jagged.
 
 <figure>
-  <img src="sherlock.jpg" loading="lazy" width="1280" height="719" style="max-width: 1280px">
-  <figcaption> A screenshot from the pilot episode of BBC’s “Sherlock” (2010). The lights in the background are out of focus and their jagged outline lets us count the number of blades used for the iris of the lens. </figcaption>
+  <img src="irisbokeh.jpg" loading="lazy" width="1280" height="720" style="max-width: 1280px">
+  <figcaption>A screenshot from season 5 episode 11 of “Suits”. The bokeh circles look like hexagons, implying a 6-blade iris.</figcaption>
 </figure>
 
 Lensbaby lenses actively take advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shape plates inbetween the lens and sensor:
@@ -544,7 +592,7 @@ Lensbaby lenses actively take advantage of the fact that out-of-focus spot light
   <figcaption>Lensbaby lens using a nice swirl or something. Waiting for Ingrid.</figcaption>
 </figure>
 
-### f-stops
+### f-stops 
 
 We have talked about the lens diameter, and how the iris allows you to effectively adjust a lens’ size. However, the lens diameter is rarely talked about directly in photography. Instead, they talk about the _aperture_, which is given as a $f$-Number. For example, the picture at the beginning of the blog post I took with a lens where $f = 46mm$ and an aperture of $f/2.8$. This $f$-Number _is_ the lens diameter, just given as a fraction of the focal length $f$. So in this case $A = \frac{f}{2.8} = 17.1mm$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit their <strike>film</strike> sensor, when they are set to the same $f$-Number — regardless of their focal lengths. For example, $50mm$ lens with the iris set to $f/2.0$ ($A=25mm$) lets in the same amount of light as a $100mm$ lens set to $f/2.0$ ($A=50mm$).
 
@@ -693,3 +741,4 @@ For most intents and purposes, these series of individual lenses
 [limit]: https://twitter.com/DasSurma/status/1361293594435403778
 [pixel5 sensor]: https://www.dxomark.com/google-pixel-5-camera-review-software-power/
 [julia]: https://julialang.org/
+[autofocus]: https://en.wikipedia.org/wiki/Autofocus

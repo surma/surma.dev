@@ -343,6 +343,46 @@ export class MeasureLine extends Segment {
   }
 }
 
+export class ArrowLine extends Segment {
+  constructor(p1, p2) {
+    super(p1, p2);
+    this.size = 10;
+  }
+
+  render({ svg }) {
+    const barDir = this.direction.orthogonal();
+    const lineDir = this.direction;
+    return svg`
+      <g class="type-line type-arrow type-segment ${this.classList()}" data-name="${
+      this.name
+    }">
+        <line x1="${this.p1.x}" x2="${this.p2.x}" y1="${this.p1.y}" y2="${
+      this.p2.y
+    }" />
+        <path d="M ${this.p1
+          .add(barDir.scalar(-this.size / 2))
+          .add(lineDir.scalar(this.size / 2))
+          .toSVG()} 
+          L ${this.p1.toSVG()} 
+          L ${this.p1
+          .add(barDir.scalar(this.size / 2))
+          .add(lineDir.scalar(this.size / 2))
+          .toSVG()}
+          M ${this.p2
+          .add(barDir.scalar(-this.size / 2))
+          .add(lineDir.scalar(-this.size / 2))
+          .toSVG()} 
+          L ${this.p2.toSVG()} 
+          L ${this.p2
+          .add(barDir.scalar(this.size / 2))
+          .add(lineDir.scalar(-this.size / 2))
+          .toSVG()}"
+      />
+      </g>
+      `;
+  }
+}
+
 export class Lens extends Geometry {
   constructor(center, fp, aperture) {
     super();
@@ -539,6 +579,27 @@ export class Arc extends Geometry {
         data-name="${this.name}"
         class="${this.classList()}"
         d="M ${p1.toSVG()} A ${this.r} ${this.r} 0 0 1 ${p2.toSVG()}" 
+      />
+    `;
+  }
+}
+
+export class Circle extends Geometry {
+  constructor(c, r) {
+    super();
+    this.c = c;
+    this.r = r;
+  }
+
+  render({ svg }) {
+    return svg`
+      <circle
+        data-type="circle" 
+        data-name="${this.name}"
+        class="${this.classList()}"
+        cx="${this.c.x}"
+        cy="${this.c.y}"
+        r="${this.r}"
       />
     `;
   }

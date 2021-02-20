@@ -50,6 +50,10 @@ svg.geometry {
 .type-point {
   fill: hsl(0deg 0% 40%);
 }
+.type-arrow {
+  fill: none;
+  stroke: black;
+}
 .handle {
   fill: hsl(12deg 100% 60%);
 }
@@ -65,6 +69,7 @@ svg.geometry {
   stroke-dasharray: 2 2;
   stroke-width: 1px;
   stroke:  hsla(0, 0%, 0%, 0.4);
+  fill: none;
 }
 .arc {
   fill: none;
