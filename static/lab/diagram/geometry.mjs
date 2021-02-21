@@ -208,8 +208,8 @@ export class Line extends Geometry {
   }
 
   render({ svg }) {
-    const p1 = this.point.add(this.direction.copy().scalarSelf(-1000));
-    const p2 = this.point.add(this.direction.copy().scalarSelf(1000));
+    const p1 = this.point.add(this.direction.copy().scalarSelf(-10000));
+    const p2 = this.point.add(this.direction.copy().scalarSelf(10000));
     return svg`<line x1="${p1.x}" x2="${p2.x}" y1="${p1.y}" y2="${
       p2.y
     }" class="${this.classList()}" data-type="line" data-name="${

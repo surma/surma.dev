@@ -719,4 +719,5 @@ html.forcedark figure video {
 }
 .katex {
   font-size: 1em !important;
+  white-space: nowrap;
 }

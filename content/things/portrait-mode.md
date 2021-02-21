@@ -320,12 +320,12 @@ That means, to be able to focus on a subject with lens with focal lens $f$, the 
 
 ## Bokeh
 
-Now that we know how to focus, determine the focal plane and even determine lens position with a given focal plane, we can take a look what happens when something is _out_ of focus. Looking at the image at the start of the article, you can see the fairly lights turning into larger circles of light, often refferred to as “Bokeh”. Bokeh is Japanese for “blur”, and as such _technically_ refers to anything that is out of focus, but depending on context, it can also be used to refer to the look of out-of-focus point lights specifically.
+Now that we know how to focus, determine the focal plane and even determine lens position with a given focal plane, we can take a look what happens when something is _out_ of focus. Most of us have seen the phenomenon of big circular light spots in the background of a photograph or in a scene in TV show. These circles are often refferred to as “Bokeh”. Bokeh is Japanese for “blur”, and _technically_ refers to anything that is out of focus, but depending on the context, it can also be used to refer to the look of out-of-focus point lights specifically.
 
 <figure>
   <img src="bokeh.jpg" loading="lazy" width="1280" height="720" style="max-width: 1280px">
   <figcaption>
-  The lights in the background are out of focus and have turned into big circles.<br>
+  The lights in the background are out of focus and have turned into big circles called “bokeh”.<br>
   Screenshot taken from season 5 episode 8 of “Suits”. 
   </figcaption>
 </figure>
@@ -462,7 +462,18 @@ I found this _fascinating_. In the extreme case, the focal length actually has _
 
 ### Same-picture comparison
 
-While focal length doesn’t matter in that extreme case, the extreme case is different per lens and effectively creates a different photo. What if we tried to “keep the photo constant”. That way only lens diameter and sensor size are the only variables we have: 
+While focal length doesn’t matter in that extreme case, it seems like it does matter when you try to take the same picture using cameras with different sensors:
+
+<figure>
+  <img src="./comparison.jpg" loading="lazy" width=2048 height=767>
+  <figcaption>
+    Left: Photo taken with my Pixel 5, main camera lens.<br>
+    Right: Photo taken with my Canon EOS R, with a zoom lens set to 27mm.<br>
+    (Images cropped to match aspect ratio, slight color grading.)
+  </figcaption>
+</figure>
+
+It’s clearly visible that I managed to capture the same scene with both my Pixel 5 and my digital camera, but the amount of background blur is significantly different. The only things that changed in between shots are sensor size, lens diameter and focal length. Focal length, however, is not variable as it is directly dependent on sensor size since we want to keep the angle of view fixed. So is the sensor size responsible for background blur, the lens diameter, or both?
 
 <figure>
 
@@ -538,18 +549,18 @@ While focal length doesn’t matter in that extreme case, the extreme case is di
 
 </figure>
 
-We know from earlier that making the sensor bigger will also increase the angle of view. Since we want to keep angle of view constant, we need to correct for smaller sensor size with shorter focal length, which we know results in a smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor as before, yielding the exact same image? It’s hard to tell from the diagram, so I guess the only way to tell is use that horrible formula from earlier. But I’ll have [Julia] do the work for me:
+We know from earlier that making the sensor smaller will also decrease the angle of view. Since we want to keep angle of view constant, we need to correct for smaller sensor size with shorter focal length, which we know results in a smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor as before, yielding the exact same image? It’s hard to tell from the diagram, so I guess the only way to tell is use that horrible formula from earlier. But I’ll have [Julia] do the work for me:
 
 <figure>
   <img src="constant-aperture.svg" width=600 height=400>
-  <figcaption>When keeping everything but the sensor size constant, the bokeh stays the same.</figcaption>
+  <figcaption>When keeping everything but the sensor size constant, the bokeh circles cover the same fraction of the sensor.</figcaption>
 </figure>
 
 The bokeh stays the same? This goes against everything I found on the internet. There must be something else causing the vast majority of articles to claim the opposite of what I just found — and $f$-Numbers are what’s to blame.
 
 ## Aperture
 
-What the diagram above does make clear is that making the lens diameter smaller will also shrink bokeh circle on the sensor. A very small circle, however, is _humanly_ indistinguishable from a point. Or to interpret that another  way: Up until a certain circle size, a human can’t tell the difference between something being perfectly in focus and slightly out of focus. That means that there is a bit of leeway around the focal plane to either side which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye and is “acceptably sharp”. How much leeway depends on how fast a point grows into a circle the further away it is from the focal plane, and that growth is determined by lens diameter.
+What the diagram above does make clear is that making the lens diameter smaller will also shrink bokeh circle on the sensor. A very small circle, however, is _humanly_ indistinguishable from a point. Or to interpret that another way: Up until a certain circle size, a human can’t tell the difference between something being perfectly in focus and slightly out of focus. That means that there is a bit of leeway around the focal plane to either side which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye and is “acceptably sharp”. How much leeway depends on how fast a point grows into a circle the further away it is from the focal plane, and that growth is determined by lens diameter.
 
 > **Circle of confusion:** The biggest circle that is perceived as a point by a human is called the [circle of confusion] (CoC), and it plays a central role in calculating the focus area. The diameter of the CoC depends on your eyesight, obviously, but also how big an image is displayed and from what distance you are looking at it. It’s confusing that many source on the internet list a single CoC diameter for any given sensor size, like listing 0.029mm for a full frame sensor. These are old values, based on printing the a picture on a piece of paper on a specific size (~$26\text{cm} \times 17\text{cm}$) and looking at it from a specific distance (~$25\text{cm}$) with 20/20 vision. 
 >
@@ -559,7 +570,7 @@ In summary that means that a smaller lens creates a bigger focus area. But, alas
 
 ### Lens size & shape
 
-The fact that smaller lens diameters create sharper images has been known since the age of pinhole cameras, which is why photographers came up with mechanisms to adjust a lens’ size. Most lenses do this via an adjustable iris, a bunch of metal blades.
+The fact that smaller lens diameters create sharper images has been known since the age of pinhole cameras, which is why photographers came up with mechanisms to adjust a lens’ size. Most lenses do this via an iris made of a bunch of metal blades.
 
 <figure>
   <img src="iris.jpg" loading="lazy" width="800" height="800" style="max-width: 800px">
@@ -570,7 +581,7 @@ The fact that smaller lens diameters create sharper images has been known since 
   </figcaption>
 </figure>
 
-The 2d diagrams can’t visualize the circle on the sensor, but the _shape_ of a lens will determine what a point light will look like when it’s out of focus. We have been talking about bokeh circles because pretty much all photography lenses are circular. The opening created by the iris is also circular, although no _perfectly_ so. This can be seen in movies, where you can sometimes count how many blades a lens’ iris had because of how bokeh circles look.
+The 2D diagrams can’t visualize the circle on the sensor, but it makes sense when you think about it: The _shape_ of a lens (or the iris opening) will determine what a point light will look like when it’s out of focus. We have been talking about bokeh circles because pretty much all photography lenses are circular. The opening created by the iris is also circular, although not _perfectly_ so. This can be seen in movies, where you can sometimes count how many blades a lens’ iris had because of how bokeh circles look.
 
 <figure>
   <img src="irisbokeh.jpg" loading="lazy" width="1280" height="720" style="max-width: 1280px">
@@ -593,9 +604,7 @@ We have talked about the lens diameter, and how the iris allows you to effective
 
 The $f$-Number is called $f$-Number because it describes the iris opening as a fraction of the focal length $f$. So for example, a 50mm lens set to $f/2.8$ means the absolute aperture is $A = \frac{f}{2.8} = 17.9mm$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit their <strike>film</strike> sensor, when they are set to the same $f$-Number — regardless of their focal lengths.
 
-That all was just to say that photographers use $f$-Numbers to compare lens configurations. Most articles that were trying to give the “definitive answer” on whether sensor size affects depth of field, do so by taking photos with different sensors and equivalent lenses _at the same $f$-Number_. In that scenario, smaller sensors will yield less bokeh.
-
-For completeness’ sake, let’s redo the graph above with a constant $f$-Number instead of a constant lens diameter, so we can replicate the results from these approaches:
+That all was just to say that photographers use $f$-Numbers to compare lens configurations. Most articles that were trying to give the “definitive answer” on whether sensor size affects depth of field, did so by taking photos with different sensors and equivalent lenses _at the same $f$-Number_. Let’s redo the graph above with a constant $f$-Number instead of a constant lens diameter, so we can replicate the results from these approaches:
 
 <figure>
   <img src="fstop-aperture.svg" width=600 height=400>
@@ -606,47 +615,26 @@ For completeness’ sake, let’s redo the graph above with a constant $f$-Numbe
   </figcaption>
 </figure>
 
-If we keep the $f$-Number constant, bokeh _drastically_ increases with bigger sensors. However, we know that the chain of causality is more complex than that: A bigger sensor requires a longer focal length to keep the same field of view. A longer focal length has a bigger aperture given the same $f$-Number. A bigger aperture makes bokeh circles grow quicker.
+If we keep the $f$-Number constant, bokeh _drastically_ increases with bigger sensors. However, we know that it’s not the sensor that causes this effect, the chain of causality is more complex than that: A bigger sensor requires a longer focal length to keep the same field of view. A longer focal length has a bigger aperture given the same $f$-Number. A bigger aperture makes bokeh circles grow quicker.
 
-The graph above, however, shows that bokeh size grows linearly with sensor size. Or to put it another way: When trying to take the same photo, the ratio of two bokeh circles is the same as the ratio of their corresponding sensors:
-
-$$
-\frac{c_1}{c_2} = \frac{D_1}{D_2}
-$$
-
-### Crop factor
-
-The ratio between two sensor sizes is known as the crop factor. It’s used by photographers to determine which lens will give them the angle of view they want. For example, a $50\text{mm}$ lens on a full-frame sensor is considered a “normal” lens that is very close to how humans perceive the world. A full-frame sensor has the same dimension as good old 35mm film, which is $36\text{mm} \times 24\text{mm}$. 
-
-> Why is it called 35mm film when it’s 36mm wide? I don’t know, man.
-
-If a photographer has a camera with an APS-C sensor ($22.2\text{mm} \times 14.8\text{mm}$), they should use a 32mm lens to get the “normal” field of view. We can use the field-of-view formula above to figure out that the ratio of the sensor sizes is equivalent to the ratio of the focal lengths, and as a consequence, the ratio of the sensor size is a factor to convert between focal lengths, and that ratio is called the “crop factor”:
+So what kind of lens would my Pixel 5 need to achieve the same background blur as my digital camera? We know that if we keep the absolute aperture $A$ constant, the bokeh will stay the same. The absolute aperture is the focal length divided by the $f$-Number $n$, and the focal length is dependent on the sensor size $D$.
 
 $$
 \begin{array}{rrlc}
-& \frac{D_1}{D_2} &=& \frac{f_1}{f_2}\\
-\Leftrightarrow & f_1 & = & \underbrace{\frac{D_1}{D_2}}_{\text{Crop factor}} \cdot f_2 \\
+  & A_1 & = & A_2 \\
+  \Leftrightarrow & \frac{f_1}{n_1} & = & \frac{f_2}{n_2}\\
+  \Leftrightarrow & \frac{D_1}{2\cdot n_1 \cdot \tan \frac\alpha2} & = & \frac{D_2}{2\cdot n_2 \cdot \tan \frac\alpha2} \\
+  \Leftrightarrow & \frac{D_1}{D_2} & = & \frac{n_1}{n_2} \\
 \end{array}
 $$
 
-????
+To say it with words: To keep the absolute apertures (and therefore the resulting bokeh) constant, the ratio of the sensor sizes has to be the same as the ratio of the $f$-Numbers.
 
-## Tying it all together
+> **Crop factor**: If you are a photographer, this might remind you of [crop factors][crop factor], and you’d be correct! Instead of taking the ratio of the sensor sizes, you can also take the ratio of the sensors’ respective crop factors!
 
-We have made some progress with regards two  my original questions. We know why a smaller aperture increases sharpness! It makes bokeh circles grow less quickly when a subject is moving away from the focal plane. We also know whether or not a smaller sensor means less background blur. It _technically_ doesn’t, only absolute aperture matters. 
+## Phones with lots of bokeh?
 
-Why do phones fake the background blur? We have all the tools to answer that question, but not all the data! To gather it, I took a picture with my Pixel 5 and then tried to take the exact same picture with my full-frame camera:
-
-<figure>
-  <img src="./comparison.jpg" loading="lazy" width=2048 height=767>
-  <figcaption>
-    Left: Photo taken with my Pixel 5, main camera lens.<br>
-    Right: Photo taken with my Canon EOS R, with a zoom lens set to 27mm.<br>
-    (Images cropped to match aspect ratio, slight color grading.)
-  </figcaption>
-</figure>
-
-What kind of lens does a Pixel 5 have exactly? And what kind of sensor? Luckily, some of this data is embedded in the EXIF data of the images and can be extracted using `identify` from ImageMagick:
+So what would the Pixel 5 need to be able to take the same picture as my digital camera? For that we need to know what kind of lens the Pixel 5 has. Luckily, this data is embedded in the EXIF data of the images and can be extracted using `identify` from ImageMagick:
 
 ```
 $ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' cam_image.jpg
@@ -656,65 +644,61 @@ $ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' pixel5_image.jpg
 f=4380/1000 A=173/100
 ```
 
-This says that my digital camera image was taken with $f=27\text{mm}$ and $f/2.8$ ($A=9.6\text{mm}$). The Pixel 5 used $f=4.38\text{mm}$ and $f/1.73$ ($A=2.5\text{mm}$). 
+This says that my digital camera image was taken with $f=27\text{mm}$ and $f/2.8$ ($A=9.6\text{mm}$). The Pixel 5 used $f=4.38\text{mm}$ and $f/1.73$ ($A=2.5\text{mm}$). It’s worth noting that both the aperture and the focal lengths are fixed. In contrast, my zoom lens allows my to control both these variables.
 
-> **I lied:** I am not using portrait mode for this experiment because the Pixel 5’s portrait mode crops in, effectively zooming in and giving the phone a longer focal length. Longer focal lenses are typically deemed more flattering for portraits as they have less perspective distortion. Whether this is a technical limitation or a technique to force people to literally take a step back when taking pictures, is unclear to me.
+The EXIF data doesn’t contain any data about the sensor size, but since we have empirically determined the field of view (the equivalent of a $27\text{mm}$ lens on a full-frame sensor), we can calculate the sensor size ourselves. Or, you know, we [can look up that the Pixel 5 has a 1/2.55" sensor][pixel5 sensor], which measures $5.76\text{mm} \times 4.29\text{mm}$, making a full-frame sensor 14 times larger than the phone’s sensor.
 
-The aperture on the DSLR is almost 4 times as large as the phones aperture. We just established that in these extreme constellations (close subject, far-away spot light), aperture is the dictating factor of the bokeh circles. To achieve the same bluriness of the DSLR, the Pixel 5 would have to achieve the same aperture of $A=16.4mm = f/0.27$. 
+> **I lied:** I am not using portrait mode for this experiment because the Pixel 5’s portrait mode crops in, effectively zooming in, emulating a longer focal length. Longer focal lenses are typically deemed more flattering for portraits as they have less perspective distortion. Whether this is a technical limitation or a technique to force people to literally take a step back when taking pictures in portrait mode is unclear to me.
 
-Is such a phone lens possible? This is where I couldn’t find any answers. In my experience, any lens with an aperture bigger than $f/1.4$ is rare and increasingly expensive. Any aperture bigger than $f/1.2$ is virtually unheard of, although they do exist.
+The aperture on the digital camera is almost 4 times as large as the phones aperture. For the Pixel 5 to achieve the same amount of background blur as my digital camera, the Pixel 5 would have to have the same absolute aperture of $A=9.6\text{mm} = f/0.46$. 
+
+Is such a phone lens possible? I am not sure. In my experience, any lens with an aperture bigger than $f/1.4$ is rare, and bigger apertures will make the lens increasingly expensive. Any aperture bigger than $f/1.2$ is virtually unheard of, although they do exist:
 
 <figure>
   <img src="nikkornoct.jpg" loading="lazy" width="1084" height="476" style="max-width: 1084px">
   <figcaption>Nikon’s f/0.95 aperture made waves amongst photographers and will cost you a mere £8.3k.</figcaption>
 </figure>
 
-The reality seems to be different: Phones are small(-ish) and physical space is valuable and as such small sensors wil be built into phones. The [Pixel 5, for example, has a $10mm$ sensor][pixel5 sensor]. Smaller sensors require shorter focal lengths for a reasonable field of view, and shorter focal lengths have smaller apertures
+Just in terms of size, a phone lens with a diameter of $~1\text{cm}$ seems practical, but big lenses with short focal length are more bulgy and I am sure the real challenges of creating a $f/0.5$ lens cannot be found when writing an article form the ivory tower of perfect lenses and ignoring the real world physics.
 
-## LEFTOVERS
+## The answers to all my questions
 
+We now have all the tools to answer the questions I asked at the beginning of the article.
 
-$$
-\begin{array}{rrcl}
-  & \frac{D_\text{fullframe}}{2 \cdot 46mm} & = & \frac{D_\text{phone}}{2 \cdot 4.38mm}\\
-  \Leftrightarrow & \frac{36mm}{2 \cdot 46mm} \cdot 2 \cdot 4.38mm & = & D_\text{phone} \\
-  \Leftrightarrow & 3.43mm & = & D_\text{phone} \\
-\end{array}
-$$
+1. **Why does a smaller aperture increase sharpness?** It makes bokeh circles grow less quickly when a subject is moving away from the focal plane.
+1. **Does a smaller sensor cause less background blur?** Technically, no. Practically, because smaller sensors are used with lenses with shorter focal lengths, and shorter focal lengths use smaller apertures to achieve the same $f$-Number, yes.
+1. **Why do phones fake the background blur?** Phones have very small sensors to save space, which means they have small focal lengths and small apertures, yielding a big focus area. This makes it physically impossible to recreate the background blur of a full-frame camera.
 
-From the diagram we can also learn a short focal length will create a bigger circle than a long focal length at the minimal focal distance. However, moving the focal plane ever so slightly away from the minimal focal length will make the circle shrink much quicker than a comparable focus shift on a longer focal length.
+I probably ignored a huge amount of factors that come into play once you are not working through the physics on a purely theoretical level. However, this still allowed me to get a deeper understanding of lens optics and find sufficient answers to all my questions.
 
- How much area? Well I’m glad you asked! Our friend the thin lenses equation combined with the [intercept theorem] will let us answer this question. Given a lens with focal length $f$ and diameter $D$, a focal plane at distance $S$ from the sensor and a point at distance $P$ from the sensor, we can calculate the area $B$ that the point will be projected on:
+## Bonus content: Tilt-Shift lenses
 
-$$
-\begin{array}{c}
-l = \frac{S}{2} - \sqrt{\frac{S^2}{4} - Sf} \\
-D \div (S-l) = B \div l
-\end{array}
-$$
+Throughout this entire article, we have assumed that the lens plane and the sensor plane are parallel to each other. That is, of course, not required and something that old field cameras used all the time. Most modern cameras can’t tilt their lenses as it introduces a lot of mechanical and optical complexity. Some lenses are specifically engineered to have this ability, though, and are aptly named “tilt-shift lenses” as you can tilt and shift the lens. This basically allows you to remove perspective distortion and move the vanishing point around _before_ taking the image — an operation that would require you throw away  precious pixels if you do it as a post-processing step.
 
-<figure>
-  <img src="intrepid.jpg" loading="lazy" width="609" height="457" style="max-width: 609px">
-  <figcaption>
-  
-  The [Intrepid Mk 4][intrepid] is a contemporary large-format camera, but works in the same way the first cameras did.
+<section class="carousel">
+  <figure>
+    <img loading="lazy" width="1280" height="853" src="./tiltshift.jpg">
+    <figcaption>Three of Canon’s tilt-shift lenses with different tilt angles. </figcaption>
+  </figure>
+  <figure>
+    <img src="intrepid.jpg" loading="lazy" width="609" height="457" style="max-width: 609px">
+    <figcaption>Old field cameras had the ability to tilt and shift the lens plane. This ability got lost due to size constraints.</figcaption>
+  </figure>
+</section>
 
-  </figcaption>
-</figure>
-
-
+Tilt-shift lenses are used for architecture photography, but are probably most well known for taking photos of cities that end up look like a miniature world. The principle behind this is called the [Scheimpflug principle][scheimpflug], which says that if you tilt the lens plane relative the sensor, the focal plane also tilts so all 3 planes intersect in the same point.
 
 <figure>
 
 |||geometry
  {
     width: 500,
-    height: 300,
+    height: 500,
     viewBox: {
-      leftX: 0,
-      rightX: 500,
-      topY: -150,
-      bottomY: 150,
+      leftX: -10,
+      rightX: 490,
+      topY: -250,
+      bottomY: 250,
     },
     handles: {
       fp: new geometry.Point(999, 0).setName("fp")
@@ -724,7 +708,7 @@ $$
       const lensCenter = new geometry.Point(1.2*f, 0);
       // Make the handle stay on a circle around the lens center
       this.handles.fp = this.handles.fp.difference(lensCenter).normalizeSelf().scalarSelf(3*f).addSelf(lensCenter);
-      const lens = new geometry.Lens(lensCenter, this.handles.fp.difference(lensCenter).normalizeSelf().scalarSelf(f), 2*f);
+      const lens = new geometry.Lens(lensCenter, this.handles.fp.difference(lensCenter).normalizeSelf().scalarSelf(f), 3*f);
 
       const sensorplane = new geometry.Line(new geometry.Point(0, 0), new geometry.Point(0, -1));
       const sensorTop = sensorplane.pointAtDistance(20);
@@ -733,6 +717,7 @@ $$
 
       const {point: projectedSensorTop} = lens.lensProject(sensorTop);
       const {point: projectedSensorBottom} = lens.lensProject(sensorBottom);
+      console.log({projectedSensorTop, projectedSensorBottom})
       const projectedSensorPlane = geometry.Line.throughPoints(projectedSensorTop, projectedSensorBottom);
       const projectedSensor = new geometry.Arrow(projectedSensorBottom, projectedSensorTop);
 
@@ -746,25 +731,29 @@ $$
         projectedSensor.addClass("sensor"),
         projectedSensorPlane.addClass("sensorplane"),
         new geometry.Text(projectedSensorPlane.intersect(topLine).add(new geometry.Point(10, 0)), "Focal plane"),
-        new geometry.Text(new geometry.Point(10, -120), "Sensor plane"),
       ];
     },
   }
 |||
 
-<figcaption>A lens focuses light rays onto a point.</figcaption>
+<figcaption>The Scheimpflug principle dictates that tilting the lens plane also tilts the focal plane so that sensor plane, lens plane and focal plane intersect in the same point.</figcaption>
 
 </figure>
 
-This journey started in the context of camera lenses, but camera lenses are complext beasts. Even the simplest, so-called “prime lenses”, which are have one fixed focal length and cannot zoom, _are_ actually zoom lenses and consist of multiple lenses. We will discover _some_ of the reasons for this overwhelming amount of lenses later in this article.
+Another thing we have ignored in the article is that there is actually two ways to increase the focus area. The way we covered is to use a smaller aperture. The other way is to move the focal plane away from the sensor. The further away we set the focus, the bigger the focus area is going to be. In fact, all lenses have an “infinite focus distance”, a lens-specific distance from which onwards _everything_ is in focus. So if you take photos of cities from either far away or high up, usually everything ends up being in focus. 
 
 <figure>
-  <img src="camera-lens.jpg" style="max-width: 700px">
-  <figcaption>Camera lenses consist of multiple lenses.</figcaption>
+  <img src="tiltshiftexample.jpg" loading="lazy" width="1280" height="960" style="max-width: 1280px">
+  <figcaption>
+  
+  An example photo taken from the [Wikipedia article about Tilt-Shift photography][wiki tiltshift]. The quick transition from sharp to blurry tricks our brain into thinking the subject must be close and therefore tiny.
+  
+  </figcaption>
 </figure>
 
-For most intents and purposes, these series of individual lenses
+Tilt-shift lenses allow you to tilt the focal plane, making things go out of focus quicker than with a parallel focal plane. Our brain associates this quick transition from sharp to blurry with the subject being very close to the lens (or rather, our eyes), which in turn would mean that the subject is tiny.
 
+<script src="/carousel-reset.js" type="module"></script>
 <script src="/lab/diagram/geometry-intromate.js" type="module"></script>
 
 [camera comparison]: https://www.dpreview.com/products/compare/side-by-side?products=ricoh_griii&products=canon_g7xiii
@@ -776,3 +765,6 @@ For most intents and purposes, these series of individual lenses
 [pixel5 sensor]: https://www.dxomark.com/google-pixel-5-camera-review-software-power/
 [julia]: https://julialang.org/
 [autofocus]: https://en.wikipedia.org/wiki/Autofocus
+[scheimpflug]: https://en.wikipedia.org/wiki/Scheimpflug_principle
+[wiki tiltshift]: https://en.wikipedia.org/wiki/Tilt%E2%80%93shift_photography
+[crop factor]: https://en.wikipedia.org/wiki/Crop_factor
