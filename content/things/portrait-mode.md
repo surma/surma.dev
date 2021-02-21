@@ -112,7 +112,7 @@ The two most important parameters of a lens for this excursion is its focal leng
 <figcaption>Rays that enter the lens parallel to the lens axis will intersect the focal point.<br>(Orange points are interactive!)</figcaption>
 </figure>
 
-The tracing the rays in reverse yields another rule: Rays that enter the lens by intersecting the focal point will exit the lens parallel to the lens axis. These two rules are very powerful and will allow us to derive pretty much everything we need to answer all our questions.
+Tracing the rays in reverse yields another rule: Rays that enter the lens by intersecting the focal point will exit the lens parallel to the lens axis. These two rules are very powerful and will allow us to derive pretty much everything we need to answer all our questions.
 
 > **Thicc:** You’ll notice that lenses with a short focal length are anything but thin. I’ll still pretend that they fall into the “thin lens” category for the remainder of this article.
 
@@ -644,9 +644,9 @@ $ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' pixel5_image.jpg
 f=4380/1000 A=173/100
 ```
 
-This says that my digital camera image was taken with $f=27\text{mm}$ and $f/2.8$ ($A=9.6\text{mm}$). The Pixel 5 used $f=4.38\text{mm}$ and $f/1.73$ ($A=2.5\text{mm}$). It’s worth noting that both the aperture and the focal lengths are fixed. In contrast, my zoom lens allows my to control both these variables.
+This says that my digital camera image was taken with $f=27\text{mm}$ and $f/2.8$ ($A=9.6\text{mm}$). The Pixel 5 used $f=4.38\text{mm}$ and $f/1.73$ ($A=2.5\text{mm}$). It’s worth noting that both the aperture and the focal lengths are fixed in the Pixel 5. The zoom lens for my digital camera on the other hand allows me to control both these variables.
 
-The EXIF data doesn’t contain any data about the sensor size, but since we have empirically determined the field of view (the equivalent of a $27\text{mm}$ lens on a full-frame sensor), we can calculate the sensor size ourselves. Or, you know, we [can look up that the Pixel 5 has a 1/2.55" sensor][pixel5 sensor], which measures $5.76\text{mm} \times 4.29\text{mm}$, making a full-frame sensor 14 times larger than the phone’s sensor.
+The EXIF data doesn’t contain any data about the sensor size, but since we have empirically determined the field of view (it’s the equivalent of a $27\text{mm}$ lens on a full-frame sensor), we can calculate the sensor size ourselves. Or, you know, we [can look up that the Pixel 5 has a 1/2.55" sensor][pixel5 sensor], which measures $5.76\text{mm} \times 4.29\text{mm}$, making the full-frame sensor about 14 times larger than the phone’s sensor.
 
 > **I lied:** I am not using portrait mode for this experiment because the Pixel 5’s portrait mode crops in, effectively zooming in, emulating a longer focal length. Longer focal lenses are typically deemed more flattering for portraits as they have less perspective distortion. Whether this is a technical limitation or a technique to force people to literally take a step back when taking pictures in portrait mode is unclear to me.
 
