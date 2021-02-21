@@ -252,7 +252,7 @@ To take a picture we have to have something that... takes the picture. Yes. Very
         sensor.addClass("sensor"),
         lens.addClass("lens"),
         new geometry.Text(topline.project(this.handles.s).addSelf(gap.scalar(10)), "Sensor plane"),
-        new geometry.Text(sensorTop.add(sensorBottom).scalarSelf(1/2).addSelf(gap), "D"),
+        new geometry.Text(sensorTop.add(sensorBottom).scalarSelf(1/2).addSelf(gap), "S"),
         new geometry.Text(topline.project(sensorTopP).addSelf(gap.scalar(10)), "Focal plane"),
         new geometry.Text(fp.add(gap.scalar(30)), "α").addClass("text-middle"),
         sensorP.addClass("sensor"),
@@ -279,29 +279,29 @@ This leads us to two conclusions: The focal length is directly related to the an
 
 $$
 
-\frac{D}{2f} = \tan \frac{\alpha}{2}
+\frac{S}{2f} = \tan \frac{\alpha}{2}
 
 $$
 
 <figcaption>
 
-The formula describing the relationship between angle of view $\alpha$, the sensor size $D$ and the focal length $f$.
+The formula describing the relationship between angle of view $\alpha$, the sensor size $S$ and the focal length $f$.
 
 </figcaption>
 </figure>
 
 ### Focusing
 
-In the diagram above, you can move the lens and change the lens’ focal length to see how it affects the focal plane. However in photography you don’t move the lens and see where our focus plane ends up, you have something that you want to focus _on_, and want to position your lens accordingly. If we know the distance $S$ between our sensor plane and our desired focal plane, we can use the thin lens equation to figure where to place the lens:
+In the diagram above, you can move the lens and change the lens’ focal length to see how it affects the focal plane. However in photography you don’t move the lens and see where our focus plane ends up, you have something that you want to focus _on_, and want to position your lens accordingly. If we know the distance $D$ between our sensor plane and our desired focal plane, we can use the thin lens equation to figure where to place the lens:
 
 <figure>
 
 $$
 \begin{array}{rc}
   & \frac{1}{f} = \frac{1}{s} + \frac{1}{s'} \\
-  \Leftrightarrow & \frac{1}{f} = \frac{1}{s} + \frac{1}{S - s} \\
+  \Leftrightarrow & \frac{1}{f} = \frac{1}{s} + \frac{1}{D - s} \\
   \Leftrightarrow & ... \\
-  \Rightarrow & s = \frac{S}{2} \pm \sqrt{\frac{S^2}{4} - Sf} \\
+  \Rightarrow & s = \frac{D}{2} \pm \sqrt{\frac{D^2}{4} - D\cdot f} \\
 \end{array}
 $$
 <figcaption>The “focusing equation” (not an official name) determines the lens’ position based on focal length and desired focal plane distance.</figcaption>
@@ -311,8 +311,8 @@ Apologies for skipping the math there in the middle, but it’s really just a bu
 
 $$
 \begin{array}{rcl}
-  \frac{S^2}{4} - Sf & > & 0 \\
-  \Leftrightarrow S & > & 4f \\
+  \frac{D^2}{4} - D\cdot f & > & 0 \\
+  \Leftrightarrow D & > & 4f \\
 \end{array}
 $$
 
@@ -606,11 +606,36 @@ For completeness’ sake, let’s redo the graph above with a constant $f$-Numbe
   </figcaption>
 </figure>
 
-If we keep the $f$-Number constant, bokeh _drastically_ increases with bigger sensors. However, we know that the chain of causality is more complex than that: A smaller sensor requires a shorter focal length to keep the same field of view. A shorter focal length has a smaller aperture given the same $f$-Number. A smaller aperture keeps bokeh circles smaller, which we perceive as sharper images. Blaming less background blur with smaller sensors on the sensor alone is ignoring a whole bunch of other factors.
+If we keep the $f$-Number constant, bokeh _drastically_ increases with bigger sensors. However, we know that the chain of causality is more complex than that: A bigger sensor requires a longer focal length to keep the same field of view. A longer focal length has a bigger aperture given the same $f$-Number. A bigger aperture makes bokeh circles grow quicker.
 
-## Pixel 5 vs Digital Camera
+The graph above, however, shows that bokeh size grows linearly with sensor size. Or to put it another way: When trying to take the same photo, the ratio of two bokeh circles is the same as the ratio of their corresponding sensors:
 
-I took a picture with my Pixel 5 and then tried to take the exact same picture with my Canon EOS R.
+$$
+\frac{c_1}{c_2} = \frac{D_1}{D_2}
+$$
+
+### Crop factor
+
+The ratio between two sensor sizes is known as the crop factor. It’s used by photographers to determine which lens will give them the angle of view they want. For example, a $50\text{mm}$ lens on a full-frame sensor is considered a “normal” lens that is very close to how humans perceive the world. A full-frame sensor has the same dimension as good old 35mm film, which is $36\text{mm} \times 24\text{mm}$. 
+
+> Why is it called 35mm film when it’s 36mm wide? I don’t know, man.
+
+If a photographer has a camera with an APS-C sensor ($22.2\text{mm} \times 14.8\text{mm}$), they should use a 32mm lens to get the “normal” field of view. We can use the field-of-view formula above to figure out that the ratio of the sensor sizes is equivalent to the ratio of the focal lengths, and as a consequence, the ratio of the sensor size is a factor to convert between focal lengths, and that ratio is called the “crop factor”:
+
+$$
+\begin{array}{rrlc}
+& \frac{D_1}{D_2} &=& \frac{f_1}{f_2}\\
+\Leftrightarrow & f_1 & = & \underbrace{\frac{D_1}{D_2}}_{\text{Crop factor}} \cdot f_2 \\
+\end{array}
+$$
+
+????
+
+## Tying it all together
+
+We have made some progress with regards two  my original questions. We know why a smaller aperture increases sharpness! It makes bokeh circles grow less quickly when a subject is moving away from the focal plane. We also know whether or not a smaller sensor means less background blur. It _technically_ doesn’t, only absolute aperture matters. 
+
+Why do phones fake the background blur? We have all the tools to answer that question, but not all the data! To gather it, I took a picture with my Pixel 5 and then tried to take the exact same picture with my full-frame camera:
 
 <figure>
   <img src="./comparison.jpg" loading="lazy" width=2048 height=767>
@@ -621,24 +646,21 @@ I took a picture with my Pixel 5 and then tried to take the exact same picture w
   </figcaption>
 </figure>
 
-So what did I really do here? My Pixel 5 has a fixed lens, so I took a photo with it first. I then tried to exactly match field of view with my DSLR, using land marks in the photo to align as close as possible. Specifically, we have the same scene with the exact same field of view and same focal plane, while sensor size, sensor position, focal length and lens diameter can change.
-
-
-Let’s return at the original comparison image from the start of the article. What kind of lens does a Pixel 5 have exactly? And what kind of sensor? Luckily, some of this data is embedded in the EXIF data of the images and can be extracted using `identify` from ImageMagick:
+What kind of lens does a Pixel 5 have exactly? And what kind of sensor? Luckily, some of this data is embedded in the EXIF data of the images and can be extracted using `identify` from ImageMagick:
 
 ```
 $ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' cam_image.jpg
-f=46/1 A=28/10
+f=27/1 A=28/10
 
 $ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' pixel5_image.jpg
 f=4380/1000 A=173/100
 ```
 
-This says that my digital camera image was taken with $f=46mm$ and $f/2.8$ ($A=16.4mm$). The Pixel 5 used $f=4.38mm$ and $f/1.73$ ($A=2.5mm$). 
+This says that my digital camera image was taken with $f=27\text{mm}$ and $f/2.8$ ($A=9.6\text{mm}$). The Pixel 5 used $f=4.38\text{mm}$ and $f/1.73$ ($A=2.5\text{mm}$). 
 
-> **More lies:** I am ignoring the fact that the Pixel 5’s portrait mode crops in, effectively zooming in and giving the phone a longer focal length. Longer focal lenses are typically deemed more flattering for portraits as they have less perspective distortion. Whether this is a technical limitation or a technique to force people to literally take a step back when taking picrtures, is unclear to me.
+> **I lied:** I am not using portrait mode for this experiment because the Pixel 5’s portrait mode crops in, effectively zooming in and giving the phone a longer focal length. Longer focal lenses are typically deemed more flattering for portraits as they have less perspective distortion. Whether this is a technical limitation or a technique to force people to literally take a step back when taking pictures, is unclear to me.
 
-The aperture on the DSLR is almost 7 times as large as the phones aperture. We just established that in these extreme constellations (close subject, far-away spot light), aperture is the dictating factor of the bokeh circles. To achieve the same bluriness of the DSLR, the Pixel 5 would have to achieve the same aperture of $A=16.4mm = f/0.27$. 
+The aperture on the DSLR is almost 4 times as large as the phones aperture. We just established that in these extreme constellations (close subject, far-away spot light), aperture is the dictating factor of the bokeh circles. To achieve the same bluriness of the DSLR, the Pixel 5 would have to achieve the same aperture of $A=16.4mm = f/0.27$. 
 
 Is such a phone lens possible? This is where I couldn’t find any answers. In my experience, any lens with an aperture bigger than $f/1.4$ is rare and increasingly expensive. Any aperture bigger than $f/1.2$ is virtually unheard of, although they do exist.
 
