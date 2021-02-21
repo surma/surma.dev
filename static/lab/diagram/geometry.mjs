@@ -365,18 +365,18 @@ export class ArrowLine extends Segment {
           .toSVG()} 
           L ${this.p1.toSVG()} 
           L ${this.p1
-          .add(barDir.scalar(this.size / 2))
-          .add(lineDir.scalar(this.size / 2))
-          .toSVG()}
+            .add(barDir.scalar(this.size / 2))
+            .add(lineDir.scalar(this.size / 2))
+            .toSVG()}
           M ${this.p2
-          .add(barDir.scalar(-this.size / 2))
-          .add(lineDir.scalar(-this.size / 2))
-          .toSVG()} 
+            .add(barDir.scalar(-this.size / 2))
+            .add(lineDir.scalar(-this.size / 2))
+            .toSVG()} 
           L ${this.p2.toSVG()} 
           L ${this.p2
-          .add(barDir.scalar(this.size / 2))
-          .add(lineDir.scalar(-this.size / 2))
-          .toSVG()}"
+            .add(barDir.scalar(this.size / 2))
+            .add(lineDir.scalar(-this.size / 2))
+            .toSVG()}"
       />
       </g>
       `;
@@ -628,6 +628,7 @@ function serializeViewBox(vb) {
   }`;
 }
 
+export const domMap = new WeakMap();
 export function instantiateDiagram(diagram, target, lit) {
   let draggedHandle = null;
   function screenToSvgCoordinates(svg, x, y) {
@@ -694,6 +695,7 @@ export function instantiateDiagram(diagram, target, lit) {
       target
     );
   }
+  domMap.set(target, { diagram, rerender });
   rerender();
 }
 

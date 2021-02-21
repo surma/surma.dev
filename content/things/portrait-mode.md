@@ -24,7 +24,7 @@ Having a blurry background is a common technique in photography to make the view
   <figcaption>The start and end of depth of field is clearly visible.</figcaption>
 </figure>
 
-If you look up how to achieve this shallow depth of field, most photography resources will say “use a wide aperture” and “use a long lens”. And that is somewhat true, and we will figure out why!
+If you look up how to achieve this shallow depth of field, most photography resources will say “use a wide aperture” and “use a long lens”. And that is somewhat true, and my goal is to figure out where exactly the nuance is.
 
 > **Be warned!** Photography terminology is a mess and correlation established in experiments is often mistaken for causation. One of my goals for this article is to clear up as much as possible.
 
@@ -717,7 +717,6 @@ Tilt-shift lenses are used for architecture photography, but are probably most w
 
       const {point: projectedSensorTop} = lens.lensProject(sensorTop);
       const {point: projectedSensorBottom} = lens.lensProject(sensorBottom);
-      console.log({projectedSensorTop, projectedSensorBottom})
       const projectedSensorPlane = geometry.Line.throughPoints(projectedSensorTop, projectedSensorBottom);
       const projectedSensor = new geometry.Arrow(projectedSensorBottom, projectedSensorTop);
 
