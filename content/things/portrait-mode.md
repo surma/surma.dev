@@ -21,7 +21,7 @@ Having a blurry background is a common technique in photography to make the view
 
 <figure>
   <img src="./depth-of-field.jpg" width="1280" height="1275">
-  <figcaption>The transition from sharp to burry is clearly visible, especially with a “Find Edges” filter applies.</figcaption>
+  <figcaption>The transition from sharp to burry is clearly visible, especially with a “Find Edges” filter applied.</figcaption>
 </figure>
 
 If you look up how to achieve this shallow depth of field, most photography resources will say “use a wide-open aperture” and “use a long lens”. And that is somewhat true, but it’s more nuanced than that.
@@ -33,8 +33,7 @@ Recently, camera phones have gotten a new feature called “portrait mode”, th
 <figure>
   <img src="./portrait-mode.jpg" width="1280" height="960">
   <figcaption>
-    Left: Picture taken in “portrait mode” on a Pixel 5.<br>
-    Right: The same picture with Photoshop’s “Find Edges” filter applied.
+    Picture taken in “portrait mode” on a Pixel 5. The “Find Edges” shows how abrupt the background blur sets in.
   </figcaption>
 </figure>
 
