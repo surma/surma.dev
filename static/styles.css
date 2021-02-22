@@ -419,7 +419,7 @@ footer > .arrows {
       6,
       var(--social-icon)
     );
-  grid-template-rows: var(--avatar-size) 1fr;
+  grid-template-rows: minmax(var(--avatar-size), min-content) 1fr;
   place-items: stretch;
   grid-auto-flow: row sparse;
 }

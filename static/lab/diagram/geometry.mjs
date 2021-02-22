@@ -24,7 +24,7 @@ export class Point extends Geometry {
     super();
     this.x = x;
     this.y = y;
-    this.vicinity = 20;
+    this.vicinity = 30;
   }
 
   angle() {

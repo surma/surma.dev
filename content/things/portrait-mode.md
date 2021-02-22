@@ -204,11 +204,11 @@ To take a picture we have to have something that... takes the picture. Yes. Very
 
 |||geometry
  {
-    width: 800,
+    width: 600,
     height: 300,
     viewBox: {
       leftX: -150,
-      rightX: 650,
+      rightX: 450,
       topY: -150,
       bottomY: 150,
     },
@@ -341,11 +341,11 @@ To figure out how big the circle will be, we’ll have to introduce a couple of 
 
 |||geometry
  {
-    width: 930,
+    width: 730,
     height: 480,
     viewBox: {
       leftX: -30,
-      rightX: 900,
+      rightX: 700,
       topY: -220,
       bottomY: 260,
     },
@@ -484,11 +484,11 @@ I managed to capture the same parts of the scene with both my Pixel 5 and my dig
 
 |||geometry
  {
-    width: 800,
+    width: 600,
     height: 300,
     viewBox: {
       leftX: -10,
-      rightX: 790,
+      rightX: 590,
       topY: -150,
       bottomY: 150,
     },
@@ -599,11 +599,15 @@ The 2D diagrams can’t visualize the circle on the sensor, but it makes sense w
   </figcaption>
 </figure>
 
-Lensbaby lenses actively take advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shape plates inbetween the lens and sensor:
+Lensbaby has a [Creative Bokeh] adapter, that actively takes advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shape plates in-between the lens and sensor:
 
 <figure>
-  <img src="#lensbaby.jpg" loading="lazy" width="1280" height="219" style="max-width: 1280px">
-  <figcaption>Lensbaby lens using a nice swirl or something. Waiting for Ingrid.</figcaption>
+  <img src="lensbaby-photo.jpg" loading="lazy" width="1200" height="900" style="max-width: 1200px">
+  <figcaption>
+  
+  Lensbaby’s Creative Bokeh with a star-shape aperture. Photo by [Tam Tam].
+  
+  </figcaption>
 </figure>
 
 ### f-stops 
@@ -779,3 +783,5 @@ Tilt-shift lenses allow you to tilt the focal plane, making things go out of foc
 [scheimpflug]: https://en.wikipedia.org/wiki/Scheimpflug_principle
 [wiki tiltshift]: https://en.wikipedia.org/wiki/Tilt%E2%80%93shift_photography
 [crop factor]: https://en.wikipedia.org/wiki/Crop_factor
+[Tam Tam]: https://www.flickr.com/photos/strollers/2126283417/
+[Creative Bokeh]: https://lensbaby.com/collections/collection/products/creative-bokeh-optic
