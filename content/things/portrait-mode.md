@@ -2,7 +2,7 @@
 title: "Why your phone’s portrait mode fakes the blur"
 date: "2021-01-15"
 live: false
-# socialmediaimage: "social.png"
+socialmediaimage: "comparison.jpg"
 ---
 
 Portrait mode artificially blurs out the background of an image to make it look... “better”. Turns out the reason this is done artificially is physics more than anything else.
