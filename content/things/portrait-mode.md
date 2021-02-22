@@ -21,7 +21,7 @@ Having a blurry background is a common technique in photography to make the view
 
 <figure>
   <img src="./depth-of-field.jpg" width="1280" height="1275">
-  <figcaption>The transition from sharp to burry is clearly visible.</figcaption>
+  <figcaption>The transition from sharp to burry is clearly visible, especially with a “Find Edges” filter applies.</figcaption>
 </figure>
 
 If you look up how to achieve this shallow depth of field, most photography resources will say “use a wide-open aperture” and “use a long lens”. And that is somewhat true, but it’s more nuanced than that.
@@ -123,7 +123,7 @@ Tracing the rays in reverse yields another rule: Rays that enter the lens by int
 
 > **Thicc:** You’ll notice that lenses with a short focal length are anything but thin. I’ll still pretend that they fall into the “thin lens” category for the remainder of this article.
 
-Light in real life is barely ever parallel, but rather radiating out from a point into all directions. More specifically, apart from a few notable exceptions (like mirrors), every material reflects the light that it is hit by evenly into all directions on every point of its surface. This allows us to focus on scenarios with one individual point light source, knowing that any object or surface is just a collection of many of such individual point light sources.
+Light in real life is barely ever parallel, but rather radiating out from a point into all directions. More specifically, apart from a few notable exceptions (like mirrors), every material reflects the light that it is hit by evenly into all directions on every point of its surface. This allows us to focus on scenarios with one individual point light source, knowing that any real scene is just a collection of many such points.
 
 We have a point that sends light rays into all directions and we put it on one side of our lens. Considering that people were able to take pictures with these simple lenses, there has to be a place on the other side of the lens where all the light rays get focused back into a single point. While the light from our point light source will be hitting every part of our lens, we only need to care about two specific light rays to figure this out: The one light ray that is parallel to the lens axis, and the other ray that intersects the focal point. We know these rays will behave according to our two rules from above and they will (most likely) also intersect on the _other_ side of the lens. Wherever these two lines intersect, all other rays will intersect as well.
 
@@ -196,7 +196,7 @@ The “thin lens equation” describes the relationship between the object’s d
 
 ## Photography
 
-You’ll notice that if you move the object parallel to the lens plane, the image will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. What is above the lens axis on one side of the lens, is below the lens axis on the other. Secondly, and more importantly, if a bunch of objects form a parallel to the lens plane, their images will also form a parallel to the lens plane. Instead of talking about individual points, we can talk about the “image plane” and the “focal plane”. We have now entered the territory of photography.
+You’ll notice that if you move the object point parallel to the lens plane, the image point will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. What is above the lens axis on one side of the lens, is below the lens axis on the other. Secondly, and more importantly, if a bunch of objects form a parallel to the lens plane, their images will also form a parallel to the lens plane. Instead of talking about individual points, we can talk about the “image plane” and the “focal plane”. We have now entered the territory of photography.
 
 ### The image plane & the focal plane
 
@@ -458,13 +458,13 @@ $$
   c = A \left( \frac{\frac{D_\text{focal}}{2} + \sqrt{\frac{D_\text{focal}^2}{4} - D_\text{focal}\cdot f}}{\frac{D_\text{light}}{2} - \sqrt{\frac{D_\text{light}^2}{4} - D_\text{light}\cdot f}} - 1 \right)
 $$
 
-Admittedly, this formula isn’t simple, intuitive or, honestly, even that helpful. But let’s look at this in an extreme configuration: Let’s move the focal plane as close as possible to the sensor ($D_\text{focal} = 4f$) and move the light source infinitelyz far away ($D_\text{light} \rightarrow \infty$). In this scenario, the formula drastically simplifies (provided you can calculate the limit, which I couldn’t without [help][limit]):
+Admittedly, this formula isn’t simple, intuitive or, honestly, even that helpful. But let’s look at this in an extreme configuration: Let’s move the focal plane as close as possible to the sensor ($D_\text{focal} = 4f$) and move the light source infinitely far away ($D_\text{light} \rightarrow \infty$). In this scenario, the formula drastically simplifies (provided you can calculate the limit, which I couldn’t without [help][limit]):
 
 $$
 c = A
 $$
 
-I found this _fascinating_. In the extreme case, the focal length actually has _no_ influence over the size of the bokeh circles, despite photographers saying to “use a long lens”. Lens size alone dictates how big the circle on the sensor is. Surely, not all photography resources can be wrong here, though?
+I found this _fascinating_. In the extreme case, the focal length actually has _no_ influence over the size of the bokeh circles, despite photographers saying to “use a long lens”. Lens size alone dictates how big the circle on the sensor is. So why do photography resources recommend a long lens to increase bokeh? Surely they can’t all be wrong?
 
 ### Same-picture comparison
 
@@ -555,25 +555,25 @@ I managed to capture the same parts of the scene with both my Pixel 5 and my dig
 
 </figure>
 
-We know from earlier that making the sensor smaller will also decrease the angle of view. Since we want to keep angle of view constant, we need to correct for smaller sensor size with shorter focal length, which we know results in a smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor as before, yielding the exact same image? It’s hard to tell from the diagram, so I guess the only way to tell is use that horrible formula from earlier. But I’ll have [Julia] do the work for me:
+We know from earlier that making the sensor smaller will also decrease the angle of view. Since we want to keep angle of view constant, we need to correct for smaller sensor size with a shorter focal length, which we know results in a smaller bokeh circle on the sensor. But wait, the sensor is also smaller, so maybe it covers the same _percentage_ of the sensor as before, yielding the exact same image? It’s hard to tell from the diagram, so I guess the only way to tell is use that horrible formula from earlier. But I’ll have [Julia] do the work for me:
 
 <figure>
   <img src="constant-aperture.svg" width=600 height=400>
   <figcaption>When keeping everything but the sensor size constant, the bokeh circles cover the same fraction of the sensor.</figcaption>
 </figure>
 
-The bokeh stays the same? This goes against everything I found on the internet. There must be something else causing the vast majority of articles to claim the opposite of what I just found.
+The bokeh stays the same? This goes against everything I found on the internet. There must be something else causing the vast majority of articles to claim that smaller sensors do have less background blur.
 
 
-The culprit are $f$-Numbers.
+The culprits are $f$-Numbers.
 
 ## Aperture
 
 The diagram above shows that making the lens diameter smaller will also shrink bokeh circle on the sensor. A very small circle, however, is _humanly_ indistinguishable from a point. Or to interpret that another way: Up until a certain circle size, a human can’t tell the difference between something being perfectly in focus and slightly out of focus. That means that there is a bit of leeway around the focal plane to either side which is called the focus area. Everything within that focus area will be perceived as in-focus by the human eye and is “acceptably sharp”. How much leeway depends on how fast a point grows into a circle the further away it is from the focal plane, and that growth is determined by lens diameter.
 
-> **Circle of confusion:** The biggest circle that is perceived as a point by a human is called the [circle of confusion] (CoC), and it plays a central role in calculating the focus area. The diameter of the CoC depends on your eyesight, obviously, but also how big an image is displayed and from what distance you are looking at it. It’s confusing that many resources on the internet list a single CoC diameter for any given sensor size, like listing 0.029mm for a full frame sensor. These are old values, based on printing the a picture in a specific size (~$26\text{cm} \times 17\text{cm}$) and looking at it from a specific distance (~$25\text{cm}$) with 20/20 vision. 
+> **Circle of confusion:** The biggest circle that is perceived as a point by a human is called the [circle of confusion] (CoC), and it plays a central role in calculating the focus area. The diameter of the CoC depends on your eyesight, obviously, but also how big an image is displayed and from what distance you are looking at it. It’s confusing that many resources on the internet list a single CoC diameter for any given sensor size, like listing 0.029mm for a full frame sensor. These are old values, based on printing the picture in a specific size (~$26\text{cm} \times 17\text{cm}$) and looking at it from a specific distance (~$25\text{cm}$) with 20/20 vision. 
 >
-> I won’t go into this with more detail, but these numbers seem unfit for the digital age, where we crop and we zoom after taking the picture. Something that looks in-focus at Instagram-size, can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your circle of confusion is the size of a single pixel on the sensor. Any bokeh circle that is at most the size of a pixel will still be captured as a single pixel, no matter how much you zoom in. This, however, has implications. I did the math to compare how big the focus area is with traditional CoCs and the pixel-based CoC and the pixel-based CoC leaves you very little room for error as a photographer. For example, in a portrait setting the traditional CoC yields a 1.5m wide focus area, which shrinks to just ~28cm with the pixel-based CoC.
+> I won’t go into this with more detail, but these numbers seem unfit for the digital age, where we crop and we zoom after taking the picture. Something that looks in-focus at Instagram-size, can look completely out of focus once zoomed in. If you want to make sure something in focus even after zooming in, your circle of confusion is the size of a single pixel on the sensor. Any bokeh circle that is at most the size of a pixel will still be captured as a single pixel, and a pixel is a pixel even if you zoom in. This, however, has implications. I did the math to compare how big the focus area is with traditional CoCs and the pixel-based CoC and the pixel-based CoC leaves you very little room for error as a photographer. For example, in a portrait setting the traditional CoC yields a 1.5m wide focus area, which shrinks to just ~28cm with the pixel-based CoC.
 
 In summary that means that a smaller lens creates a bigger focus area. But, alas, lenses are made of glass and can’t just change their size, now can they?
 
@@ -613,7 +613,7 @@ We have talked about the lens diameter, and how the iris allows you to effective
 
 The $f$-Number is called $f$-Number because it describes the iris opening as a fraction of the focal length $f$. For example, a 50mm lens set to $f/2.8$ means the absolute aperture is $A = \frac{f}{2.8} = 17.9\text{mm}$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit the ~~film~~ sensor, when they are set to the same $f$-Number — regardless of their focal lengths.
 
-That all was just to say that photographers use $f$-Numbers to compare lens configurations. Most articles that were trying to give the “definitive answer” on whether sensor size affects depth of field, did so by taking photos with different sensors and equivalent lenses _at the same $f$-Number_. Let’s redo the graph above with a constant $f$-Number instead of a constant lens diameter, so we can replicate the results from these approaches:
+That all was just to say that photographers use $f$-Numbers to compare lens configurations. Most articles that were trying to give the “definitive answer” on whether sensor size affects depth of field, did so by taking photos with different sensors and equivalent lenses _at the same $f$-Number_. Let’s redo the graph above with a constant $f$-Number instead of a constant lens diameter, so we can replicate the results from those articles:
 
 <figure>
   <img src="fstop-aperture.svg" width=600 height=400>
@@ -699,7 +699,7 @@ Old field cameras had the ability to tilt and shift the lens plane. This ability
   </figure>
 </section>
 
-Tilt-shift lenses are used for architecture photography, portraits and other genres, but are probably most well known for taking photos of cities that end up look like a miniature world. The principle used for those shots this is called the [Scheimpflug principle][scheimpflug], which says that if you tilt the lens plane relative the sensor plane, the focal plane also tilts so all 3 planes intersect in the same point.
+Tilt-shift lenses are used for architecture photography, portraits and other genres, but are probably most well known for taking photos of cities that end up look like a miniature world. The principle used for those shots is called the [Scheimpflug principle][scheimpflug], which says that if you tilt the lens plane relative the sensor plane, the focal plane also tilts so all 3 planes intersect in the same point.
 
 <figure>
 
