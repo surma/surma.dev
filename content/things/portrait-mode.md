@@ -605,7 +605,7 @@ Lensbaby has a [Creative Bokeh] adapter, that actively takes advantage of the fa
   <img src="lensbaby-photo.jpg" loading="lazy" width="1200" height="900" style="max-width: 1200px">
   <figcaption>
   
-  Lensbaby’s Creative Bokeh with a star-shape aperture. Photo by [Tam Tam].
+  Lensbaby’s Creative Bokeh with a snowflake-shaped aperture. Photo by [Tam Tam].
   
   </figcaption>
 </figure>
