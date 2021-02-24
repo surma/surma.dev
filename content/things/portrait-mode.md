@@ -17,7 +17,7 @@ Alright, I will admit: The titular question is not actually the question I had w
 
 ## Portrait mode
 
-Having a blurry background is a common technique in photography to make the viewer focus on the subject and not get distracted by elements in the background. Photographers calls this a “shallow depth of field”, because the field (i.e. area) that is in-focus is shallow and introduces “separation” between the foreground subject and background elements. 
+Having a blurry background is a common technique in photography to make the viewer focus on the subject and not get distracted by elements in the background. Photographers calls this a “shallow depth of field”, because the field (i.e. area) that is in focus is shallow and creates “separation” between the foreground subject and background elements. 
 
 <figure>
   <img src="./depth-of-field.jpg" width="1280" height="1275">
@@ -28,7 +28,7 @@ If you look up how to achieve this shallow depth of field, most photography reso
 
 > **Be warned!** Photography terminology is a mess and correlation established in experiments is often mistaken for causation. One of my goals for this article is to clear up as much as possible.
 
-Recently, camera phones have gotten a new feature called “portrait mode”, that adds this background blur to a photo. It’s called portrait mode because the shallow depth of field is especially popular for portraits. However, the phone’s background blur is fake — it’s added during post-processing and often you can even remove or adjust the background blur after the fact. By visualizing sharp edges in the image, you can see that the blurriness sets in quite abruptly. That’s not how real background blur would behave.
+Recently, camera phones have gotten a new feature called “portrait mode”, that adds this background blur to a photo. It’s called portrait mode because that background blur is especially popular for portraits. However, the phone’s background blur is fake — it’s added during post-processing and often you can even remove or adjust the background blur after the fact. Once you take a closer look, you can often see the blurriness setting in quite abruptly or other weird artifacts.
 
 <figure>
   <img src="./portrait-mode.jpg" width="1280" height="960">
@@ -44,7 +44,7 @@ In the earlier days of photography, lenses were simple. A single glass lens and 
 
 <figure>
   <img src="camera-lens.jpg" style="max-width: 700px">
-  <figcaption>Camera lenses consist of multiple lenses. It’s complicated</figcaption>
+  <figcaption>Modern camera lenses consist of multiple lenses. It’s complicated</figcaption>
 </figure>
 
 To keep this article somewhat manageable, I will focus on simple lenses. Not only that, but I will assume that we are working with “perfect” lenses throughout this article. They don’t have any imperfection, any chromatic aberration (i.e. they don’t bend different wave lengths differently) and they are “thin” lenses (i.e. they can be modeled with simplified formulas). I will also only look at spherical, bi-convex lenses. That means the lenses are convex (a belly-like shape) on both sides and their curvature is that of a sphere. Contemporary camera lenses combine all kinds of lenses (concave, convex-concave, aspheric, etc).
@@ -124,7 +124,7 @@ Tracing the rays in reverse yields another rule: Rays that enter the lens by int
 
 Light in real life is barely ever parallel, but rather radiating out from a point into all directions. More specifically, apart from a few notable exceptions (like mirrors), every material reflects the light that it is hit by evenly into all directions on every point of its surface. This allows us to focus on scenarios with one individual point light source, knowing that any real scene is just a collection of many such points.
 
-We have a point that sends light rays into all directions and we put it on one side of our lens. Considering that people were able to take pictures with these simple lenses, there has to be a place on the other side of the lens where all the light rays get focused back into a single point. While the light from our point light source will be hitting every part of our lens, we only need to care about two specific light rays to figure this out: The one light ray that is parallel to the lens axis, and the other ray that intersects the focal point. We know these rays will behave according to our two rules from above and they will (most likely) also intersect on the _other_ side of the lens. Wherever these two lines intersect, all other rays will intersect as well.
+We have a point that sends light rays into all directions and we put it on one side of our lens. Considering that people were able to take pictures with these simple lenses, there has to be a place on the other side of the lens where all the light rays get focused back into a single point. While the light from our point light source will be hitting every part of the lens, we only need to care about two specific light rays to figure this out: The one light ray that is parallel to the lens axis, and the other ray that intersects the focal point. We know these rays will behave according to our two rules from above and they will (most likely) also intersect on the _other_ side of the lens. Wherever these two lines intersect, all other rays will intersect as well.
 
 <figure>
 
@@ -195,7 +195,7 @@ The “thin lens equation” describes the relationship between the object’s d
 
 ## Photography
 
-You’ll notice that if you move the object point parallel to the lens plane, the image point will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. What is above the lens axis on one side of the lens, is below the lens axis on the other. Secondly, and more importantly, if a bunch of objects form a parallel to the lens plane, their images will also form a parallel to the lens plane. Instead of talking about individual points, we can talk about the “image plane” and the “focal plane”. We have now entered the territory of photography.
+You’ll notice that if you move the object point parallel to the lens plane, the image point will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. What is above the lens axis on one side of the lens, is below the lens axis on the other. Secondly, and more importantly, if a bunch of objects form a parallel to the lens plane, their images will also form a parallel to the lens plane. So instead of talking about individual points, we can talk about the “image plane” (which we will end up callend the “sensor plane”) and the “focal plane”. We have now entered the territory of photography.
 
 ### The image plane & the focal plane
 
@@ -278,7 +278,7 @@ To take a picture we have to have something that... takes the picture. Yes. Very
 
 </figure>
 
-This leads us to the following conclusion: The focal length is directly related to the angle of view. A longer focal length has a smaller angle of view, effectively creating a zoomed-in picture. Similarly, the same lens on a larger sensor will yield a larger angle of view. More specifically, the relationship between sensor size, focal length and angle of view can be described as follows:
+This diagram lets us discover the following: The focal length is directly related to the angle of view. A longer focal length has a smaller angle of view, effectively creating a zoomed-in picture. Similarly, the same lens on a larger sensor will yield a larger angle of view. More specifically, the relationship between sensor size, focal length and angle of view can be described as follows:
 
 <figure>
 
@@ -297,7 +297,7 @@ The formula describing the relationship between angle of view $\alpha$, the sens
 
 ### Focusing
 
-In the diagram above, you can move the lens and change the lens’ focal length to see how it affects the focal plane. However in photography you don’t move the lens and see where our focus plane ends up. You have something that you want to focus _on_, and want to position your lens accordingly. If we know the distance $D$ between our sensor plane and our desired focal plane, we can use the thin lens equation to figure where to place the lens:
+In the diagram above, you can move the lens and change the lens’ focal length to see how it affects the focal plane. However in photography you don’t move the lens and see where your focus plane ends up. You have something that you want to focus _on_, and want to position your lens accordingly. If we know the distance $D$ between our sensor plane and our desired focal plane, we can use the thin lens equation to figure where to place the lens:
 
 <figure>
 
@@ -309,10 +309,10 @@ $$
   \Rightarrow & s = \frac{D}{2} \pm \sqrt{\frac{D^2}{4} - D\cdot f} \\
 \end{array}
 $$
-<figcaption>The “focusing equation” (not an official name) determines the lens’ position based on focal length and desired focal plane distance from the sensor.</figcaption>
+<figcaption>The “focusing equation” (not an official name) determines the lens’ position based on focal length and the subject’s distance from the sensor.</figcaption>
 </figure>
 
-Apologies for skipping the math there in the middle, but it’s really just a bunch of transformations until you can use the [quadratic formula]. The majority of cameras don’t use this formula, of course, as they can’t measure the distance to the target, but [use phase detection or contrast detection][autofocus]. But something interesting can be derived from the formula: For the result to even exist, the expression in the square root must be positive.
+Apologies for skipping the math there in the middle, but it’s really just a bunch of transformations until you can use the [quadratic formula]. The majority of cameras don’t use this formula, of course, as they can’t measure the distance to the target, but [use phase detection or contrast detection][autofocus] instead. But something interesting can be derived from the formula: For the result to even exist, the expression in the square root must be positive.
 
 $$
 \begin{array}{rcl}
@@ -325,7 +325,7 @@ That means, to be able to focus on a subject with lens with focal lens $f$, the 
 
 ## Bokeh
 
-Now that we know how to focus, determine the focal plane and even determine lens position with a given focal plane, we can take a look what happens when something is _out_ of focus. Most of us have seen the phenomenon of big circular light spots in the background. These circles are often refferred to as “Bokeh”. Bokeh is Japanese for “blur”, and _technically_ refers to anything that is out of focus, but instead it is often used to refer to the look of out-of-focus point lights specifically.
+Now that we know how to focus, determine the focal plane and even determine lens position with a given focal plane, we can take a look what happens when something is _out_ of focus. Most of us have seen the phenomenon of big circular light spots in the background. These circles are often referred to as “Bokeh”. Bokeh is Japanese for “blur”, and _technically_ refers to anything that is out of focus, but instead it is often used to refer to the look of out-of-focus point lights specifically.
 
 <figure>
   <img src="bokeh.jpg" loading="lazy" width="1280" height="720" style="max-width: 1280px">
@@ -335,7 +335,7 @@ Now that we know how to focus, determine the focal plane and even determine lens
   </figcaption>
 </figure>
 
-To figure out how big the circle will be, we’ll have to introduce a couple of variables. First, we have to separate our distance to the focal plane from the distance to our light source. In most of these setups, the focal plane is fairly close to the sensor, while the light source is significantly further away. We can now figure out where the lens needs to located to set the right focus, and which point the light from the light source will be focused on.
+To figure out how big the circle will be, we have to separate our distance to the focal plane from the distance to our light source. In most of these setups, the focal plane is fairly close to the sensor, while the light source is significantly further away. We can now figure out where the lens needs to located to set the right focus, and which point the light from the light source will be focused on.
 
 <figure>
 
@@ -467,7 +467,9 @@ I found this _fascinating_. In the extreme case, the focal length actually has _
 
 ### Same-picture comparison
 
-While focal length doesn’t matter in that extreme case, it sure seems like it does matter when you try to take the same picture using cameras with different sensors:
+Focal length doesn’t matter in that extreme case, but that is not really an interesting comparison, as the closest possible focus distance changes with the lens’ focal length. So as a photographer, that’d mean we are taking different pictures.
+
+Let’s try and keep the picture constant, and compare the background blur then:
 
 <figure>
   <img src="./comparison.jpg" loading="lazy" width=2048 height=767>
@@ -561,8 +563,7 @@ We know from earlier that making the sensor smaller will also decrease the angle
   <figcaption>When keeping everything but the sensor size constant, the bokeh circles cover the same fraction of the sensor.</figcaption>
 </figure>
 
-The bokeh stays the same? This goes against everything I found on the internet. There must be something else causing the vast majority of articles to claim that smaller sensors do have less background blur.
-
+That means that no matter the scenario, that you will be able to take the same picture with any sensor size, as long as you keep angle of view and lens diameter constant. But this somewhat goes against everything I found on the internet, where the vast majority of articles claim that smaller sensors have less background blur.
 
 The culprits are $f$-Numbers.
 
@@ -576,7 +577,7 @@ The diagram above shows that making the lens diameter smaller will also shrink b
 
 In summary that means that a smaller lens creates a bigger focus area. But, alas, lenses are made of glass and can’t just change their size, now can they?
 
-### Lens size & shape
+### f-stops
 
 The fact that smaller lens diameters create sharper images has been known since the age of pinhole cameras, which is why photographers came up with mechanisms to adjust a lens’ size. Most lenses do this via an iris made of a bunch of metal blades.
 
@@ -589,30 +590,7 @@ The fact that smaller lens diameters create sharper images has been known since 
   </figcaption>
 </figure>
 
-The 2D diagrams can’t visualize the circle on the sensor, but it makes sense when you think about it: The _shape_ of a lens (or the iris opening) will determine what a point light will look like when it’s out of focus. We have been talking about bokeh circles because pretty much all photography lenses are circular. The opening created by the iris is also circular, although not _perfectly_ so. The imperfectness of that circular opening can sometimes be seen in movies:
-
-<figure>
-  <img src="irisbokeh.jpg" loading="lazy" width="1280" height="720" style="max-width: 1280px">
-  <figcaption>
-    The bokeh circles look like hexagons, implying a 6-blade iris.<br>
-    Screenshot taken from season 5 episode 11 of “Suits”. 
-  </figcaption>
-</figure>
-
-Lensbaby has a [Creative Bokeh] adapter, that actively takes advantage of the fact that out-of-focus spot lights take the shape of the lens opening and allows you to put shape plates in-between the lens and sensor:
-
-<figure>
-  <img src="lensbaby-photo.jpg" loading="lazy" width="1200" height="900" style="max-width: 1200px">
-  <figcaption>
-  
-  Lensbaby’s Creative Bokeh with a snowflake-shaped aperture. Photo by [Tam Tam].
-  
-  </figcaption>
-</figure>
-
-### f-stops 
-
-We have talked about the lens diameter, and how the iris allows you to effectively adjust a lens’ size. However, the lens diameter is rarely talked about directly in photography. Instead, they talk about the _aperture_, which is given as a $f$-Number. If you need to refer to the actual opening of the lens or iris through which light can pass, you talk about the “absolute aperture”. 
+However, the lens diameter is rarely talked about directly in photography. Instead, they talk about the _aperture_, which is given as a $f$-Number. If you need to refer to the actual opening of the lens or iris through which light can pass, you talk about the “absolute aperture”. 
 
 The $f$-Number is called $f$-Number because it describes the iris opening as a fraction of the focal length $f$. For example, a 50mm lens set to $f/2.8$ means the absolute aperture is $A = \frac{f}{2.8} = 17.9\text{mm}$. The reason that photographers use $f$-Numbers is that two lenses will allow the same amount of light to hit the ~~film~~ sensor, when they are set to the same $f$-Number — regardless of their focal lengths.
 
@@ -629,7 +607,7 @@ That all was just to say that photographers use $f$-Numbers to compare lens conf
 
 If we keep the $f$-Number constant, bokeh _drastically_ increases with bigger sensors. However, we know that it’s not the sensor that directly causes this effect — the chain of causality is more complex than that: A bigger sensor requires a longer focal length to keep the same field of view. A longer focal length has a bigger aperture given the same $f$-Number. A bigger aperture makes bokeh circles grow quicker.
 
-This explains why in the comparison photo above my digital camera has so much more background blur. There is no way my phone’s tiny camera opening can compete with the diameter of the big lens. So what kind of lens would my Pixel 5 need to achieve the same background blur as my digital camera? We know that if we keep the absolute aperture $A$ constant, the bokeh will stay the same. The absolute aperture is the focal length divided by the $f$-Number $n$, and the focal length is dependent on the sensor size $D$.
+This explains why in the comparison photo above my digital camera has so much more background blur. There is no way my phone’s tiny camera opening can compete with the diameter of the big lens. If want to make sure that two cameras take a picture with the same amount of background blur, we need to keep the absolute aperture $A$ constant. The absolute aperture is the focal length divided by the $f$-Number $n$, and the focal length is dependent on the sensor size $D$.
 
 $$
 \begin{array}{rrlc}
@@ -646,7 +624,7 @@ To say it with words: To keep the absolute apertures (and therefore the resultin
 
 ## Phones with lots of bokeh?
 
-What kind of lens does the Pixel 5 even have? Luckily, this data is embedded in the EXIF data of the images and can be extracted using `identify` from ImageMagick:
+So what kind of lens would my Pixel 5 need to achieve the same background blur as my digital camera? For that we need to know what kind of lens the Pixel 5 has. Luckily, this data is embedded in the EXIF data of the images and can be extracted using `identify` from [ImageMagick]:
 
 ```
 $ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' cam_image.jpg
@@ -656,15 +634,15 @@ $ identify -format 'f=%[EXIF:FocalLength] A=%[EXIF:FNumber]' pixel5_image.jpg
 f=4380/1000 A=173/100
 ```
 
-This says that my digital camera image was taken with $f=27\text{mm}$ and $f/2.8$ ($A=9.6\text{mm}$). The Pixel 5 used $f=4.38\text{mm}$ and $f/1.73$ ($A=2.5\text{mm}$). It’s worth noting that both the aperture and the focal lengths are fixed in the Pixel 5. The zoom lens for my digital camera on the other hand allows me to control both these variables.
+This says that my digital camera image was taken with $f=27\text{mm}$ and $f/2.8$ ($A=9.6\text{mm}$). The Pixel 5 used $f=4.38\text{mm}$ and $f/1.73$ ($A=2.5\text{mm}$). 
 
-The EXIF data doesn’t contain any data about the sensor size, but since we have empirically determined the field of view (it’s the equivalent of a $27\text{mm}$ lens on a full-frame sensor), we can calculate the sensor size ourselves. Or, you know, we [can look up that the Pixel 5 has a 1/2.55" sensor][pixel5 sensor], which measures $5.76\text{mm} \times 4.29\text{mm}$, making the full-frame sensor about 14 times larger than the phone’s sensor.
+The EXIF data doesn’t contain any data about the sensor size, but since we have empirically determined the angle of view (it’s the equivalent of a $27\text{mm}$ lens on a full-frame sensor), we can calculate the sensor size ourselves. Or, you know, we [can look up that the Pixel 5 has a 1/2.55" sensor][pixel5 sensor], which measures $5.76\text{mm} \times 4.29\text{mm}$, making the full-frame sensor about 14 times larger than the phone’s sensor.
 
 > **I lied:** I am not using portrait mode for this experiment because the Pixel 5’s portrait mode crops in, effectively zooming in, emulating a longer focal length. Longer focal lenses are typically deemed more flattering for portraits as they have less perspective distortion. Whether this is a technical limitation or a technique to force people to literally take a step back when taking pictures in portrait mode is unclear to me.
 
 The aperture on the digital camera is almost 4 times as large as the phones aperture. For the Pixel 5 to achieve the same amount of background blur as my digital camera, the Pixel 5 would have to have the same absolute aperture of $A=9.6\text{mm} = f/0.46$. 
 
-Is such a phone lens possible? I am not sure. In my experience, any lens with an aperture bigger than $f/1.4$ is rare, and bigger apertures will make the lens increasingly expensive. Any aperture bigger than $f/1.2$ is virtually unheard of, although they do exist:
+Is such a phone lens possible? I am not sure. In my experience, the bigger the aperture on a lens, the more expensive they get. Any aperture with an $f$-Number below 1 is virtually unheard of, although they do exist:
 
 <figure>
   <img src="nikkornoct.jpg" loading="lazy" width="1084" height="476" style="max-width: 1084px">
@@ -685,7 +663,7 @@ I probably ignored a huge amount of factors that come into play once you are not
 
 ## Bonus content: Tilt-Shift lenses
 
-Throughout this entire article, we have assumed that the lens plane and the sensor plane are parallel to each other. Having those two planes _not_ be parallel used to be a much more common, especially with field cameras. Most modern cameras can’t tilt their lenses as it introduces a lot of mechanical and optical complexity. Some lenses, however, are specifically engineered to have this ability, though, and are aptly named “tilt-shift lenses” as you can tilt and shift the lens. This ability is useful as it allows you to remove perspective distortion and move the vanishing point around _before_ taking the image — an operation that would require you throw away precious pixels in post-processing.
+Throughout this entire article, we have assumed that the lens plane and the sensor plane are parallel to each other. Having those two planes _not_ be parallel used to be a much more common ability, especially with field cameras. Most modern cameras can’t tilt their lenses as it introduces a lot of mechanical and optical complexity. Some lenses, however, are specifically engineered to have this ability, and are aptly named “tilt-shift lenses” as you can tilt and shift the lens. This ability is useful as it allows you to remove perspective distortion and move the vanishing point around _before_ taking the image — an operation that would require you throw away precious pixels in post-processing.
 
 <section class="carousel">
   <figure>
@@ -702,7 +680,7 @@ Old field cameras had the ability to tilt and shift the lens plane. This ability
   </figure>
 </section>
 
-Tilt-shift lenses are used for architecture photography, portraits and other genres, but are probably most well known for taking photos of cities that end up look like a miniature world. The principle used for those shots is called the [Scheimpflug principle][scheimpflug], which says that if you tilt the lens plane relative the sensor plane, the focal plane also tilts so all 3 planes intersect in the same point.
+Tilt-shift lenses are used for architecture photography, portraits and other genres, but are probably most well known for taking photos of cities that end up look like a miniature world. The principle used for those shots is called the [Scheimpflug principle][scheimpflug], which says that if you tilt the lens plane relative the sensor plane, the focal plane also tilts so all 3 planes intersect in the same point. I never quite believed the Scheimpflug principle. It seemed so unintuitive. Having written the geometric diagram “engine” for this article, I thought I could use it to understand how the Scheimpflug principle really follows from just the geometric construction I used at the start of the article.
 
 <figure>
 
@@ -785,3 +763,4 @@ Tilt-shift lenses allow you to tilt the focal plane, making things go out of foc
 [crop factor]: https://en.wikipedia.org/wiki/Crop_factor
 [Tam Tam]: https://www.flickr.com/photos/strollers/2126283417/
 [Creative Bokeh]: https://lensbaby.com/collections/collection/products/creative-bokeh-optic
+[ImageMagick]: https://imagemagick.org/index.php
