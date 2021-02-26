@@ -18,6 +18,7 @@
     "idb-keyval": "^3.2.0",
     "katex": "^0.12.0",
     "lit-html": "^1.0.0",
+    "lit1.3.0": "npm:lit-html@^1.3.0",
     "markdown-it": "^12.0.3",
     "mkdirp": "^0.5.1",
     "parcel": "2.0.0-nightly.590",
@@ -29,12 +30,15 @@
   "scripts": {
     "clean": "rm -rf build _site .tmp .parcel-cache",
     "build": "./full-build.sh",
-    "serve": "eleventy --serve",
+    "dev": "run-p serve watch",
+    "serve": "node server.js",
+    "watch": "eleventy --watch",
     "fmt": "prettier --write '{./,./{_includes,_data}/**/}*.{json,md,js,css}'"
   },
   "devDependencies": {
+    "npm-run-all": "^4.1.5",
     "prettier": "^1.19.1",
-    "serve": "^11.3.2"
+    "superstatic": "^7.1.0"
   },
   "@mischnic/parcel-resolver-root": {
     "/": "./.tmp/"

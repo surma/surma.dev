@@ -1,0 +1,83 @@
+.geometrycontainer {
+  font-size: 16px;
+  color: black;
+  --light-color: hsl(40deg 100% 70%);
+}
+
+.type-text {
+  fill: black;
+}
+.type-measure {
+  stroke: black;
+}
+
+svg.geometry {
+  background: white;
+  padding: 1em;
+  width: 100%;
+  height: auto;
+  box-sizing: border-box;
+}
+.lens {
+  stroke: hsla(240, 100%, 50%, 0.6);
+  fill: hsla(240, 100%, 50%, 0.2);
+}
+.lensplane, .axis, .focalplane, .sensorplane {
+  stroke: hsla(240deg 100% 50% / 40%);
+  stroke-dasharray: 4 1;
+}
+.sensor {
+  stroke: black;
+  stroke-width: 3px;
+}
+.constructionray {
+  stroke-width: 3px;
+  stroke: hsl(40deg 100% 70%);
+}
+.light {
+  stroke: hsl(40deg 100% 70%);
+  stroke-width: 1px;
+  fill: hsl(40deg 100% 60% / 26%);
+}
+.fov {
+  fill: hsl(230deg 100% 60% / 26%);
+}
+.image {
+  stroke-width: 3px;
+  stroke: hsl(12 100% 60% / 100%);
+}
+
+.type-point {
+  fill: hsl(0deg 0% 40%);
+}
+.type-arrow {
+  fill: none;
+  stroke: black;
+}
+.handle {
+  fill: hsl(12deg 100% 60%);
+}
+.ray {
+  stroke: var(--light-color);
+  fill: var(--light-color);
+}
+.focallength {
+  stroke-width: 2px;
+}
+
+.dashed {
+  stroke-dasharray: 2 2;
+  stroke-width: 1px;
+  stroke:  hsla(0, 0%, 0%, 0.4);
+  fill: none;
+}
+.arc {
+  fill: none;
+  stroke: black;
+}
+.text-middle {
+  alignment-baseline: middle;
+}
+.text-hmiddle {
+  text-anchor: middle;
+}

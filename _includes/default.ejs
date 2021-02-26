@@ -33,6 +33,19 @@
 <meta property="og:description" content="<%= excerpt(content) %>" />
 <meta name="twitter:description" content="<%= excerpt(content) %>" />
 <% } %>
+<script>
+  document.write(
+    `  
+    <script type="importmap">
+      {
+        "imports": {
+          "lit1.3.0/": "/node_modules/lit1.3.0/"
+        }
+      }
+    <${'/'}script>
+  `
+  );
+</script>
 
 <style>
   /* Workaround for https://github.com/parcel-bundler/parcel/issues/5475 */

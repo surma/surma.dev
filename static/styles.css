@@ -419,7 +419,7 @@ footer > .arrows {
       6,
       var(--social-icon)
     );
-  grid-template-rows: var(--avatar-size) 1fr;
+  grid-template-rows: minmax(var(--avatar-size), min-content) 1fr;
   place-items: stretch;
   grid-auto-flow: row sparse;
 }
@@ -691,6 +691,7 @@ html.forcedark blockquote code {
   color: var(--lightblue);
 }
 html.forcedark figure img,
+html.forcedark figure svg,
 html.forcedark figure picture,
 html.forcedark figure video {
   filter: saturate(0.8) brightness(0.8);
@@ -710,11 +711,13 @@ html.forcedark figure video {
 
 .katex-display {
   max-width: 100%;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .katex-display .katex {
   font-size: 1.21em !important;
 }
 .katex {
   font-size: 1em !important;
+  white-space: nowrap;
 }

@@ -1,20 +1,45 @@
 const syntaxhighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
 require("prismjs/components");
 
-let markdownIt = require("markdown-it");
-let markdownItKatex = require("./plugins/markdown-it-katex");
-let options = {
-  html: true,
+const markdownIt = require("markdown-it");
+const markdownItKatex = require("./plugins/markdown-it-katex");
+const options = {
+  html: true
 };
+const geometryPlugin = require("./plugins/geometry");
+const markdownLib = markdownIt(options)
+  .use(markdownItKatex)
+  .use(geometryPlugin);
 
-let markdownLib = markdownIt(options).use(markdownItKatex);
 module.exports = function(config) {
   // Copy /static to /
-  config.addPassthroughCopy({ 
+  config.addPassthroughCopy({
     static: "/"
   });
-  config.addPlugin(syntaxhighlight);
   config.setLibrary("md", markdownLib);
+  config.addPlugin(syntaxhighlight);
+  config.addMarkdownHighlighter((str, lang) => {
+    if (lang !== "geometry") {
+      return;
+    }
+    const geometryDescriptor = new Function("geometry", `return (${str})`)(
+      geometry
+    );
+    const uid = Array.from({ length: 16 }, () =>
+      Math.floor(Math.random() * 256).toString(16)
+    ).join("");
+    return `
+      <div id="${uid}">
+      ${geometry.renderToString(geometryDescriptor)}
+      </div>
+      <script type="module">
+        import * as geometry from "/lab/diagram/geometry.mjs";
+        import * as lit from "lit1.3.0/lit-html.js";
+        const descriptor = ${str};
+        geometry.instantiateDiagram(descriptor, document.getElementById("${uid}"), lit);
+      </script>
+    `;
+  });
   return {
     dir: {
       input: "content",
