@@ -39,12 +39,12 @@ module.exports = (md, options) => {
       ${geometry.renderToString(geometryDescriptor)}
       </div>
       <script type="module">
-        import * as geometry from "/things/portrait-mode/geometry.mjs";
-        import * as lit from "lit1.3.0/lit-html.js";
-        import {unsafeSVG} from "lit1.3.0/directives/unsafe-svg.js";
-        import {unsafeHTML} from "lit1.3.0/directives/unsafe-html.js";
-        const descriptor = ${rawGeometryDescriptor};
-        geometry.instantiateDiagram(descriptor, document.getElementById("${uid}"), {render: lit.render, html: lit.html, svg: lit.svg, unsafeSVG, unsafeHTML} );
+        (async function() {
+          const tools = await import("/things/portrait-mode/facade.js");
+          const geometry = await import("/things/portrait-mode/geometry.mjs");
+          const descriptor = ${rawGeometryDescriptor};
+          geometry.instantiateDiagram(descriptor, document.getElementById("${uid}"), tools);
+        })();
       </script>
     `;
   };

@@ -1,9 +1,10 @@
-import { domMap, clamp } from "./geometry.mjs";
 
 async function run() {
   if (!IntersectionObserver) {
     return;
   }
+  const { domMap, clamp } = await import("./geometry.mjs");
+  await new Promise(resolve => setTimeout(resolve, 2000));
   const geometries = [...document.querySelectorAll("svg.geometry")];
   if (geometries.length <= 0) {
     return;

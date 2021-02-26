@@ -9,7 +9,7 @@ Portrait mode artificially blurs out the background of an image to make it look.
 
 <!-- more -->
 
-<link rel="stylesheet" href="/lab/diagram/geometry.css" />
+<link rel="stylesheet" href="/things/portrait-mode/geometry.css" />
 
 > **Before we start:** I am not a lens expert. Nor am I physicist or an optician. I tried my best to do my due diligence and be upfront when I’m simplifying things, but I might still have gotten things wrong. If you find something, please give me a shout.
 
@@ -747,7 +747,7 @@ Another thing we have ignored in the article is that there is actually two ways 
 Tilt-shift lenses allow you to tilt the focal plane, making things go out of focus quicker than with a parallel focal plane, even when far away. Our brain associates this quick transition from sharp to blurry with the subject being very close to the lens (or rather, our eyes), which in turn would mean that the subject is tiny.
 
 <script src="/carousel-reset.js" type="module"></script>
-<script src="/lab/diagram/geometry-intromate.js" type="module"></script>
+<script src="/things/portrait-mode/geometry-intromate.js" type="module"></script>
 
 [camera comparison]: https://www.dpreview.com/products/compare/side-by-side?products=ricoh_griii&products=canon_g7xiii
 [intrepid]: https://intrepidcamera.co.uk/
