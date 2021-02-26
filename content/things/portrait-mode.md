@@ -195,7 +195,7 @@ The “thin lens equation” describes the relationship between the object’s d
 
 ## Photography
 
-You’ll notice that if you move the object point parallel to the lens plane, the image point will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. What is above the lens axis on one side of the lens, is below the lens axis on the other. Secondly, and more importantly, if a bunch of objects form a parallel to the lens plane, their images will also form a parallel to the lens plane. So instead of talking about individual points, we can talk about the “image plane” (which we will end up callend the “sensor plane”) and the “focal plane”. We have now entered the territory of photography.
+You’ll notice that if you move the object point parallel to the lens plane, the image point will also move parallel to the lens plane, although in the opposite direction. This tells us two things: Firstly, the image is upside down. What is above the lens axis on one side of the lens, is below the lens axis on the other. Secondly, and more importantly, if a bunch of objects form a parallel to the lens plane, their images will also form a parallel to the lens plane. So instead of talking about individual points, we can talk about the “image plane” (which we will end up calling the “sensor plane”) and the “focal plane”. We have now entered the territory of photography.
 
 ### The image plane & the focal plane
 
