@@ -1,6 +1,6 @@
 // Would you like some race conditions with your wine?
 let geometry;
-import("../static/lab/diagram/geometry.mjs").then((m) => (geometry = m));
+import("../static/things/portrait-mode/geometry.mjs").then((m) => (geometry = m));
 
 const startMarker = "|||geometry";
 const endMarker = "|||";
@@ -39,7 +39,7 @@ module.exports = (md, options) => {
       ${geometry.renderToString(geometryDescriptor)}
       </div>
       <script type="module">
-        import * as geometry from "/lab/diagram/geometry.mjs";
+        import * as geometry from "/things/portrait-mode/geometry.mjs";
         import * as lit from "lit1.3.0/lit-html.js";
         import {unsafeSVG} from "lit1.3.0/directives/unsafe-svg.js";
         import {unsafeHTML} from "lit1.3.0/directives/unsafe-html.js";
