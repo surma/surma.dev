@@ -56,6 +56,7 @@ svg.geometry {
 }
 .handle {
   fill: hsl(12deg 100% 60%);
+  cursor: grabbing;
 }
 .ray {
   stroke: var(--light-color);
