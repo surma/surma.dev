@@ -1,7 +1,7 @@
 ---
 title: "Why your phone’s portrait mode fakes the blur"
-date: "2021-01-15"
-live: false
+date: "2021-02-26"
+live: true
 socialmediaimage: "comparison.jpg"
 ---
 
