@@ -1,10 +1,18 @@
 const syntaxhighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
 require("prismjs/components");
 
+const prism = require('prismjs');
+const languages = {
+  'js': prism.languages.javascript,
+  'javascript': prism.languages.javascript,
+  'erlang': prism.languages.erlang
+};
 const markdownIt = require("markdown-it");
 const markdownItKatex = require("./plugins/markdown-it-katex");
 const options = {
-  html: true
+  html: true,
+  highlight(str, lang) {
+  }
 };
 const geometryPlugin = require("./plugins/geometry");
 const markdownLib = markdownIt(options)
@@ -19,6 +27,10 @@ module.exports = function(config) {
   config.setLibrary("md", markdownLib);
   config.addPlugin(syntaxhighlight);
   config.addMarkdownHighlighter((str, lang) => {
+    if(!(lang in languages)) {
+      throw Error(`Unknown language: ${lang}`);
+    }
+    return prism.highlight(str, languages[lang]);
     if (lang !== "geometry") {
       return;
     }

@@ -22,6 +22,7 @@
     "markdown-it": "^12.0.3",
     "mkdirp": "^0.5.1",
     "parcel": "2.0.0-nightly.590",
+    "prismjs": "^1.23.0",
     "rimraf": "^3.0.0",
     "rollup": "^1.27.9",
     "rollup-plugin-node-resolve": "^5.2.0",
