@@ -22,9 +22,11 @@ const options = {
   html: true,
 };
 const geometryPlugin = require("./plugins/geometry");
+const dataTablePlugin = require("./plugins/data-table");
 const markdownLib = markdownIt(options)
   .use(markdownItKatex)
-  .use(geometryPlugin);
+  .use(dataTablePlugin)
+  .use(geometryPlugin)
 
 module.exports = function (config) {
   // Copy /static to /
