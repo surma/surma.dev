@@ -8,13 +8,6 @@ const path = require('path');
 const startMarker = "|||datatable";
 const endMarker = "|||";
 
-function parseCSV(data) {
-  return data
-    .split("\n")
-    .filter(v => v.length >= 1)
-    .map(v => v.split(",").map(v => v.trim()));
-}
-
 module.exports = (md, options) => {
   md.block.ruler.after("blockquote", "datatable", (state, start) => {
     const startPos = state.bMarks[start] + state.tShift[start];
@@ -41,8 +34,7 @@ module.exports = (md, options) => {
       "table",
       `return (${rawTableDescriptor})`
     )();
-    const rawData = parseCSV(fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data), "utf8"));
-    const dataTable = new DataTable(rawData[0], rawData.slice(1));
+    const dataTable = DataTable.fromCSV(fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data), "utf8"));
     const newDataTable = tableDescriptor.mangle(dataTable);
     return newDataTable.toHTML();
   };

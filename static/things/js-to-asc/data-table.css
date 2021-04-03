@@ -21,3 +21,6 @@
 .data-table tbody tr:nth-child(2n) {
   background-color: var(--white);
 }
+.data-table .right {
+  text-align: right;
+}

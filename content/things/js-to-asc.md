@@ -113,7 +113,7 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
       const avg = runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
       row.splice(table.header.length, runs.length, `${avg.toFixed(2)}ms`); 
     }
-    table.header.push("Average");
+    table.header.push({name: "Average", classList: ["right"]});
     return table
         .filter(
           {
