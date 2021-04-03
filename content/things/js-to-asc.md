@@ -9,6 +9,8 @@ Does it really make things faster? Better? Smaller? Stronger?
 
 <!-- more -->
 
+<link rel="stylesheet" href="/things/js-to-asc/data-table.css" />
+
 The incredibly unsatisfying answer is: It depends. It depends on oh-so-many factors, and I’ll be touching on _some_ of them here.
 
 ## Why am I doing this? (You can skip this)
@@ -109,7 +111,7 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
     for(const row of table.rows) {
       const runs = row.slice(table.header.length);
       const avg = runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-      row.splice(table.header.length, runs.length, avg); 
+      row.splice(table.header.length, runs.length, `${avg.toFixed(2)}ms`); 
     }
     table.header.push("Average");
     return table
