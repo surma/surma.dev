@@ -104,7 +104,14 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 
 |||datatable
 {
-  data: "./static/lab/js-to-asc/results.csv"
+  data: "./static/things/js-to-asc/results.csv",
+  mangle(data) {
+    return data
+        .filterRows("program", "blur")
+        .filterRows("variant", "naive")
+        .filterRows("optimizer", ["O3s", ""])
+        .filterRows("runtime", ["incremental", ""]);
+  }
 }
 |||
 

@@ -1,9 +1,18 @@
 // Would you like some race conditions with your wine?
+let DataTable;
+import("../static/things/js-to-asc/data-table.mjs").then((m) => ({DataTable} = m));
+
 const fs = require('fs');
 const path = require('path');
 
 const startMarker = "|||datatable";
 const endMarker = "|||";
+
+function parseCSV(data) {
+  return data
+    .split("\n")
+    .map(v => v.split(",").map(v => v.trim()));
+}
 
 module.exports = (md, options) => {
   md.block.ruler.after("blockquote", "datatable", (state, start) => {
@@ -31,7 +40,10 @@ module.exports = (md, options) => {
       "table",
       `return (${rawTableDescriptor})`
     )();
-    const data = fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data));
-    return data;
+    const rawData = parseCSV(fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data), "utf8"));
+    const dataTable = new DataTable(rawData[0], rawData.slice(1));
+    const newDataTable = tableDescriptor.mangle(dataTable);
+    console.log({newDataTable});
+    return newDataTable.data.map(v => v.join(",")).join("\n");
   };
 };

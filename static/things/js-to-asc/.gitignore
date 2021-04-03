@@ -5,4 +5,3 @@ node_modules
 target
 Cargo.lock
 v8.log
-results.csv
