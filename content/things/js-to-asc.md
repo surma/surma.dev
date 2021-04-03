@@ -111,10 +111,10 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
     for(const row of table.rows) {
       const runs = row.slice(table.header.length);
       const avg = runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-      row.splice(table.header.length, runs.length, `${avg.toFixed(2)}ms`); 
+      row.splice(table.header.length, runs.length, avg);
     }
     table.header.push({name: "Average", classList: ["right"]});
-    return table
+    table = table
         .filter(
           {
             program: "blur",
@@ -128,6 +128,17 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
           }
         )
         .keepColumns("language", "engine", "average");
+    const avgCol = table.header.findIndex(col => col.name.toLowerCase() === "average");
+    let min= {val: Number.POSITIVE_INFINITY, index: -1};
+    table.rows.forEach((row, i) => {
+      const avg = row[avgCol];
+      if(avg < min.val) {
+        min.val = avg;
+        min.index = i;
+      }
+    });
+    table.rows[min.index][avgCol] = `🏆 ${table.rows[min.index][avgCol].toFixed(2)}ms`;
+    return table;
   }
 }
 |||
