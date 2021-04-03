@@ -11,6 +11,7 @@ const endMarker = "|||";
 function parseCSV(data) {
   return data
     .split("\n")
+    .filter(v => v.length >= 1)
     .map(v => v.split(",").map(v => v.trim()));
 }
 
@@ -43,6 +44,6 @@ module.exports = (md, options) => {
     const rawData = parseCSV(fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data), "utf8"));
     const dataTable = new DataTable(rawData[0], rawData.slice(1));
     const newDataTable = tableDescriptor.mangle(dataTable);
-    return newDataTable.data.map(v => v.join(",")).join("\n");
+    return newDataTable.toHTML();
   };
 };

@@ -105,8 +105,14 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
-  mangle(data) {
-    return data
+  mangle(table) {
+    for(const row of table.rows) {
+      const runs = row.slice(table.header.length);
+      const avg = runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
+      row.splice(table.header.length, runs.length, avg); 
+    }
+    table.header.push("Average");
+    return table
         .filter(
           {
             program: "blur",

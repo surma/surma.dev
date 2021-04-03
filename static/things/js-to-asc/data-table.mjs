@@ -1,7 +1,8 @@
+const html = String.raw;
 export class DataTable {
-    constructor(header, data) {
+    constructor(header, rows) {
         this.header = header;
-        this.data = data;
+        this.rows = rows;
     }
 
     rowMatchesPredicate(row, predicate) {
@@ -18,7 +19,28 @@ export class DataTable {
     }
 
     filter(...predicates) {
-        const data = this.data.filter(row => predicates.some(predicate => this.rowMatchesPredicate(row, predicate)));
+        const data = this.rows.filter(row => predicates.some(predicate => this.rowMatchesPredicate(row, predicate)));
         return new DataTable(this.header.slice(), data);
+    }
+
+    toHTML() {
+        return html`
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        ${this.header.map(head => html`<th>${head}</th>`).join("")}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${
+                        this.rows.map(row => html`
+                            <tr>
+                                ${row.map(col => html`<td>${col}</td>`).join("")}
+                            </tr>
+                        `).join("")
+                    }
+                </tbody>
+            </table>
+        `;
     }
 }
