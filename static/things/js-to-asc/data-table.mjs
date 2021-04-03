@@ -4,14 +4,21 @@ export class DataTable {
         this.data = data;
     }
 
-    filterRows(prop, vals) {
-        if(typeof vals === "string") {
-            vals = [vals];
+    rowMatchesPredicate(row, predicate) {
+        for(let [prop, vals] of Object.entries(predicate)) {
+            if(typeof vals === "string") {
+                vals = [vals];
+            }
+            const propIdx = this.header.findIndex(f => f.toLowerCase() === prop.toLowerCase());
+            if(!vals.includes(row[propIdx])) {
+                return false
+            }
         }
+        return true
+    }
 
-        // const propIdxs = vals.map(val => this.header.findIndex(f => f === val));
-        const propIdx = this.header.findIndex(f => f.toLowerCase() === prop.toLowerCase());
-        const data = this.data.filter(row => vals.includes(row[propIdx]));
+    filter(...predicates) {
+        const data = this.data.filter(row => predicates.some(predicate => this.rowMatchesPredicate(row, predicate)));
         return new DataTable(this.header.slice(), data);
     }
 }

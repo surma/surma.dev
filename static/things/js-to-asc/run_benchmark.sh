@@ -2,12 +2,13 @@
 
 OUTPUT=${OUTPUT:-"results.csv"}
 echo "Writing to $OUTPUT"
-rm -rf $OUTPUT
 
 PROGRAMS=${PROGRAMS:-"blur bubblesort binaryheap"}
 VERSIONS=${VERSIONS:-"naive optimized"}
 RUNTIMES=${RUNTIMES:-"stub minimal incremental"}
 OPTIMIZERS=${OPTIMIZERS:-"O3"}
+
+echo "Program,Language,Engine,Variant,Optimizer,Runtime" > $OUTPUT
 
 for program in $PROGRAMS ; do
   if [ -f "${program}.js" ]; then

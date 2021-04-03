@@ -107,10 +107,18 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
   data: "./static/things/js-to-asc/results.csv",
   mangle(data) {
     return data
-        .filterRows("program", "blur")
-        .filterRows("variant", "naive")
-        .filterRows("optimizer", ["O3s", ""])
-        .filterRows("runtime", ["incremental", ""]);
+        .filter(
+          {
+            program: "blur",
+            variant: "naive",
+            optimizer: "O3",
+            runtime: "incremental"
+          },
+          {
+            program: "blur",
+            language: "JavaScript"
+          }
+        );
   }
 }
 |||

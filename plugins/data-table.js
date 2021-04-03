@@ -43,7 +43,6 @@ module.exports = (md, options) => {
     const rawData = parseCSV(fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data), "utf8"));
     const dataTable = new DataTable(rawData[0], rawData.slice(1));
     const newDataTable = tableDescriptor.mangle(dataTable);
-    console.log({newDataTable});
     return newDataTable.data.map(v => v.join(",")).join("\n");
   };
 };
