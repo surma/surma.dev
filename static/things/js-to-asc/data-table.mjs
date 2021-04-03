@@ -36,24 +36,41 @@ export class DataTable {
         return new DataTable(this.header.slice(), data);
     }
 
+    keepColumns(...columns) {
+        const newTable = new DataTable(this.header.slice(), this.rows.map(row => row.slice()));
+        for(let i = 0; i < newTable.header.length;) {
+            // If the current header is included, don’t delete the column.
+            // Thank you, next.
+            if(columns.some(col => col.toLowerCase() === newTable.header[i].name.toLowerCase())) {
+                i++;
+                continue;
+            }
+            newTable.header.splice(i, 1);
+            newTable.rows.forEach(row => row.splice(i, 1));
+        }
+        return newTable;
+    }
+
     toHTML() {
         return html`
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        ${this.header.map(head => html`<th class="${head.classList.join(" ")}">${head.name}</th>`).join("")}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${
-                        this.rows.map(row => html`
-                            <tr>
-                                ${row.map((col, i) => html`<td class="${this.header[i].classList.join(" ")}">${col}</td>`).join("")}
-                            </tr>
-                        `).join("")
-                    }
-                </tbody>
-            </table>
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            ${this.header.map(head => html`<th class="${head.classList.join(" ")}">${head.name}</th>`).join("")}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${
+                            this.rows.map(row => html`
+                                <tr>
+                                    ${row.map((col, i) => html`<td class="${this.header[i].classList.join(" ")}">${col}</td>`).join("")}
+                                </tr>
+                            `).join("")
+                        }
+                    </tbody>
+                </table>
+            </div>
         `;
     }
 }

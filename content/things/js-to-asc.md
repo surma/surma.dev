@@ -126,7 +126,8 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
             program: "blur",
             language: "JavaScript"
           }
-        );
+        )
+        .keepColumns("language", "engine", "average");
   }
 }
 |||
