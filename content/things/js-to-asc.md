@@ -100,9 +100,15 @@ Now that we have a JS file and an ASC file, we can compile the ASC to WebAssembl
 
 However, since this section has the word “Benchmarking” in the title, I think it’s important to put a disclaimer here: The numbers I am listing here are specific to the code that _I_ wrote in a language _I_ chose, ran on _my_ machine using a benchmark script that _I_ made. The results are coarse indicators _at best_ and it would be ill-advices to derive conclusions about the general performance AssemblyScript, WebAssembly or JavaScript from this.
 
+But why `d8`? Why not Node or just the browser? The reason is that `d8` allows me to control whether TurboFan should be enabled or not. I can force `d8` to continue interpreting JavaScript using Ignition if it had enough data to tier up to TurboFan. With WebAssembly, I can opt-in to longer compilation times and force `d8` to _only_ use TurboFan, skipping the Liftoff phase. 
+
 ### Methodology
 
-As described above, it is important to “warm-up” JavaScript when benchmarking, or you end up measuring a mixture of the performance characteristics of interpreted JS and optimized machine code.
+As described above, it is important to “warm-up” JavaScript when benchmarking, or you end up measuring a mixture of the performance characteristics of interpreted JS and optimized machine code. To that end, I’m running the blur program 5 times before I start measuring, then I do 20 timed runs to eliminate some of the noise and variation that is inevitably going to happen.
+
+### First run
+
+Here’s what I got:
 
 |||datatable
 {
@@ -126,7 +132,7 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
       const runs = row.slice(table.header.length);
       return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
     });
-    table.classList("Average")?.push?.("right");
+    table.classList("Average").push("right");
 
     const base = table.copy().filter({
       language: "JavaScript",
@@ -134,7 +140,7 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
     }).getColumn("Average")[0];
     const avgs = table.getColumn("Average");
     table.addColumn("vs JS", table.header.length, (row, i) => `${(avgs[i] / base).toFixed(1)}x`);
-    table.classList("vs JS")?.push?.("right");
+    table.classList("vs JS").push("right");
     table.mapColumn("Average", v => `${v.toFixed(2)}ms`);
 
     table.keepColumns("Language", "Engine", "Average", "vs JS");
@@ -143,7 +149,7 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 }
 |||
 
-- ASC is young, small team etc
+This didn’t sit well with me. On the one hand, AssemblyScript is a relatively young project with a small team. Their compiler is single-pass and defers all optimization efforts to [Binaryen]’s `wasm-opt`. This means that optimization only happens when a lot of the high-level semantics have been compiled away, giving the JavaScript optimizer an edge. on But at the same time, the blur code is so simple and just does a bunch of arithmetic with values from memory, that I was really surprised to see the WebAssembly variant taking 3 times as long as JavaScript. What _is_ an interesting take away even at this stage is that Liftoff’s output is _significantly_ faster than what Ignition can deliver.
 
 [AssemblyScript]: https://assemblyscript.org
 [Ingvar]: https://twitter.com/rreverser
@@ -153,3 +159,4 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 [jsvu]: https://github.com/GoogleChromeLabs/jsvu
 [io19 talk]: https://www.youtube.com/watch?v=njt-Qzw0mVY&t=1064s
 [webassembly.org]: https://webassembly.org/
+[binaryen]: https://github.com/WebAssembly/binaryen
