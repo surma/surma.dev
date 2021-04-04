@@ -121,24 +121,23 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
             language: "JavaScript"
           }
         );
-        
+
     table.addColumn("Average", table.header.length, row => {
       const runs = row.slice(table.header.length);
       return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
     });
     table.classList("Average")?.push?.("right");
 
-    table.keepColumns("Language", "Engine", "Average");
-    const avgCol = table.header.findIndex(col => col.name === "Average");
-    let min= {val: Number.POSITIVE_INFINITY, index: -1};
-    table.rows.forEach((row, i) => {
-      const avg = row[avgCol];
-      if(avg < min.val) {
-        min.val = avg;
-        min.index = i;
-      }
-    });
-    table.rows[min.index][avgCol] = `🏆 ${table.rows[min.index][avgCol].toFixed(2)}ms`;
+    const base = table.copy().filter({
+      language: "JavaScript",
+      engine: "Turbofan"
+    }).getColumn("Average")[0];
+    const avgs = table.getColumn("Average");
+    table.addColumn("vs JS", table.header.length, (row, i) => `${(avgs[i] / base).toFixed(1)}x`);
+    table.classList("vs JS")?.push?.("right");
+    table.mapColumn("Average", v => `${v.toFixed(2)}ms`);
+
+    table.keepColumns("Language", "Engine", "Average", "vs JS");
     return table;
   }
 }

@@ -55,9 +55,23 @@ export class DataTable {
     }
 
     addColumn(name, index, f) {
-        const newCol = this.rows.map(row => f(row));
+        const newCol = this.rows.map((row, i) => f(row, i));
         this.rows.forEach((row, i) => row.splice(index, 0, newCol[i]));
         this.header.splice(index, 0, {name, classList: []});
+        return this;
+    }
+
+    getColumn(name, mapF) {
+        const colIdx = this.header.findIndex(col => col.name.toLowerCase() === name.toLowerCase());
+        return this.rows.map(row => row[colIdx]);
+    }
+
+    mapColumn(name, mapF) {
+        const colIdx = this.header.findIndex(col => col.name.toLowerCase() === name.toLowerCase());
+        this.rows = this.rows.map(row => {
+            row[colIdx] = mapF(row[colIdx]);
+            return row;
+        });
         return this;
     }
 
