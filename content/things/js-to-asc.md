@@ -108,13 +108,7 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 {
   data: "./static/things/js-to-asc/results.csv",
   mangle(table) {
-    for(const row of table.rows) {
-      const runs = row.slice(table.header.length);
-      const avg = runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-      row.splice(table.header.length, runs.length, avg);
-    }
-    table.header.push({name: "Average", classList: ["right"]});
-    table = table
+    table
         .filter(
           {
             program: "blur",
@@ -126,9 +120,16 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
             program: "blur",
             language: "JavaScript"
           }
-        )
-        .keepColumns("language", "engine", "average");
-    const avgCol = table.header.findIndex(col => col.name.toLowerCase() === "average");
+        );
+        
+    table.addColumn("Average", table.header.length, row => {
+      const runs = row.slice(table.header.length);
+      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
+    });
+    table.classList("Average")?.push?.("right");
+
+    table.keepColumns("Language", "Engine", "Average");
+    const avgCol = table.header.findIndex(col => col.name === "Average");
     let min= {val: Number.POSITIVE_INFINITY, index: -1};
     table.rows.forEach((row, i) => {
       const avg = row[avgCol];
