@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:rust": "cargo +nightly build --target wasm32-unknown-unknown --release && wasm-opt -O3 target/wasm32-unknown-unknown/release/binaryheap.wasm -o binaryheap_rs.wasm",
+    "build:rust": "cargo +nightly build --target wasm32-unknown-unknown --release --features $FEATURES && wasm-opt -O3 target/wasm32-unknown-unknown/release/binaryheap.wasm -o binaryheap_rs.wasm",
     "benchmark": "./run_benchmark.sh"
   },
   "type": "module",

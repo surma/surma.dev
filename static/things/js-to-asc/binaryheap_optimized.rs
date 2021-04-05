@@ -1,5 +1,3 @@
-#![feature(option_result_unwrap_unchecked)]
-
 extern crate wee_alloc;
 
 // Use `wee_alloc` as the global allocator.
@@ -118,31 +116,26 @@ impl BinaryHeap {
 
 static mut INSTANCE: Option<BinaryHeap> = None;
 
-#[no_mangle]
 pub fn init() {
     unsafe {
         INSTANCE = Some(BinaryHeap::new());
     }
 }
 
-#[no_mangle]
 pub fn push(v: f32) {
     unsafe {
         INSTANCE.as_mut().unwrap_unchecked().push(v);
     }
 }
 
-#[no_mangle]
 pub fn pop() -> f32 {
     unsafe { INSTANCE.as_mut().unwrap_unchecked().pop() }
 }
 
-#[no_mangle]
 pub fn size() -> usize {
     unsafe { INSTANCE.as_ref().unwrap_unchecked().size() }
 }
 
-#[no_mangle]
 pub fn peek() -> f32 {
     unsafe { INSTANCE.as_ref().unwrap_unchecked().peek() }
 }

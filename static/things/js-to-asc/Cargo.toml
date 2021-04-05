@@ -8,11 +8,14 @@ edition = "2018"
 
 [lib]
 crate-type = ["cdylib"]
-# path = "binaryheap_optimized.rs"
-path = "binaryheap_idiomatic.rs"
+path = "binaryheap.rs"
 
 [profile.release]
 lto = true
 
 [dependencies]
 wee_alloc = "0.4.5"
+
+[features]
+idiomatic = []
+optimized = []
