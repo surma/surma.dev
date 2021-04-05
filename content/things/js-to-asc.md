@@ -129,7 +129,8 @@ Here’s what I got:
         );
 
     table.addColumn("Average", table.header.length, row => {
-      const runs = row.slice(table.header.length);
+      let runs = row.slice(table.header.length);
+      runs = runs.sort().slice(5, -5)
       return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
     });
     table.classList("Average").push("right");

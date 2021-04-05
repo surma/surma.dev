@@ -6,7 +6,7 @@ echo "Writing to $OUTPUT"
 PROGRAMS=${PROGRAMS:-"blur bubblesort binaryheap"}
 VERSIONS=${VERSIONS:-"naive optimized"}
 RUNTIMES=${RUNTIMES:-"stub minimal incremental"}
-OPTIMIZERS=${OPTIMIZERS:-"O3"}
+OPTIMIZERS=${OPTIMIZERS:-"O3 O3s"}
 
 echo "Program,Language,Engine,Variant,Optimizer,Runtime" > $OUTPUT
 

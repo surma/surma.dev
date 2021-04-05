@@ -1,6 +1,7 @@
 import { benchmark } from "./bench.js";
 
-const data = readbuffer("image.dat");
+const data = new Uint8ClampedArray(2048 * 2048 * 4);
+data.forEach((_, i, arr) => arr[i] = Math.random() * 255);
 
 const ascModule = new WebAssembly.Module(readbuffer(arguments[0]));
 const results = await benchmark({
@@ -27,7 +28,7 @@ const results = await benchmark({
       dataPtr,
       this.data.byteLength
     ).set(this.data);
-    this.instance.exports.blurRGBA(arrayViewPtr, 3872, 2592, 100);
+    this.instance.exports.blurRGBA(arrayViewPtr, 2048, 2048, 100);
   },
   numWarmup: 0,
 });

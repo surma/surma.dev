@@ -1,5 +1,5 @@
-const numWarmupDefault = 10;
-const numIterationsDefault = 20;
+const numWarmupDefault = 5;
+const numIterationsDefault = 50;
 
 export async function benchmark({
   before = () => {},
