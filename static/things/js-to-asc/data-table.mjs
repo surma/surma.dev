@@ -119,7 +119,7 @@ export class DataTable {
                         ${
                             this.rows.map(row => html`
                                 <tr>
-                                    ${this.header.map((header, i) => html`<td class="${header.classList.join(" ")}" data-value="${toBase64(JSON.stringify(row[i]))}">${this._getFormatter(header.name)(row[i])}</td>`).join("")}
+                                    ${this.header.map((header, i) => html`<td class="${header.classList.join(" ")}" data-value="${toDataSet(row[i])}">${this._getFormatter(header.name)(row[i])}</td>`).join("")}
                                 </tr>
                             `).join("")
                         }

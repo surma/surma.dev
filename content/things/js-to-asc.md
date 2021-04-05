@@ -156,20 +156,6 @@ This didn’t sit well with me. On the one hand, AssemblyScript is a relatively 
 {
   data: "./static/things/js-to-asc/results.csv",
   mangle(table) {
-    table
-        .filter(
-          {
-            program: "binaryheap",
-            language: "AssemblyScript",
-            variant: "optimized",
-            optimizer: "O3",
-          },
-          {
-            program: "binaryheap",
-            language: ["JavaScript", "Rust"]
-          }
-        );
-
     table.addColumn("Average", table.header.length, row => {
       let runs = row.slice(table.header.length);
       runs = runs.sort().slice(5, -5)
@@ -177,16 +163,28 @@ This didn’t sit well with me. On the one hand, AssemblyScript is a relatively 
     });
     table.classList("Average").push("right");
 
-    const base = table.copy().filter({
-      language: "JavaScript",
-      engine: "Turbofan"
-    }).getColumn("Average")[0];
+    const base = {
+      blur: table.copy().filter({
+          program: "blur",
+          language: "JavaScript",
+          engine: "Turbofan"
+        }).getColumn("Average")[0],
+      bubblesort: table.copy().filter({
+          program: "bubblesort",
+          language: "JavaScript",
+          engine: "Turbofan"
+        }).getColumn("Average")[0],
+      binaryheap: table.copy().filter({
+          program: "binaryheap",
+          language: "JavaScript",
+          engine: "Turbofan"
+        }).getColumn("Average")[0]
+    };
     const avgs = table.getColumn("Average");
-    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
+    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base[row[0]], v => `${v.toFixed(1)}x`);
     table.classList("vs JS").push("right");
     table.setFormatter("Average", v => `${v.toFixed(2)}ms`);
 
-    table.keepColumns("Language", "Engine", "Average", "Variant", "Runtime", "vs JS");
     return table;
   },
   interactive: true
