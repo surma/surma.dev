@@ -119,7 +119,7 @@ Here’s what I got:
           {
             program: "blur",
             variant: "naive",
-            optimizer: "O3",
+            optimizer: "O3s",
             runtime: "incremental"
           },
           {
@@ -140,9 +140,9 @@ Here’s what I got:
       engine: "Turbofan"
     }).getColumn("Average")[0];
     const avgs = table.getColumn("Average");
-    table.addColumn("vs JS", table.header.length, (row, i) => `${(avgs[i] / base).toFixed(1)}x`);
+    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
     table.classList("vs JS").push("right");
-    table.mapColumn("Average", v => `${v.toFixed(2)}ms`);
+    table.setFormatter("Average", v => `${v.toFixed(2)}ms`);
 
     table.keepColumns("Language", "Engine", "Average", "vs JS");
     return table;
@@ -151,6 +151,47 @@ Here’s what I got:
 |||
 
 This didn’t sit well with me. On the one hand, AssemblyScript is a relatively young project with a small team. Their compiler is single-pass and defers all optimization efforts to [Binaryen]’s `wasm-opt`. This means that optimization only happens when a lot of the high-level semantics have been compiled away, giving the JavaScript optimizer an edge. on But at the same time, the blur code is so simple and just does a bunch of arithmetic with values from memory, that I was really surprised to see the WebAssembly variant taking 3 times as long as JavaScript. What _is_ an interesting take away even at this stage is that Liftoff’s output is _significantly_ faster than what Ignition can deliver.
+
+|||datatable
+{
+  data: "./static/things/js-to-asc/results.csv",
+  mangle(table) {
+    table
+        .filter(
+          {
+            program: "binaryheap",
+            language: "AssemblyScript",
+            variant: "optimized",
+            optimizer: "O3",
+          },
+          {
+            program: "binaryheap",
+            language: ["JavaScript", "Rust"]
+          }
+        );
+
+    table.addColumn("Average", table.header.length, row => {
+      let runs = row.slice(table.header.length);
+      runs = runs.sort().slice(5, -5)
+      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
+    });
+    table.classList("Average").push("right");
+
+    const base = table.copy().filter({
+      language: "JavaScript",
+      engine: "Turbofan"
+    }).getColumn("Average")[0];
+    const avgs = table.getColumn("Average");
+    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
+    table.classList("vs JS").push("right");
+    table.setFormatter("Average", v => `${v.toFixed(2)}ms`);
+
+    table.keepColumns("Language", "Engine", "Average", "Runtime", "vs JS");
+    return table;
+  },
+  interactive: true
+}
+|||
 
 [AssemblyScript]: https://assemblyscript.org
 [Ingvar]: https://twitter.com/rreverser

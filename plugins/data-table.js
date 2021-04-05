@@ -36,6 +36,20 @@ module.exports = (md, options) => {
     )();
     const dataTable = DataTable.fromCSV(fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data), "utf8"));
     const newDataTable = tableDescriptor.mangle(dataTable);
-    return newDataTable.toHTML();
+    const uid = Array.from({ length: 16 }, () =>
+      Math.floor(Math.random() * 256).toString(16)
+    ).join("");
+    let markup = newDataTable.toHTML(uid);
+    if(tableDescriptor?.interactive) {
+      markup += `
+        <script type="module">
+          import {interactive} from "/things/js-to-asc/data-table.mjs";
+
+          const table = document.getElementById("${uid}").children[0];
+          interactive(table);
+        </script>
+      `
+    }
+    return markup;
   };
 };

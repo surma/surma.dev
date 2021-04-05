@@ -7,10 +7,18 @@ function parseCSV(data) {
     .map(v => v.split(",").map(v => v.trim()));
 }
 
+function toBase64(v) {
+    if(typeof Buffer !== "undefined") {
+        return Buffer.from(v).toString("base64");
+    }
+    return btoa(v);
+}
+
 export class DataTable {
     constructor(header, rows) {
         this.header = header;
         this.rows = rows;
+        this.formatters = new Map();
     }
 
     static fromCSV(csv) {
@@ -54,11 +62,18 @@ export class DataTable {
         return this;
     }
 
-    addColumn(name, index, f) {
+    addColumn(name, index, f, formatter) {
         const newCol = this.rows.map((row, i) => f(row, i));
         this.rows.forEach((row, i) => row.splice(index, 0, newCol[i]));
         this.header.splice(index, 0, {name, classList: []});
+        if(formatter) {
+            this.setFormatter(name, formatter);
+        }
         return this;
+    }
+
+    setFormatter(name, formatter) {
+        this.formatters.set(name, formatter);
     }
 
     getColumn(name, mapF) {
@@ -79,9 +94,16 @@ export class DataTable {
         return this.header.find(col => col.name === colName)?.classList;
     }
 
-    toHTML() {
+    _getFormatter(name) {
+        if(this.formatters.has(name)) {
+            return this.formatters.get(name);
+        }
+        return v => v;
+    }
+
+    toHTML(uid) {
         return html`
-            <div class="data-table-wrapper">
+            <div class="data-table-wrapper" id="${uid}">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -92,7 +114,7 @@ export class DataTable {
                         ${
                             this.rows.map(row => html`
                                 <tr>
-                                    ${this.header.map((header, i) => html`<td class="${header.classList.join(" ")}">${row[i]}</td>`).join("")}
+                                    ${this.header.map((header, i) => html`<td class="${header.classList.join(" ")}" data-value="${toBase64(JSON.stringify(row[i]))}">${this._getFormatter(header.name)(row[i])}</td>`).join("")}
                                 </tr>
                             `).join("")
                         }
@@ -101,4 +123,51 @@ export class DataTable {
             </div>
         `;
     }
+}
+
+function ascendingSorter(a, b) {
+    if(a == b) {
+        return 0;
+    }
+    if(a > b) {
+        return 1
+    }
+    return -1;
+}
+
+function descendingSorter(a, b) {
+    return -ascendingSorter(a, b);
+}
+
+
+export function interactive(table) {
+    for(const th of table.querySelectorAll("th")) {
+        const asc = document.createElement("button");
+        asc.textContent = "▲"
+        asc.classList.add("ascending", "sort-btn");
+        th.append(asc);
+        const desc = document.createElement("button");
+        desc.textContent = "▼"
+        desc.classList.add("descending", "sort-btn");
+        th.append(desc);
+    }
+
+    table.addEventListener("click", ev => {
+        if(!ev.target.classList.contains("sort-btn")) {
+            return;
+        }
+        const isAscending = ev.target.classList.contains("ascending") ? 1 : -1;
+        const th = ev.target.closest('th');
+        const colNumber = [...th.parentElement.children].indexOf(th);
+        const tbody = table.querySelector("tbody");
+        const rows = [...tbody.querySelectorAll("tr")]
+        const colItems = [...table.querySelectorAll(`tbody > tr > td:nth-child(${colNumber+1})`)].map((cell, i) => ({i, value: JSON.parse(atob(cell.dataset.value))}));
+        colItems.sort((a, b) => a.value > b.value ? 1 * isAscending : -1 * isAscending);
+        while(tbody.firstChild) {
+            tbody.firstChild.remove();
+        }
+        for(const {i} of colItems) {
+            tbody.append(rows[i]);
+        }
+    });
 }
