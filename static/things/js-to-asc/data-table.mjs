@@ -7,11 +7,16 @@ function parseCSV(data) {
     .map(v => v.split(",").map(v => v.trim()));
 }
 
-function toBase64(v) {
+function toDataSet(v) {
+    v = JSON.stringify(v);
     if(typeof Buffer !== "undefined") {
         return Buffer.from(v).toString("base64");
     }
     return btoa(v);
+}
+
+function fromDataSet(v) {
+    return JSON.parse(atob(v));
 }
 
 export class DataTable {
@@ -141,15 +146,39 @@ function descendingSorter(a, b) {
 
 
 export function interactive(table) {
+    const tbody = table.querySelector("tbody");
+    const rows = [...tbody.querySelectorAll("tr")]
+    let visibleRows = rows.slice();
+
     for(const th of table.querySelectorAll("th")) {
         const asc = document.createElement("button");
         asc.textContent = "▲"
-        asc.classList.add("ascending", "sort-btn");
+        asc.classList.add("btn", "ascending", "sort-btn");
         th.append(asc);
         const desc = document.createElement("button");
         desc.textContent = "▼"
-        desc.classList.add("descending", "sort-btn");
+        desc.classList.add("btn", "descending", "sort-btn");
         th.append(desc);
+    }
+    for(const td of table.querySelectorAll("td")) {
+        const asc = document.createElement("button");
+        asc.textContent = "✘"
+        asc.classList.add("btn", "hide-btn");
+        td.append(asc);
+    }
+    
+    {
+        const reset = document.createElement("button");
+        reset.textContent = "⟳"
+        reset.classList.add("btn", "reset-btn");
+        table.querySelector("th:first-child").append(reset);
+    }
+
+    function rerender() {
+        while(tbody.firstChild) {
+            tbody.firstChild.remove();
+        }
+        tbody.append(...visibleRows);
     }
 
     table.addEventListener("click", ev => {
@@ -159,15 +188,30 @@ export function interactive(table) {
         const isAscending = ev.target.classList.contains("ascending") ? 1 : -1;
         const th = ev.target.closest('th');
         const colNumber = [...th.parentElement.children].indexOf(th);
-        const tbody = table.querySelector("tbody");
-        const rows = [...tbody.querySelectorAll("tr")]
-        const colItems = [...table.querySelectorAll(`tbody > tr > td:nth-child(${colNumber+1})`)].map((cell, i) => ({i, value: JSON.parse(atob(cell.dataset.value))}));
+        const colItems = visibleRows.map(row => row.querySelector(`td:nth-child(${colNumber+1})`)).map((cell, i) => ({i, value: fromDataSet(cell.dataset.value)}));
         colItems.sort((a, b) => a.value > b.value ? 1 * isAscending : -1 * isAscending);
-        while(tbody.firstChild) {
-            tbody.firstChild.remove();
-        }
+        const prevVisibleRows = visibleRows.slice();
+        visibleRows = []
         for(const {i} of colItems) {
-            tbody.append(rows[i]);
+            visibleRows.push(prevVisibleRows[i]);
         }
+        rerender();
+    });
+    table.addEventListener("click", ev => {
+        if(!ev.target.classList.contains("hide-btn")) {
+            return;
+        }
+        const td = ev.target.closest("td");
+        const colNumber = [...td.parentElement.children].indexOf(td);
+        const valRemoval = td.dataset.value;
+        visibleRows = visibleRows.filter(row => row.children[colNumber].dataset.value !== valRemoval);
+        rerender();
+    });
+    table.addEventListener("click", ev => {
+        if(!ev.target.classList.contains("reset-btn")) {
+            return;
+        }
+        visibleRows = rows.slice();
+        rerender();
     });
 }

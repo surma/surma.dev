@@ -3,15 +3,20 @@
   max-width: 100%;
 }
 .data-table {
+  position: relative;
   hyphens: none;
   border-spacing: 0;
   border-collapse: collapse;
   width: 100%;
 }
+.data-table th, .data-table td {
+  position: relative;
+}
 .data-table th {
   font-variation-settings: "wght" var(--bold-font-weight);
   padding: .5em;
   text-align: left;
+  white-space: nowrap;
 }
 .data-table td {
   padding: .5em;
@@ -31,4 +36,32 @@
 }
 .data-table .right {
   text-align: right;
+}
+
+.data-table .btn {
+  position: absolute;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  top: 0;
+  left: 0;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s linear;
+}
+
+.data-table .reset-btn {
+  opacity: 1;
+}
+
+.data-table td:hover .btn {
+  opacity: 1;
+}
+
+.data-table .sort-btn {
+  position: static;
+  opacity: 1;
+  display: inline-block;
 }

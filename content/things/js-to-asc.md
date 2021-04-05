@@ -186,7 +186,7 @@ This didn’t sit well with me. On the one hand, AssemblyScript is a relatively 
     table.classList("vs JS").push("right");
     table.setFormatter("Average", v => `${v.toFixed(2)}ms`);
 
-    table.keepColumns("Language", "Engine", "Average", "Runtime", "vs JS");
+    table.keepColumns("Language", "Engine", "Average", "Variant", "Runtime", "vs JS");
     return table;
   },
   interactive: true
