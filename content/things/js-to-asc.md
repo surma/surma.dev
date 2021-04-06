@@ -104,11 +104,7 @@ But why `d8`? Why not Node or just the browser? The reason is that `d8` allows m
 
 ### Methodology
 
-As described above, it is important to “warm-up” JavaScript when benchmarking, or you end up measuring a mixture of the performance characteristics of interpreted JS and optimized machine code. To that end, I’m running the blur program 5 times before I start measuring, then I do 20 timed runs to eliminate some of the noise and variation that is inevitably going to happen.
-
-### First run
-
-Here’s what I got:
+As described above, it is important to “warm-up” JavaScript when benchmarking, or you end up measuring a mixture of the performance characteristics of interpreted JS and optimized machine code. To that end, I’m running the blur program 5 times before I start measuring, then I do 50 timed runs to eliminate some of the noise and variation and ignore the 5 fastest and slowest runs to remove potential outliers. Here’s what I got:
 
 |||datatable
 {
@@ -132,7 +128,7 @@ Here’s what I got:
       let runs = row.slice(table.header.length);
       runs = runs.sort().slice(5, -5)
       return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-    });
+    }, v => `${v.toFixed(2)}ms`);
     table.classList("Average").push("right");
 
     const base = table.copy().filter({
@@ -142,7 +138,6 @@ Here’s what I got:
     const avgs = table.getColumn("Average");
     table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
     table.classList("vs JS").push("right");
-    table.setFormatter("Average", v => `${v.toFixed(2)}ms`);
 
     table.keepColumns("Language", "Engine", "Average", "vs JS");
     return table;
@@ -150,7 +145,45 @@ Here’s what I got:
 }
 |||
 
-This didn’t sit well with me. On the one hand, AssemblyScript is a relatively young project with a small team. Their compiler is single-pass and defers all optimization efforts to [Binaryen]’s `wasm-opt`. This means that optimization only happens when a lot of the high-level semantics have been compiled away, giving the JavaScript optimizer an edge. on But at the same time, the blur code is so simple and just does a bunch of arithmetic with values from memory, that I was really surprised to see the WebAssembly variant taking 3 times as long as JavaScript. What _is_ an interesting take away even at this stage is that Liftoff’s output is _significantly_ faster than what Ignition can deliver.
+This didn’t sit well with me. On the one hand, AssemblyScript is a relatively young project with a small team. Their compiler is single-pass and defers all optimization efforts to [Binaryen] (same optimizer as `wasm-opt`). This means that optimization only happens when a many of the high-level semantics have been compiled away, giving the JavaScript optimizer an edge. But at the same time, the blur code is so simple — just doing arithmetic with values from memory — that I was really surprised to see the WebAssembly variant taking 3 times as long as JavaScript. What’s going on here? Before we dive in, though, what _is_ an interesting insight is that Liftoff’s output is _significantly_ faster than what Ignition can deliver, making WebAssembly fast instantly where JavaScript needs time to get fast.
+
+### Digging in
+
+After quickly consulting with some folks from the V8 team and some folks from the AssemblyScript team (thanks [Daniel] and [Max]!), there were some easy optimizations:
+
+- Use the `stub` runtime by passing `--runtime stub` to `asc`. The default runtime is an incremental garbage collector which makes allocations a bit more expensive (and obviously needs to do gargabe collecting every now and then). The stub runtime is super fast, but as a trade-off lacks the ability to ever free up memory. This is great for single-purpose Wasm modules that just do their job and then get discarded. No need to worry about building up memory.
+- Set the `-O3` flag to aggressively optimize for speed. To my surprise, the default flag in AssemblyScript is `-O3s` which also aggressively optimizes for speed with a tradeoff for size. A quick test reveals: `-O3s` can end up trading laughable amounts of bytes (~30 bytes in the example below) for a huge performance penalty:
+
+|||datatable
+{
+  data: "./static/things/js-to-asc/results.csv",
+  mangle(table) {
+    table.filter({
+      program: "blur",
+      language: "AssemblyScript",
+      variant: "optimized",
+      runtime: "incremental",
+      engine: "Turbofan"
+    });
+    table.addColumn("Average", table.header.length, row => {
+      let runs = row.slice(table.header.length);
+      runs = runs.sort().slice(5, -5)
+      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
+    }, v => `${v.toFixed(2)}ms`);
+    table.classList("Average").push("right");
+    table.keepColumns("Language", "Optimizer", "Average");
+
+    return table;
+  }
+}
+|||
+
+But there’s more: The Typed Arrays (`Uint8Array`, `Float32Array`, ...) offer the same API as they do on the platform, meaning they are merely a view of an underlying raw `ArrayBuffer`. This is good in that the API design is familiar and battle-tested, but due to the lack of high-level optimizations means that every access to a field in the array (like `myFloatArray[23]`) needs to access memory twice: Once to load the pointer to the underlying `ArrayBuffer`, and another to load the value at the right offset. V8 is most likely able to optimize that into a single memory operation. Similarly, V8 can deduce that most of the array access operations are guaranteed to be in-bounds and can remove the bounds checks (the `if` statements checking if your index is between `0` and `myArray.length`). Again, because AssemblyScript only optimizes at the WebAssembly-level, where many higher-level semantics are gone, these bounds checks will stay in place.
+
+### Hand optimizing
+
+- StaticArray
+- `unchecked()`
 
 |||datatable
 {
@@ -200,3 +233,5 @@ This didn’t sit well with me. On the one hand, AssemblyScript is a relatively 
 [io19 talk]: https://www.youtube.com/watch?v=njt-Qzw0mVY&t=1064s
 [webassembly.org]: https://webassembly.org/
 [binaryen]: https://github.com/WebAssembly/binaryen
+[daniel]: https://twitter.com/dcodeio
+[max]: https://twitter.com/maxgraey
