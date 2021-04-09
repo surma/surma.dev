@@ -1,8 +1,68 @@
 // Binary heap implementation from:
 // http://eloquentjavascript.net/appendix2.html
 
+class MyArray<T> {
+  data: StaticArray<T>;
+  length: i32 = 0;
+  [key: number]: T;
+
+  constructor(capacity: u32 = 10) {
+    this.data = new StaticArray<T>(capacity);
+  }
+
+  @inline
+  capacity(): i32 {
+    return this.data.length;
+  }
+
+  push(value: T): void {
+    // If we have reached capacity, create a new underlying array with
+    // double the capacity.
+    if (this.length == this.capacity()) {
+      const newData = new StaticArray<T>(this.capacity() * 2);
+      memory.copy(
+        changetype<usize>(newData),
+        changetype<usize>(this.data),
+        this.length * sizeof<T>()
+      );
+      this.data = newData;
+    }
+    this.data[this.length] = value;
+    this.length++;
+  }
+
+  pop(): T {
+    if (this.length <= 0) {
+      throw new Error("Popping empty MyArray");
+    }
+    this.length -= 1;
+    return this.data[<i32>this.length];
+  }
+
+  @operator("[]") private __get(index: i32): T {
+    // No bounds check because lol
+    return unchecked(this[index]);
+  }
+
+  @operator("[]=") private __set(index: i32, value: T): void {
+    // No bounds check because lol
+    unchecked((this[index] = value));
+  }
+
+  // Unchecked get
+  @unsafe @operator("{}") private __uget(index: i32): T {
+    return load<T>(changetype<usize>(this.data) + <usize>index * sizeof<T>());
+  }
+
+  // Unchecked set
+  @unsafe @operator("{}=") private __uset(index: i32, value: T): void {
+    store<T>(changetype<usize>(this.data) + <usize>index * sizeof<T>(), value);
+  }
+}
+
+type ScoreFunction<T> = (v: T) => f32;
 class BinaryHeap<T> {
-  content: Array<T> = new Array<T>(10);
+  content: MyArray<T> = new MyArray<T>(10);
 
   push(element: T): void {
     // Add the new element to the end of the array.

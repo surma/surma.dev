@@ -4,7 +4,7 @@ OUTPUT=${OUTPUT:-"results.csv"}
 echo "Writing to $OUTPUT"
 
 PROGRAMS=${PROGRAMS:-"blur bubblesort binaryheap"}
-VERSIONS=${VERSIONS:-"naive idiomatic optimized"}
+VERSIONS=${VERSIONS:-"naive idiomatic customarray optimized"}
 RUNTIMES=${RUNTIMES:-"stub minimal incremental"}
 OPTIMIZERS=${OPTIMIZERS:-"O3 O3s"}
 
@@ -16,6 +16,9 @@ for program in $PROGRAMS ; do
     if [ -z "${SKIP_JS}" ]; then
       echo -n "${program},JavaScript,Ignition,optimized,,," | tee -a $OUTPUT
       v8 --no-opt --module --harmony-top-level-await ./${program}_js_bench.js >> $OUTPUT
+      echo "" 
+      echo -n "${program},JavaScript,Sparkplug,optimized,,," | tee -a $OUTPUT
+      v8 --sparkplug --always-sparkplug --no-opt --module --harmony-top-level-await ./${program}_js_bench.js >> $OUTPUT
       echo "" 
       echo -n "${program},JavaScript,Turbofan,optimized,,," | tee -a $OUTPUT
       v8 --module --harmony-top-level-await ./${program}_js_bench.js >> $OUTPUT

@@ -89,7 +89,7 @@ export class DataTable {
     mapColumn(name, mapF) {
         const colIdx = this.header.findIndex(col => col.name.toLowerCase() === name.toLowerCase());
         this.rows = this.rows.map(row => {
-            row[colIdx] = mapF(row[colIdx]);
+            row[colIdx] = mapF(row[colIdx], row);
             return row;
         });
         return this;

@@ -160,9 +160,11 @@ With JavaScript, V8 has the luxury of having access to the language semantics as
 + unchecked(line[line_index] = prev_out_r);
 ```
 
-But there’s more: The Typed Arrays (`Uint8Array`, `Float32Array`, ...) offer the same API as they do on the platform, meaning they are merely a view of an underlying raw `ArrayBuffer`. This is good in that the API design is familiar and battle-tested, but due to the lack of high-level optimizations means that every access to a field in the array (like `myFloatArray[23]`) needs to access memory twice: Once to load the pointer to the underlying `ArrayBuffer`, and another to load the value at the right offset. V8 is most likely able to optimize that into a single memory operation.
+But there’s more: The Typed Arrays (`Uint8Array`, `Float32Array`, ...) offer the same API as they do on the platform, meaning they are merely a view of an underlying raw `ArrayBuffer`. This is good in that the API design is familiar and battle-tested, but due to the lack of high-level optimizations means that every access to a field in the array (like `myFloatArray[23]`) needs to access memory twice: Once to load the pointer to the underlying `ArrayBuffer`, and another to load the value at the right offset. V8, is it can tell that you are accessing the Typed Array but never the underlying buffer, is most likely able to optimize that into a single memory access.
 
-To that end, AssemblyScript provides `StaticArray<T>`
+To that end, AssemblyScript provides `StaticArray<T>`, which is mostly equivalent to an `Array<T>` except that it can’t grow. With a fixed length, there is no need keep the Array entity separate from the memory the values are stored in, removing that indirection.
+
+I applied both these optimizations to my “naïve port” and measured again:
 
 |||datatable
 {
@@ -196,7 +198,8 @@ To that end, AssemblyScript provides `StaticArray<T>`
     const avgs = table.getColumn("Average");
     table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
     table.classList("vs JS").push("right");
-
+    table.mapColumn("Variant", (v, row) => row.includes("JavaScript") ? "" : v);
+    
     table.keepColumns("Language", "Variant", "Average", "vs JS");
 
     return table;
@@ -204,16 +207,150 @@ To that end, AssemblyScript provides `StaticArray<T>`
 }
 |||
 
+A lot better! While the AssemblyScript is still slower than the JavaScript, we got significantly closer. Is this the best we can do?
 
+### Sneaky defaults
 
-- Set the `-O3` flag to aggressively optimize for speed. To my surprise, the default flag in AssemblyScript is `-O3s` which also aggressively optimizes for speed with a tradeoff for size. A quick test reveals: `-O3s` can end up trading laughable amounts of bytes (~30 bytes in the example below) for a huge performance penalty:
+Another thing that the AssemblyScript folks pointed out to me is that the `--optimize` flag is equivalent to `-O3s` which aggressively optimizes for speed, but makes tradeoffs to reduce binary size. `-O3` optimizes for speed and speed only. Having `-O3s` as a default is good in spirit — binary size matters on the web — but is it worth it? At least in this specific example the answer is no: `-O3s` ends up trading laughable amounts of bytes (saving ~30 bytes) for a huge performance penalty:
 
-### Hand optimizing
+|||datatable
+{
+  data: "./static/things/js-to-asc/results.csv",
+  mangle(table) {
+    table.filter(
+      {
+        program: "blur",
+        language: "JavaScript",
+        engine: "Turbofan"
+      },
+      {
+        program: "blur",
+        language: "AssemblyScript",
+        runtime: "incremental",
+        variant: "optimized",
+        engine: "Turbofan"
+      }
+    );
+    table.addColumn("Average", table.header.length, row => {
+      let runs = row.slice(table.header.length);
+      runs = runs.sort().slice(5, -5)
+      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
+    }, v => `${v.toFixed(2)}ms`);
+    table.classList("Average").push("right");
 
-- Use the `stub` runtime by passing `--runtime stub` to `asc`. The default runtime is an incremental garbage collector which makes allocations a bit more expensive (and obviously needs to do gargabe collecting every now and then). The stub runtime is super fast, but as a trade-off lacks the ability to ever free up memory. This is great for single-purpose Wasm modules that just do their job and then get discarded. No need to worry about building up memory.
+    const base = table.copy().filter({
+      language: "JavaScript",
+      engine: "Turbofan"
+    }).getColumn("Average")[0];
+    const avgs = table.getColumn("Average");
+    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
+    table.classList("vs JS").push("right");
+    table.mapColumn("Variant", (v, row) => row.includes("JavaScript") ? "" : v);
 
-- StaticArray
-- `unchecked()`
+    table.keepColumns("Language", "Optimizer", "Average", "vs JS");
+
+    return table;
+  }
+}
+|||
+
+One single optimizer flag makes a night-and-day difference, letting AssemblyScript overtake JavaScript _on this specific test case_.
+
+### Bubblesort
+
+To gain some confidence that the image blur example is not just a fluke, I thought I should try this again with a second program. Rather uncreatively, I took a bubblesort implementation off of StackOverflow and ran through the same process. Add types. Run benchmark. Optimize. Run benchmark. Worth nothing that creating the array that’s be bubble-sorted is _not_ part of the benchmarked code path.
+
+|||datatable
+{
+  data: "./static/things/js-to-asc/results.csv",
+  mangle(table) {
+    table.filter(
+      {
+        program: "bubblesort",
+        language: "JavaScript",
+      },
+      {
+        program: "bubblesort",
+        language: "AssemblyScript",
+        runtime: "incremental",
+        optimizer: "O3"
+      }
+    );
+    table.addColumn("Average", table.header.length, row => {
+      let runs = row.slice(table.header.length);
+      runs = runs.sort().slice(5, -5)
+      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
+    }, v => `${v.toFixed(2)}ms`);
+    table.classList("Average").push("right");
+
+    const base = table.copy().filter({
+      language: "JavaScript",
+      engine: "Turbofan"
+    }).getColumn("Average")[0];
+    const avgs = table.getColumn("Average");
+    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
+    table.classList("vs JS").push("right");
+    table.mapColumn("Variant", (v, row) => row.includes("JavaScript") ? "" : v);
+
+    table.keepColumns("Language", "Variant", "Engine", "Average", "vs JS");
+
+    return table;
+  }
+}
+|||
+
+## Allocations
+
+Some of you may have noticed that both these examples have very few or no allocations. V8’s memory management for JavaScript is quite complex and I won’t pretend that I understand it. In WebAssembly, on the other hand, you get a chunk of linear memory and you have to decide how to use it (or rather: the language does). So how does AssemblyScript hold up on this front?
+
+To measure this, I chose to benchmark an implementation of a [binary heap]. Fill the binary heap with 1 million random numbers (curtesy of `Math.random()`) and `pop()` them all back out, checking that the numbers are in increasing order. The process remained the same as above: Make a naïve port of the JS code to ASC, run benchmark, optimize, benchmark again:
+
+|||datatable
+{
+  data: "./static/things/js-to-asc/results.csv",
+  mangle(table) {
+    table.filter(
+      {
+        program: "binaryheap",
+        language: "JavaScript",
+      },
+      {
+        program: "binaryheap",
+        language: "AssemblyScript",
+        runtime: "incremental",
+        variant: ["naive", "optimized"],
+        optimizer: "O3"
+      }
+    );
+    table.addColumn("Average", table.header.length, row => {
+      let runs = row.slice(table.header.length);
+      //runs = runs.sort().slice(5, -5)
+      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
+    }, v => `${v.toFixed(2)}ms`);
+    table.classList("Average").push("right");
+
+    const base = table.copy().filter({
+      language: "JavaScript",
+      engine: "Turbofan"
+    }).getColumn("Average")[0];
+    const avgs = table.getColumn("Average");
+    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
+    table.classList("vs JS").push("right");
+    table.mapColumn("Variant", (v, row) => row.includes("JavaScript") ? "" : v);
+
+    table.keepColumns("Language", "Variant", "Engine", "Average", "vs JS");
+
+    return table;
+  }
+}
+|||
+
+More than 100x slower than JavaScript?! Surely, there is something else going on here.
+
+- Add sanitzation file and a `requires: []` array.
+- Add pre-sorting
+- Inspect Array impl
+
 
 |||datatable
 {
@@ -265,3 +402,4 @@ To that end, AssemblyScript provides `StaticArray<T>`
 [binaryen]: https://github.com/WebAssembly/binaryen
 [daniel]: https://twitter.com/dcodeio
 [max]: https://twitter.com/maxgraey
+[binary heap]: https://en.wikipedia.org/wiki/Binary_heap
