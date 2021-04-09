@@ -1,11 +1,11 @@
 ---
-title: "Replacing JavaScript with WebAssembly"
-date: "2021-02-26"
+title: "Is WebAssembly magic performance pixie dust?"
+date: "2021-04-09"
 live: false
 # socialmediaimage: "comparison.jpg"
 ---
 
-Does it really make things faster? Better? Smaller? Stronger? 
+Add WebAssembly, get performance? Well, it’s a bit more complicated than that!
 
 <!-- more -->
 
@@ -145,42 +145,72 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 }
 |||
 
-This didn’t sit well with me. On the one hand, AssemblyScript is a relatively young project with a small team. Their compiler is single-pass and defers all optimization efforts to [Binaryen] (same optimizer as `wasm-opt`). This means that optimization only happens when a many of the high-level semantics have been compiled away, giving the JavaScript optimizer an edge. But at the same time, the blur code is so simple — just doing arithmetic with values from memory — that I was really surprised to see the WebAssembly variant taking 3 times as long as JavaScript. What’s going on here? Before we dive in, though, what _is_ an interesting insight is that Liftoff’s output is _significantly_ faster than what Ignition can deliver, making WebAssembly fast instantly where JavaScript needs time to get fast.
+This didn’t sit well with me. On the one hand, AssemblyScript is a relatively young project with a small team. Their compiler is single-pass and defers all optimization efforts to [Binaryen] (same optimizer as `wasm-opt`). This means that optimization only happens when a many of the high-level semantics have been compiled away, giving the JavaScript optimizer an edge. But at the same time, the blur code is so simple — just doing arithmetic with values from memory — that I was really surprised to see the WebAssembly variant taking 3 times as long as JavaScript. What’s going on here? Before we dive in, though, what _is_ an interesting insight is that Liftoff’s output is _significantly_ faster than what Ignition or Sparkplug can deliver, making WebAssembly fast instantly where JavaScript needs time to get fast. But from now on, we are going to focus on TurboFan only.
 
 ### Digging in
 
-After quickly consulting with some folks from the V8 team and some folks from the AssemblyScript team (thanks [Daniel] and [Max]!), there were some easy optimizations:
+After quickly consulting with some folks from the V8 team and some folks from the AssemblyScript team (thanks [Daniel] and [Max]!), it turns out that one big difference here are “bounds checks” — or the lack thereof. 
 
-- Use the `stub` runtime by passing `--runtime stub` to `asc`. The default runtime is an incremental garbage collector which makes allocations a bit more expensive (and obviously needs to do gargabe collecting every now and then). The stub runtime is super fast, but as a trade-off lacks the ability to ever free up memory. This is great for single-purpose Wasm modules that just do their job and then get discarded. No need to worry about building up memory.
-- Set the `-O3` flag to aggressively optimize for speed. To my surprise, the default flag in AssemblyScript is `-O3s` which also aggressively optimizes for speed with a tradeoff for size. A quick test reveals: `-O3s` can end up trading laughable amounts of bytes (~30 bytes in the example below) for a huge performance penalty:
+With JavaScript, V8 has the luxury of having access to the language semantics as an additional source of information. It can tell you are not just randomly reading values from memory, but you are iterating over an `ArrayBuffer` using a `for ... of` loop. What’s the difference? Well with a `for ... of` loop, the language semantics guarantee that you will never go _out of bounds_. You will never end up accidentally reading element 11 when there is only 10 slots. This means TurboFan does not need to emit bounds checks, which you can think of as `if` statements making sure you are not accessing memory you are not supposed to. Of course, bounds checks take time and are most likely making a big difference here. Luckily, AssemblyScript provides a magic `unchecked()` annotation to indicate that we are taking responsibilty for staying in-bounds.
+
+```diff
+- prev_prev_out_r = prev_src_r * coeff[6];
+- line[line_index] = prev_out_r;
++ prev_prev_out_r = prev_src_r * unchecked(coeff[6]);
++ unchecked(line[line_index] = prev_out_r);
+```
+
+But there’s more: The Typed Arrays (`Uint8Array`, `Float32Array`, ...) offer the same API as they do on the platform, meaning they are merely a view of an underlying raw `ArrayBuffer`. This is good in that the API design is familiar and battle-tested, but due to the lack of high-level optimizations means that every access to a field in the array (like `myFloatArray[23]`) needs to access memory twice: Once to load the pointer to the underlying `ArrayBuffer`, and another to load the value at the right offset. V8 is most likely able to optimize that into a single memory operation.
+
+To that end, AssemblyScript provides `StaticArray<T>`
 
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
   mangle(table) {
-    table.filter({
-      program: "blur",
-      language: "AssemblyScript",
-      variant: "optimized",
-      runtime: "incremental",
-      engine: "Turbofan"
-    });
+    table.filter(
+      {
+        program: "blur",
+        language: "JavaScript",
+        engine: "Turbofan"
+      },
+      {
+        program: "blur",
+        language: "AssemblyScript",
+        optimizer: "O3s",
+        runtime: "incremental",
+        engine: "Turbofan"
+      }
+    );
     table.addColumn("Average", table.header.length, row => {
       let runs = row.slice(table.header.length);
       runs = runs.sort().slice(5, -5)
       return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
     }, v => `${v.toFixed(2)}ms`);
     table.classList("Average").push("right");
-    table.keepColumns("Language", "Optimizer", "Average");
+
+    const base = table.copy().filter({
+      language: "JavaScript",
+      engine: "Turbofan"
+    }).getColumn("Average")[0];
+    const avgs = table.getColumn("Average");
+    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
+    table.classList("vs JS").push("right");
+
+    table.keepColumns("Language", "Variant", "Average", "vs JS");
 
     return table;
   }
 }
 |||
 
-But there’s more: The Typed Arrays (`Uint8Array`, `Float32Array`, ...) offer the same API as they do on the platform, meaning they are merely a view of an underlying raw `ArrayBuffer`. This is good in that the API design is familiar and battle-tested, but due to the lack of high-level optimizations means that every access to a field in the array (like `myFloatArray[23]`) needs to access memory twice: Once to load the pointer to the underlying `ArrayBuffer`, and another to load the value at the right offset. V8 is most likely able to optimize that into a single memory operation. Similarly, V8 can deduce that most of the array access operations are guaranteed to be in-bounds and can remove the bounds checks (the `if` statements checking if your index is between `0` and `myArray.length`). Again, because AssemblyScript only optimizes at the WebAssembly-level, where many higher-level semantics are gone, these bounds checks will stay in place.
+
+
+- Set the `-O3` flag to aggressively optimize for speed. To my surprise, the default flag in AssemblyScript is `-O3s` which also aggressively optimizes for speed with a tradeoff for size. A quick test reveals: `-O3s` can end up trading laughable amounts of bytes (~30 bytes in the example below) for a huge performance penalty:
 
 ### Hand optimizing
+
+- Use the `stub` runtime by passing `--runtime stub` to `asc`. The default runtime is an incremental garbage collector which makes allocations a bit more expensive (and obviously needs to do gargabe collecting every now and then). The stub runtime is super fast, but as a trade-off lacks the ability to ever free up memory. This is great for single-purpose Wasm modules that just do their job and then get discarded. No need to worry about building up memory.
 
 - StaticArray
 - `unchecked()`
