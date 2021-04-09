@@ -308,7 +308,8 @@ To measure this, I chose to benchmark an implementation of a [binary heap]. Fill
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
-  mangle(table) {
+  requires: ["./static/things/js-to-asc/sanitizer.js"],
+  mangle(table, sanitizer) {
     table.filter(
       {
         program: "binaryheap",
@@ -322,24 +323,8 @@ To measure this, I chose to benchmark an implementation of a [binary heap]. Fill
         optimizer: "O3"
       }
     );
-    table.addColumn("Average", table.header.length, row => {
-      let runs = row.slice(table.header.length);
-      //runs = runs.sort().slice(5, -5)
-      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-    }, v => `${v.toFixed(2)}ms`);
-    table.classList("Average").push("right");
-
-    const base = table.copy().filter({
-      language: "JavaScript",
-      engine: "Turbofan"
-    }).getColumn("Average")[0];
-    const avgs = table.getColumn("Average");
-    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
-    table.classList("vs JS").push("right");
-    table.mapColumn("Variant", (v, row) => row.includes("JavaScript") ? "" : v);
-
+    sanitizer(table);
     table.keepColumns("Language", "Variant", "Engine", "Average", "vs JS");
-
     return table;
   }
 }
@@ -355,36 +340,9 @@ More than 100x slower than JavaScript?! Surely, there is something else going on
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
-  mangle(table) {
-    table.addColumn("Average", table.header.length, row => {
-      let runs = row.slice(table.header.length);
-      runs = runs.sort().slice(5, -5)
-      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-    });
-    table.classList("Average").push("right");
-
-    const base = {
-      blur: table.copy().filter({
-          program: "blur",
-          language: "JavaScript",
-          engine: "Turbofan"
-        }).getColumn("Average")[0],
-      bubblesort: table.copy().filter({
-          program: "bubblesort",
-          language: "JavaScript",
-          engine: "Turbofan"
-        }).getColumn("Average")[0],
-      binaryheap: table.copy().filter({
-          program: "binaryheap",
-          language: "JavaScript",
-          engine: "Turbofan"
-        }).getColumn("Average")[0]
-    };
-    const avgs = table.getColumn("Average");
-    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base[row[0]], v => `${v.toFixed(1)}x`);
-    table.classList("vs JS").push("right");
-    table.setFormatter("Average", v => `${v.toFixed(2)}ms`);
-
+  requires: ["./static/things/js-to-asc/sanitizer.js"],
+  mangle(table, sanitizer) {
+    sanitizer(table);
     return table;
   },
   interactive: true

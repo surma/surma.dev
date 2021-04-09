@@ -28,14 +28,18 @@ module.exports = (md, options) => {
     return true;
   });
 
-  md.renderer.rules.datatable = (tokens, idx /*, options, env */) => {
+  md.renderer.rules.datatable = (tokens, idx, options, env ) => {
     const rawTableDescriptor = tokens[idx].content.trim();
     const tableDescriptor = new Function(
       "table",
       `return (${rawTableDescriptor})`
     )();
+    let requires = [];
+    if(Array.isArray(tableDescriptor.requires)) {
+      requires = tableDescriptor.requires.map(r => require(path.resolve(__dirname, '../', r)));
+    }
     const dataTable = DataTable.fromCSV(fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data), "utf8"));
-    const newDataTable = tableDescriptor.mangle(dataTable);
+    const newDataTable = tableDescriptor.mangle(dataTable, ...requires);
     const uid = Array.from({ length: 16 }, () =>
       Math.floor(Math.random() * 256).toString(16)
     ).join("");
