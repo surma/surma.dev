@@ -109,7 +109,8 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
-  mangle(table) {
+  requires: ["./static/things/js-to-asc/sanitizer.js"],
+  mangle(table, sanitizer) {
     table
         .filter(
           {
@@ -123,21 +124,7 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
             language: "JavaScript"
           }
         );
-
-    table.addColumn("Average", table.header.length, row => {
-      let runs = row.slice(table.header.length);
-      runs = runs.sort().slice(5, -5)
-      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-    }, v => `${v.toFixed(2)}ms`);
-    table.classList("Average").push("right");
-
-    const base = table.copy().filter({
-      language: "JavaScript",
-      engine: "Turbofan"
-    }).getColumn("Average")[0];
-    const avgs = table.getColumn("Average");
-    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
-    table.classList("vs JS").push("right");
+    sanitizer(table);
 
     table.keepColumns("Language", "Engine", "Average", "vs JS");
     return table;
@@ -169,7 +156,8 @@ I applied both these optimizations to my “naïve port” and measured again:
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
-  mangle(table) {
+  requires: ["./static/things/js-to-asc/sanitizer.js"],
+  mangle(table, sanitizer) {
     table.filter(
       {
         program: "blur",
@@ -184,22 +172,7 @@ I applied both these optimizations to my “naïve port” and measured again:
         engine: "Turbofan"
       }
     );
-    table.addColumn("Average", table.header.length, row => {
-      let runs = row.slice(table.header.length);
-      runs = runs.sort().slice(5, -5)
-      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-    }, v => `${v.toFixed(2)}ms`);
-    table.classList("Average").push("right");
-
-    const base = table.copy().filter({
-      language: "JavaScript",
-      engine: "Turbofan"
-    }).getColumn("Average")[0];
-    const avgs = table.getColumn("Average");
-    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
-    table.classList("vs JS").push("right");
-    table.mapColumn("Variant", (v, row) => row.includes("JavaScript") ? "" : v);
-    
+    sanitizer(table);
     table.keepColumns("Language", "Variant", "Average", "vs JS");
 
     return table;
@@ -216,7 +189,8 @@ Another thing that the AssemblyScript folks pointed out to me is that the `--opt
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
-  mangle(table) {
+  requires: ["./static/things/js-to-asc/sanitizer.js"],
+  mangle(table, sanitizer) {
     table.filter(
       {
         program: "blur",
@@ -231,24 +205,8 @@ Another thing that the AssemblyScript folks pointed out to me is that the `--opt
         engine: "Turbofan"
       }
     );
-    table.addColumn("Average", table.header.length, row => {
-      let runs = row.slice(table.header.length);
-      runs = runs.sort().slice(5, -5)
-      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-    }, v => `${v.toFixed(2)}ms`);
-    table.classList("Average").push("right");
-
-    const base = table.copy().filter({
-      language: "JavaScript",
-      engine: "Turbofan"
-    }).getColumn("Average")[0];
-    const avgs = table.getColumn("Average");
-    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
-    table.classList("vs JS").push("right");
-    table.mapColumn("Variant", (v, row) => row.includes("JavaScript") ? "" : v);
-
+    sanitizer(table);
     table.keepColumns("Language", "Optimizer", "Average", "vs JS");
-
     return table;
   }
 }
@@ -263,7 +221,8 @@ To gain some confidence that the image blur example is not just a fluke, I thoug
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
-  mangle(table) {
+  requires: ["./static/things/js-to-asc/sanitizer.js"],
+  mangle(table, sanitizer) {
     table.filter(
       {
         program: "bubblesort",
@@ -276,22 +235,7 @@ To gain some confidence that the image blur example is not just a fluke, I thoug
         optimizer: "O3"
       }
     );
-    table.addColumn("Average", table.header.length, row => {
-      let runs = row.slice(table.header.length);
-      runs = runs.sort().slice(5, -5)
-      return runs.reduce((sum, c) => sum + parseInt(c), 0) / runs.length;
-    }, v => `${v.toFixed(2)}ms`);
-    table.classList("Average").push("right");
-
-    const base = table.copy().filter({
-      language: "JavaScript",
-      engine: "Turbofan"
-    }).getColumn("Average")[0];
-    const avgs = table.getColumn("Average");
-    table.addColumn("vs JS", table.header.length, (row, i) => avgs[i] / base, v => `${v.toFixed(1)}x`);
-    table.classList("vs JS").push("right");
-    table.mapColumn("Variant", (v, row) => row.includes("JavaScript") ? "" : v);
-
+    sanitizer(table);
     table.keepColumns("Language", "Variant", "Engine", "Average", "vs JS");
 
     return table;
@@ -332,7 +276,40 @@ To measure this, I chose to benchmark an implementation of a [binary heap]. Fill
 
 More than 100x slower than JavaScript?! Surely, there is something else going on here.
 
-- Add sanitzation file and a `requires: []` array.
+### Runtimes
+
+All data that we create in AssemblyScript needs to be stored in memory. To make sure we don’t overwrite anything else that is already in memory, there is memory management. To provide a familiar environment, AssemblyScript aims to mirror the behavior and semantics of JavaScript as closely as possible. So by default, AssemblyScript adds a fully managed garbage collector to your WebAssembly module so that you don’t have to worry about when to allocate and freeing up memory.
+
+By default, AssemblyScript ships with a [Two-Level Segregated Fit memory allocator][tlsf] and a Incremental Tri-Color Mark & Sweep (ITCMS) garbage collector. The exact kind of allocator and garbage collector don’t really matter, I just found it interesting that you can also go [look at them][asc runtime]. The default runtime, called `incremental`, is also surprisingly small, adding only about 2KB of gzip’d Wasm overhead. AssemblyScript also offers alternative runtimes, namely `minimal` and `stub` that can be chosen using the `--runtime` flag. `minimal` uses the same allocator, but a more lightweight GC that does _not_ run automatically but must be manually invoked. This could be interesting for high-performance use-cases like games where long pauses due to GC are potentially unacceptable. `stub` is _extremely_ small (~400B gzip’d) and fast, as it’s just a [bump allocator]. The downside is that you can’t free up memory. Once it’s allocated, it’s gone (you can call `memory.reset()` to discard the entire heap). For specific single-purpose, one-off modules, this can actually be really handy.
+
+How much faster does that make our binary heap experiment? Quite significantly!
+
+|||datatable
+{
+  data: "./static/things/js-to-asc/results.csv",
+  requires: ["./static/things/js-to-asc/sanitizer.js"],
+  mangle(table, sanitizer) {
+    table.filter(
+      {
+        program: "binaryheap",
+        language: "JavaScript",
+        engine: "Turbofan"
+      },
+      {
+        program: "binaryheap",
+        language: "AssemblyScript",
+        variant: "optimized",
+        optimizer: "O3",
+        engine: "Turbofan"
+      }
+    );
+    sanitizer(table);
+    table.keepColumns("Language", "Variant", "Runtime", "Average", "vs JS");
+    return table;
+  }
+}
+|||
+
 - Add pre-sorting
 - Inspect Array impl
 
@@ -361,3 +338,7 @@ More than 100x slower than JavaScript?! Surely, there is something else going on
 [daniel]: https://twitter.com/dcodeio
 [max]: https://twitter.com/maxgraey
 [binary heap]: https://en.wikipedia.org/wiki/Binary_heap
+[tlsf]: http://www.gii.upv.es/tlsf/
+[itcms]: https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking
+[asc runtime]: https://github.com/AssemblyScript/assemblyscript/tree/master/std/assembly/rt
+[bump allocator]: https://os.phil-opp.com/allocator-designs/#bump-allocator
