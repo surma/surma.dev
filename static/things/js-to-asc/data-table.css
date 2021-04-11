@@ -17,6 +17,7 @@
   padding: .5em;
   text-align: left;
   white-space: nowrap;
+  vertical-align: top;
 }
 .data-table td {
   padding: .5em;
@@ -64,4 +65,11 @@
   position: static;
   opacity: 1;
   display: inline-block;
+}
+.data-table .filters {
+  display: flex;
+  flex-direction: column;
+  font-variation-settings: "wght" var(--body-font-weight);
+  font-size: 0.7em;
+  line-height: 1em;
 }

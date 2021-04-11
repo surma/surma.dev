@@ -186,7 +186,7 @@ export function interactive(table) {
   const rows = [...tbody.querySelectorAll("tr")];
   let visibleRows = rows.slice();
 
-  for (const th of table.querySelectorAll("th")) {
+  table.querySelectorAll("th").forEach((th, i) => {
     const asc = document.createElement("button");
     asc.textContent = "▲";
     asc.classList.add("btn", "ascending", "sort-btn");
@@ -195,20 +195,25 @@ export function interactive(table) {
     desc.textContent = "▼";
     desc.classList.add("btn", "descending", "sort-btn");
     th.append(desc);
-  }
-  for (const td of table.querySelectorAll("td")) {
-    const asc = document.createElement("button");
-    asc.textContent = "✘";
-    asc.classList.add("btn", "hide-btn");
-    td.append(asc);
-  }
 
-  {
-    const reset = document.createElement("button");
-    reset.textContent = "⟳";
-    reset.classList.add("btn", "reset-btn");
-    table.querySelector("th:first-child").append(reset);
-  }
+    if(!th.classList.contains("discrete")) {
+        return;
+    }
+    const values = new Set(
+        rows.map(row => row.children[i].dataset.value)
+    );
+    values.delete(toDataSet(""));
+    const div = document.createElement("div")
+    div.classList.add("filters");
+    div.innerHTML = [...values]
+            .map(value => html`
+                <label>
+                    <input type="checkbox" class="filter" data-column="${i}" data-value="${value}" checked>
+                    ${fromDataSet(value)}
+                </label>
+            `).join("");
+    th.append(div);
+  });
 
   function rerender() {
     while (tbody.firstChild) {
@@ -237,23 +242,25 @@ export function interactive(table) {
     }
     rerender();
   });
-  table.addEventListener("click", (ev) => {
-    if (!ev.target.classList.contains("hide-btn")) {
+  table.addEventListener("change", (ev) => {
+    if (!ev.target.classList.contains("filter")) {
       return;
     }
-    const td = ev.target.closest("td");
-    const colNumber = [...td.parentElement.children].indexOf(td);
-    const valRemoval = td.dataset.value;
-    visibleRows = visibleRows.filter(
-      (row) => row.children[colNumber].dataset.value !== valRemoval
+
+    const enabledValues = [];
+    [...table.querySelectorAll("input.filter")]
+        .filter(checkbox => checkbox.checked)
+        .forEach(checkbox => {
+            const {column, value} = checkbox.dataset;
+            if(!enabledValues[column]) {
+                enabledValues[column] = new Set();
+            }
+            enabledValues[column].add(value);
+        });
+    
+    visibleRows = rows.filter(row =>
+        [...row.children].every((col, i) => i >= enabledValues.length ? true : enabledValues[i].has(col.dataset.value))
     );
-    rerender();
-  });
-  table.addEventListener("click", (ev) => {
-    if (!ev.target.classList.contains("reset-btn")) {
-      return;
-    }
-    visibleRows = rows.slice();
     rerender();
   });
 }

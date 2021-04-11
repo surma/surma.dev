@@ -100,6 +100,8 @@ Now that we have a JS file and an ASC file, we can compile the ASC to WebAssembl
 
 However, since this section has the word “Benchmarking” in the title, I think it’s important to put a disclaimer here: The numbers I am listing here are specific to the code that _I_ wrote in a language _I_ chose, ran on _my_ machine using a benchmark script that _I_ made. The results are coarse indicators _at best_ and it would be ill-advices to derive conclusions about the general performance AssemblyScript, WebAssembly or JavaScript from this.
 
+- The takeaways are qualitative not quantitative.
+
 But why `d8`? Why not Node or just the browser? The reason is that `d8` allows me to control whether TurboFan should be enabled or not. I can force `d8` to continue interpreting JavaScript using Ignition if it had enough data to tier up to TurboFan. With WebAssembly, I can opt-in to longer compilation times and force `d8` to _only_ use TurboFan, skipping the Liftoff phase. 
 
 ### Methodology
@@ -274,7 +276,7 @@ To measure this, I chose to benchmark an implementation of a [binary heap]. Fill
 }
 |||
 
-More than 100x slower than JavaScript?! Surely, there is something else going on here.
+80x slower than JavaScript?! Surely, there is something else going on here.
 
 ### Runtimes
 
@@ -310,8 +312,116 @@ How much faster does that make our binary heap experiment? Quite significantly!
 }
 |||
 
-- Add pre-sorting
-- Inspect Array impl
+Both `minimal` and `stub` get us _significantly_ closer to JavaScripts performance. But _why_ are these two so much faster? As mentioned above, `minimal` and `incremental` share the same allocator. Both also have a garbage collector, but `minimal` doesn’t run it unless explicitly invoked (and we ain’t invoking it). The differentiating quality is that `incremental` _runs_ garbage collection, while neither `minimal` nor `stub` do anything of that sorts. I found this rather unsatisfying as I don’t see why the garbage collector that has to handle exactly one growing array should be this costly.
+
+### Growth
+
+After doing some [profiling with d8] on a build with debugging symbols, it turns out that most time is spent in a system library `libsystem_platform.dylib` (which contains OS-level primitives for threading and memory management). Calls into this library are made from `__new` and `__renew` from the garbage collector, which in turn is called from `Array<f32>#push`:
+```
+[Bottom up (heavy) profile]:
+  ticks parent  name
+  18670   96.1%  /usr/lib/system/libsystem_platform.dylib
+  13530   72.5%    Function: *~lib/rt/itcms/__renew
+  13530  100.0%      Function: *~lib/array/ensureSize
+  13530  100.0%        Function: *~lib/array/Array<f32>#push
+  13530  100.0%          Function: *binaryheap_optimized/BinaryHeap<f32>#push
+  13530  100.0%            Function: *binaryheap_optimized/push
+   5119   27.4%    Function: *~lib/rt/itcms/__new
+   5119  100.0%      Function: *~lib/rt/itcms/__renew
+   5119  100.0%        Function: *~lib/array/ensureSize
+   5119  100.0%          Function: *~lib/array/Array<f32>#push
+   5119  100.0%            Function: *binaryheap_optimized/BinaryHeap<f32>#push
+```
+
+Clearly, we have a problem with allocation here. But JavaScript manages to make this fast, so why can’t AssemblyScript? Luckily, the standard library of AssemblyScript is rather small and approachable, so let’s go and take a look at this ominous `push()` function of the `Array<T>` class:
+
+```ts
+export class Array<T> {
+  // ...
+  push(value: T): i32 {
+    var length = this.length_;
+    var newLength = length + 1;
+    ensureSize(changetype<usize>(this), newLength, alignof<T>());
+    // ...
+    return newLength;
+  }
+  // ...
+}
+```
+
+- Explain why bad
+- I wrote a `MyArray<T>` which doubles the size the underlying memory whenever it runs out
+
+|||datatable
+{
+  data: "./static/things/js-to-asc/results.csv",
+  requires: ["./static/things/js-to-asc/sanitizer.js"],
+  mangle(table, sanitizer) {
+    table.filter(
+      {
+        program: "binaryheap",
+        language: "JavaScript",
+        engine: "Turbofan"
+      },
+      {
+        program: "binaryheap",
+        language: "AssemblyScript",
+        runtime: ["incremental", "stub"],
+        variant: ["optimized", "customarray"],
+        optimizer: "O3",
+        engine: "Turbofan"
+      }
+    );
+    sanitizer(table);
+    table.keepColumns("Language", "Variant", "Runtime", "Average", "vs JS");
+    return table;
+  }
+}
+|||
+
+- Got incremental to the same performance as stub. But still not quite as fast as JavaScript.
+- There’s probably something more I can do, but I wanted to see if the other “big” languages really have smarter compilers
+
+|||datatable
+{
+  data: "./static/things/js-to-asc/results.csv",
+  requires: ["./static/things/js-to-asc/sanitizer.js"],
+  mangle(table, sanitizer) {
+    table.filter(
+      {
+        program: "binaryheap",
+        language: "JavaScript",
+        engine: "Turbofan"
+      },
+      {
+        program: "binaryheap",
+        language: "AssemblyScript",
+        runtime: "incremental",
+        variant: "customarray",
+        optimizer: "O3",
+        engine: "Turbofan"
+      },
+      {
+        program: "binaryheap",
+        language: "Rust",
+        engine: "Turbofan"
+      },
+      {
+        program: "binaryheap",
+        language: "C++",
+        engine: "Turbofan"
+      }
+    );
+    sanitizer(table);
+    table.keepColumns("Language", "Variant", "Average", "vs JS");
+    return table;
+  }
+}
+|||
+
+- Rust also slowed down due to bounds check. Circumvented that with a bunch of `unsafe` code. Couldn’t get it to be faster than JS, but that’s probably my fault rather than Rust’s.
+- C++ was as fast as JS out of the box.
+- Worth noting that ASC with `incremental` is 2.6KB, Rust is 7.3KB and C++ is 6.7KB + 9.9KB glue code.
 
 
 |||datatable
@@ -342,3 +452,4 @@ How much faster does that make our binary heap experiment? Quite significantly!
 [itcms]: https://en.wikipedia.org/wiki/Tracing_garbage_collection#Tri-color_marking
 [asc runtime]: https://github.com/AssemblyScript/assemblyscript/tree/master/std/assembly/rt
 [bump allocator]: https://os.phil-opp.com/allocator-designs/#bump-allocator
+[profiling with d8]: https://v8.dev/docs/profile

@@ -46,4 +46,6 @@ module.exports = function (table) {
   );
   table.classList("vs JS").push("right");
   table.mapColumn("Variant", (v, row) => (row.includes("JavaScript") ? "" : v));
+  ["Language", "Program", "Engine", "Variant", "Optimizer", "Runtime"]
+    .forEach(name => table.classList(name).push("discrete"));
 };
