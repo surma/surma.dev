@@ -1,6 +1,6 @@
 ---
 title: "Is WebAssembly magic performance pixie dust?"
-date: "2021-04-09"
+date: "2021-04-12"
 live: false
 # socialmediaimage: "comparison.jpg"
 ---
@@ -15,31 +15,35 @@ The incredibly unsatisfying answer is: It depends. It depends on oh-so-many fact
 
 ## Why am I doing this? (You can skip this)
 
-I really like [AssemblyScript] (ASC for short). It’s a very young language with a small but passionate team that built a custom compiler from a TypeScript-like language to WebAssembly. The reason I like it is because it allows the average web developer to make use of WebAssembly without having to learn a potentially new language like C++ or Rust (full disclosure: I am one of their backers). It’s important to note that the language is TypeScript-_like_. Don’t expect your existing TypeScript code to just compile out of the box. That being said, the language is intentionally trying to mimic the behavior and semantics of TypeScript (and therefore JavaScript), which means that the modifications are often mostly cosmetic. I always wondered if there is anything to gain from taking a piece of JavaScript, making some slight adjustments to make it valid AssemblyScript and compiling it to WebAssembly. When my colleague [Ingvar] happend to send me a [piece of JavaScript][glur] code that blurs images, I decided to run a small experiment to see if this excursion would be worth doing at a larger scale. And _oh boy_ is it worth it.
+I really like [AssemblyScript] (full disclosure: I am one of their backers). It’s a very young language with a small but passionate team that built a custom compiler for a TypeScript-like language targeting WebAssembly. The reason I like AssemblyScript (or ASC for short) is because it allows the average web developer to make use of WebAssembly without having to learn a potentially new language like C++ or Rust. It’s important to note that the language is TypeScript-_like_. Don’t expect your existing TypeScript code to just compile out of the box. That being said, the language is intentionally mirroring the behaviors and semantics of TypeScript (and therefore JavaScript), which means that the act of “porting” TypeScript to AssemblyScript are often mostly cosmetic, usually just adding type annotations. 
 
-If you want to know more about AssemblyScript, go to the [website][assemblyscript], join the [Discord] or, if you fancy, I made a [quick-start video][asc video], too.
+I always wondered if there is anything to gain from taking a piece of JavaScript, turning it into AssemblyScript and compiling it to WebAssembly. When my colleague [Ingvar] sent me a [piece of JavaScript][glur] code to blur images, I thought that this would be a perfect case study. I ran a quick experiment to see if it’s worth doing a deeper exploration into porting JavaScript to AssemblyScript. And _oh boy_ was it worth it. This article is that deeper exploration.
 
-## Why use WebAssembly ?
+If you want to know more about AssemblyScript, go to the [website][assemblyscript], join the [Discord][asc discord] or, if you fancy, watch the [AssemblyScript intro video][asc video] I made with my podcast husband [Jake].
 
-I feel like there are a lot of people who think of WebAssembly purely as a performance primitive. It’s compiled, so it’s gotta be fast, right? Well, for the longest time [I have said that WebAssembly and JavaScript have the same _peak_ performance][io19 talk], and I still stand behind that. Given ideal conditions, they both compile to machine code and end up being equally fast. But there’s obviously more nuance here, and when have conditions _ever_ been ideal on the web. Something that is definitely better to associate with WebAssembly is that WebAssembly’s performance is _predictable_ and stable.
+## Advantages of WebAssembly
 
-It’s only recently that WebAssembly has gotten access to performance primitives (like SIMD or shared-memory threads) that JavaScript cannot utilize, giving WebAssembly a _potential_ edge to predictably out-perform JavaScript. But there are other considerations that can make WebAssembly perform better in specific situations:
+In my perception, a lot of people think of WebAssembly purely as a performance primitive. It’s compiled, so it’s gotta be fast, right? Well, for the longest time [I have been vocal that WebAssembly and JavaScript have the same _peak_ performance][io19 talk], and I still stand behind that. Given ideal conditions, they both compile to machine code and end up being equally fast. But there’s obviously more nuance here, and when have conditions _ever_ been ideal on the web‽ Instead, I think it would be better if we thought about WebAssembly as a way to get _predictable_ performance.
+
+However, it’s also important to realize that WebAssembly has recently been getting access to performance primitives (like SIMD or shared-memory threads) that JavaScript cannot utilize, giving WebAssembly a _potential_ edge to predictably out-perform JavaScript. There are also some other qualities of WebAssembly that might make it better suited in specific situations than JavaScript:
 
 ### No warmup
 
-For JavaScript to be turned into machine code, it needs to run a bit first. In V8’s case, it’s interpreter “Ignition” is optimized to make code run as _soon_ as possible. Meanwhile, “Sparkplug” compiles your JavaScript to byte code and takes over once it’s done. While both of these run your code, they make observations about your code. How it behaves and what kind of data you store in your variables, function parameters and so on. Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates low-level machine code using that type data. This will give a massive speed-boost. 
+For JavaScript to be turned into machine code, it needs to run a bit first. In V8’s case, its interpreter “Ignition” is optimized to make code run as _soon_ as possible. Meanwhile, “Sparkplug” compiles your JavaScript to byte code, taking longer but also yieling better performance. Once Sparkplug is done the compiled byte code takes over. While your code is running (either through Ignition or Sparkplug), it is closely observed by V8. It takes not of what kind of type of data you store in your variables, function parameters and so on. Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates low-level machine code using that type data. This will give a significant speed boost.
 
-WebAssembly, on the other hand, is strongly typed. It can be turned into machine code _straight away_. V8 has a streaming Wasm compiler called “Liftoff“ which is optimized to generate machine code _fast_, making sure your WebAssembly can start working as soon as possible. The second Liftoff is done, TurboFan kicks in and generates optimized machine code that will run faster than what Liftoff produced. The big difference is that the TurboFan can do its work without having to observe your Wasm first.
+WebAssembly, on the other hand, is strongly typed. It can be turned into machine code _straight away_. V8 has a streaming Wasm compiler called “Liftoff“ which, like Ignition, is optimized to generate machine code _fast_, making sure your WebAssembly can start working as soon as possible, at the cost of generating potentially suboptimal machine code. The second Liftoff is done, TurboFan kicks in and both generates optimized machine code that will run faster than what Liftoff produced, but will take  longer to generate. The big difference to JavaScript is that the TurboFan can do its work without having to observe your Wasm first.
 
 ### No tierdown
 
-The machine code that TurboFan generates for JavaScript is only usable for as long as the assumptions about types hold. If TurboFan generated machine code for a funtion `f` with a number as a parameter, and now all of the sudden that function `f` gets called with an object, the engine has to fall back to Ignition or Sparkplug. That’s called a “deoptimization” (or “deopt” for short). Again, because WebAssembly is strongly typed, the types _can’t_ change. Not only that, but they types that WebAssembly supports were designed to map well to machine code. Deopts can’t happen with WebAssembly.
+The machine code that TurboFan generates for JavaScript is only usable for as long as the assumptions about types hold. If TurboFan generated machine code for a funtion `f` with a number as a parameter, and now all of the sudden that function `f` gets called with an object, the engine has to fall back to Ignition or Sparkplug. That’s called a “deoptimization” (or “deopt” for short). Again, because WebAssembly is strongly typed, the types _can’t_ change. Not only that, but they types that WebAssembly supports are designed to map well to machine code. Deopts can’t happen with WebAssembly.
 
 ### Binary size
 
-Now this one is a bit elusive. According to [webassembly.org], “the wasm stack machine is designed to be encoded in a size- and load-time-efficient binary format.” And yet, WebAssembly is currently somewhat notorious for generating big binary blobs, at least by what is considered “big” on the web. WebAssembly brotli’s (and gzip’s) very well and can undo a lot of the bloat. However, JavaScript comes with a lot of batteries included (despite the claim that it doesn’t hava a standard library). For example: You can handle arrays, objects, iterate over keys and values, split strings, filter, map, have prototypical inheritance and so on and so forth. All that is built into the JavaScript engine. WebAssembly comes with _nothing_, except arithmetic. Whenever you use any of these higher-level concepts in a language that compiles to WebAssembly, that code will have to be bundled into your binary, which is one of the big causes for big WebAssembly binary. Of course those functions will only have to be included once, so bigger projects will benefit more from Wasm’s small binary representation than small modules.
+Now this one is a bit elusive. According to [webassembly.org], “the wasm stack machine is designed to be encoded in a size- and load-time-efficient binary format.” And yet, WebAssembly is currently somewhat notorious for generating big binary blobs, at least by what is considered “big” on the web. WebAssembly compresses very well (via gzip or brotli), which can undo a lot of the bloat. 
 
-Not all of these advantages are equally available or important in any given scenario. However, AssemblyScript is known to generate rather small WebAssembly binaries and I was curious how it can hold up in terms of speed and size with equivalent JavaScript.
+It is easy to forget that JavaScript comes with a lot of batteries included (despite the claim that it doesn’t have a standard library). For example: You can handle arrays, objects, iterate over keys and values, split strings, filter, map, have prototypical inheritance and so on and so forth. All that is built into the JavaScript engine. WebAssembly comes with _nothing_, except arithmetic. Whenever you use any of these higher-level concepts in a language that compiles to WebAssembly, the underpinning code will have to get bundled into your binary, which is one of the causes for big WebAssembly binaries. Of course those functions will only have to be included once, so bigger projects will benefit more from Wasm’s small binary representation than small modules.
+
+Not all of these advantages are equally available or important in any given scenario. However, AssemblyScript is known to generate rather small WebAssembly binaries and I was curious how it can hold up in terms of speed and size with _directly_ comparable JavaScript.
 
 ## Porting to AssemblyScript
 
@@ -47,7 +51,7 @@ As mentioned, AssemblyScript mimics TypeScript’s semantics and Web Platform AP
 
 ### Adding types
 
-ASC’s built-in types mirror the types of the WebAssembly VM. While numeric values in TypeScript are just `number` (a 64-bit IEEE754 float according to the spec), AssemblyScript has `u8`, `u16`, `u32`, `i8`, `i16`, `i32`, `f32` and `f64` as its primitive types. The [small-but-sufficiently-powerful standard library of ASC][asc stdlib] adds higher-level data structures like `string`, `Array<T>`, `ArrayBuffer`, `Uint8Array` etc. The only ASC-specific data structure, that is neither in JavaScript nor the Web Platform, is `StaticArray`, which I will talk about a bit later.
+ASC’s built-in types mirror the types of the WebAssembly VM. While numeric values in TypeScript are just `number` (a 64-bit [IEEE754] float according to the spec), AssemblyScript has `u8`, `u16`, `u32`, `i8`, `i16`, `i32`, `f32` and `f64` as its primitive types. The [small-but-sufficiently-powerful standard library of ASC][asc stdlib] adds higher-level data structures like `string`, `Array<T>`, `ArrayBuffer`, `Uint8Array` etc. The only ASC-specific data structure, that is neither in JavaScript nor the Web Platform, is `StaticArray`, which I will talk about a bit later.
 
 As an example, here is a function from the glur library and its AssemblyScript’ified counterpart:
 
@@ -72,7 +76,7 @@ function gaussCoef(sigma: f32): Float32Array {
   if (sigma < 0.5) 
     sigma = 0.5;
 
-  let a: f32 = <f32>Math.exp(0.726 * 0.726) / sigma;
+  let a: f32 = Mathf.exp(0.726 * 0.726) / sigma;
   /* ... more math ... */
 
   const r = new Float32Array(8);
@@ -88,11 +92,13 @@ function gaussCoef(sigma: f32): Float32Array {
 }
 ```
 
-The explicit loop at the end to populate the array is there because of a current short-coming in AssemblyScript: Function overloading isn’t support yet, so there is only _exactly_ one constructor for `Float32Array` in ASC, which takes an `i32` parameter for the length of the `TypedArray`. Callbacks are supported in ASC, but closures also are not, so I can’t use `.forEach()` to fill in the values. This is certainly _inconvenient_, but not prohibitively so. 
+The explicit loop at the end to populate the array is there because of a current short-coming in AssemblyScript: Function overloading isn’t support yet. There is only _exactly_ one constructor for `Float32Array` in ASC, which takes an `i32` parameter for the length of the `TypedArray`. Callbacks are supported in ASC, but closures also are not, so I can’t use `.forEach()` to fill in the values. This is certainly _inconvenient_, but not prohibitively so. 
+
+> **Mathf**: You might have noticed `Mathf` instead of `Math`. `Mathf` is specifically for 32-bit floats, while `Math` is for 64-bit floats. I could have used `Math` and do a cast, but they are ever-so-slightly slower due to the increased precision required. Either way, the `gaussCoef` function is not part of the hot path, so it really doesn’t make a difference.
 
 ### Side note: Mind the signs
 
-Something that took me an embarrassingly long time to figure out is that, uh, types matter. Blurring an image involves convolution, and that means a whole bunch of for-loops iterating over all the pixels. Naïvely I thought that because all pixel indices are positive, the loop counters would be as well and decided to choose `u32` for those loop variables. That’ll bite you with a _lovely_ infinite loop if any of those loops happen to iterate backwards, like this one (because `j` will _always_ be greater or equal than `0`):
+Something that took me an embarrassingly long time to figure out is that, uh, types matter. Blurring an image involves convolution, and that means a whole bunch of for-loops iterating over all the pixels. Naïvely I thought that because all pixel indices are positive, the loop counters would be as well and decided to choose `u32` for those loop variables. That’ll bite you with a _lovely_ infinite loop if any of those loops happen to iterate backwards, like the following one:
 
 ```ts
 let j: u32; 
@@ -110,13 +116,13 @@ Now that we have a JS file and an ASC file, we can compile the ASC to WebAssembl
 
 > **d-What?**: `d8` is a minimal CLI wrapper around V8, exposing fine-grained control over all kinds of engine features for both Wasm and JS. You can think of it like Node, but with no standard library whatsoever. Just vanilla ECMAScript. Unless you have compiled V8 locally (which you _can_ do by following [the guide on v8.dev][compile v8]), you probably won’t have `d8` available. [JSVU] is a tool that can install pre-compiled binaries for many JavaScript engines, including V8.
 
-However, since this section has the word “Benchmarking” in the title, I think it’s important to put a disclaimer here: The numbers I am listing here are specific to the code that _I_ wrote in a language _I_ chose, ran on _my_ machine using a benchmark script that _I_ made. The results are coarse indicators _at best_ and it would be ill-advised to derive quantitative conclusions about the general performance AssemblyScript, WebAssembly or JavaScript from this.
+However, since this section has the word “Benchmarking” in the title, I think it’s important to put a disclaimer here: The numbers I am listing here are specific to the code that _I_ wrote in a language _I_ chose, ran on _my_ machine (a 2020 M1 MacBook Air) using a benchmark script that _I_ made. The results are coarse indicators _at best_ and it would be ill-advised to derive quantitative conclusions about the general performance AssemblyScript, WebAssembly or JavaScript from this.
 
-But why `d8`? Why not Node or just the browser? Both Node and the browser have,... other stuff that may or may not screw with the results `d8` is the most sterile environment I can get and as a cherry on top it allows me to control the tier-up behavior. I can limit execution to use Ignition, Sparkplug or Liftoff only.
+Some might be wondering why I’m using `d8` instead running this in the browser or even Node. Both Node and the browser have,... other stuff that may or may not screw with the results. `d8` is the most sterile environment I can get and as a cherry on top it allows me to control the tier-up behavior. I can limit execution to use Ignition, Sparkplug or Liftoff only, ensuring that performance characteristics don’t change in the middle of a benchmark.
 
 ### Methodology
 
-As described above, it is important to “warm-up” JavaScript when benchmarking, giving V8 a chance to observe your JavaScript. If you don’t do that, you may very well end up measuring a mixture of the performance characteristics of interpreted JS and optimized machine code. To that end, I’m running the blur program 5 times before I start measuring, then I do 50 timed runs to eliminate some of the noise and variation and ignore the 5 fastest and slowest runs to remove potential outliers. Here’s what I got:
+As described above, it is important to “warm-up” JavaScript when benchmarking, giving V8 a chance to optimize it. If you don’t do that, you may very well end up measuring a mixture of the performance characteristics of interpreted JS and optimized machine code. To that end, I’m running the blur program 5 times before I start measuring, then I do 50 timed runs and ignore the 5 fastest and slowest runs to remove potential outliers. Here’s what I got:
 
 |||datatable
 {
@@ -148,13 +154,13 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 
 On the one hand, I was happy to see that Liftoff’s output was faster than what Ignition or Sparkplug could squeeze out of JavaScript. At the same time, it didn’t sit well with me that the optimized WebAssembly module takes about 3 times as long as JavaScript. 
 
-To be fair, this is a David vs Goliath scenario: V8 is a long-standing JavaScript engine with a huge team of engineers adding optimizations and other clever stuff, while AssemblyScript is a relatively young project with a small team around it. ASC’s compiler is single-pass and defers all optimization efforts to [Binaryen] (see also: `wasm-opt`). This means that optimization only happens when a many of the high-level semantics have been compiled away, giving the V8 a clear edge. However, the blur code is so simple — just doing arithmetic with values from memory — that I was really expecting it to be closer. What’s going on here? 
+To be fair, this is a David vs Goliath scenario: V8 is a long-standing JavaScript engine with a huge team of engineers implementing optimizations and other clever stuff, while AssemblyScript is a relatively young project with a small team around it. ASC’s compiler is single-pass and defers all optimization efforts to [Binaryen] (see also: `wasm-opt`). This means that optimization is done at the Wasm VM byte code level, after most of the high-level semantics have been compiled away. V8 has a clear edge here. However, the blur code is so simple — just doing arithmetic with values from memory — that I was really expecting it to be closer. What’s going on here? 
 
 ### Digging in
 
 After quickly consulting with some folks from the V8 team and some folks from the AssemblyScript team (thanks [Daniel] and [Max]!), it turns out that one big difference here are “bounds checks” — or the lack thereof. 
 
-With JavaScript, V8 has the luxury of having access to the language semantics. It can tell you are not just randomly reading values from memory, but you are iterating over an `ArrayBuffer` using a `for ... of` loop. What’s the difference? Well with a `for ... of` loop, the language semantics guarantee that you will never go _out of bounds_. You will never end up accidentally reading element 11 when there is only 10 slots. This means TurboFan does not need to emit bounds checks, which you can think of as `if` statements making sure you are not accessing memory you are not supposed to. Of course, those take additional time and are most likely making a big difference here. This kind of information is lost once compiled to WebAssembly, and since ASC’s compiler also only optimizes at the WebAssembly VM level, it can’t apply the same optimization.
+V8 has the luxury of having access to your original JavaScript code and knowledge about the semantics of the language. It can use that information to apply additional optimizations. For example: It can tell you are not just randomly reading values from memory, but you are iterating over an `ArrayBuffer` using a `for ... of` loop. What’s the difference? Well with a `for ... of` loop, the language semantics guarantee that you will never try to read values outside of the `ArrayBuffer`. You will never end up accidentally reading byte 11 when the buffer is only 10 bytes long, or: You never go _out of bounds_. This means TurboFan does not need to emit bounds checks, which you can think of as `if` statements making sure you are not accessing memory you are not supposed to. This kind of information is lost once compiled to WebAssembly, and since ASC’s optimization only happens at WebAssembly VM level, it can’t necessarily apply the same optimization.
 
 Luckily, AssemblyScript provides a magic `unchecked()` annotation to indicate that we are taking responsibilty for staying in-bounds.
 
@@ -165,9 +171,9 @@ Luckily, AssemblyScript provides a magic `unchecked()` annotation to indicate th
 + unchecked(line[line_index] = prev_out_r);
 ```
 
-But there’s more: The Typed Arrays (`Uint8Array`, `Float32Array`, ...) offer the same API as they do on the platform, meaning they are merely a view onto an underlying `ArrayBuffer`. This is good in that the API design is familiar and battle-tested, but due to the lack of high-level optimizations, this means that every access to a field in the array (like `myFloatArray[23]`) needs to access memory twice: Once to load the pointer to the underlying `ArrayBuffer`, and another to load the value at the right offset. V8, as it can tell that you are accessing the Typed Array but never the underlying buffer, is most likely able to optimize that into a single memory access.
+But there’s more: The Typed Arrays in AssemblyScript (`Uint8Array`, `Float32Array`, ...) offer the same API as they do on the platform, meaning they are merely a view onto an underlying `ArrayBuffer`. This is good in that the API design is familiar and battle-tested, but due to the lack of high-level optimizations, this means that every access to a field on the Typed Array (like `myFloatArray[23]`) needs to access memory twice: Once to load the pointer to the underlying `ArrayBuffer` of this specific array, and another to load the value at the right offset. V8, as it can tell that you are accessing the Typed Array but never the underlying buffer, is most likely able to optimize the entire data structure so that you can read  values with a single memory access.
 
-To that end, AssemblyScript provides `StaticArray<T>`, which is mostly equivalent to an `Array<T>` except that it can’t grow. With a fixed length, there is no need keep the Array entity separate from the memory the values are stored in, removing that indirection.
+For that reason, AssemblyScript provides `StaticArray<T>`, which is mostly equivalent to an `Array<T>` except that it can’t grow. With a fixed length, there is no need keep the Array entity separate from the memory the values are stored in, removing that indirection.
 
 I applied both these optimizations to my “naïve port” and measured again:
 
@@ -242,11 +248,13 @@ Another thing that the AssemblyScript folks pointed out to me is that the `--opt
 }
 |||
 
-One single optimizer flag makes a night-and-day difference, letting AssemblyScript overtake JavaScript (on this specific test case!). From here on forward, I will only be using `-O3` in this article.
+One single optimizer flag makes a night-and-day difference, letting AssemblyScript overtake JavaScript (on this specific test case!). We made AssemblyScript faster than JavaScript!
+
+> **O3**: From here on forward, I will only be using `-O3` in this article.
 
 ### Bubblesort
 
-To gain some confidence that the image blur example is not just a fluke, I thought I should try this again with a second program. Rather uncreatively, I took a bubblesort implementation off of StackOverflow and ran through the same process. Add types. Run benchmark. Optimize. Run benchmark. The creation and population of the array that’s to be bubble-sorted is _not_ part of the benchmarked code path.
+To gain some confidence that the image blur example is not just a fluke, I thought I should try this again with a second program. Rather uncreatively, I took a bubblesort implementation off of StackOverflow and ran through the same process: Add types. Run benchmark. Optimize. Run benchmark. The creation and population of the array that’s to be bubble-sorted is _not_ part of the benchmarked code path.
 
 |||datatable
 {
@@ -276,7 +284,7 @@ To gain some confidence that the image blur example is not just a fluke, I thoug
 }
 |||
 
-We did it again! Even more significantly so: The optimized AssemblyScript is almost twice as fast as JavaScript. But do me a favor: Don’t stop reading now.
+We did it again! This time with an even bigger discrepancy: The optimized AssemblyScript is almost twice as fast as JavaScript. But do me a favor: Don’t stop reading now.
 
 ## Allocations
 
@@ -318,7 +326,11 @@ To measure this, I chose to benchmark an implementation of a [binary heap]. The 
 
 All data that we create in AssemblyScript needs to be stored in memory. To make sure we don’t overwrite anything else that is already in memory, there is memory management. As AssemblyScript aims to provide a familiar environment, mirroring the behavior of JavaScript, it adds a fully managed garbage collector to your WebAssembly module so that you don’t have to worry about when to allocate and when to free up memory.
 
-By default, AssemblyScript ships with a [Two-Level Segregated Fit memory allocator][tlsf] and an [Incremental Tri-Color Mark & Sweep (ITCMS)][itcms] garbage collector. It’s not actually relevant for this article what allocator and garbage collector they implemented, I just found it interesting that you can go [look at them][asc runtime]. This default runtime, called `incremental`, is also surprisingly small, adding only about 2KB of gzip’d WebAssembly to your module. AssemblyScript also offers alternative runtimes, namely `minimal` and `stub` that can be chosen using the `--runtime` flag. `minimal` uses the same allocator, but a more lightweight GC that does _not_ run automatically but must be manually invoked. This could be interesting for high-performance use-cases like games where long pauses due to GC are potentially unacceptable. `stub` is _extremely_ small (~400B gzip’d) and fast, as it’s just a [bump allocator]. The downside is that you can’t free up memory. Once it’s allocated, it’s gone (you can call `memory.reset()` to discard the _entire_ heap). For specific single-purpose, one-off modules, this can actually be really handy.
+By default, AssemblyScript ships with a [Two-Level Segregated Fit memory allocator][tlsf] and an [Incremental Tri-Color Mark & Sweep (ITCMS)][itcms] garbage collector. It’s not actually relevant for this article what kind of allocator and garbage collector they use, I just found it interesting that you can go [look at them][asc runtime]. 
+
+This default runtime, called `incremental`, is surprisingly small, adding only about 2KB of gzip’d WebAssembly to your module. AssemblyScript also offers alternative runtimes, namely `minimal` and `stub` that can be chosen using the `--runtime` flag. `minimal` uses the same allocator, but a more lightweight GC that does _not_ run automatically but must be manually invoked. This could be interesting for high-performance use-cases like games where you want to be in control when the GC will pause your program. `stub` is _extremely_ small (~400B gzip’d) and fast, as it’s just a [bump allocator].
+
+> **My lovely memory bump**: Bump allocators are _extrelemy_ fast, but lack the ability to free up memory. While that sounds stupid, it can be extremely useful for single-purpose modules, where instead of freeing memory, you delete the entire WebAssembly instance and rather create a new one. If you are curious, I actually wrote a bump allocator in my article [Compiling C to WebAssembly without Emscripten][c to webassembly].
 
 How much faster does that make our binary heap experiment? Quite significantly!
 
@@ -350,11 +362,11 @@ How much faster does that make our binary heap experiment? Quite significantly!
 }
 |||
 
-Both `minimal` and `stub` get us _significantly_ closer to JavaScripts performance. But _why_ are these two so much faster? As mentioned above, `minimal` and `incremental` share the same allocator. Both also have a garbage collector, but `minimal` doesn’t run it unless explicitly invoked (and we ain’t invoking it). That means differentiating quality is that `incremental` _runs_ garbage collection, while `minimal` and `stub` don’t. I found this rather unsatisfying as I don’t see why the garbage collector that has to handle exactly one growing array should be this costly.
+Both `minimal` and `stub` get us _significantly_ closer to JavaScripts performance. But _why_ are these two so much faster? As mentioned above, `minimal` and `incremental` share the same allocator, so that can’t be it. Both also have a garbage collector, but `minimal` doesn’t run it unless explicitly invoked (and we ain’t invoking it). That means the differentiating quality is that `incremental` _runs_ garbage collection, while `minimal` and `stub` do not. I don’t see why the garbage collector should make this big of a difference, considering it has to keep track of _one_ array.
 
 ### Growth
 
-After doing some [profiling with d8] on a build with debugging symbols, it turns out that most time is spent in a system library `libsystem_platform.dylib` (which contains OS-level primitives for threading and memory management). Calls into this library are made from `__new` and `__renew` from the garbage collector, which in turn are called from `Array<f32>#push`:
+After doing some [profiling with d8] on a build with debugging symbols (`--debug`), it turns out that a lot of time is spent in a system library `libsystem_platform.dylib`, which contains OS-level primitives for threading and memory management. Calls into this library are made from `__new` and `__renew`, which in turn are called from `Array<f32>#push`:
 ```
 [Bottom up (heavy) profile]:
   ticks parent  name
@@ -401,7 +413,7 @@ function ensureSize(array: usize, minSize: usize, alignLog2: u32): void {
 }
 ```
 
-`ensureSize()`, in turn, checks if the capacity is smaller than the new `minSize`, and if so, allocates a new buffer with exactly `minSize` using `__renew`, which entails copying all the data from the old buffer to the new buffer. For that reason our benchmark, where we push _one million values_ one-by-one into the array, ends up causing a _lot_ of allocation work and create a lot of garbage. 
+`ensureSize()`, in turn, checks if the capacity is smaller than the new `minSize`, and if so, allocates a new buffer of size  `minSize` using `__renew`, which entails copying all the data from the old buffer to the new buffer. For that reason our benchmark, where we push _one million values_ one-by-one into the array, ends up causing a _lot_ of allocation work and create a lot of garbage. 
 
 In other languages, like [Rust’s `std::vec`][rust impl] or [Go’s slices][go impl], the new buffer has _double_ the old buffer’s capacity, which amortizes the allocation work over time. [I am working to fix this in ASC][asc issue], but in the meantime we can create our own `CustomArrow<T>` that has the desired behavior. Lo and behold, we made things faster!
 
@@ -500,15 +512,13 @@ It is worth noting that file size is a _strength_ of AssemblyScript. Comparing t
     table.addColumn(
       "Total",
       table.header.length,
-      (row, i) => parseInt(row[1]) + parseInt(row[2]),
+      (row, i) => parseInt(row[2]) + parseInt(row[3]),
       v => v > 1024 ? `${(v/1024).toFixed(1)}KB` : `${v} B`
     );
     return table;
   }
 }
 |||
-
-Note that the AssemblyScript modules _include_ the `incremental` runtime!
 
 ## Conclusion
 
@@ -548,3 +558,6 @@ If you don’t trust me (and you shouldn’t!) and want to dig into the benchmar
 [asc video]: https://www.youtube.com/watch?v=u0Jgz6QVJqg
 [ensuresize impl]: https://github.com/AssemblyScript/assemblyscript/blob/42c2dbc987c2e9f4096a226b62bbf0e72b4a0e51/std/assembly/array.ts#L10-L26
 [gist]: https://gist.github.com/surma/40e632f57a1aec4439be6fa7db95bc88
+[jake]: https://twitter.com/jaffathecake
+[ieee754]: https://en.wikipedia.org/wiki/IEEE_754
+[c to webassembly]: /things/c-to-webassembly/index.html
