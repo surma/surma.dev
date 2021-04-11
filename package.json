@@ -5,7 +5,7 @@
   "dependencies": {
     "@11ty/eleventy": "^0.11.1",
     "@11ty/eleventy-plugin-syntaxhighlight": "^3.0.4",
-    "@mischnic/parcel-resolver-root": "0.2.0",
+    "@mischnic/parcel-resolver-root": "^0.2.2",
     "@parcel/optimizer-cssnano": "2.0.0-nightly.592",
     "@parcel/optimizer-htmlnano": "2.0.0-nightly.592",
     "@parcel/packager-css": "2.0.0-nightly.592",
