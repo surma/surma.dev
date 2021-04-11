@@ -255,19 +255,19 @@ export function interactive(table) {
       return;
     }
 
-    const enabledValues = [];
+    const disabledValues = [];
     [...table.querySelectorAll("input.filter")]
-        .filter(checkbox => checkbox.checked)
+        .filter(checkbox => !checkbox.checked)
         .forEach(checkbox => {
             const {column, value} = checkbox.dataset;
-            if(!enabledValues[column]) {
-                enabledValues[column] = new Set();
+            if(!disabledValues[column]) {
+                disabledValues[column] = new Set();
             }
-            enabledValues[column].add(value);
+            disabledValues[column].add(value);
         });
     
     visibleRows = rows.filter(row =>
-        [...row.children].every((col, i) => i >= enabledValues.length ? true : enabledValues[i].has(col.dataset.value))
+        ![...row.children].some((col, i) => disabledValues[i]?.has?.(col.dataset.value))
     );
     rerender();
   });
