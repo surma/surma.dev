@@ -519,7 +519,7 @@ I want to be very clear: Any generalized, quantitative take-away from this artic
 - Compilers can do a lot of work for you, more mature compilers are likely to be better at optimizing your code.
 - AssemblyScript modules tend to be a lot smaller.
 
-If you want to dig into the data yourself, you can do so here: ???
+If you don’t trust me (and you shouldn’t!) and want to dig into the benchmark code yourself, take a look at the [gist].
 
 [AssemblyScript]: https://assemblyscript.org
 [Ingvar]: https://twitter.com/rreverser
@@ -547,3 +547,4 @@ If you want to dig into the data yourself, you can do so here: ???
 [asc discord]: https://discord.gg/assemblyscript
 [asc video]: https://www.youtube.com/watch?v=u0Jgz6QVJqg
 [ensuresize impl]: https://github.com/AssemblyScript/assemblyscript/blob/42c2dbc987c2e9f4096a226b62bbf0e72b4a0e51/std/assembly/array.ts#L10-L26
+[gist]: https://gist.github.com/surma/40e632f57a1aec4439be6fa7db95bc88
