@@ -42,13 +42,14 @@ module.exports = (md, options) => {
     const newDataTable = tableDescriptor.mangle(dataTable, ...requires);
     const uid = generateUid();
     let markup = newDataTable.toHTML(uid);
-    if(tableDescriptor?.interactive) {
+    if(tableDescriptor?.sortable || tableDescriptor?.filterable) {
       markup += `
         <script type="module">
-          import {interactive} from "/things/js-to-asc/data-table.mjs";
+          import {sortable, filterable} from "/things/js-to-asc/data-table.mjs";
 
           const table = document.getElementById("${uid}").children[0];
-          interactive(table);
+          ${tableDescriptor?.sortable ? `sortable(table);` : ''}
+          ${tableDescriptor?.filterable ? `filterable(table);` : ''}
         </script>
       `
     }

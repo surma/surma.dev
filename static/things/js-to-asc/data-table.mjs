@@ -186,11 +186,15 @@ function descendingSorter(a, b) {
   return -ascendingSorter(a, b);
 }
 
-export function interactive(table) {
-  const tbody = table.querySelector("tbody");
-  const rows = [...tbody.querySelectorAll("tr")];
-  let visibleRows = rows.slice();
+function rerender(tbody, visibleRows) {
+while (tbody.firstChild) {
+    tbody.firstChild.remove();
+}
+tbody.append(...visibleRows);
+}
 
+
+export function sortable(table) {
   table.querySelectorAll("th").forEach((th, i) => {
     const asc = document.createElement("button");
     asc.textContent = "▲";
@@ -200,7 +204,36 @@ export function interactive(table) {
     desc.textContent = "▼";
     desc.classList.add("btn", "descending", "sort-btn");
     th.append(desc);
+  });
 
+  table.addEventListener("click", (ev) => {
+    if (!ev.target.classList.contains("sort-btn")) {
+      return;
+    }
+    const visibleRows = [...table.querySelectorAll("tbody > tr")];
+    const isAscending = ev.target.classList.contains("ascending") ? 1 : -1;
+    const th = ev.target.closest("th");
+    const colNumber = [...th.parentElement.children].indexOf(th);
+    const colItems = visibleRows
+      .map((row) => row.querySelector(`td:nth-child(${colNumber + 1})`))
+      .map((cell, i) => ({ i, value: fromDataSet(cell.dataset.value) }));
+    colItems.sort((a, b) =>
+      a.value > b.value ? 1 * isAscending : -1 * isAscending
+    );
+    const newVisibleRows = [];
+    for (const { i } of colItems) {
+      newVisibleRows.push(visibleRows[i]);
+    }
+    rerender(table.querySelector("tbody"), newVisibleRows);
+  });
+}
+
+export function filterable(table) {
+  const tbody = table.querySelector("tbody");
+  const rows = [...tbody.querySelectorAll("tr")];
+  let visibleRows = rows.slice();
+
+  table.querySelectorAll("th").forEach((th, i) => {
     if(!th.classList.contains("discrete")) {
         return;
     }
@@ -223,33 +256,6 @@ export function interactive(table) {
     th.append(div);
   });
 
-  function rerender() {
-    while (tbody.firstChild) {
-      tbody.firstChild.remove();
-    }
-    tbody.append(...visibleRows);
-  }
-
-  table.addEventListener("click", (ev) => {
-    if (!ev.target.classList.contains("sort-btn")) {
-      return;
-    }
-    const isAscending = ev.target.classList.contains("ascending") ? 1 : -1;
-    const th = ev.target.closest("th");
-    const colNumber = [...th.parentElement.children].indexOf(th);
-    const colItems = visibleRows
-      .map((row) => row.querySelector(`td:nth-child(${colNumber + 1})`))
-      .map((cell, i) => ({ i, value: fromDataSet(cell.dataset.value) }));
-    colItems.sort((a, b) =>
-      a.value > b.value ? 1 * isAscending : -1 * isAscending
-    );
-    const prevVisibleRows = visibleRows.slice();
-    visibleRows = [];
-    for (const { i } of colItems) {
-      visibleRows.push(prevVisibleRows[i]);
-    }
-    rerender();
-  });
   table.addEventListener("change", (ev) => {
     if (!ev.target.classList.contains("filter")) {
       return;
@@ -269,6 +275,6 @@ export function interactive(table) {
     visibleRows = rows.filter(row =>
         ![...row.children].some((col, i) => disabledValues[i]?.has?.(col.dataset.value))
     );
-    rerender();
+    rerender(tbody, visibleRows);
   });
 }

@@ -5,7 +5,7 @@ live: false
 # socialmediaimage: "comparison.jpg"
 ---
 
-Add WebAssembly, get performance? Well, it’s a bit more complicated than that!
+Add WebAssembly, get performance? Is that how it really works?
 
 <!-- more -->
 
@@ -15,29 +15,41 @@ The incredibly unsatisfying answer is: It depends. It depends on oh-so-many fact
 
 ## Why am I doing this? (You can skip this)
 
-[AssemblyScript] (ASC for short) is a TypeScript-like language that was designed for and as such compiles to WebAssembly. The “Assembly” in “AssemblyScript” stems from the fact that the languages is very close to the metal of WebAssembly (yes, yes, WebAssembly itself is designed around a VM and not _real_ metal. I know.). AssemblyScript is fairly young with a small team, and so somethings that you might expect do not exist or do not work. Also, full disclosure, I am one of their backers. I think ASC fills an important niche in the WebAssembly ecosystem, as it allows web developers to reap the benefits of WebAssembly without having to learn a new language.
+I really like [AssemblyScript] (ASC for short). It’s a very young language with a small but passionate team that built a custom compiler from a TypeScript-like language to WebAssembly. The reason I like it is because it allows the average web developer to make use of WebAssembly without having to learn a potentially new language like C++ or Rust (full disclosure: I am one of their backers). It’s important to note that the language is TypeScript-_like_. Don’t expect your existing TypeScript code to just compile out of the box. That being said, the language is intentionally trying to mimic the behavior and semantics of TypeScript (and therefore JavaScript), which means that the modifications are often mostly cosmetic. I always wondered if there is anything to gain from taking a piece of JavaScript, making some slight adjustments to make it valid AssemblyScript and compiling it to WebAssembly. When my colleague [Ingvar] happend to send me a [piece of JavaScript][glur] code that blurs images, I decided to run a small experiment to see if this excursion would be worth doing at a larger scale. And _oh boy_ is it worth it.
 
-The fact that AssemblyScript is very much TypeScript-like (not just in syntax, but to a large extent also in semantics), I have been thinking about taking a piece of JavaScript and porting it to AssemblyScript to see how this affects performance and file size. When my colleague [Ingvar] happend to send me a [highly-optimized piece of JavaScript][glur] code that blurs images, I decided to run a small experiment to see if this excursion would be worth doing at a larger scale. And _oh boy_ is it worth it.
+If you want to know more about AssemblyScript, go to the [website][assemblyscript], join the [Discord] or, if you fancy, I made a [quick-start video][asc video], too.
 
-## Why WebAssembly?
+## Why use WebAssembly ?
 
-Why would WebAssembly be faster than JavaScript? For the longest time, [I have said that WebAssembly and JavaScript have the same peak performance][io19 talk], and I still stand behind that. It’s only recently that WebAssembly has gotten access to performance primitives (like SIMD or shared-memory threads) that JavaScript cannot utilize. But there are other factors that could make WebAssembly faster in certain constellations:
+I feel like there are a lot of people who think of WebAssembly purely as a performance primitive. It’s compiled, so it’s gotta be fast, right? Well, for the longest time [I have said that WebAssembly and JavaScript have the same _peak_ performance][io19 talk], and I still stand behind that. Given ideal conditions, they both compile to machine code and end up being equally fast. But there’s obviously more nuance here, and when have conditions _ever_ been ideal on the web. Something that is definitely better to associate with WebAssembly is that WebAssembly’s performance is _predictable_ and stable.
 
-- **No warmup**: For JavaScript to be turned into machine code, it needs to run for a bit first. This is where V8’s interpreter “Ignition” interprets JavaScript and makes observations about what the data in your variables, function parameters and so on looks like. Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates machine code using that data that will execute the same code a lot faster than Ingnition can. WebAssembly on the other hand is strongly typed, it can be turned into machine code _straight away_. V8 has a streaming Wasm compiler called “Liftoff“ which is optimized to generate machine code _fast_, rather than generating fast machine code. This way your WebAssembly can start running sooner. The second Liftoff is done, TurboFan kicks in and generates optimized machine code that will run faster than what Ignition produced. The big difference is that the TurboFan can do its work without the Wasm ever being run. 
-- **No tierdown**: The machine code that TurboFan generates for JavaScript is only usable for as long as the observed types don’t change. If TurboFan generated machine code for a funtion `f` with a number as a parameter, and now all of the sudden that function `f` gets called with an object, the engine has to fall back to interpreting JavaScript using Ignition. That’s called a “deoptimization” (or “deopt” for short) because interpreting code is a lot slower than running machine code on the bare metal. WebAssembly is strongly typed. All variables and functions are not only given types, but they are also types that map well to machine code. Deopts can’t happen with WebAssembly.
-- **Binary size**: Now this one is a bit elusive. According to [webassembly.org], “the wasm stack machine is designed to be encoded in a size- and load-time-efficient binary format.” And yet, WebAssembly is currently somewhat notorious for generating big binary blobs, at least by what is considered “big” on the web. WebAssembly brotli’s (and gzip’s) very well and can indeed achieve a high programmatic density. However, despite claims to the opposite, JavaScript comes with a lot of batteries included. You can handle arrays, objects, iterate over keys and values, split strings, filter, map, have prototypical inheritance and so on and so forth. WebAssembly comes with _nothing_, except arithmetic. Whenever you use anything higher level when compiling to WebAssembly, that code will have to be bundled into your binary, which is often referred to as shipping a “runtime”. Of course those functionalities will only have to be included once, so bigger projects will benefit more from Wasm’s small binary representation than small modules.
+It’s only recently that WebAssembly has gotten access to performance primitives (like SIMD or shared-memory threads) that JavaScript cannot utilize, giving WebAssembly a _potential_ edge to predictably out-perform JavaScript. But there are other considerations that can make WebAssembly perform better in specific situations:
 
-The question is, which way do these benefits and drawbacks add up in concrete examples? That’s what I want to find out.
+### No warmup
+
+For JavaScript to be turned into machine code, it needs to run a bit first. In V8’s case, it’s interpreter “Ignition” is optimized to make code run as _soon_ as possible. Meanwhile, “Sparkplug” compiles your JavaScript to byte code and takes over once it’s done. While both of these run your code, they make observations about your code. How it behaves and what kind of data you store in your variables, function parameters and so on. Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates low-level machine code using that type data. This will give a massive speed-boost. 
+
+WebAssembly, on the other hand, is strongly typed. It can be turned into machine code _straight away_. V8 has a streaming Wasm compiler called “Liftoff“ which is optimized to generate machine code _fast_, making sure your WebAssembly can start working as soon as possible. The second Liftoff is done, TurboFan kicks in and generates optimized machine code that will run faster than what Liftoff produced. The big difference is that the TurboFan can do its work without having to observe your Wasm first.
+
+### No tierdown
+
+The machine code that TurboFan generates for JavaScript is only usable for as long as the assumptions about types hold. If TurboFan generated machine code for a funtion `f` with a number as a parameter, and now all of the sudden that function `f` gets called with an object, the engine has to fall back to Ignition or Sparkplug. That’s called a “deoptimization” (or “deopt” for short). Again, because WebAssembly is strongly typed, the types _can’t_ change. Not only that, but they types that WebAssembly supports were designed to map well to machine code. Deopts can’t happen with WebAssembly.
+
+### Binary size
+
+Now this one is a bit elusive. According to [webassembly.org], “the wasm stack machine is designed to be encoded in a size- and load-time-efficient binary format.” And yet, WebAssembly is currently somewhat notorious for generating big binary blobs, at least by what is considered “big” on the web. WebAssembly brotli’s (and gzip’s) very well and can undo a lot of the bloat. However, JavaScript comes with a lot of batteries included (despite the claim that it doesn’t hava a standard library). For example: You can handle arrays, objects, iterate over keys and values, split strings, filter, map, have prototypical inheritance and so on and so forth. All that is built into the JavaScript engine. WebAssembly comes with _nothing_, except arithmetic. Whenever you use any of these higher-level concepts in a language that compiles to WebAssembly, that code will have to be bundled into your binary, which is one of the big causes for big WebAssembly binary. Of course those functions will only have to be included once, so bigger projects will benefit more from Wasm’s small binary representation than small modules.
+
+Not all of these advantages are equally available or important in any given scenario. However, AssemblyScript is known to generate rather small WebAssembly binaries and I was curious how it can hold up in terms of speed and size with equivalent JavaScript.
 
 ## Porting to AssemblyScript
 
-AssemblyScript tries to mimick TypeScript semantics and the web platform as much as possible, which means porting a piece of JS to ASC is _mostly_ a matter of adding type annotations to the code. But there is some more nuance to this.
+As mentioned, AssemblyScript mimics TypeScript’s semantics and Web Platform APIs as much as possible, which means porting a piece of JS to ASC is _mostly_ a matter of adding type annotations to the code. As a first example, I took [`glur`][glur], a JavaScript library that blurs images. 
 
 ### Adding types
 
-ASC built-in types mirror the types of the WebAssembly VM. While all numeric values in TypeScript are just `number` (a 64-bit IEEE754 float according to the spec), AssemblyScript has `u8`, `u16`, `u32`, `i8`, `i16`, `i32`, `f32` and `f64` as its primitive types. The [small-but-sufficiently-powerful standard library of ASC][asc stdlib] adds higher-level data structures like `string`, `Array<T>`, `ArrayBuffer`, `Uint8Array` etc. The only ASC-specific data structure I am aware of is `StaticArray`, which I will talk about a bit later.
+ASC’s built-in types mirror the types of the WebAssembly VM. While numeric values in TypeScript are just `number` (a 64-bit IEEE754 float according to the spec), AssemblyScript has `u8`, `u16`, `u32`, `i8`, `i16`, `i32`, `f32` and `f64` as its primitive types. The [small-but-sufficiently-powerful standard library of ASC][asc stdlib] adds higher-level data structures like `string`, `Array<T>`, `ArrayBuffer`, `Uint8Array` etc. The only ASC-specific data structure, that is neither in JavaScript nor the Web Platform, is `StaticArray`, which I will talk about a bit later.
 
-As an example, here is a  function from the glur library and it’s AssemblyScript’ified counterpart:
+As an example, here is a function from the glur library and its AssemblyScript’ified counterpart:
 
 ```js
 function gaussCoef(sigma) {
@@ -76,11 +88,11 @@ function gaussCoef(sigma: f32): Float32Array {
 }
 ```
 
-The explicit loop at the end to populate the array might surprise you. Function overloading isn’t support (yet), so there is only _exactly_ one constructor for `Float32Array` in ASC, which takes an `i32` parameter for the length of the `TypedArray`. Callbacks are supported in ASC, but closures also are not, so I can’t use `.forEach()` to fill in the values. This is certainly _inconvenient_, but not prohibitively so. 
+The explicit loop at the end to populate the array is there because of a current short-coming in AssemblyScript: Function overloading isn’t support yet, so there is only _exactly_ one constructor for `Float32Array` in ASC, which takes an `i32` parameter for the length of the `TypedArray`. Callbacks are supported in ASC, but closures also are not, so I can’t use `.forEach()` to fill in the values. This is certainly _inconvenient_, but not prohibitively so. 
 
 ### Side note: Mind the signs
 
-Something that took me an embarrassingly long time to figure out is that, uh, types matter. Blurring an image involves convolution, and that means a whole bunch of for-loops iterating over all the pixels. Näively I thought that pixel indices are all positive and as such chose `u32` for those loop variables. That’ll bit you with a _lovely_ infinite loop if any of those loops happen to iterate backwards, like this one:
+Something that took me an embarrassingly long time to figure out is that, uh, types matter. Blurring an image involves convolution, and that means a whole bunch of for-loops iterating over all the pixels. Naïvely I thought that because all pixel indices are positive, the loop counters would be as well and decided to choose `u32` for those loop variables. That’ll bite you with a _lovely_ infinite loop if any of those loops happen to iterate backwards, like this one:
 
 ```ts
 let j: u32; 
@@ -110,6 +122,7 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 {
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
+  sortable: true,
   mangle(table, sanitizer) {
     table
         .filter(
@@ -157,6 +170,7 @@ I applied both these optimizations to my “naïve port” and measured again:
 {
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
+  sortable: true,
   mangle(table, sanitizer) {
     table.filter(
       {
@@ -190,6 +204,7 @@ Another thing that the AssemblyScript folks pointed out to me is that the `--opt
 {
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
+  sortable: true,
   mangle(table, sanitizer) {
     table.filter(
       {
@@ -222,6 +237,8 @@ To gain some confidence that the image blur example is not just a fluke, I thoug
 {
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
+  sortable: true,
+  filterable: true,
   mangle(table, sanitizer) {
     table.filter(
       {
@@ -253,6 +270,8 @@ To measure this, I chose to benchmark an implementation of a [binary heap]. Fill
 {
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
+  sortable: true,
+  filterable: true,
   mangle(table, sanitizer) {
     table.filter(
       {
@@ -288,6 +307,7 @@ How much faster does that make our binary heap experiment? Quite significantly!
 {
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
+  sortable: true,
   mangle(table, sanitizer) {
     table.filter(
       {
@@ -356,6 +376,8 @@ In other languages, like [Rust’s `std::vec`][rust impl] or [Go’s slices][go 
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
   interactive: true,
+  sortable: true,
+  filterable: true,
   mangle(table, sanitizer) {
     table.filter(
       {
@@ -393,7 +415,7 @@ I took the same approach with C++, using [Emscripten] to compile it to WebAssemb
 {
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
-  interactive: true,
+  sortable: true,
   mangle(table, sanitizer) {
     table.filter(
       {
@@ -431,23 +453,13 @@ I’m sure both Rust and C++ could be made even faster, but I don’t know have 
 
 ## Conclusion
 
-Again, any quantitative take-away from this article would be ill-advised. AssemblyScript is _not_ 1.4x slower than JavaScript. These number are very much specfic to the code that _I_ wrote, the optimizations that _I_ applied and the machine _I_ used. However, here is what I think we can conclude from this experiment:
+I want to be very clear: Any generalized, quantitative take-away from this article would be ill-advised. For example, Rust is _not_ 1.2x slower than JavaScript. These number are very much specific to the code that _I_ wrote, the optimizations that _I_ applied and the machine _I_ used. However, I think there are some general guidelines we can extract to help you make more informed decisions in the future:
 
-- V8’s Liftoff compiler will generate code from WebAssembly that runs significantly faster thant what Ignition or SparkPlug can deliver with JavaScript. If you need performance without any warmup time, WebAssembly excels here.
-- V8 is _really_ good at executing JavaScript. It is likely that you will have to hand-optimize your code so that the resulting WebAssembly can be faster than comparable JavaScript.
+- V8’s Liftoff compiler will generate code from WebAssembly that runs significantly faster thant what Ignition or SparkPlug can deliver for JavaScript. If you need performance without _any_ warmup time, WebAssembly excels here.
+- V8 is _really_ good at executing JavaScript. While WebAssembly can run faster than JavaScript, it is likely that you will have to hand-optimize your code so to achieve that.
 - Compilers can do a lot of work for you, more mature compilers are likely to be better at optimizing your code.
 
-|||datatable
-{
-  data: "./static/things/js-to-asc/results.csv",
-  requires: ["./static/things/js-to-asc/sanitizer.js"],
-  mangle(table, sanitizer) {
-    sanitizer(table);
-    return table;
-  },
-  interactive: true
-}
-|||
+If you want to dig into the data yourself, you can do so here: ???
 
 [AssemblyScript]: https://assemblyscript.org
 [Ingvar]: https://twitter.com/rreverser
@@ -472,3 +484,5 @@ Again, any quantitative take-away from this article would be ill-advised. Assemb
 [go impl]: https://github.com/golang/go/blob/3f4977bd5800beca059defb5de4dc64cd758cbb9/src/runtime/slice.go#L144-L163
 [IR]: https://en.wikipedia.org/wiki/Intermediate_representation
 [emscripten]: https://emscripten.org/
+[asc discord]: https://discord.gg/assemblyscript
+[asc video]: https://www.youtube.com/watch?v=u0Jgz6QVJqg
