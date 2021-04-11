@@ -1,5 +1,10 @@
 const html = String.raw;
 
+export function generateUid() {
+    return Array.from({ length: 16 }, () =>
+      Math.floor(Math.random() * 256).toString(16)
+    ).join("");
+}
 function parseCSV(data) {
   return data
     .split("\n")
@@ -206,12 +211,15 @@ export function interactive(table) {
     const div = document.createElement("div")
     div.classList.add("filters");
     div.innerHTML = [...values]
-            .map(value => html`
-                <label>
-                    <input type="checkbox" class="filter" data-column="${i}" data-value="${value}" checked>
+            .map(value => {
+                const uid = generateUid();
+                return html`
+                <input id="${uid}" type="checkbox" class="filter" data-column="${i}" data-value="${value}" checked>
+                <label for="${uid}">
                     ${fromDataSet(value)}
                 </label>
-            `).join("");
+            `;
+            }).join("");
     th.append(div);
   });
 

@@ -1,6 +1,6 @@
 // Would you like some race conditions with your wine?
-let DataTable;
-import("../static/things/js-to-asc/data-table.mjs").then((m) => ({DataTable} = m));
+let DataTable, generateUid;
+import("../static/things/js-to-asc/data-table.mjs").then((m) => ({DataTable, generateUid} = m));
 
 const fs = require('fs');
 const path = require('path');
@@ -40,9 +40,7 @@ module.exports = (md, options) => {
     }
     const dataTable = DataTable.fromCSV(fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data), "utf8"));
     const newDataTable = tableDescriptor.mangle(dataTable, ...requires);
-    const uid = Array.from({ length: 16 }, () =>
-      Math.floor(Math.random() * 256).toString(16)
-    ).join("");
+    const uid = generateUid();
     let markup = newDataTable.toHTML(uid);
     if(tableDescriptor?.interactive) {
       markup += `
