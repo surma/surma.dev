@@ -100,8 +100,6 @@ Now that we have a JS file and an ASC file, we can compile the ASC to WebAssembl
 
 However, since this section has the word “Benchmarking” in the title, I think it’s important to put a disclaimer here: The numbers I am listing here are specific to the code that _I_ wrote in a language _I_ chose, ran on _my_ machine using a benchmark script that _I_ made. The results are coarse indicators _at best_ and it would be ill-advices to derive conclusions about the general performance AssemblyScript, WebAssembly or JavaScript from this.
 
-- The takeaways are qualitative not quantitative.
-
 But why `d8`? Why not Node or just the browser? The reason is that `d8` allows me to control whether TurboFan should be enabled or not. I can force `d8` to continue interpreting JavaScript using Ignition if it had enough data to tier up to TurboFan. With WebAssembly, I can opt-in to longer compilation times and force `d8` to _only_ use TurboFan, skipping the Liftoff phase. 
 
 ### Methodology
@@ -333,7 +331,7 @@ After doing some [profiling with d8] on a build with debugging symbols, it turns
    5119  100.0%            Function: *binaryheap_optimized/BinaryHeap<f32>#push
 ```
 
-Clearly, we have a problem with allocation here. But JavaScript manages to make this fast, so why can’t AssemblyScript? Luckily, the standard library of AssemblyScript is rather small and approachable, so let’s go and take a look at this ominous `push()` function of the `Array<T>` class:
+Clearly, we have a problem with allocation here. But JavaScript somehow manages to make an ever-growing array fast, so why can’t AssemblyScript? Luckily, the standard library of AssemblyScript is rather small and approachable, so let’s go and [take a look][array push impl] at this ominous `push()` function of the `Array<T>` class:
 
 ```ts
 export class Array<T> {
@@ -349,13 +347,15 @@ export class Array<T> {
 }
 ```
 
-- Explain why bad
-- I wrote a `MyArray<T>` which doubles the size the underlying memory whenever it runs out
+The `push()` function correctly determines that the new length of the array is the current length plus 1 and then calls `ensureSize()`, to make sure that the underlying buffer has enough room (“capacity”) to grow to this length. However, if it doesn’t, `ensureSize()` grows the buffer to exactly that capacity (which _can_ entail allocating a new buffer and copying all the data). In our case, where we push one million values one by one into the array, that’s a _lot_ of allocation work, where we also create a lot of garbage. 
+
+In other languages, like [Rust’s `std::vec`][rust impl] or [Go’s slices][go impl], the new buffer has _double_ the old buffer’s capacity. While [I am working to fix this in ASC][asc issue], we can create our own `CustomArrow<T>` for now that has the desired behavior. Lo and behold, we made things faster!
 
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
+  interactive: true,
   mangle(table, sanitizer) {
     table.filter(
       {
@@ -366,7 +366,7 @@ export class Array<T> {
       {
         program: "binaryheap",
         language: "AssemblyScript",
-        runtime: ["incremental", "stub"],
+        runtime: ["incremental", "minimal", "stub"],
         variant: ["optimized", "customarray"],
         optimizer: "O3",
         engine: "Turbofan"
@@ -379,13 +379,21 @@ export class Array<T> {
 }
 |||
 
-- Got incremental to the same performance as stub. But still not quite as fast as JavaScript.
-- There’s probably something more I can do, but I wanted to see if the other “big” languages really have smarter compilers
+With this change `incremental` is as fast as `stub` and `minimal`, but none of them are as fast as JavaScript in this test case. There are probably more optimizations I could do, but we are already pretty deep in the weeds here, and this is not supposed to be an article about how to optimize AssemblyScript. There is probably also more that AssemblyScript’s _compiler_ could do, and they are working on an [IR] to start implementing their own optimization passes.
+
+Will that make things faster out-of-the-box without having to hand-optimize every array access? Very likely. Will it be faster than JavaScript? Hard to say. But I _did_ wonder what the more “mature” languages with “very smart” compiler toolchains can achieve.
+
+### Rust & C++
+
+I re-rewrote the code in Rust, being as idiomatic as possible and compile it to WebAssembly. While it was faster than a naive port to AssemblyScript, it was slower than our optimized AssemblyScript with `CustomArray<T>`. So I had to do the same as I did in AssemblyScript: Remove the bounds checks by sprinkling some `unsafe` here and there. With those optimizations in place, I ended up getting something faster than our optimized AssemblyScript, but not faster than JavaScript.
+
+I took the same approach with C++, using [Emscripten] to compile it to WebAssembly. To my surprise, my first attempt came out performing just as well as JavaScript.
 
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
   requires: ["./static/things/js-to-asc/sanitizer.js"],
+  interactive: true,
   mangle(table, sanitizer) {
     table.filter(
       {
@@ -419,10 +427,15 @@ export class Array<T> {
 }
 |||
 
-- Rust also slowed down due to bounds check. Circumvented that with a bunch of `unsafe` code. Couldn’t get it to be faster than JS, but that’s probably my fault rather than Rust’s.
-- C++ was as fast as JS out of the box.
-- Worth noting that ASC with `incremental` is 2.6KB, Rust is 7.3KB and C++ is 6.7KB + 9.9KB glue code.
+I’m sure both Rust and C++ could be made even faster, but I don’t know have sufficent deep knowledge to squeeze out these last couple optimizations. It is worth nothing that AssemblyScript’s WebAssembly binary was 2.6KB (including the `incremental` runtime!), while Rust ended up with 7.3KB and C++ consisted of 6.8KB of WebAssembly and 9.9KB of glue code.
 
+## Conclusion
+
+Again, any quantitative take-away from this article would be ill-advised. AssemblyScript is _not_ 1.4x slower than JavaScript. These number are very much specfic to the code that _I_ wrote, the optimizations that _I_ applied and the machine _I_ used. However, here is what I think we can conclude from this experiment:
+
+- V8’s Liftoff compiler will generate code from WebAssembly that runs significantly faster thant what Ignition or SparkPlug can deliver with JavaScript. If you need performance without any warmup time, WebAssembly excels here.
+- V8 is _really_ good at executing JavaScript. It is likely that you will have to hand-optimize your code so that the resulting WebAssembly can be faster than comparable JavaScript.
+- Compilers can do a lot of work for you, more mature compilers are likely to be better at optimizing your code.
 
 |||datatable
 {
@@ -453,3 +466,9 @@ export class Array<T> {
 [asc runtime]: https://github.com/AssemblyScript/assemblyscript/tree/master/std/assembly/rt
 [bump allocator]: https://os.phil-opp.com/allocator-designs/#bump-allocator
 [profiling with d8]: https://v8.dev/docs/profile
+[array push impl]: https://github.com/AssemblyScript/assemblyscript/blob/42c2dbc987c2e9f4096a226b62bbf0e72b4a0e51/std/assembly/array.ts#L204-L216
+[asc issue]: https://github.com/AssemblyScript/assemblyscript/issues/1798
+[rust impl]: https://github.com/rust-lang/rust/blob/58f32da346642ff3f50186f6f4a0de46e61008be/library/alloc/src/raw_vec.rs#L431
+[go impl]: https://github.com/golang/go/blob/3f4977bd5800beca059defb5de4dc64cd758cbb9/src/runtime/slice.go#L144-L163
+[IR]: https://en.wikipedia.org/wiki/Intermediate_representation
+[emscripten]: https://emscripten.org/
