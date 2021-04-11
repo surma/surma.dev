@@ -39,9 +39,23 @@ module.exports = (md, options) => {
       requires = tableDescriptor.requires.map(r => require(path.resolve(__dirname, '../', r)));
     }
     const dataTable = DataTable.fromCSV(fs.readFileSync(path.resolve(__dirname, '../', tableDescriptor.data), "utf8"));
-    const newDataTable = tableDescriptor.mangle(dataTable, ...requires);
+    const table = tableDescriptor.mangle(dataTable, ...requires);
+    if(tableDescriptor.sort) {
+      const [colName, order] = tableDescriptor.sort;
+      const isAscending = order.toLowerCase() === "ascending" ? 1 : -1;
+      const colNumber = [...table.header.map(hdr => hdr.name)].indexOf(colName);
+      const colItems = table.rows.map((row,i ) => ({i, value: row[colNumber]}));
+      colItems.sort((a, b) =>
+        a.value > b.value ? 1 * isAscending : -1 * isAscending
+      );
+      const newRows = [];
+      for(const {i} of colItems) {
+        newRows.push(table.rows[i]);
+      }
+      table.rows = newRows;
+    }
     const uid = generateUid();
-    let markup = newDataTable.toHTML(uid);
+    let markup = table.toHTML(uid);
     if(tableDescriptor?.sortable || tableDescriptor?.filterable) {
       markup += `
         <script type="module">

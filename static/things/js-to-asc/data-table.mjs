@@ -172,25 +172,11 @@ export class DataTable {
   }
 }
 
-function ascendingSorter(a, b) {
-  if (a == b) {
-    return 0;
-  }
-  if (a > b) {
-    return 1;
-  }
-  return -1;
-}
-
-function descendingSorter(a, b) {
-  return -ascendingSorter(a, b);
-}
-
 function rerender(tbody, visibleRows) {
-while (tbody.firstChild) {
-    tbody.firstChild.remove();
-}
-tbody.append(...visibleRows);
+    while (tbody.firstChild) {
+        tbody.firstChild.remove();
+    }
+    tbody.append(...visibleRows);
 }
 
 
