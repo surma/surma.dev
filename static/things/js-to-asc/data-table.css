@@ -73,6 +73,7 @@
   font-variation-settings: "wght" var(--body-font-weight);
   font-size: 0.7em;
   line-height: 1em;
+  align-items: center;
 }
 
 .filter:not(:checked) + label {
