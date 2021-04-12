@@ -292,7 +292,7 @@ We did it again! This time with an even bigger discrepancy: The optimized Assemb
 
 Some of you may have noticed that both these examples have very few or no allocations. V8 takes care of all memory management (and garbage collection) in JavaScript for you and I won’t pretend that I know much about it. In WebAssembly, on the other hand, you get a chunk of linear memory and you have to decide how to use it (or rather: the language does). How much do these rankings change if we make _heavy_ use of dynamic memory?
 
-To measure this, I chose to benchmark an implementation of a [binary heap]. The benchmark fills the binary heap with 1 million random numbers (curtesy of `Math.random()`) and `pop()`s them all back out, checking that the numbers are in increasing order. The process remained the same as above: Make a naïve port of the JS code to ASC, run benchmark, optimize, benchmark again:
+To measure this, I chose to benchmark an implementation of a [binary heap]. The benchmark fills the binary heap with 1 million random numbers (courtesy of `Math.random()`) and `pop()`s them all back out, checking that the numbers are in increasing order. The process remained the same as above: Make a naïve port of the JS code to ASC, run benchmark, optimize, benchmark again:
 
 |||datatable
 {
@@ -332,7 +332,7 @@ By default, AssemblyScript ships with a [Two-Level Segregated Fit memory allocat
 
 This default runtime, called `incremental`, is surprisingly small, adding only about 2KB of gzip’d WebAssembly to your module. AssemblyScript also offers alternative runtimes, namely `minimal` and `stub` that can be chosen using the `--runtime` flag. `minimal` uses the same allocator, but a more lightweight GC that does _not_ run automatically but must be manually invoked. This could be interesting for high-performance use-cases like games where you want to be in control when the GC will pause your program. `stub` is _extremely_ small (~400B gzip’d) and fast, as it’s just a [bump allocator].
 
-> **My lovely memory bump**: Bump allocators are _extrelemy_ fast, but lack the ability to free up memory. While that sounds stupid, it can be extremely useful for single-purpose modules, where instead of freeing memory, you delete the entire WebAssembly instance and rather create a new one. If you are curious, I actually wrote a bump allocator in my article [Compiling C to WebAssembly without Emscripten][c to webassembly].
+> **My lovely memory bump**: Bump allocators are _extremely_ fast, but lack the ability to free up memory. While that sounds stupid, it can be extremely useful for single-purpose modules, where instead of freeing memory, you delete the entire WebAssembly instance and rather create a new one. If you are curious, I actually wrote a bump allocator in my article [Compiling C to WebAssembly without Emscripten][c to webassembly].
 
 How much faster does that make our binary heap experiment? Quite significantly!
 
@@ -524,7 +524,7 @@ It is worth noting that file size is a _strength_ of AssemblyScript. Comparing t
 
 ## Conclusion
 
-I want to be very clear: Any generalized, quantitative take-away from this article would be ill-advised. For example, Rust is _not_ 1.2x slower than JavaScript. These number are very much specific to the code that _I_ wrote, the optimizations that _I_ applied and the machine _I_ used. However, I think there are some general guidelines we can extract to help you make more informed decisions in the future:
+I want to be very clear: Any generalized, quantitative take-away from this article would be ill-advised. For example, Rust is _not_ 1.2x slower than JavaScript. These numbers are very much specific to the code that _I_ wrote, the optimizations that _I_ applied and the machine _I_ used. However, I think there are some general guidelines we can extract to help you make more informed decisions in the future:
 
 - V8’s Liftoff compiler will generate code from WebAssembly that runs significantly faster than what Ignition or SparkPlug can deliver for JavaScript. If you need performance without _any_ warmup time, WebAssembly is your tool of choice.
 - V8 is _really_ good at executing JavaScript. While WebAssembly can run faster than JavaScript, it is likely that you will have to hand-optimize your code to achieve that.
