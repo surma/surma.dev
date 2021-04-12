@@ -2,7 +2,7 @@
 title: "Is WebAssembly magic performance pixie dust?"
 date: "2021-04-12"
 live: false
-# socialmediaimage: "comparison.jpg"
+socialmediaimage: "social.png"
 ---
 
 Add WebAssembly, get performance? Is that how it really works?
