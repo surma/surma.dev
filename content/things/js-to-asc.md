@@ -29,7 +29,9 @@ However, it’s also important to realize that WebAssembly has recently been get
 
 ### No warmup
 
-For V8 to execute JavaScript, it first gives the code to the interpreter “Ignition”. Ignition is optimized to make code run as _soon_ as possible. Afterwards, “Sparkplug” takes Ignition’s output (the infamous “byte code”) and turns it into non-optimized machine code, yielding better performance at the cost of increased memory footprint. While your code is executing, it is closely observed by V8 to gather data on object shapes (think of them like types). Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates low-level machine code that is optimized for those types. This will give another significant speed boost.
+For V8 to execute JavaScript, it first gives the code to the interpreter “Ignition”. Ignition is optimized to make code run as _soon_ as possible. Afterwards, “Sparkplug” takes Ignition’s output (the infamous “bytecode”) and turns it into non-optimized machine code, yielding better performance at the cost of increased memory footprint. While your code is executing, it is closely observed by V8 to gather data on object shapes (think of them like types). Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates low-level machine code that is optimized for those types. This will give another significant speed boost.
+
+> **It’s tradeoffs all the way down:** If you want to learn more about the exact tradeoffs JavaScripts engines have to make, I can recommend this [article][tradeoff article] by [Mathias].
 
 WebAssembly, on the other hand, is strongly typed. It can be turned into machine code _straight away_. V8 has a streaming Wasm compiler called “Liftoff“ which, like Ignition, is geared to get your code running _quickly_, at the cost of generating potentially suboptimal execution speed. The second Liftoff is done, TurboFan kicks in and generates optimized machine code that will run faster than what Liftoff produced, but will take longer to generate. The big difference to JavaScript is that TurboFan can do its work without having to observe your Wasm first.
 
@@ -154,7 +156,7 @@ As described above, it is important to “warm-up” JavaScript when benchmarkin
 
 On the one hand, I was happy to see that Liftoff’s output was faster than what Ignition or Sparkplug could squeeze out of JavaScript. At the same time, it didn’t sit well with me that the optimized WebAssembly module takes about 3 times as long as JavaScript. 
 
-To be fair, this is a David vs Goliath scenario: V8 is a long-standing JavaScript engine with a huge team of engineers implementing optimizations and other clever stuff, while AssemblyScript is a relatively young project with a small team around it. ASC’s compiler is single-pass and defers all optimization efforts to [Binaryen] (see also: `wasm-opt`). This means that optimization is done at the Wasm VM byte code level, after most of the high-level semantics have been compiled away. V8 has a clear edge here. However, the blur code is so simple — just doing arithmetic with values from memory — that I was really expecting it to be closer. What’s going on here? 
+To be fair, this is a David vs Goliath scenario: V8 is a long-standing JavaScript engine with a huge team of engineers implementing optimizations and other clever stuff, while AssemblyScript is a relatively young project with a small team around it. ASC’s compiler is single-pass and defers all optimization efforts to [Binaryen] (see also: `wasm-opt`). This means that optimization is done at the Wasm VM bytecode level, after most of the high-level semantics have been compiled away. V8 has a clear edge here. However, the blur code is so simple — just doing arithmetic with values from memory — that I was really expecting it to be closer. What’s going on here? 
 
 ### Digging in
 
@@ -561,3 +563,5 @@ If you don’t trust me (and you shouldn’t!) and want to dig into the benchmar
 [jake]: https://twitter.com/jaffathecake
 [ieee754]: https://en.wikipedia.org/wiki/IEEE_754
 [c to webassembly]: /things/c-to-webassembly/index.html
+[tradeoff article]: https://mathiasbynens.be/notes/prototypes#tradeoffs
+[mathias]: https://twitter.com/mathias
