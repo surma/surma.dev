@@ -17,7 +17,7 @@ module.exports = function (table) {
       .filter({
         program: "blur",
         language: "JavaScript",
-        engine: "Turbofan",
+        engine: "TurboFan",
       })
       .getColumn("Average")[0],
     bubblesort: table
@@ -25,7 +25,7 @@ module.exports = function (table) {
       .filter({
         program: "bubblesort",
         language: "JavaScript",
-        engine: "Turbofan",
+        engine: "TurboFan",
       })
       .getColumn("Average")[0],
     binaryheap: table
@@ -33,7 +33,7 @@ module.exports = function (table) {
       .filter({
         program: "binaryheap",
         language: "JavaScript",
-        engine: "Turbofan",
+        engine: "TurboFan",
       })
       .getColumn("Average")[0],
   };

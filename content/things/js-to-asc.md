@@ -23,15 +23,15 @@ If you want to know more about AssemblyScript, go to the [website][assemblyscrip
 
 ## Advantages of WebAssembly
 
-In my perception, a lot of people think of WebAssembly purely as a performance primitive. It’s compiled, so it’s gotta be fast, right? Well, for the longest time [I have been vocal that WebAssembly and JavaScript have the same _peak_ performance][io19 talk], and I still stand behind that. Given ideal conditions, they both compile to machine code and end up being equally fast. But there’s obviously more nuance here, and when have conditions _ever_ been ideal on the web‽ Instead, I think it would be better if we thought about WebAssembly as a way to get _predictable_ performance.
+In my perception, a lot of people think of WebAssembly purely as a performance primitive. It’s compiled, so it’s gotta be fast, right? Well, for the longest time [I have been vocal that WebAssembly and JavaScript have the same _peak_ performance][io19 talk], and I still stand behind that. Given ideal conditions, they both compile to machine code and end up being equally fast. But there’s obviously more nuance here, and when have conditions _ever_ been ideal on the web‽ Instead, I think it would be better if we thought about WebAssembly as a way to get more reliable performance.
 
-However, it’s also important to realize that WebAssembly has recently been getting access to performance primitives (like SIMD or shared-memory threads) that JavaScript cannot utilize, giving WebAssembly a _potential_ edge to predictably out-perform JavaScript. There are also some other qualities of WebAssembly that might make it better suited in specific situations than JavaScript:
+However, it’s also important to realize that WebAssembly has recently been getting access to performance primitives (like SIMD or shared-memory threads) that JavaScript cannot utilize, giving WebAssembly an increased chance to out-perform JavaScript. There are also some other qualities of WebAssembly that might make it better suited in specific situations than JavaScript:
 
 ### No warmup
 
 For V8 to execute JavaScript, it first gives the code to the interpreter “Ignition”. Ignition is optimized to make code run as _soon_ as possible. Afterwards, “Sparkplug” takes Ignition’s output (the infamous “bytecode”) and turns it into non-optimized machine code, yielding better performance at the cost of increased memory footprint. While your code is executing, it is closely observed by V8 to gather data on object shapes (think of them like types). Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates low-level machine code that is optimized for those types. This will give another significant speed boost.
 
-> **It’s tradeoffs all the way down:** If you want to learn more about the exact tradeoffs JavaScripts engines have to make, I can recommend this [article][tradeoff article] by [Mathias].
+> **It’s tradeoffs all the way down:** If you want to learn more about the exact tradeoffs JavaScripts engines have to make, I can recommend this [article][tradeoff article] by [Benedikt] and [Mathias].
 
 WebAssembly, on the other hand, is strongly typed. It can be turned into machine code _straight away_. V8 has a streaming Wasm compiler called “Liftoff“ which, like Ignition, is geared to get your code running _quickly_, at the cost of generating potentially suboptimal execution speed. The second Liftoff is done, TurboFan kicks in and generates optimized machine code that will run faster than what Liftoff produced, but will take longer to generate. The big difference to JavaScript is that TurboFan can do its work without having to observe your Wasm first.
 
@@ -190,14 +190,14 @@ I applied both these optimizations to my “naïve port” and measured again:
       {
         program: "blur",
         language: "JavaScript",
-        engine: "Turbofan"
+        engine: "TurboFan"
       },
       {
         program: "blur",
         language: "AssemblyScript",
         optimizer: "O3s",
         runtime: "incremental",
-        engine: "Turbofan"
+        engine: "TurboFan"
       }
     );
     sanitizer(table);
@@ -225,7 +225,7 @@ Another thing that the AssemblyScript folks pointed out to me is that the `--opt
       {
         program: "blur",
         language: "JavaScript",
-        engine: "Turbofan"
+        engine: "TurboFan"
       },
       {
         program: "blur",
@@ -233,14 +233,14 @@ Another thing that the AssemblyScript folks pointed out to me is that the `--opt
         runtime: "incremental",
         optimizer: "O3s",
         variant: "naive",
-        engine: "Turbofan"
+        engine: "TurboFan"
       },
       {
         program: "blur",
         language: "AssemblyScript",
         runtime: "incremental",
         variant: "optimized",
-        engine: "Turbofan"
+        engine: "TurboFan"
       }
     );
     sanitizer(table);
@@ -347,14 +347,14 @@ How much faster does that make our binary heap experiment? Quite significantly!
       {
         program: "binaryheap",
         language: "JavaScript",
-        engine: "Turbofan"
+        engine: "TurboFan"
       },
       {
         program: "binaryheap",
         language: "AssemblyScript",
         variant: "optimized",
         optimizer: "O3",
-        engine: "Turbofan"
+        engine: "TurboFan"
       }
     );
     sanitizer(table);
@@ -431,7 +431,7 @@ In other languages, like [Rust’s `std::vec`][rust impl] or [Go’s slices][go 
       {
         program: "binaryheap",
         language: "JavaScript",
-        engine: "Turbofan"
+        engine: "TurboFan"
       },
       {
         program: "binaryheap",
@@ -439,7 +439,7 @@ In other languages, like [Rust’s `std::vec`][rust impl] or [Go’s slices][go 
         runtime: ["incremental", "minimal", "stub"],
         variant: ["optimized", "customarray"],
         optimizer: "O3",
-        engine: "Turbofan"
+        engine: "TurboFan"
       }
     );
     sanitizer(table);
@@ -470,7 +470,7 @@ I took the same approach with C++, using [Emscripten] to compile it to WebAssemb
       {
         program: "binaryheap",
         language: "JavaScript",
-        engine: "Turbofan"
+        engine: "TurboFan"
       },
       {
         program: "binaryheap",
@@ -478,17 +478,17 @@ I took the same approach with C++, using [Emscripten] to compile it to WebAssemb
         runtime: "incremental",
         variant: "customarray",
         optimizer: "O3",
-        engine: "Turbofan"
+        engine: "TurboFan"
       },
       {
         program: "binaryheap",
         language: "Rust",
-        engine: "Turbofan"
+        engine: "TurboFan"
       },
       {
         program: "binaryheap",
         language: "C++",
-        engine: "Turbofan"
+        engine: "TurboFan"
       }
     );
     sanitizer(table);
@@ -565,3 +565,4 @@ If you don’t trust me (and you shouldn’t!) and want to dig into the benchmar
 [c to webassembly]: /things/c-to-webassembly/index.html
 [tradeoff article]: https://mathiasbynens.be/notes/prototypes#tradeoffs
 [mathias]: https://twitter.com/mathias
+[benedikt]: https://twitter.com/bmeurer
