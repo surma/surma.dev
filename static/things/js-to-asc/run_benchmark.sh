@@ -68,7 +68,7 @@ for program in $PROGRAMS ; do
     SRCFILE="${program}_${version}.cpp"
     FILE="./${program}_${version}_cpp.js"
     if [ -f $SRCFILE ] && [ -z "${SKIP_CPP}" ]; then
-      em++ -O3 --bind -o ${FILE} -std=c++17 ${SRCFILE}
+      em++ -s ENVIRONMENT=shell --closure 1 -O3 --bind -o ${FILE} -std=c++17 ${SRCFILE}
       echo -n "${program},C++,Liftoff,${version},,," | tee -a $OUTPUT
       v8 --liftoff-only --module --harmony-top-level-await ./${program}_cpp_bench.js >> $OUTPUT
       echo ""

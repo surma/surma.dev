@@ -5,3 +5,4 @@ node_modules
 target
 Cargo.lock
 v8.log
+binaryheap_idiomatic_cpp.js
