@@ -29,13 +29,13 @@ However, it’s also important to realize that WebAssembly has recently been get
 
 ### No warmup
 
-When V8 gets given JavaScript, it is first given to the interpreter “Ignition”. It is optimized to make code run as _soon_ as possible. Meanwhile, “Sparkplug” takes Ignitions output (called “byte code”) and turns it into machine code, yielding better performance at the cost of increased memory footprint. While your code is running (either through Ignition or Sparkplug), it is closely observed by V8. It takes note of what kind of type of data you store in your variables, function parameters and so on. Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates low-level machine code that is optimized for those types. This will give another significant speed boost.
+For V8 to execute JavaScript, it first gives the code to the interpreter “Ignition”. Ignition is optimized to make code run as _soon_ as possible. Afterwards, “Sparkplug” takes Ignition’s output (the infamous “byte code”) and turns it into non-optimized machine code, yielding better performance at the cost of increased memory footprint. While your code is executing, it is closely observed by V8 to gather data on object shapes (think of them like types). Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates low-level machine code that is optimized for those types. This will give another significant speed boost.
 
 WebAssembly, on the other hand, is strongly typed. It can be turned into machine code _straight away_. V8 has a streaming Wasm compiler called “Liftoff“ which, like Ignition, is geared to get your code running _quickly_, at the cost of generating potentially suboptimal execution speed. The second Liftoff is done, TurboFan kicks in and generates optimized machine code that will run faster than what Liftoff produced, but will take longer to generate. The big difference to JavaScript is that TurboFan can do its work without having to observe your Wasm first.
 
 ### No tierdown
 
-The machine code that TurboFan generates for JavaScript is only usable for as long as the assumptions about types hold. If TurboFan generated machine code for a funtion `f` with a number as a parameter, and now all of the sudden that function `f` gets called with an object, the engine has to fall back to Ignition or Sparkplug. That’s called a “deoptimization” (or “deopt” for short). Again, because WebAssembly is strongly typed, the types _can’t_ change. Not only that, but the types that WebAssembly supports are designed to map well to machine code. Deopts can’t happen with WebAssembly.
+The machine code that TurboFan generates for JavaScript is only usable for as long as the assumptions about types hold. If TurboFan generated machine code for a function `f` with a number as a parameter, and now all of a sudden that function `f` gets called with an object, the engine has to fall back to Ignition or Sparkplug. That’s called a “deoptimization” (or “deopt” for short). Again, because WebAssembly is strongly typed, the types _can’t_ change. Not only that, but the types that WebAssembly supports are designed to map well to machine code. Deopts can’t happen with WebAssembly.
 
 ### Binary size
 
@@ -92,9 +92,9 @@ function gaussCoef(sigma: f32): Float32Array {
 }
 ```
 
-The explicit loop at the end to populate the array is there because of a current short-coming in AssemblyScript: Function overloading isn’t support yet. There is only _exactly_ one constructor for `Float32Array` in ASC, which takes an `i32` parameter for the length of the `TypedArray`. Callbacks are supported in ASC, but closures also are not, so I can’t use `.forEach()` to fill in the values. This is certainly _inconvenient_, but not prohibitively so. 
+The explicit loop at the end to populate the array is there because of a current short-coming in AssemblyScript: Function overloading isn’t supported yet. There is only _exactly_ one constructor for `Float32Array` in ASC, which takes an `i32` parameter for the length of the `TypedArray`. Callbacks are supported in ASC, but closures also are not, so I can’t use `.forEach()` to fill in the values. This is certainly _inconvenient_, but not prohibitively so. 
 
-> **Mathf**: You might have noticed `Mathf` instead of `Math`. `Mathf` is specifically for 32-bit floats, while `Math` is for 64-bit floats. I could have used `Math` and do a cast, but they are ever-so-slightly slower due to the increased precision required. Either way, the `gaussCoef` function is not part of the hot path, so it really doesn’t make a difference.
+> **Mathf**: You might have noticed `Mathf` instead of `Math`. `Mathf` is specifically for 32-bit floats, while `Math` is for 64-bit floats. I could have used `Math` and donei a cast, but they are ever-so-slightly slower due to the increased precision required. Either way, the `gaussCoef` function is not part of the hot path, so it really doesn’t make a difference.
 
 ### Side note: Mind the signs
 
@@ -116,9 +116,9 @@ Now that we have a JS file and an ASC file, we can compile the ASC to WebAssembl
 
 > **d-What?**: `d8` is a minimal CLI wrapper around V8, exposing fine-grained control over all kinds of engine features for both Wasm and JS. You can think of it like Node, but with no standard library whatsoever. Just vanilla ECMAScript. Unless you have compiled V8 locally (which you _can_ do by following [the guide on v8.dev][compile v8]), you probably won’t have `d8` available. [jsvu] is a tool that can install pre-compiled binaries for many JavaScript engines, including V8.
 
-However, since this section has the word “Benchmarking” in the title, I think it’s important to put a disclaimer here: The numbers I am listing here are specific to the code that _I_ wrote in a language _I_ chose, ran on _my_ machine (a 2020 M1 MacBook Air) using a benchmark script that _I_ made. The results are coarse indicators _at best_ and it would be ill-advised to derive quantitative conclusions about the general performance AssemblyScript, WebAssembly or JavaScript from this.
+However, since this section has the word “Benchmarking” in the title, I think it’s important to put a disclaimer here: The numbers I am listing here are specific to the code that _I_ wrote in a language _I_ chose, ran on _my_ machine (a 2020 M1 MacBook Air) using a benchmark script that _I_ made. The results are coarse indicators _at best_ and it would be ill-advised to derive quantitative conclusions about the general performance of AssemblyScript, WebAssembly or JavaScript from this.
 
-Some might be wondering why I’m using `d8` instead running this in the browser or even Node. Both Node and the browser have,... other stuff that may or may not screw with the results. `d8` is the most sterile environment I can get and as a cherry on top it allows me to control the tier-up behavior. I can limit execution to use Ignition, Sparkplug or Liftoff only, ensuring that performance characteristics don’t change in the middle of a benchmark.
+Some might be wondering why I’m using `d8` instead of running this in the browser or even Node. Both Node and the browser have,... other stuff that may or may not screw with the results. `d8` is the most sterile environment I can get and as a cherry on top it allows me to control the tier-up behavior. I can limit execution to use Ignition, Sparkplug or Liftoff only, ensuring that performance characteristics don’t change in the middle of a benchmark.
 
 ### Methodology
 
