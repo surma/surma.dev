@@ -31,7 +31,7 @@ However, it’s also important to realize that WebAssembly has recently been get
 
 When V8 gets given JavaScript, it is first given to the interpreter “Ignition”. It is optimized to make code run as _soon_ as possible. Meanwhile, “Sparkplug” takes Ignitions output (called “byte code”) and turns it into machine code, yielding better performance at the cost of increased memory footprint. While your code is running (either through Ignition or Sparkplug), it is closely observed by V8. It takes note of what kind of type of data you store in your variables, function parameters and so on. Once sufficient data has been collected, V8’s optimizing compiler “TurboFan” kicks in and generates low-level machine code that is optimized for those types. This will give another significant speed boost.
 
-WebAssembly, on the other hand, is strongly typed. It can be turned into machine code _straight away_. V8 has a streaming Wasm compiler called “Liftoff“ which, like Ignition, is geared to get your code running _quickly_, at the cost of generating potentially suboptimal execution speed. The second Liftoff is done, TurboFan kicks in and both generates optimized machine code that will run faster than what Liftoff produced, but will take  longer to generate. The big difference to JavaScript is that the TurboFan can do its work without having to observe your Wasm first.
+WebAssembly, on the other hand, is strongly typed. It can be turned into machine code _straight away_. V8 has a streaming Wasm compiler called “Liftoff“ which, like Ignition, is geared to get your code running _quickly_, at the cost of generating potentially suboptimal execution speed. The second Liftoff is done, TurboFan kicks in and generates optimized machine code that will run faster than what Liftoff produced, but will take longer to generate. The big difference to JavaScript is that TurboFan can do its work without having to observe your Wasm first.
 
 ### No tierdown
 
@@ -173,7 +173,7 @@ Luckily, AssemblyScript provides a magic `unchecked()` annotation to indicate th
 
 But there’s more: The Typed Arrays in AssemblyScript (`Uint8Array`, `Float32Array`, ...) offer the same API as they do on the platform, meaning they are merely a view onto an underlying `ArrayBuffer`. This is good in that the API design is familiar and battle-tested, but due to the lack of high-level optimizations, this means that every access to a field on the Typed Array (like `myFloatArray[23]`) needs to access memory twice: Once to load the pointer to the underlying `ArrayBuffer` of this specific array, and another to load the value at the right offset. V8, as it can tell that you are accessing the Typed Array but never the underlying buffer, is most likely able to optimize the entire data structure so that you can read  values with a single memory access.
 
-For that reason, AssemblyScript provides `StaticArray<T>`, which is mostly equivalent to an `Array<T>` except that it can’t grow. With a fixed length, there is no need keep the Array entity separate from the memory the values are stored in, removing that indirection.
+For that reason, AssemblyScript provides `StaticArray<T>`, which is mostly equivalent to an `Array<T>` except that it can’t grow. With a fixed length, there is no need to keep the Array entity separate from the memory the values are stored in, removing that indirection.
 
 I applied both these optimizations to my “naïve port” and measured again:
 
@@ -290,7 +290,7 @@ We did it again! This time with an even bigger discrepancy: The optimized Assemb
 
 Some of you may have noticed that both these examples have very few or no allocations. V8 takes care of all memory management (and garbage collection) in JavaScript for you and I won’t pretend that I know much about it. In WebAssembly, on the other hand, you get a chunk of linear memory and you have to decide how to use it (or rather: the language does). How much do these rankings change if we make _heavy_ use of dynamic memory?
 
-To measure this, I chose to benchmark an implementation of a [binary heap]. The benchmark fils the binary heap with 1 million random numbers (curtesy of `Math.random()`) and `pop()`s them all back out, checking that the numbers are in increasing order. The process remained the same as above: Make a naïve port of the JS code to ASC, run benchmark, optimize, benchmark again:
+To measure this, I chose to benchmark an implementation of a [binary heap]. The benchmark fills the binary heap with 1 million random numbers (curtesy of `Math.random()`) and `pop()`s them all back out, checking that the numbers are in increasing order. The process remained the same as above: Make a naïve port of the JS code to ASC, run benchmark, optimize, benchmark again:
 
 |||datatable
 {
@@ -415,7 +415,7 @@ function ensureSize(array: usize, minSize: usize, alignLog2: u32): void {
 
 `ensureSize()`, in turn, checks if the capacity is smaller than the new `minSize`, and if so, allocates a new buffer of size  `minSize` using `__renew`, which entails copying all the data from the old buffer to the new buffer. For that reason our benchmark, where we push _one million values_ one-by-one into the array, ends up causing a _lot_ of allocation work and create a lot of garbage. 
 
-In other languages, like [Rust’s `std::vec`][rust impl] or [Go’s slices][go impl], the new buffer has _double_ the old buffer’s capacity, which amortizes the allocation work over time. [I am working to fix this in ASC][asc issue], but in the meantime we can create our own `CustomArrow<T>` that has the desired behavior. Lo and behold, we made things faster!
+In other languages, like [Rust’s `std::vec`][rust impl] or [Go’s slices][go impl], the new buffer has _double_ the old buffer’s capacity, which amortizes the allocation work over time. [I am working to fix this in ASC][asc issue], but in the meantime we can create our own `CustomArray<T>` that has the desired behavior. Lo and behold, we made things faster!
 
 |||datatable
 {
@@ -496,7 +496,7 @@ I took the same approach with C++, using [Emscripten] to compile it to WebAssemb
 }
 |||
 
-I’m sure both Rust and C++ could be made even faster, but I don’t know have sufficently deep knowledge of either language to squeeze out those last couple optimizations. 
+I’m sure both Rust and C++ could be made even faster, but I don’t have sufficiently deep knowledge of either language to squeeze out those last couple optimizations. 
 
 ### Gzip’d file sizes
 
@@ -524,7 +524,7 @@ It is worth noting that file size is a _strength_ of AssemblyScript. Comparing t
 
 I want to be very clear: Any generalized, quantitative take-away from this article would be ill-advised. For example, Rust is _not_ 1.2x slower than JavaScript. These number are very much specific to the code that _I_ wrote, the optimizations that _I_ applied and the machine _I_ used. However, I think there are some general guidelines we can extract to help you make more informed decisions in the future:
 
-- V8’s Liftoff compiler will generate code from WebAssembly that runs significantly faster thant what Ignition or SparkPlug can deliver for JavaScript. If you need performance without _any_ warmup time, WebAssembly is your tool of choice.
+- V8’s Liftoff compiler will generate code from WebAssembly that runs significantly faster than what Ignition or SparkPlug can deliver for JavaScript. If you need performance without _any_ warmup time, WebAssembly is your tool of choice.
 - V8 is _really_ good at executing JavaScript. While WebAssembly can run faster than JavaScript, it is likely that you will have to hand-optimize your code to achieve that.
 - Compilers can do a lot of work for you, more mature compilers are likely to be better at optimizing your code.
 - AssemblyScript modules tend to be a lot smaller.
