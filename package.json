@@ -5,7 +5,7 @@
   "dependencies": {
     "@11ty/eleventy": "^0.11.1",
     "@11ty/eleventy-plugin-syntaxhighlight": "^3.0.4",
-    "@mischnic/parcel-resolver-root": "0.2.0",
+    "@mischnic/parcel-resolver-root": "^0.3.1",
     "@parcel/optimizer-cssnano": "2.0.0-nightly.592",
     "@parcel/optimizer-htmlnano": "2.0.0-nightly.592",
     "@parcel/packager-css": "2.0.0-nightly.592",
@@ -22,6 +22,7 @@
     "markdown-it": "^12.0.3",
     "mkdirp": "^0.5.1",
     "parcel": "2.0.0-nightly.590",
+    "prismjs": "^1.23.0",
     "rimraf": "^3.0.0",
     "rollup": "^1.27.9",
     "rollup-plugin-node-resolve": "^5.2.0",
