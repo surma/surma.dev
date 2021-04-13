@@ -1,11 +1,11 @@
 ---
 title: "Is WebAssembly magic performance pixie dust?"
-date: "2021-04-12"
-live: false
+date: "2021-04-13"
+live: true
 socialmediaimage: "social.png"
 ---
 
-Add WebAssembly, get performance? Is that how it really works?
+Add WebAssembly, get performance. Is that how it really works?
 
 <!-- more -->
 
@@ -23,7 +23,9 @@ If you want to know more about AssemblyScript, go to the [website][assemblyscrip
 
 ## Advantages of WebAssembly
 
-In my perception, a lot of people think of WebAssembly purely as a performance primitive. It’s compiled, so it’s gotta be fast, right? Well, for the longest time [I have been vocal that WebAssembly and JavaScript have the same _peak_ performance][io19 talk], and I still stand behind that. Given ideal conditions, they both compile to machine code and end up being equally fast. But there’s obviously more nuance here, and when have conditions _ever_ been ideal on the web‽ Instead, I think it would be better if we thought about WebAssembly as a way to get more reliable performance.
+I think it is fair to say that most mature use-case for WebAssembly is tapping into the ecosystem of other languages. In [Squoosh], for example, we use libraries from the C/C++ and Rust ecosystem to process images. These libraries were not written with the web in mind, but through WebAssembly, they can run there anyway.
+
+WebAssembly, in my perception, is also strongly associated with performance by a lot of people. It was designed to be fast, and it’s compiled, so it’s gotta be fast, right? Well, for the longest time [I have been vocal that WebAssembly and JavaScript have the same _peak_ performance][io19 talk], and I still stand behind that. Given ideal conditions, they both compile to machine code and end up being equally fast. But there’s obviously more nuance here, and when have conditions _ever_ been ideal on the web‽ Instead, I think it would be better if we thought about WebAssembly as a way to get more reliable performance.
 
 However, it’s also important to realize that WebAssembly has recently been getting access to performance primitives (like SIMD or shared-memory threads) that JavaScript cannot utilize, giving WebAssembly an increased chance to out-perform JavaScript. There are also some other qualities of WebAssembly that might make it better suited in specific situations than JavaScript:
 
@@ -96,7 +98,7 @@ function gaussCoef(sigma: f32): Float32Array {
 
 The explicit loop at the end to populate the array is there because of a current short-coming in AssemblyScript: Function overloading isn’t supported yet. There is only _exactly_ one constructor for `Float32Array` in ASC, which takes an `i32` parameter for the length of the `TypedArray`. Callbacks are supported in ASC, but closures also are not, so I can’t use `.forEach()` to fill in the values. This is certainly _inconvenient_, but not prohibitively so. 
 
-> **Mathf**: You might have noticed `Mathf` instead of `Math`. `Mathf` is specifically for 32-bit floats, while `Math` is for 64-bit floats. I could have used `Math` and donei a cast, but they are ever-so-slightly slower due to the increased precision required. Either way, the `gaussCoef` function is not part of the hot path, so it really doesn’t make a difference.
+> **Mathf**: You might have noticed `Mathf` instead of `Math`. `Mathf` is specifically for 32-bit floats, while `Math` is for 64-bit floats. I could have used `Math` and done a cast, but they are ever-so-slightly slower due to the increased precision required. Either way, the `gaussCoef` function is not part of the hot path, so it really doesn’t make a difference.
 
 ### Side note: Mind the signs
 
@@ -164,7 +166,7 @@ After quickly consulting with some folks from the V8 team and some folks from th
 
 V8 has the luxury of having access to your original JavaScript code and knowledge about the semantics of the language. It can use that information to apply additional optimizations. For example: It can tell you are not just randomly reading values from memory, but you are iterating over an `ArrayBuffer` using a `for ... of` loop. What’s the difference? Well with a `for ... of` loop, the language semantics guarantee that you will never try to read values outside of the `ArrayBuffer`. You will never end up accidentally reading byte 11 when the buffer is only 10 bytes long, or: You never go _out of bounds_. This means TurboFan does not need to emit bounds checks, which you can think of as `if` statements making sure you are not accessing memory you are not supposed to. This kind of information is lost once compiled to WebAssembly, and since ASC’s optimization only happens at WebAssembly VM level, it can’t necessarily apply the same optimization.
 
-Luckily, AssemblyScript provides a magic `unchecked()` annotation to indicate that we are taking responsibilty for staying in-bounds.
+Luckily, AssemblyScript provides a magic `unchecked()` annotation to indicate that we are taking responsibility for staying in-bounds.
 
 ```diff
 - prev_prev_out_r = prev_src_r * coeff[6];
@@ -498,7 +500,9 @@ I took the same approach with C++, using [Emscripten] to compile it to WebAssemb
 }
 |||
 
-I’m sure both Rust and C++ could be made even faster, but I don’t have sufficiently deep knowledge of either language to squeeze out those last couple optimizations. 
+> **Lrn2code**: The versions labelled “idiomatic” are still very closely inspired by the original JS code. I tried to make use of my knowledge of the idioms of the target language, but in the end it’s still a port. I am sure an implementation from scratch by someone with more experience in those languages would look different.
+
+I’m fairly certain that Rust and C++ could be made even faster, but I don’t have sufficiently deep knowledge of either language to squeeze out those last couple optimizations. 
 
 ### Gzip’d file sizes
 
@@ -527,9 +531,9 @@ It is worth noting that file size is a _strength_ of AssemblyScript. Comparing t
 I want to be very clear: Any generalized, quantitative take-away from this article would be ill-advised. For example, Rust is _not_ 1.2x slower than JavaScript. These numbers are very much specific to the code that _I_ wrote, the optimizations that _I_ applied and the machine _I_ used. However, I think there are some general guidelines we can extract to help you make more informed decisions in the future:
 
 - V8’s Liftoff compiler will generate code from WebAssembly that runs significantly faster than what Ignition or SparkPlug can deliver for JavaScript. If you need performance without _any_ warmup time, WebAssembly is your tool of choice.
-- V8 is _really_ good at executing JavaScript. While WebAssembly can run faster than JavaScript, it is likely that you will have to hand-optimize your code to achieve that.
+- V8 is _really_ good at executing JavaScript. While WebAssembly can run faster than JavaScript, it is likely that you will have to hand-optimize your code to achieve that. I could see this balance shift once there is wide-spread support for SIMD and Threads and a good developer experience around utilizing them.
 - Compilers can do a lot of work for you, more mature compilers are likely to be better at optimizing your code.
-- AssemblyScript modules tend to be a lot smaller.
+- AssemblyScript modules tend to be a lot smaller than the other WebAssembly modules produced by other languages. In this exploration, AssemblyScript was _not_ smaller than the original JavaScript, but this could very well be different for bigger modules.
 
 If you don’t trust me (and you shouldn’t!) and want to dig into the benchmark code yourself, take a look at the [gist].
 
@@ -566,3 +570,4 @@ If you don’t trust me (and you shouldn’t!) and want to dig into the benchmar
 [tradeoff article]: https://mathiasbynens.be/notes/prototypes#tradeoffs
 [mathias]: https://twitter.com/mathias
 [benedikt]: https://twitter.com/bmeurer
+[squoosh]: https://squoosh.app
