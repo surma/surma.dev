@@ -421,6 +421,8 @@ function ensureSize(array: usize, minSize: usize, alignLog2: u32): void {
 
 In other languages, like [Rust’s `std::vec`][rust impl] or [Go’s slices][go impl], the new buffer has _double_ the old buffer’s capacity, which amortizes the allocation work over time. [I am working to fix this in ASC][asc issue], but in the meantime we can create our own `CustomArray<T>` that has the desired behavior. Lo and behold, we made things faster!
 
+> *Fixed*: The ASC team has since fixed this regression v0.18.31
+
 |||datatable
 {
   data: "./static/things/js-to-asc/results.csv",
