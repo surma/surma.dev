@@ -1,6 +1,6 @@
 {
   "private": true,
   "dependencies": {
-			"parcel": "^2.0.0-rc.0"
+			"parcel": "^2.0.0-nightly.799"
 	}
 }
