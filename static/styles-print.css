@@ -1,10 +1,12 @@
 @import "./base.css";
+
 :root {
 	--base: 0.6rem;
 }
 main {
 	column-width: 17em;
 	column-gap: 1.5em;
+	-webkit-print-color-adjust: exact !important;
 }
 
 .darkmode-toggle, .back {
