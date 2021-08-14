@@ -1,0 +1,49 @@
+@import "./base.css";
+:root {
+	--base: 0.6rem;
+}
+main {
+	column-width: 17em;
+	column-gap: 1.5em;
+}
+
+.darkmode-toggle, .back {
+	display: none;
+}
+
+footer .icon, footer .licenses {
+	display: none;
+}
+
+.noise {
+	display: none;
+}
+
+.data-table .filters, .data-table .sort-btn {
+	display: none !important;
+}
+
+.data-table {
+	font-size: 0.6rem;
+}
+
+.katex-display {
+	font-size: 0.6rem;
+}
+
+pre > code,
+.codestyle > code {
+	font-size: 0.6rem;
+}
+
+blockquote {
+	background-color: #eee;
+	margin: 0;
+	padding: 0.5em 1em;
+	margin: 0.5em;
+	border-radius: 3px;
+}
+
+header {
+	margin: 3em 0;
+}

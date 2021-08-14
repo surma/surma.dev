@@ -1,63 +1,4 @@
-@font-face {
-  font-display: block;
-  font-family: "Lab 2";
-  /* prettier-ignore */
-  src: url(/fonts/lab/lab.eot);
-  /* prettier-ignore */
-  src: url(/fonts/lab/lab.woff2) format("woff2"),
-    url(/fonts/lab/lab.woff) format("woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-display: block;
-  font-family: "Vinila";
-  /* prettier-ignore */
-  src: url(/fonts/vinila/vinila.woff2) format("woff2");
-  font-style: normal;
-  font-weight: 100 900;
-}
-
-:root {
-  --base: 0.8rem;
-
-  --width: 960px;
-  --arrow-height: calc(2 * var(--base));
-
-  --body-font-width: 300;
-  --body-font-weight: 300;
-  --body-font-slant: 0;
-  
-  --bold-font-weight: 800;
-
-  --heading-lineheight: 1;
-  --heading-size: 500;
-  --heading-quad: 0;
-  --heading-bevl: 0;
-  --heading-oval: 1000;
-
-  --title-size: 0;
-  --title-quad: 0;
-  --title-bevl: 0;
-  --title-oval: 0;
-
-  --subheading-size: 0;
-  --subheading-quad: 0;
-  --subheading-bevl: 0;
-  --subheading-oval: 0;
-
-  --grid-gutter: var(--base);
-  --grid-height: calc(2 * var(--base));
-  --avatar-size: calc(12 * var(--base));
-  --social-icon: var(--grid-height);
-  --noise-size: 64;
-
-  /* prettier-ignore */
-  --arrow-file: url(/arrow.svg);
-  /* prettier-ignore */
-  --arrow-right-file: url(/arrow-right.svg);
-}
+@import "./base.css";
 @media (max-width: 720px) {
   :root {
     --base: 0.5rem;
@@ -82,13 +23,7 @@ body {
   position: relative;
   background-color: var(--yellow);
   color: var(--darkblue);
-  font-family: "Vinila", "Helvetica", sans-serif;
-  font-variation-settings: "wdth" var(--body-font-width),
-    "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
-  font-size: var(--grid-height);
-  line-height: calc(var(--grid-height) + var(--grid-gutter));
-  overflow-x: hidden;
-  hyphens: auto;
+
 }
 * {
   font-variation-settings: inherit;
@@ -109,18 +44,6 @@ a > code {
 a:hover {
   text-decoration: underline;
 }
-strong {
-  font-weight: 700;
-  --body-font-weight: 700;
-  font-variation-settings: "wdth" var(--body-font-width),
-    "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
-}
-em {
-  font-style: italic;
-  --body-font-slant: 10;
-  font-variation-settings: "wdth" var(--body-font-width),
-    "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
-}
 p,
 pre,
 .codestyle,
@@ -132,42 +55,13 @@ hr {
   margin: var(--grid-height) 0;
   border-radius: 2px;
 }
-img,
-video {
-  max-width: calc(100% - 2 * var(--grid-height));
-  margin: 0 auto;
-  display: block;
-  width: 100%;
-}
-code {
-  hyphens: none;
-}
+
 figure {
   position: relative;
   z-index: 999;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-figure > * {
-  max-width: 100%;
-  height: auto;
-}
-figure > p:first-child,
-figcaption > p:first-child {
-  display:contents;
-}
-figcaption {
-  margin-top: var(--grid-height);
-  max-width: calc(100% - 2 * var(--grid-height));
-  margin: var(--grid-height) auto;
-  --body-font-slant: 10;
-  font-variation-settings: "wdth" var(--body-font-width),
-    "wght" var(--body-font-weight), "slnt" var(--body-font-slant);
-  text-align: center;
-}
-figcaption em{
-  --body-font-slant: 0;
 }
 :not(pre) > code {
   color: var(--blue);
@@ -178,17 +72,7 @@ blockquote code {
 h2 code {
   color: var(--yellow);
 }
-h1,
-h2,
-h3 {
-  margin: 0;
-  font-family: "Lab 2", "Helvetica", sans-serif;
-  font-variation-settings: "size" var(--heading-size),
-    "quad" var(--heading-quad), "bevl" var(--heading-bevl),
-    "oval" var(--heading-oval);
-  line-height: 1.2em;
-  hyphens: none;
-}
+
 h2 {
   --color: var(--darkblue);
   --font-size: calc(1.5 * var(--grid-height));
@@ -228,18 +112,7 @@ h2:after {
   --mask: var(--arrow-file) 0% 100%/100% 200%;
 }
 
-h3,
-h4 {
-  font-size: inherit;
-  margin: 0;
-  margin-top: calc(2 * var(--grid-height));
-  font-variation-settings: "size" var(--subheading-size),
-    "quad" var(--subheading-quad), "bevl" var(--subheading-bevl),
-    "oval" var(--subheading-oval);
-}
-h3 + p {
-  margin-top: 0;
-}
+
 pre,
 .codestyle {
   --color: var(--white);
@@ -309,16 +182,10 @@ pre + figcaption:after {
 
 pre > code,
 .codestyle > code {
-  display: inline-block;
-  margin: 0 auto;
   color: #93a1a1;
-  box-sizing: border-box;
   padding: var(--grid-gutter);
-  width: 100%;
-  overflow-x: auto;
   padding-left: calc(50vw - var(--width) / 2);
   padding-right: calc(50vw - var(--width) / 2);
-  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
 }
 blockquote {
   --color: var(--blue);
@@ -412,47 +279,7 @@ header > .arrows {
 footer > .arrows {
   margin-bottom: calc(1 * var(--grid-height));
 }
-.me {
-  width: var(--width);
-  margin: calc(3 * var(--grid-height)) auto;
-  display: grid;
-  grid-gap: calc(2 * var(--grid-gutter));
-  grid-template-columns: var(--avatar-size) 1fr [social-col] repeat(
-      6,
-      var(--social-icon)
-    );
-  grid-template-rows: minmax(var(--avatar-size), min-content) 1fr;
-  place-items: stretch;
-  grid-auto-flow: row sparse;
-}
 
-.name,
-.info {
-  margin: 0;
-  padding: 0;
-}
-.me .name {
-  font-family: "Lab 2", "Helvetica", sans-serif;
-  font-variation-settings: "size" var(--heading-size),
-    "quad" var(--heading-quad), "bevl" var(--heading-bevl),
-    "oval" var(--heading-oval);
-  font-size: calc(1.5 * var(--grid-height));
-  margin-bottom: var(--grid-gutter);
-}
-.me > .bio {
-  align-self: center;
-  grid-column: 2 / end;
-}
-.me .icon:first-of-type {
-  grid-column-start: social-col;
-}
-
-.avatar {
-  width: var(--avatar-size);
-  height: var(--avatar-size);
-  border-radius: 50%;
-  max-width: initial;
-}
 .arrow {
   position: relative;
   height: var(--grid-height);
@@ -723,3 +550,4 @@ html.forcedark figure video {
   font-size: 1em !important;
   white-space: nowrap;
 }
+

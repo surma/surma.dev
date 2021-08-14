@@ -65,7 +65,7 @@
   rel="alternate"
   title="Sitewide Atom feed"
 />
-<style>
+<style media="screen">
   :root{
     <% for(const [name, color] of Object.entries(colors.palette)) { %>
       --<%= name %>: <%= color %>;
@@ -89,7 +89,15 @@
     <% } %>
   }
 </style>
-<link rel="stylesheet" href="/styles.css" />
+<style media="print">
+  :root{
+    <% for(const [name, color] of Object.entries(colors.palette)) { %>
+      --<%= name %>: <%= color %>;
+    <% } %>
+  }
+</style>
+<link rel="stylesheet" href="/styles.css" media="screen" />
+<link rel="stylesheet" href="/styles-print.css" media="print" />
 <link rel="icon" href="/avatars/surma.jpg" />
 <link rel="apple-touch-icon-precomposed" href="/avatars/surma.jpg" />
 <link rel="me" href="mailto:surma@surma.dev" />
