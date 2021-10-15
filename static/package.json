@@ -1,6 +1,7 @@
 {
   "private": true,
   "dependencies": {
+			"sharp": "^0.29.1",
 			"@parcel/transformer-xml": "^2.0.0",
 			"parcel": "^2.0.0"
 	}
