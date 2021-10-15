@@ -11,4 +11,6 @@ export BRANCH
 
 PUBLIC_URL=${PUBLIC_URL:-"https://${TARGET_DOMAIN}"}
 npx eleventy
-npx parcel build .tmp/index.html --dist-dir _site --public-url "${PUBLIC_URL}"
+cd .tmp
+npm i
+npx parcel build index.html --dist-dir ../_site --public-url "${PUBLIC_URL}"

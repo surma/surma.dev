@@ -7,14 +7,10 @@ import {
 
 const numBayerLevels = 4;
 let bayerWorker;
-if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  bayerWorker = new Worker("../ditherpunk/bayer-worker.js", { name: "bayer" });
-} else {
-  bayerWorker = new Worker("../ditherpunk/bayer-worker.js", {
+  bayerWorker = new Worker(new URL("../ditherpunk/bayer-worker.js", import.meta.url), {
     name: "bayer",
     type: "module"
   });
-}
 bayerWorker.addEventListener("error", () =>
   console.error("Something went wrong in the Bayer worker")
 );

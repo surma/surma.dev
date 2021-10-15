@@ -14,11 +14,7 @@ const {
   bluenoiseimg
 } = document.all;
 let worker;
-if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  worker = new Worker("./color-worker.js");
-} else {
-  worker = new Worker("./color-worker.js", { type: "module" });
-}
+  worker = new Worker(new URL("./color-worker.js", import.meta.url), { type: "module" });
 worker.addEventListener("message", async ev => {
   const { id, type, title, imageData } = ev.data;
   const [algo, numColor] = id.split(":");
