@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<meta name="viewport" content="minimum-scale=1, width=device-width" />
+<link rel="stylesheet" href="./geometry.css" />
+<div id="target"></div>
+<script>
+  document.write(
+    `  
+    <script type="importmap">
+      {
+        "imports": {
+          "lit1.3.0/": "/node_modules/lit1.3.0/"
+        }
+      }
+    <${"/"}script>
+  `
+  );
+</script>
+<script type="module">
+  import * as lit from "lit1.3.0/lit-html.js";
+  import * as geometry from "./geometry.mjs";
+
+  const { target } = document.all;
+
+  const diagram = {
+    width: 500,
+    height: 300,
+    viewBox: {
+      leftX: -300,
+      rightX: 200,
+      topY: -150,
+      bottomY: 150,
+    },
+    handles: {
+      p: new geometry.Point(150, 20).setName("p"),
+      fp: new geometry.Point(50, 0).setName("fp"),
+    },
+    recalculate() {
+      this.handles.fp.y = 0;
+      this.handles.p.x = Math.max(this.handles.p.x, this.handles.fp.x + 1);
+      const lens = new geometry.Lens(
+        new geometry.Point(0, 0),
+        this.handles.fp,
+        150
+      ).addClass("lens");
+      const lensplane = lens.asLine().addClass("lensplane");
+      const { point, ray1a, ray1b, ray2a, ray2b } = lens.lensProject(
+        this.handles.p
+      );
+      const top = lens.top();
+      const bottom = lens.bottom();
+      const light = new geometry.Polygon(
+        this.handles.p,
+        top,
+        new geometry.HalfSegment(top, point).pointAtDistance(1000),
+        new geometry.HalfSegment(bottom, point).pointAtDistance(1000),
+        bottom
+      ).addClass("light");
+      return [ray1a, ray1b, ray2a, ray2b, lens, lensplane, light];
+    },
+  };
+
+  geometry.instantiateDiagram(diagram, target, lit);
+</script>

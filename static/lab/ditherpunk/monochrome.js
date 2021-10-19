@@ -8,11 +8,7 @@ import { message } from "./worker-utils.js";
 
 const { fileinput, log, results } = document.all;
 let worker;
-if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  worker = new Worker("./monochrome-worker.js");
-} else {
-  worker = new Worker("./monochrome-worker.js", { type: "module" });
-}
+  worker = new Worker(new URL("./monochrome-worker.js", import.meta.url), { type: "module" });
 worker.addEventListener("message", async ev => {
   const { id, type, title, imageData } = ev.data;
   let container = document.getElementById(id);
@@ -73,14 +69,10 @@ fileinput.addEventListener("change", async () => {
 });
 
 let bluenoiseWorker;
-if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  bluenoiseWorker = new Worker("./bluenoise-worker.js", { name: "bluenoise" });
-} else {
-  bluenoiseWorker = new Worker("./bluenoise-worker.js", {
+  bluenoiseWorker = new Worker(new URL("./bluenoise-worker.js", import.meta.url), {
     name: "bluenoise",
     type: "module"
   });
-}
 bluenoiseWorker.addEventListener("error", () =>
   console.error("Something went wrong in the Bluenoise worker")
 );
@@ -94,14 +86,10 @@ bluenoiseWorker.addEventListener(
 
 const numBayerLevels = 4;
 let bayerWorker;
-if (typeof process !== "undefined" && process.env.TARGET_DOMAIN) {
-  bayerWorker = new Worker("./bayer-worker.js", { name: "bayer" });
-} else {
-  bayerWorker = new Worker("./bayer-worker.js", {
+  bayerWorker = new Worker(new URL("./bayer-worker.js", import.meta.url), {
     name: "bayer",
     type: "module"
   });
-}
 bayerWorker.addEventListener("error", () =>
   console.error("Something went wrong in the Bayer worker")
 );

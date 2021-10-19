@@ -1,0 +1,81 @@
+.data-table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.data-table {
+  position: relative;
+  hyphens: none;
+  border-spacing: 0;
+  border-collapse: collapse;
+  width: 100%;
+}
+.data-table th, .data-table td {
+  position: relative;
+}
+.data-table th {
+  font-variation-settings: "wght" var(--bold-font-weight);
+  padding: .5em;
+  text-align: left;
+  white-space: nowrap;
+  vertical-align: top;
+}
+.data-table td {
+  padding: .5em;
+}
+.data-table thead {
+  background-color: var(--darkblue);
+  color: var(--white);
+}
+.data-table tbody tr:nth-child(2n) {
+  background-color: var(--white);
+}
+.data-table tbody tr {
+  transition: 0.3s background-color linear;
+}
+.data-table tbody tr:hover {
+  background-color: var(--orange);
+}
+.data-table .right {
+  text-align: right;
+}
+
+.data-table .btn {
+  position: absolute;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  top: 0;
+  left: 0;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s linear;
+}
+
+.data-table .reset-btn {
+  opacity: 1;
+}
+
+.data-table td:hover .btn {
+  opacity: 1;
+}
+
+.data-table .sort-btn {
+  position: static;
+  opacity: 1;
+  display: inline-block;
+}
+.data-table .filters {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  grid-auto-rows: min-content;
+  font-variation-settings: "wght" var(--body-font-weight);
+  font-size: 0.7em;
+  line-height: 1em;
+  align-items: center;
+}
+
+.filter:not(:checked) + label {
+  text-decoration: line-through;
+}

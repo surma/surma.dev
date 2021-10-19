@@ -6,10 +6,32 @@ import {
   srgbToLinear,
   linearToSrgb
 } from "../ditherpunk/image-utils.js";
+
 import {
   hilbertCurveGenerator,
   weightGenerator
 } from "../ditherpunk/curve-utils.js";
+
+
+const numBayerLevels = 4;
+let bayerWorker;
+  bayerWorker = new Worker(new URL("../ditherpunk/bayer-worker.js", import.meta.url), {
+    name: "bayer",
+    type: "module"
+  });
+bayerWorker.addEventListener("error", () =>
+  console.error("Something went wrong in the Bayer worker")
+);
+const bayerLevels = Array.from({ length: numBayerLevels }, (_, id) => {
+  bayerWorker.postMessage({
+    level: id,
+    id
+  });
+  return message(bayerWorker, id).then(m =>
+    Object.setPrototypeOf(m.result, GrayImageF32N0F8.prototype)
+  );
+});
+
 
 const myBluenoisePromise = message(self, "bluenoise").then(({ mask }) => {
   Object.setPrototypeOf(mask, GrayImageF32N0F8.prototype);

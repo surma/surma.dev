@@ -1,0 +1,6 @@
+Language,Runtime,.wasm,.js
+JavaScript,,0,449
+AssemblyScript,stub,959,0
+AssemblyScript,incremental,2642,0
+Rust,,7347,0
+C++,,6734,6386

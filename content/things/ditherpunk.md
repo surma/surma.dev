@@ -4,7 +4,7 @@ date: "2021-01-04"
 socialmediaimage: "social.png"
 ---
 
-I always loved the visual aesthetic of dithering but never knew how it’s done. So I did some research. This article may contain traces of nostaliga and none of Lena.
+I always loved the visual aesthetic of dithering but never knew how it’s done. So I did some research. This article may contain traces of nostalgia and none of Lena.
 
 <!-- more -->
 
@@ -12,7 +12,14 @@ I always loved the visual aesthetic of dithering but never knew how it’s done.
 
 <style>
   .pixelated {
-    image-rendering: pixelated;
+    image-rendering:optimizeSpeed;             /* Legal fallback */
+    image-rendering:-moz-crisp-edges;          /* Firefox        */
+    image-rendering:-o-crisp-edges;            /* Opera          */
+    image-rendering:-webkit-optimize-contrast; /* Safari         */
+    image-rendering:optimize-contrast;         /* CSS3 Proposed  */
+    image-rendering:crisp-edges;               /* CSS4 Proposed  */
+    image-rendering:pixelated;                 /* CSS4 Proposed  */
+    -ms-interpolation-mode:nearest-neighbor;   /* IE8+           */
   }
 
   .demoimage {
@@ -31,7 +38,7 @@ I am late to the party, but I finally played [“Return of the Obra Dinn”][obr
   <figcaption>Screenshot of “Return of the Obra Dinn”.</figcaption>
 </figure>
 
-Dithering, so my original understanding, was a technique to place pixels using only a _few_ colors from a palette in a clever way to trick your brain into seeing _many_ colors. Like in the picture, where you probably feel like there are multipl brightness levels when in fact there’s only two: Full brightness and black.
+Dithering, so my original understanding, was a technique to place pixels using only a _few_ colors from a palette in a clever way to trick your brain into seeing _many_ colors. Like in the picture, where you probably feel like there are multiple brightness levels when in fact there’s only two: Full brightness and black.
 
 The fact that I have never seen a 3D game with dithering like this probably stems from the fact that color palettes are mostly a thing of the past. You _may_ remember running Windows 95 with 16 colors and playing games like “Monkey Island” on it.
 
@@ -98,12 +105,14 @@ grayscaleImage.mapSelf(brightness =>
 
 I had finished writing this article and just wanted to “quickly” look what a black-to-white gradient looks like with the different dithering algorithms. The results showed me that I failed to consider _the thing_ that always becomes a problem when working with images: color spaces. I had written the sentence “ideally correlating with human perception” without actually following it myself.
 
-My [demo] is implemented using web technologies, most notably `<canvas>` and `ImageData`, which are — at the time of writing — specified to use [sRGB]. It’s an old color space specification (from 1996) whose value-to-color mapping was modeled to mirror the behavior of CRT monitors. While barely anyone uses CRTs these days, it’s still considered the “safe” color space that gets correctly displayed on every display. As such, it is the default on the web platform. However, sRGB is not linear, meaning that $(0.5, 0.5, 0.5)$ in sRGB is _not_ the color a human sees when you mix 50% of $(0, 0, 0)$ and $(1, 1, 1)$. Instead, it’s the color you get when you pump half the power of full white through your Cathod-Ray Tube (CRT).
+My [demo] is implemented using web technologies, most notably `<canvas>` and `ImageData`, which are — at the time of writing — specified to use [sRGB]. It’s an old color space specification (from 1996) whose value-to-color mapping was modeled to mirror the behavior of CRT monitors. While barely anyone uses CRTs these days, it’s still considered the “safe” color space that gets correctly displayed on every display. As such, it is the default on the web platform. However, sRGB is not linear, meaning that $(0.5, 0.5, 0.5)$ in sRGB is _not_ the color a human sees when you mix 50% of $(0, 0, 0)$ and $(1, 1, 1)$. Instead, it’s the color you get when you pump half the power of full white through your Cathode-Ray Tube (CRT).
 
 <figure>
   <img loading="lazy" width="360" height="40" src="./gradient-srgb.png" class="pixelated">
   <figcaption>A gradient and how it looks when dithered in sRGB color space.</figcaption>
 </figure>
+
+> **Warning:** I set `image-rendering: pixelated;` on most of the images in this article. This allows you to zoom in and truly see the pixels. However, on devices with fraction `devicePixelRatio`, this might introduce artifacts. If in doubt, open the image separate in a new tab.
 
 As this image shows, the dithered gradient gets bright way too quickly. If we want 0.5 be the color in the middle of pure black and white (as perceived by a human), we need to convert from sRGB to linear RGB space, which can be done with a process called “gamma correction”. Wikipedia lists the following formulas to convert between sRGB and linear RGB.
 
@@ -207,7 +216,7 @@ The threshold map for the random dithering above, literally a map full of random
 “Bayer dithering” uses a Bayer matrix as the threshold map. They are named after Bryce Bayer, inventor of the [Bayer filter], which is in use to this day in digital cameras. Each pixel on the sensor can only detect brightness, but by cleverly arranging colored filters in front of the individual pixels, we can reconstruct color images through [demosaicing]. The pattern for the filters is the same pattern used in Bayer dithering.
 
 Bayer matrices come in various sizes which I ended up calling “levels”. Bayer Level 0 is $2 \times 2$ matrix. Bayer Level 1 is a $4 
-\times 4$ matrix. Bayer Level $n$ is a $2^{n+1} \times 2^{n+1}$ matrix. A level $n$ matrix can be recursively calcuated from level $n-1$ (although Wikipedia also lists an [per-cell algorithm][bayer wikipedia]). If your image happens to be bigger than your bayer matrix, you can tile the threshold map.
+\times 4$ matrix. Bayer Level $n$ is a $2^{n+1} \times 2^{n+1}$ matrix. A level $n$ matrix can be recursively calculated from level $n-1$ (although Wikipedia also lists an [per-cell algorithm][bayer wikipedia]). If your image happens to be bigger than your bayer matrix, you can tile the threshold map.
 
 <figure>
 
@@ -254,7 +263,7 @@ One thing to note: Bayer dithering using matrices as defined above will render a
 
 <figure>
   <img loading="lazy" width="400" height="267" src="./bayerbias.png" class="pixelated demoimage">
-  <figcaption>The almost-black areas in the image are getting noticably brighter.</figcaption>
+  <figcaption>The almost-black areas in the image are getting noticeably brighter.</figcaption>
 </figure>
 
 In our dark test image, the sky is not pure black and made _significantly_ brighter when using Bayer Level 0. While it gets better with higher levels, an alternative solution is to flip the bias and make images render _darker_ by inverting the way we use the Bayer matrix:
@@ -313,7 +322,7 @@ There is a variant of noise called “_blue_ noise”, that addresses this issue
 
 The most common algorithm to generate blue noise seems to be the “void-and-cluster method” by [Robert Ulichney]. Here is the [original whitepaper][bluenoise93]. I found the way the algorithm is described quite unintuitive and, now that I have implemented it, I am convinced it is explained in an unnecessarily abstract fashion. But it is quite clever!
 
-The algorithm is based on the idea that you can find a pixel that is part of cluster or a void by applying a [Gaussian Blur] to the image and finding the brightest (or darkest) pixel in the blurred image respectively. After initializing a black image with a couple of randomly placed white pixels, the algorihtm proceeds to continuously swap cluster pixels and void pixels to spread the white pixels out as evenly as possible. Afterwards, every pixel gets a number between 0 and n (where n is the total number of pixels) according to their importance for forming clusters and voids. For more details, see the [paper][bluenoise93].
+The algorithm is based on the idea that you can find a pixel that is part of cluster or a void by applying a [Gaussian Blur] to the image and finding the brightest (or darkest) pixel in the blurred image respectively. After initializing a black image with a couple of randomly placed white pixels, the algorithm proceeds to continuously swap cluster pixels and void pixels to spread the white pixels out as evenly as possible. Afterwards, every pixel gets a number between 0 and n (where n is the total number of pixels) according to their importance for forming clusters and voids. For more details, see the [paper][bluenoise93].
 
 My implementation works fine but is not very fast, as I didn’t spend much time optimizing. It takes about 1 minute to generate a 64×64 blue noise texture on my 2018 MacBook, which is sufficient for these purposes. If something faster is needed, a promising optimization would be to apply the Gaussian Blur not in the spatial domain but in the frequency domain instead.
 
@@ -433,13 +442,41 @@ Using this diffusion matrix, patterns are even less likely to emerge. While the 
 <figcaption>Jarvis’, Judice’s and Ninke’s dithering.</figcaption>
 </figure>
 
+### Atkinson Dither
+
+Atkinson dithering was developed at Apple by Bill Atkinson and gained notoriety on on early Macintosh computers.
+
+<figure>
+
+$$
+\frac{1}{8} \cdot \left(\begin{array}{}
+ & * & 1 & 1 \\
+1 & 1 & 1 &  \\
+ & 1 &   & \\
+\end{array}
+\right)
+$$
+
+<figcaption>Diffusion matrix by Bill Atkinson.</figcaption>
+</figure>
+
+It’s worth noting that the Atkinson diffusion matrix contains six ones, but is normalized using $\frac{1}{8}$, meaning it doesn’t diffuse the _entire_ error to neighboring pixels, increasing the perceived contrast of the image.
+
+<figure>
+<section class="carousel">
+    <img loading="lazy" width="400" height="267" src="./dark-atkinson.png" class="pixelated demoimage">
+    <img loading="lazy" width="253" height="400" src="./light-atkinson.png" class="pixelated demoimage">
+  </section>
+<figcaption>Atkinson Dithering.</figcaption>
+</figure>
+
 ### Riemersma Dither
 
 To be completely honest, the Riemersma dither is something I stumbled upon by accident. I found an [in-depth article][riemersma article] while I was researching the other dithering algorithms. It doesn’t seem to be widely known, but I _really_ like the way it looks and the concept behind it. Instead of traversing the image row-by-row it traverses the image with a [Hilbert curve]. Technically, any [space-filling curve] would do, but the Hilbert curve came recommended and is [rather easy to implement using generators][lsystem tweet]. Through this it aims to take the best of both ordered dithering and error diffusion dithering: Limiting the number of pixels a single pixel can influence together with the organic look (and small memory footprint).
 
 <figure>
 <img loading="lazy" width="256" height="256" src="./hilbertcurve.png" class="pixelated" style="max-height: 50vh; width: auto">
-<figcaption>Visualization of the 256x256 Hilbert curve by making pixels brighter the later they are visisted by the curve.</figcaption>
+<figcaption>Visualization of the 256x256 Hilbert curve by making pixels brighter the later they are visited by the curve.</figcaption>
 </figure>
 
 The Hilbert curve has a “locality” property, meaning that the pixels that are close together on the curve are also close together in the picture. This way we don’t need to use an error diffusion matrix but rather a diffusion _sequence_ of length $n$. To quantize the current pixel, the last $n$ quantization errors are added to the current pixel with weights given in the diffusion sequence. In the article they use an exponential falloff for the weights — the previous pixel’s quantization error getting a weight of 1, the oldest quantization error in the list a small, chosen weight $r$. This results in the following formula for the $i$th weight:
@@ -481,7 +518,7 @@ I am sure this super niche, but I enjoyed this rabbit hole. If you have any opin
 
 Thanks to [Lucas Pope][dukope] for his games and the visual inspiration.
 
-Thanks to [Christoph Peter] for his excellent [article on blue noise generation][cp blue noise].
+Thanks to [Christoph Peters] for his excellent [article on blue noise generation][cp blue noise].
 
 <script src="/carousel-reset.js" type="module"></script>
 
@@ -497,7 +534,7 @@ Thanks to [Christoph Peter] for his excellent [article on blue noise generation]
 [bayer wikipedia]: https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps
 [bayer filter]: https://en.wikipedia.org/wiki/Bayer_filter
 [imagedata]: https://developer.mozilla.org/en-US/docs/Web/API/ImageData
-[christoph peter]: https://twitter.com/momentsincg
+[christoph peters]: https://twitter.com/momentsincg
 [cp blue noise]: http://momentsingraphics.de/BlueNoise.html
 [robert ulichney]: http://ulichney.com/
 [gaussian blur]: https://en.wikipedia.org/wiki/Gaussian_blur
