@@ -11,12 +11,15 @@
 canvas {
   display: block;
 }
+img {
+  width: 200%;
+  display: block;
+  image-rendering: pixelated;
+}
 </style>
-<!-- Invisible image to Parcel is aware of it and we can use it-->
-<img src="./bluenoise.png" id="bluenoiseimg" style="display: none">
 <input type="file" id="fileinput" />
-<button id="examplebtn">
-  <img src="./color-image.png" id="exampleimg" height="40" />
+<button class="examplebtn">
+  <img src="./color-image.png" class="exampleimg" height="40" />
 </button>
 <script type="module" src="./color.js"></script>
 <pre id="log"></pre>

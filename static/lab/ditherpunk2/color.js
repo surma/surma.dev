@@ -1,4 +1,5 @@
 import Color from "colorjs.io/color.js";
+import {imageToImageData, imageDataToPNG} from "../ditherpunk/image-utils.js";
 
 function clamp(min, v, max) {
   if(v < min) {
@@ -69,5 +70,65 @@ function colorMix(srgbA, srgbB, {unit = 256, interp = "pixelated"} = {}) {
   return cvs;
 }
 
-document.body.append(colorMix([1, 1, 1], [0, 0, 0]));
-document.body.append(colorMix([1, 1, 1], [0, 0, 0], {interp: "auto"}));
+// document.body.append(colorMix([1, 1, 1], [0, 0, 0]));
+// document.body.append(colorMix([1, 1, 1], [0, 0, 0], {interp: "auto"}));
+
+const worker = new Worker(new URL("./color-worker.js", import.meta.url), {type: "module"});
+worker.addEventListener("message", async ev => {
+  const { id, type, title, imageData } = ev.data;
+  let container = document.getElementById(id);
+  if (!container) {
+    container = document.createElement("details");
+    container.id = id;
+    container.open = true;
+    container.innerHTML = `<summary></summary>`;
+    results.append(container);
+  }
+  while (container.lastChild.nodeName !== "SUMMARY") {
+    container.lastChild.remove();
+  }
+  container.querySelector("summary").textContent = title;
+  switch (type) {
+    case "started":
+      container.innerHTML += "Processing...";
+      break;
+    case "result":
+      const imgUrl = URL.createObjectURL(await imageDataToPNG(imageData));
+      container.innerHTML += `<img src="${imgUrl}">`;
+      break;
+  }
+});
+worker.addEventListener("error", () =>
+  console.error("Something went wrong in the worker")
+);
+
+function dither(image) {
+  worker.postMessage({
+    id: "image",
+    image
+  });
+}
+
+document.body.addEventListener("click", async ev => {
+  const btn = ev.target.closest(".examplebtn");
+  if (!btn) {
+    return;
+  }
+  try {
+    const img = btn.querySelector("img");
+    const imgData = await imageToImageData(img);
+    dither(imgData);
+  } catch (e) {
+    log.innerHTML += `${e.message}\n`;
+  }
+});
+
+fileinput.addEventListener("change", async () => {
+  const file = fileinput.files[0];
+  try {
+    const imgData = await blobToImageData(file);
+    dither(imgData);
+  } catch (e) {
+    log.innerHTML += `${e.message}\n`;
+  }
+});
