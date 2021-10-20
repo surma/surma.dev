@@ -4,9 +4,7 @@ import { MessageStream, message } from "../ditherpunk/worker-utils.js";
 import {
   RGBImageF32N0F8,
   GrayImageF32N0F8,
-  clamp,
-  srgbToLinear,
-  linearToSrgb
+  clamp
 } from "../ditherpunk/image-utils.js";
 
 import {
@@ -32,7 +30,7 @@ function remap(a, b) {
 
 /**
  * @param {RGBImageF32N0F8} img
- * @param {Float32Array} diffusor
+ * @param {GrayImageF32N0F8} diffusor
  * @param {function (Float32Array): Float32Array} quantizeFunc
  */
 function matrixErrorDiffusion(img, diffusor, quantizeFunc, {normalize = true} = {}) {
@@ -53,13 +51,26 @@ function matrixErrorDiffusion(img, diffusor, quantizeFunc, {normalize = true} = 
       const offsetY = diffY;
       if (img.isInBounds(x + offsetX, y + offsetY)) {
         const pixel = img.pixelAt(x + offsetX, y + offsetY);
-        pixel[0] = pixel[0] + error * diffPixel[0];
+        pixel.forEach((v, i, arr) => arr[i] = v + error[i] * diffPixel[0])
       }
     }
   }
   return img;
 }
 
+const atkinson = new GrayImageF32N0F8(
+  new Float32Array([0, 0, 1/8, 1/8, 1/8, 1/8, 1/8, 0, 0, 1/8, 0, 0]),
+  4,
+  3
+);
+
+/**
+ * @param {RGBImageF32N0F8} img
+ * @param {function (number, number): Iterable<{x: number, y: number}>} curve
+ * @param {number[]} weights
+ * @param {function (Float32Array): Float32Array} quantF
+ * @returns {RGBImageF32N0F8}
+ */
 function curveErrorDiffusion(img, curve, weights, quantF) {
   const curveIt = curve(img.width, img.height);
   const errors = Array.from(
@@ -95,36 +106,48 @@ async function init() {
       continue;
     }
 
-    const color = RGBImageF32N0F8.fromImageData(image);
+    const color = RGBImageF32N0F8.fromImageData(image, {linearize: false});
 
     postMessage({
       type: "result",
       id: "original",
       title: "Original",
-      imageData: color.toImageData()
+      imageData: color.toImageData({delinearize: false})
     });
 
-    const quant = curveErrorDiffusion(
+    const atquant = matrixErrorDiffusion(
+      color.copy(),
+      atkinson,
+      color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
+    );
+    postMessage({
+      type: "result",
+      id: "atkinson",
+      title: "Atkinson",
+      imageData: atquant.toImageData({delinearize: false})
+    });
+
+    const riequant = curveErrorDiffusion(
       color.copy(), 
       hilbertCurveGenerator,
       weightGenerator(32, 1/16),
-      color => color.map(v => Math.floor(v * 4) / 4)
+      color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
     );
     postMessage({
       type: "result",
       id: "riemersma",
       title: "Riemersma",
-      imageData: quant.toImageData()
+      imageData: riequant.toImageData({delinearize: false})
     });
 
     let colorXYZ = color.copy().mapSelf(pixel => new Color("srgb", [...pixel]).to("xyz").coords);
-    const quantXYZ = curveErrorDiffusion(
+    const riequantXYZ = curveErrorDiffusion(
       colorXYZ.copy(), 
       hilbertCurveGenerator,
       weightGenerator(32, 1/16),
       color => {
         let srgb = new Color("xyz", [...color]).to("srgb").coords;
-        let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 4, 1));
+        let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
         return new Color("srgb", quant).to("xyz").coords;
       }
 
@@ -132,8 +155,24 @@ async function init() {
     postMessage({
       type: "result",
       id: "riemersma_xyz",
-      title: "Riemersma_xyz",
-      imageData: quantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData()
+      title: "Riemersma XYZ",
+      imageData: riequantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
+    });
+
+    const atquantXYZ = matrixErrorDiffusion(
+      colorXYZ.copy(),
+      atkinson,
+      color => {
+        let srgb = new Color("xyz", [...color]).to("srgb").coords;
+        let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
+        return new Color("srgb", quant).to("xyz").coords;
+      }
+    );
+    postMessage({
+      type: "result",
+      id: "atkinson_xyz",
+      title: "Atkinson XYZ",
+      imageData: atquantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
     });
   }
 }

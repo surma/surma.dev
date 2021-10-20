@@ -103,6 +103,11 @@ export class Image {
     return { x, y };
   }
 
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @returns {Float32Array}
+   */
   pixelAt(x, y, { wrap = false } = {}) {
     if (wrap) {
       ({ x, y } = this.wrapCoordinates({ x, y }));
@@ -278,7 +283,7 @@ export class RGBImageF32N0F8 extends Image {
     return 3;
   }
 
-  static fromImageData(sourceImage) {
+  static fromImageData(sourceImage, {linearize = true} = {}) {
     const img = new this(
       new this.BUFFER_TYPE(
         sourceImage.width * sourceImage.height * this.NUM_CHANNELS
@@ -287,9 +292,15 @@ export class RGBImageF32N0F8 extends Image {
       sourceImage.height
     );
     for (let i = 0; i < sourceImage.width * sourceImage.height; i++) {
-      img.data[3 * i + 0] = srgbToLinear(sourceImage.data[4 * i + 0] / 255);
-      img.data[3 * i + 1] = srgbToLinear(sourceImage.data[4 * i + 1] / 255);
-      img.data[3 * i + 2] = srgbToLinear(sourceImage.data[4 * i + 2] / 255);
+      if(linearize) {
+        img.data[3 * i + 0] = srgbToLinear(sourceImage.data[4 * i + 0] / 255);
+        img.data[3 * i + 1] = srgbToLinear(sourceImage.data[4 * i + 1] / 255);
+        img.data[3 * i + 2] = srgbToLinear(sourceImage.data[4 * i + 2] / 255);
+      } else {
+        img.data[3 * i + 0] = sourceImage.data[4 * i + 0] / 255;
+        img.data[3 * i + 1] = sourceImage.data[4 * i + 1] / 255;
+        img.data[3 * i + 2] = sourceImage.data[4 * i + 2] / 255;
+      }
     }
     return img;
   }
@@ -301,13 +312,22 @@ export class RGBImageF32N0F8 extends Image {
     return this;
   }
 
-  toImageData() {
+  /**
+   * @param {{delinearize: boolean}}
+   */
+  toImageData({delinearize = true} = {}) {
     const img = new Uint8ClampedArray(this.width * this.height * 4);
     for (let i = 0; i < this.width * this.height; i++) {
       // Clamping and floor’ing is done implicitly by Uint8ClampedArray
-      img[4 * i + 0] = linearToSrgb(this.data[3 * i + 0]) * 255;
-      img[4 * i + 1] = linearToSrgb(this.data[3 * i + 1]) * 255;
-      img[4 * i + 2] = linearToSrgb(this.data[3 * i + 2]) * 255;
+      if(delinearize) {
+        img[4 * i + 0] = linearToSrgb(this.data[3 * i + 0]) * 255;
+        img[4 * i + 1] = linearToSrgb(this.data[3 * i + 1]) * 255;
+        img[4 * i + 2] = linearToSrgb(this.data[3 * i + 2]) * 255;
+      } else {
+        img[4 * i + 0] =this.data[3 * i + 0] * 255;
+        img[4 * i + 1] =this.data[3 * i + 1] * 255;
+        img[4 * i + 2] =this.data[3 * i + 2] * 255;
+      }
       img[4 * i + 3] = 255;
     }
     return new ImageData(img, this.width, this.height);
