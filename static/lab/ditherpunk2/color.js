@@ -1,5 +1,7 @@
 import Color from "colorjs.io/color.js";
-import {imageToImageData, imageDataToPNG} from "../ditherpunk/image-utils.js";
+import {imageToImageData, imageDataToPNG, blobToImageData} from "../ditherpunk/image-utils.js";
+import "two-up-element/dist/two-up.js";
+import "pinch-zoom-element/dist/pinch-zoom.js";
 
 function clamp(min, v, max) {
   if(v < min) {
@@ -74,27 +76,19 @@ function colorMix(srgbA, srgbB, {unit = 256, interp = "pixelated"} = {}) {
 // document.body.append(colorMix([1, 1, 1], [0, 0, 0], {interp: "auto"}));
 
 const worker = new Worker(new URL("./color-worker.js", import.meta.url), {type: "module"});
+const {left, right} = document.all;
+
+left.addEventListener("change", () => right.setTransform(left));
+right.addEventListener("change", () => left.setTransform(right));
+
 worker.addEventListener("message", async ev => {
   const { id, type, title, imageData } = ev.data;
-  let container = document.getElementById(id);
-  if (!container) {
-    container = document.createElement("details");
-    container.id = id;
-    container.open = true;
-    container.innerHTML = `<summary></summary>`;
-    results.append(container);
-  }
-  while (container.lastChild.nodeName !== "SUMMARY") {
-    container.lastChild.remove();
-  }
-  container.querySelector("summary").textContent = title;
   switch (type) {
     case "started":
-      container.innerHTML += "Processing...";
       break;
     case "result":
       const imgUrl = URL.createObjectURL(await imageDataToPNG(imageData));
-      container.innerHTML += `<img src="${imgUrl}">`;
+      right.firstElementChild.src = imgUrl;
       break;
   }
 });
@@ -116,6 +110,7 @@ document.body.addEventListener("click", async ev => {
   }
   try {
     const img = btn.querySelector("img");
+    left.firstElementChild.src = img.src;
     const imgData = await imageToImageData(img);
     dither(imgData);
   } catch (e) {
@@ -127,6 +122,8 @@ fileinput.addEventListener("change", async () => {
   const file = fileinput.files[0];
   try {
     const imgData = await blobToImageData(file);
+    const imgUrl = URL.createObjectURL(await imageDataToPNG(imgData));
+    left.firstElementChild.src = imgUrl;
     dither(imgData);
   } catch (e) {
     log.innerHTML += `${e.message}\n`;

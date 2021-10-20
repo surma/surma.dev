@@ -3,7 +3,9 @@
 <script type="importmap">
   {
     "imports": {
-      "colorjs.io/": "/node_modules/colorjs.io/"
+      "colorjs.io/": "/node_modules/colorjs.io/",
+      "two-up-element/": "/node_modules/two-up-element/",
+      "pinch-zoom-element/": "/node_modules/pinch-zoom-element/"
     }
   }
 </script>
@@ -16,12 +18,21 @@ img {
   display: block;
   image-rendering: pixelated;
 }
+two-up {
+  display: block;
+  width: 100%;
+}
+two-up > * {
+  width: 100%;
+}
 </style>
 <input type="file" id="fileinput" />
 <button class="examplebtn">
-  <img src="./color-image.png" class="exampleimg" height="40" />
+  <img src="./color-image.png" id="exampleimg" height="40" />
 </button>
-<script type="module" src="./color.js"></script>
 <pre id="log"></pre>
-<table id="results">
-</table>
+<two-up id="twoup">
+  <pinch-zoom id="left"> <img></pinch-zoom>
+  <pinch-zoom id="right"> <img></pinch-zoom>
+</two-up>
+<script type="module" src="./color.js"></script>
