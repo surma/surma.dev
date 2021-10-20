@@ -180,6 +180,9 @@ export class Image {
     }
   }
 
+  /**
+   * @returns {Iterable<{x: number, y: number, i: number, pixel: Float32Array}>}
+   */
   *allPixels() {
     let i = 0;
     for (const { x, y } of this.allCoordinates()) {

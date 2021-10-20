@@ -30,6 +30,36 @@ function remap(a, b) {
   return v => v * (b - a) + a;
 }
 
+/**
+ * @param {RGBImageF32N0F8} img
+ * @param {Float32Array} diffusor
+ * @param {function (Float32Array): Float32Array} quantizeFunc
+ */
+function matrixErrorDiffusion(img, diffusor, quantizeFunc, {normalize = true} = {}) {
+  if(normalize) {
+    diffusor.normalizeSelf();
+  }
+  for (const { x, y, pixel } of img.allPixels()) {
+    const original = pixel.slice();
+    const quantized = quantizeFunc(original);
+    pixel.set(quantized);
+    const error = original.map((v, i) => v - quantized[i]);
+    for (const {
+      x: diffX,
+      y: diffY,
+      pixel: diffPixel
+    } of diffusor.allPixels()) {
+      const offsetX = diffX - Math.floor((diffusor.width - 1) / 2);
+      const offsetY = diffY;
+      if (img.isInBounds(x + offsetX, y + offsetY)) {
+        const pixel = img.pixelAt(x + offsetX, y + offsetY);
+        pixel[0] = pixel[0] + error * diffPixel[0];
+      }
+    }
+  }
+  return img;
+}
+
 function curveErrorDiffusion(img, curve, weights, quantF) {
   const curveIt = curve(img.width, img.height);
   const errors = Array.from(
@@ -77,7 +107,7 @@ async function init() {
     const quant = curveErrorDiffusion(
       color.copy(), 
       hilbertCurveGenerator,
-      weightGenerator(32, 1/8),
+      weightGenerator(32, 1/16),
       color => color.map(v => Math.floor(v * 4) / 4)
     );
     postMessage({
@@ -91,10 +121,10 @@ async function init() {
     const quantXYZ = curveErrorDiffusion(
       colorXYZ.copy(), 
       hilbertCurveGenerator,
-      weightGenerator(32, 1/8),
+      weightGenerator(32, 1/16),
       color => {
-        let srgb = new Color("xyz", [...color]).to("srgb", {inGamut: true}).coords;
-        let quant = srgb.map(v => Math.floor(v * 4) / 4);
+        let srgb = new Color("xyz", [...color]).to("srgb").coords;
+        let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 4, 1));
         return new Color("srgb", quant).to("xyz").coords;
       }
 
