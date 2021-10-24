@@ -1,6 +1,5 @@
 import Color from "/node_modules/colorjs.io/src/main.js";
 self.Color = Color;
-import { MessageStream, message } from "../ditherpunk/worker-utils.js";
 import {
   RGBImageF32N0F8,
   GrayImageF32N0F8,
@@ -95,85 +94,94 @@ function curveErrorDiffusion(img, curve, weights, quantF) {
   return img;
 }
 
-async function init() {
-  const reader = MessageStream().getReader();
-
-  while (true) {
-    const {
-      value: { image, id }
-    } = await reader.read();
-    if (id != "image") {
-      continue;
-    }
-
-    const color = RGBImageF32N0F8.fromImageData(image, {linearize: false});
-
-    postMessage({
-      type: "result",
-      id: "original",
-      title: "Original",
-      imageData: color.toImageData({delinearize: false})
-    });
-
-    const atquant = matrixErrorDiffusion(
+const dithers = {
+  original(color, opts) {
+    return color;
+  },
+  atkinson(color, opts) {
+    return matrixErrorDiffusion(
       color.copy(),
       atkinson,
       color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
     );
-    postMessage({
-      type: "result",
-      id: "atkinson",
-      title: "Atkinson",
-      imageData: atquant.toImageData({delinearize: false})
-    });
-
-    const riequant = curveErrorDiffusion(
-      color.copy(), 
-      hilbertCurveGenerator,
-      weightGenerator(32, 1/16),
-      color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
-    );
-    postMessage({
-      type: "result",
-      id: "riemersma",
-      title: "Riemersma",
-      imageData: riequant.toImageData({delinearize: false})
-    });
-
-    let colorXYZ = color.copy().mapSelf(pixel => new Color("srgb", [...pixel]).to("xyz").coords);
-    const riequantXYZ = curveErrorDiffusion(
-      colorXYZ.copy(), 
-      hilbertCurveGenerator,
-      weightGenerator(32, 1/16),
-      color => {
-        let srgb = new Color("xyz", [...color]).to("srgb").coords;
-        let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
-        return new Color("srgb", quant).to("xyz").coords;
-      }
-
-    );
-    postMessage({
-      type: "result",
-      id: "riemersma_xyz",
-      title: "Riemersma XYZ",
-      imageData: riequantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
-    });
-
-    const atquantXYZ = matrixErrorDiffusion(
-      colorXYZ.copy(),
-      atkinson,
-      color => {
-        let srgb = new Color("xyz", [...color]).to("srgb").coords;
-        let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
-        return new Color("srgb", quant).to("xyz").coords;
-      }
-    );
-    postMessage({
-      type: "result",
-      id: "atkinson_xyz",
-      title: "Atkinson XYZ",
-      imageData: atquantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
-    });
+  },
+  riemersma(color, opts) {
+    return curveErrorDiffusion(
+        color.copy(), 
+        hilbertCurveGenerator,
+        weightGenerator(32, 1/16),
+        color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
+      );
   }
-}
-init();
+};
+
+addEventListener("message", async ev => {
+  const {image, opts, dither} = ev.data;
+
+  const color = RGBImageF32N0F8.fromImageData(image, {linearize: false});
+
+  const result = await dithers[dither](color, opts);
+  postMessage({
+    imageData: result.toImageData({delinearize: false})
+  });
+
+    // const atquant = matrixErrorDiffusion(
+    //   color.copy(),
+    //   atkinson,
+    //   color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
+    // );
+    // postMessage({
+    //   type: "result",
+    //   id: "atkinson",
+    //   title: "Atkinson",
+    //   imageData: atquant.toImageData({delinearize: false})
+    // });
+
+    // const riequant = curveErrorDiffusion(
+    //   color.copy(), 
+    //   hilbertCurveGenerator,
+    //   weightGenerator(32, 1/16),
+    //   color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
+    // );
+    // postMessage({
+    //   type: "result",
+    //   id: "riemersma",
+    //   title: "Riemersma",
+    //   imageData: riequant.toImageData({delinearize: false})
+    // });
+
+    // let colorXYZ = color.copy().mapSelf(pixel => new Color("srgb", [...pixel]).to("xyz").coords);
+    // const riequantXYZ = curveErrorDiffusion(
+    //   colorXYZ.copy(), 
+    //   hilbertCurveGenerator,
+    //   weightGenerator(32, 1/16),
+    //   color => {
+    //     let srgb = new Color("xyz", [...color]).to("srgb").coords;
+    //     let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
+    //     return new Color("srgb", quant).to("xyz").coords;
+    //   }
+
+    // );
+    // postMessage({
+    //   type: "result",
+    //   id: "riemersma_xyz",
+    //   title: "Riemersma XYZ",
+    //   imageData: riequantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
+    // });
+
+    // const atquantXYZ = matrixErrorDiffusion(
+    //   colorXYZ.copy(),
+    //   atkinson,
+    //   color => {
+    //     let srgb = new Color("xyz", [...color]).to("srgb").coords;
+    //     let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
+    //     return new Color("srgb", quant).to("xyz").coords;
+    //   }
+    // );
+    // postMessage({
+    //   type: "result",
+    //   id: "atkinson_xyz",
+    //   title: "Atkinson XYZ",
+    //   imageData: atquantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
+    // });
+  });

@@ -3,6 +3,8 @@ import {imageToImageData, imageDataToPNG, blobToImageData} from "../ditherpunk/i
 import "two-up-element/dist/two-up.js";
 import "pinch-zoom-element/dist/pinch-zoom.js";
 
+const html = String.raw;
+
 function clamp(min, v, max) {
   if(v < min) {
     return min;
@@ -75,57 +77,106 @@ function colorMix(srgbA, srgbB, {unit = 256, interp = "pixelated"} = {}) {
 // document.body.append(colorMix([1, 1, 1], [0, 0, 0]));
 // document.body.append(colorMix([1, 1, 1], [0, 0, 0], {interp: "auto"}));
 
-const worker = new Worker(new URL("./color-worker.js", import.meta.url), {type: "module"});
-const {left, right} = document.all;
+const {left, right, submits, sources, exampleimg, logarea, fileinput, dither, palette} = document.all;
 
 left.addEventListener("change", () => right.setTransform(left));
 right.addEventListener("change", () => left.setTransform(right));
 
-worker.addEventListener("message", async ev => {
-  const { id, type, title, imageData } = ev.data;
-  switch (type) {
-    case "started":
-      break;
-    case "result":
-      const imgUrl = URL.createObjectURL(await imageDataToPNG(imageData));
-      right.firstElementChild.src = imgUrl;
-      break;
-  }
-});
-worker.addEventListener("error", () =>
-  console.error("Something went wrong in the worker")
-);
-
-function dither(image) {
-  worker.postMessage({
-    id: "image",
-    image
+/** @type Worker */
+let worker;
+function ditherImage(image, dither, opts) {
+  return new Promise(resolve => {
+    if(worker) {
+      worker.terminate();
+    }
+    worker = new Worker(new URL("./color-worker.js", import.meta.url), {type: "module"});
+    worker.addEventListener("message", async ev => {
+      const { imageData } = ev.data;
+      resolve(imageData);
+    });
+    worker.addEventListener("error", () =>
+      console.error("Something went wrong in the worker")
+    );
+    worker.postMessage({
+      image,
+      dither,
+      opts
+    });
   });
 }
 
-document.body.addEventListener("click", async ev => {
-  const btn = ev.target.closest(".examplebtn");
-  if (!btn) {
-    return;
-  }
-  try {
-    const img = btn.querySelector("img");
-    left.firstElementChild.src = img.src;
-    const imgData = await imageToImageData(img);
-    dither(imgData);
-  } catch (e) {
-    log.innerHTML += `${e.message}\n`;
-  }
-});
+/** 
+ * @param {Event} ev 
+ */
+function updateControls() {
+  document.querySelectorAll("fieldset").forEach(fieldset => {
+    const select = fieldset.querySelector("select");
+    if(!select) return;
+    const selected = select.value;
+    [...fieldset.children].forEach(el => el.style = '');
+    fieldset.querySelector(`#${selected}`).style.display = 'block';
+  });
+}
+updateControls();
+document.body.addEventListener("change", updateControls);
 
-fileinput.addEventListener("change", async () => {
-  const file = fileinput.files[0];
-  try {
-    const imgData = await blobToImageData(file);
-    const imgUrl = URL.createObjectURL(await imageDataToPNG(imgData));
-    left.firstElementChild.src = imgUrl;
-    dither(imgData);
-  } catch (e) {
-    log.innerHTML += `${e.message}\n`;
+function log(msg) {
+  logarea.innerText = msg;
+}
+
+async function getImage() {
+  switch([...sources.querySelectorAll("input[type=radio]")].filter(x => x.checked)[0].value) {
+    case "custom":
+        const src = fileinput.files[0];
+        if(!src) {
+          log(`No image selected`);
+          return;
+        }
+        return blobToImageData(src); 
+      break;
+      case "example":
+        return imageToImageData(exampleimg); 
+        break;
   }
+}
+
+function getDither() {
+  const ditherName = dither.querySelector("select").value;
+  const opts = {}; // TODO
+  return {dither: ditherName, opts};
+}
+
+submits.addEventListener("click", async ev => {
+  const {target} = ev.target.dataset;
+  document.all[target].firstElementChild.src = "";
+  const image = await getImage();
+  if(!image) return;
+  const {dither, opts} = getDither();
+  const dithered = await ditherImage(image, dither, opts);
+  const blob = await imageDataToPNG(dithered);
+  document.all[target].firstElementChild.src = URL.createObjectURL(blob);
 });
+// document.body.addEventListener("change", async ev => {
+//   const btn = ev.target.closest(".examplebtn");
+//   if (!btn) {
+//     return;
+//   }
+//   try {
+//     const img = btn.querySelector("img");
+//     const imgData = await imageToImageData(img);
+//     dither(imgData);
+//   } catch (e) {
+//     log.innerHTML += `${e.message}\n`;
+//   }
+// });
+
+// fileinput.addEventListener("change", async () => {
+//   const file = fileinput.files[0];
+//   try {
+//     const imgData = await blobToImageData(file);
+//     const imgUrl = URL.createObjectURL(await imageDataToPNG(imgData));
+//     dither(imgData);
+//   } catch (e) {
+//     log.innerHTML += `${e.message}\n`;
+//   }
+// });

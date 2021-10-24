@@ -10,29 +10,85 @@
   }
 </script>
 <style>
-canvas {
-  display: block;
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
-img {
-  width: 200%;
-  display: block;
-  image-rendering: pixelated;
+body {
+  display: flex;
+  flex-direction: column;
+  gap: .3em;
 }
 two-up {
   display: block;
   width: 100%;
+  flex-grow: 1;
+}
+two-up img {
+  image-rendering: pixelated;
 }
 two-up > * {
   width: 100%;
 }
+fieldset {
+  display: flex;
+  gap: 1em;
+}
+.subcontrol {
+  display: none;
+}
+#submits {
+  display: flex;
+  justify-content: space-around;
+}
 </style>
-<input type="file" id="fileinput" />
-<button class="examplebtn">
+<fieldset id="sources">
+  <legend>Image</legend>
+  <label>
+    <input type="radio" name="source" value="custom">
+    <input type="file" id="fileinput" />
+</label>
+<label>
+  <input type="radio" name="source" value="example" checked>
   <img src="./color-image.png" id="exampleimg" height="40" />
-</button>
-<pre id="log"></pre>
+</label>
+</fieldset>
+<fieldset id="dither">
+  <legend>Dithering Algorithm</legend>
+  <select>
+    <option value="original">Original</option>
+    <option value="riemersma">Riemersma</option>
+    <option value="atkinson">Atkinson</option>
+  </select>
+  <div id="riemersma" class="subcontrol">
+    Weights and stuff
+  </div>
+  <div id="atkinson" class="subcontrol">
+  </div>
+  <div id="original" class="subcontrol">
+  </div>
+</fieldset>
+<fieldset id="palette">
+  <legend>Palette</legend>
+  <select>
+    <option value="evenspaced">Evenly spaced</option>
+    <option value="kmeans">k-means Clustering</option>
+  </select>
+  <div id="evenspaced" class="subcontrol">
+    N
+  </div>
+  <div id="kmeans" class="subcontrol">
+    k
+  </div>
+</fieldset>
+<div id="submits">
+  <button data-target="left">Put left</button>
+  <button data-target="right">Put right</button>
+</div>
 <two-up id="twoup">
   <pinch-zoom id="left"> <img></pinch-zoom>
   <pinch-zoom id="right"> <img></pinch-zoom>
 </two-up>
+<pre id="logarea"></pre>
 <script type="module" src="./color.js"></script>
