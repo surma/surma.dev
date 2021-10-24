@@ -84,7 +84,7 @@ right.addEventListener("change", () => left.setTransform(right));
 
 /** @type Worker */
 let worker;
-function ditherImage(image, dither, opts) {
+function ditherImage(image, opts) {
   return new Promise(resolve => {
     if(worker) {
       worker.terminate();
@@ -99,8 +99,7 @@ function ditherImage(image, dither, opts) {
     );
     worker.postMessage({
       image,
-      dither,
-      opts
+      ...opts
     });
   });
 }
@@ -141,9 +140,18 @@ async function getImage() {
 }
 
 function getDither() {
-  const ditherName = dither.querySelector("select").value;
-  const opts = {}; // TODO
-  return {dither: ditherName, opts};
+  return {
+    dither: dither.querySelector("select").value,
+    opts: {}
+  }; 
+}
+
+function getPalette() {
+  let name = palette.querySelector("select").value
+  return {
+    palette: name,
+    opts: Object.fromEntries([...palette.querySelectorAll(`#${name} input, #${name} select`)].map(el => ([el.name, el.value])))
+  }; 
 }
 
 submits.addEventListener("click", async ev => {
@@ -151,8 +159,16 @@ submits.addEventListener("click", async ev => {
   document.all[target].firstElementChild.src = "";
   const image = await getImage();
   if(!image) return;
-  const {dither, opts} = getDither();
-  const dithered = await ditherImage(image, dither, opts);
+  const opts = {
+    dither: getDither(),
+    palette: getPalette()
+  };
+  let dithered;
+  if(opts.dither.dither === "original") {
+    dithered = image;
+  } else {
+    dithered = await ditherImage(image, opts);
+  }
   const blob = await imageDataToPNG(dithered);
   document.all[target].firstElementChild.src = URL.createObjectURL(blob);
 });

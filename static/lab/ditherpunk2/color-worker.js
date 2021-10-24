@@ -3,28 +3,26 @@ self.Color = Color;
 import {
   RGBImageF32N0F8,
   GrayImageF32N0F8,
-  clamp
+  clamp,
 } from "../ditherpunk/image-utils.js";
 
 import {
   hilbertCurveGenerator,
-  weightGenerator
+  weightGenerator,
 } from "../ditherpunk/curve-utils.js";
-
-
 
 function createEvenPaletteQuantizer(n) {
   n = clamp(2, n, 255) - 1;
-  return p => {
+  return (p) => {
     if (typeof p === "number") {
       p = [p];
     }
-    return p.map(p => clamp(0, Math.round(p * n) / n, 1));
+    return p.map((p) => clamp(0, Math.round(p * n) / n, 1));
   };
 }
 
 function remap(a, b) {
-  return v => v * (b - a) + a;
+  return (v) => v * (b - a) + a;
 }
 
 /**
@@ -32,8 +30,13 @@ function remap(a, b) {
  * @param {GrayImageF32N0F8} diffusor
  * @param {function (Float32Array): Float32Array} quantizeFunc
  */
-function matrixErrorDiffusion(img, diffusor, quantizeFunc, {normalize = true} = {}) {
-  if(normalize) {
+function matrixErrorDiffusion(
+  img,
+  diffusor,
+  quantizeFunc,
+  { normalize = true } = {}
+) {
+  if (normalize) {
     diffusor.normalizeSelf();
   }
   for (const { x, y, pixel } of img.allPixels()) {
@@ -44,13 +47,13 @@ function matrixErrorDiffusion(img, diffusor, quantizeFunc, {normalize = true} = 
     for (const {
       x: diffX,
       y: diffY,
-      pixel: diffPixel
+      pixel: diffPixel,
     } of diffusor.allPixels()) {
       const offsetX = diffX - Math.floor((diffusor.width - 1) / 2);
       const offsetY = diffY;
       if (img.isInBounds(x + offsetX, y + offsetY)) {
         const pixel = img.pixelAt(x + offsetX, y + offsetY);
-        pixel.forEach((v, i, arr) => arr[i] = v + error[i] * diffPixel[0])
+        pixel.forEach((v, i, arr) => (arr[i] = v + error[i] * diffPixel[0]));
       }
     }
   }
@@ -58,7 +61,12 @@ function matrixErrorDiffusion(img, diffusor, quantizeFunc, {normalize = true} = 
 }
 
 const atkinson = new GrayImageF32N0F8(
-  new Float32Array([0, 0, 1/8, 1/8, 1/8, 1/8, 1/8, 0, 0, 1/8, 0, 0]),
+  // prettier-ignore
+  new Float32Array([ 
+        0,     0, 1 / 8, 1 / 8,
+    1 / 8, 1 / 8, 1 / 8,     0,
+        0, 1 / 8,     0,     0,
+  ]),
   4,
   3
 );
@@ -84,7 +92,8 @@ function curveErrorDiffusion(img, curve, weights, quantF) {
     const quantized = quantF(
       original.map(
         (p, ch) =>
-          p + errors.map(v => v[ch]).reduce((sum, c, i) => sum + c * weights[i])
+          p +
+          errors.map((v) => v[ch]).reduce((sum, c, i) => sum + c * weights[i])
       )
     );
     errors.pop();
@@ -95,93 +104,139 @@ function curveErrorDiffusion(img, curve, weights, quantF) {
 }
 
 const dithers = {
-  original(color, opts) {
+  none(color, opts) {
     return color;
   },
   atkinson(color, opts) {
-    return matrixErrorDiffusion(
-      color.copy(),
-      atkinson,
-      color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
+    return matrixErrorDiffusion(color.copy(), atkinson, (color) =>
+      color.map((v) => clamp(0, Math.floor(v * 4) / 3, 1))
     );
   },
   riemersma(color, opts) {
     return curveErrorDiffusion(
-        color.copy(), 
-        hilbertCurveGenerator,
-        weightGenerator(32, 1/16),
-        color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
-      );
-  }
+      color.copy(),
+      hilbertCurveGenerator,
+      weightGenerator(32, 1 / 16),
+      (color) => color.map((v) => clamp(0, Math.floor(v * 4) / 3, 1))
+    );
+  },
 };
 
-addEventListener("message", async ev => {
-  const {image, opts, dither} = ev.data;
+const palettes = {
+  evenspaced(image, { n, space }) {
+    // Try to auto-compute all values
+    const dims = new Array(3);
+      const white = new Color("srgb", [1, 1, 1]).to(space);
+      const black = new Color("srgb", [0, 0, 0]).to(space);
+      for (let i = 0; i < dims.length; i++) {
+        dims[i] = {
+          min: black.coords[i],
+          max: white.coords[i],
+        };
+      }
+    // Correct
+    switch (space) {
+      case "lch": 
+        dims[1] = { min: 0, max: 131};
+        dims[2] = { min: 0, max: 360};
+        break;
+      case "hsl": 
+        dims[0] = { min: 0, max: 360};
+        dims[1] = { min: 0, max: 100};
+        break;
+    }
+    dims.forEach(v => v.inc = (v.max - v.min) / (n-1));
+    console.log(dims);
 
-  const color = RGBImageF32N0F8.fromImageData(image, {linearize: false});
+    const colors = [];
+    for (let d1 = 0; d1 < n; d1++) {
+      for (let d2 = 0; d2 < n; d2++) {
+        for (let d3 = 0; d3 < n; d3++) {
+          const indices = [d1, d2, d3];
+          colors.push(
+            new Color(
+              space,
+              indices.map((idx, i) => dims[i].min + dims[i].inc * idx)
+            )
+              .to("srgb")
+              .toString({ format: "hex" })
+          );
+        }
+      }
+    }
+    return colors;
+  },
+};
 
-  const result = await dithers[dither](color, opts);
+addEventListener("message", async (ev) => {
+  const { image, dither, palette } = ev.data;
+  const color = RGBImageF32N0F8.fromImageData(image, { linearize: false });
+
+  const genPalette = palettes[palette.palette](color, palette.opts);
+  console.log({ genPalette });
+
+  const result = await dithers[dither.dither](color, dither.opts);
   postMessage({
-    imageData: result.toImageData({delinearize: false})
+    imageData: result.toImageData({ delinearize: false }),
   });
 
-    // const atquant = matrixErrorDiffusion(
-    //   color.copy(),
-    //   atkinson,
-    //   color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
-    // );
-    // postMessage({
-    //   type: "result",
-    //   id: "atkinson",
-    //   title: "Atkinson",
-    //   imageData: atquant.toImageData({delinearize: false})
-    // });
+  // const atquant = matrixErrorDiffusion(
+  //   color.copy(),
+  //   atkinson,
+  //   color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
+  // );
+  // postMessage({
+  //   type: "result",
+  //   id: "atkinson",
+  //   title: "Atkinson",
+  //   imageData: atquant.toImageData({delinearize: false})
+  // });
 
-    // const riequant = curveErrorDiffusion(
-    //   color.copy(), 
-    //   hilbertCurveGenerator,
-    //   weightGenerator(32, 1/16),
-    //   color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
-    // );
-    // postMessage({
-    //   type: "result",
-    //   id: "riemersma",
-    //   title: "Riemersma",
-    //   imageData: riequant.toImageData({delinearize: false})
-    // });
+  // const riequant = curveErrorDiffusion(
+  //   color.copy(),
+  //   hilbertCurveGenerator,
+  //   weightGenerator(32, 1/16),
+  //   color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
+  // );
+  // postMessage({
+  //   type: "result",
+  //   id: "riemersma",
+  //   title: "Riemersma",
+  //   imageData: riequant.toImageData({delinearize: false})
+  // });
 
-    // let colorXYZ = color.copy().mapSelf(pixel => new Color("srgb", [...pixel]).to("xyz").coords);
-    // const riequantXYZ = curveErrorDiffusion(
-    //   colorXYZ.copy(), 
-    //   hilbertCurveGenerator,
-    //   weightGenerator(32, 1/16),
-    //   color => {
-    //     let srgb = new Color("xyz", [...color]).to("srgb").coords;
-    //     let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
-    //     return new Color("srgb", quant).to("xyz").coords;
-    //   }
+  // let colorXYZ = color.copy().mapSelf(pixel => new Color("srgb", [...pixel]).to("xyz").coords);
+  // const riequantXYZ = curveErrorDiffusion(
+  //   colorXYZ.copy(),
+  //   hilbertCurveGenerator,
+  //   weightGenerator(32, 1/16),
+  //   color => {
+  //     let srgb = new Color("xyz", [...color]).to("srgb").coords;
+  //     let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
+  //     return new Color("srgb", quant).to("xyz").coords;
+  //   }
 
-    // );
-    // postMessage({
-    //   type: "result",
-    //   id: "riemersma_xyz",
-    //   title: "Riemersma XYZ",
-    //   imageData: riequantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
-    // });
+  // );
+  // postMessage({
+  //   type: "result",
+  //   id: "riemersma_xyz",
+  //   title: "Riemersma XYZ",
+  //   imageData: riequantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
+  // });
 
-    // const atquantXYZ = matrixErrorDiffusion(
-    //   colorXYZ.copy(),
-    //   atkinson,
-    //   color => {
-    //     let srgb = new Color("xyz", [...color]).to("srgb").coords;
-    //     let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
-    //     return new Color("srgb", quant).to("xyz").coords;
-    //   }
-    // );
-    // postMessage({
-    //   type: "result",
-    //   id: "atkinson_xyz",
-    //   title: "Atkinson XYZ",
-    //   imageData: atquantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
-    // });
-  });
+  // const atquantXYZ = matrixErrorDiffusion(
+  //   colorXYZ.copy(),
+  //   atkinson,
+  //   color => {
+  //     let srgb = new Color("xyz", [...color]).to("srgb").coords;
+  //     let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
+  //     return new Color("srgb", quant).to("xyz").coords;
+  //   }
+  // );
+  // postMessage({
+  //   type: "result",
+  //   id: "atkinson_xyz",
+  //   title: "Atkinson XYZ",
+  //   imageData: atquantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
+  // });
+});

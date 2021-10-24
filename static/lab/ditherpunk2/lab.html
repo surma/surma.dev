@@ -58,16 +58,16 @@ fieldset {
   <legend>Dithering Algorithm</legend>
   <select>
     <option value="original">Original</option>
+    <option value="nearest">Nearest Color</option>
     <option value="riemersma">Riemersma</option>
     <option value="atkinson">Atkinson</option>
   </select>
   <div id="riemersma" class="subcontrol">
     Weights and stuff
   </div>
-  <div id="atkinson" class="subcontrol">
-  </div>
-  <div id="original" class="subcontrol">
-  </div>
+  <div id="atkinson" class="subcontrol"> </div>
+  <div id="original" class="subcontrol"> </div>
+  <div id="nearest" class="subcontrol"> </div>
 </fieldset>
 <fieldset id="palette">
   <legend>Palette</legend>
@@ -76,7 +76,19 @@ fieldset {
     <option value="kmeans">k-means Clustering</option>
   </select>
   <div id="evenspaced" class="subcontrol">
-    N
+    <label>
+      Items per dimension:
+      <input type="number" name="n" min=2 value=4>
+    </label>
+    <label>
+      Space:
+      <select name="space">
+        <option value="srgb">sRGB</option>
+        <option value="xyz">XYZ</option>
+        <option value="hsl">HSL</option>
+        <option value="lch">LCH</option>
+      </select>
+    </label>
   </div>
   <div id="kmeans" class="subcontrol">
     k
