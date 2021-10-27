@@ -58,7 +58,7 @@ fieldset {
   <legend>Dithering Algorithm</legend>
   <select>
     <option value="original">Original</option>
-    <option value="nearest">Nearest Color</option>
+    <option value="none">No dithering</option>
     <option value="riemersma">Riemersma</option>
     <option value="atkinson">Atkinson</option>
   </select>
@@ -67,7 +67,7 @@ fieldset {
   </div>
   <div id="atkinson" class="subcontrol"> </div>
   <div id="original" class="subcontrol"> </div>
-  <div id="nearest" class="subcontrol"> </div>
+  <div id="none" class="subcontrol"> </div>
 </fieldset>
 <fieldset id="palette">
   <legend>Palette</legend>
@@ -91,8 +91,28 @@ fieldset {
     </label>
   </div>
   <div id="kmeans" class="subcontrol">
-    k
+    <label>
+      Num colors
+      <input type="number" name="n" min=2 value=4>
+    </label>
+    <label>
+      Max Iterations
+      <input type="number" name="maxit" min=1 value=1000>
+    </label>
   </div>
+</fieldset>
+<fieldset id="closestcolor">
+  <legend>Closest Color Algorithm</legend>
+  <select>
+    <option value="srgb">Euclidian in sRGB</option>
+    <option value="xyz">Euclidan in XYZ</option>
+    <option value="lab">Euclidan in Lab</option>
+    <option value="de2k">Delta E 2000</option>
+  </select>
+  <div id="srgb" class="subcontrol"></div>
+  <div id="xyz" class="subcontrol"></div>
+  <div id="lab" class="subcontrol"></div>
+  <div id="de2k" class="subcontrol"></div>
 </fieldset>
 <div id="submits">
   <button data-target="left">Put left</button>

@@ -104,23 +104,78 @@ function curveErrorDiffusion(img, curve, weights, quantF) {
 }
 
 const dithers = {
-  none(color, opts) {
-    return color;
+  /**
+   * @params {RGBImageF32N0F8} color
+   */
+  none(color, opts, quantF) {
+    return color.copy().mapSelf(color => quantF(new Color("srgb", [...color])).coords)
   },
-  atkinson(color, opts) {
-    return matrixErrorDiffusion(color.copy(), atkinson, (color) =>
-      color.map((v) => clamp(0, Math.floor(v * 4) / 3, 1))
-    );
+  atkinson(color, opts, quantF) {
+    return matrixErrorDiffusion(color.copy(), atkinson, color => quantF(new Color("srgb", [...color])).coords);
   },
-  riemersma(color, opts) {
+  riemersma(color, opts, quantF) {
     return curveErrorDiffusion(
       color.copy(),
       hilbertCurveGenerator,
       weightGenerator(32, 1 / 16),
-      (color) => color.map((v) => clamp(0, Math.floor(v * 4) / 3, 1))
+      color => quantF(new Color("srgb", [...color])).coords
     );
   },
 };
+
+/**
+ * @param {Float32Array | number[]} a
+ * @param {Float32Array | number[]} b
+ * @returns number
+ */
+function euclidDistance(a, b) {
+  let sum = 0;
+  for(const [i, v] of a.entries()) {
+    sum += (v - b[i])**2;
+  }
+  return Math.sqrt(sum);
+}
+
+const closestcolors = {
+  srgb(palette) {
+    const newPalette = palette.map(c => c.to("srgb").coords);
+    return color => {
+      const newColor = color.to("srgb").coords;
+      let idx = newPalette
+        .map((c, i) => ([i, euclidDistance(c, newColor)]))
+        .sort((a,b) => a[1] - b[1])[0][0];
+      return palette[idx];
+    };
+  },
+  xyz(palette) {
+    const newPalette = palette.map(c => c.to("xyz").coords);
+    return color => {
+      const newColor = color.to("xyz").coords;
+      let idx = newPalette
+        .map((c, i) => ([i, euclidDistance(c, newColor)]))
+        .sort((a,b) => a[1] - b[1])[0][0];
+      return palette[idx];
+    };
+  },
+  lab(palette) {
+    const newPalette = palette.map(c => c.to("lab").coords);
+    return color => {
+      const newColor = color.to("lab").coords;
+      let idx = newPalette
+        .map((c, i) => ([i, euclidDistance(c, newColor)]))
+        .sort((a,b) => a[1] - b[1])[0][0];
+      return palette[idx];
+    };
+  },
+  de2k(palette) {
+    return color => {
+      let idx = palette
+        .map((c, i) => ([i, color.deltaE(c, {method: "2000"})]))
+        .sort((a,b) => a[1] - b[1])[0][0];
+      return palette[idx];
+    };
+  },
+}
 
 const palettes = {
   evenspaced(image, { n, space }) {
@@ -134,7 +189,7 @@ const palettes = {
           max: white.coords[i],
         };
       }
-    // Correct
+    // Correct for conical spaces
     switch (space) {
       case "lch": 
         dims[1] = { min: 0, max: 131};
@@ -146,7 +201,6 @@ const palettes = {
         break;
     }
     dims.forEach(v => v.inc = (v.max - v.min) / (n-1));
-    console.log(dims);
 
     const colors = [];
     for (let d1 = 0; d1 < n; d1++) {
@@ -158,85 +212,25 @@ const palettes = {
               space,
               indices.map((idx, i) => dims[i].min + dims[i].inc * idx)
             )
-              .to("srgb")
-              .toString({ format: "hex" })
+              .to("srgb", {inGamut: true})
           );
         }
       }
     }
     return colors;
   },
+  kmeans(color, {n}) {
+  }
 };
 
 addEventListener("message", async (ev) => {
-  const { image, dither, palette } = ev.data;
+  const { image, dither, palette, closestcolor } = ev.data;
   const color = RGBImageF32N0F8.fromImageData(image, { linearize: false });
 
   const genPalette = palettes[palette.palette](color, palette.opts);
-  console.log({ genPalette });
-
-  const result = await dithers[dither.dither](color, dither.opts);
+  const quantF = closestcolors[closestcolor.closestcolor](genPalette);
+  const result = await dithers[dither.dither](color, dither.opts, quantF);
   postMessage({
     imageData: result.toImageData({ delinearize: false }),
   });
-
-  // const atquant = matrixErrorDiffusion(
-  //   color.copy(),
-  //   atkinson,
-  //   color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
-  // );
-  // postMessage({
-  //   type: "result",
-  //   id: "atkinson",
-  //   title: "Atkinson",
-  //   imageData: atquant.toImageData({delinearize: false})
-  // });
-
-  // const riequant = curveErrorDiffusion(
-  //   color.copy(),
-  //   hilbertCurveGenerator,
-  //   weightGenerator(32, 1/16),
-  //   color => color.map(v => clamp(0, Math.floor(v * 4) / 3, 1))
-  // );
-  // postMessage({
-  //   type: "result",
-  //   id: "riemersma",
-  //   title: "Riemersma",
-  //   imageData: riequant.toImageData({delinearize: false})
-  // });
-
-  // let colorXYZ = color.copy().mapSelf(pixel => new Color("srgb", [...pixel]).to("xyz").coords);
-  // const riequantXYZ = curveErrorDiffusion(
-  //   colorXYZ.copy(),
-  //   hilbertCurveGenerator,
-  //   weightGenerator(32, 1/16),
-  //   color => {
-  //     let srgb = new Color("xyz", [...color]).to("srgb").coords;
-  //     let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
-  //     return new Color("srgb", quant).to("xyz").coords;
-  //   }
-
-  // );
-  // postMessage({
-  //   type: "result",
-  //   id: "riemersma_xyz",
-  //   title: "Riemersma XYZ",
-  //   imageData: riequantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
-  // });
-
-  // const atquantXYZ = matrixErrorDiffusion(
-  //   colorXYZ.copy(),
-  //   atkinson,
-  //   color => {
-  //     let srgb = new Color("xyz", [...color]).to("srgb").coords;
-  //     let quant = srgb.map(v => clamp(0, Math.floor(v * 4) / 3, 1));
-  //     return new Color("srgb", quant).to("xyz").coords;
-  //   }
-  // );
-  // postMessage({
-  //   type: "result",
-  //   id: "atkinson_xyz",
-  //   title: "Atkinson XYZ",
-  //   imageData: atquantXYZ.mapSelf(pixel => new Color("xyz", [...pixel]).to("srgb", {inGamut: true}).coords).toImageData({delinearize: false})
-  // });
 });

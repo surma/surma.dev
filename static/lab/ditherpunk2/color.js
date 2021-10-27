@@ -77,7 +77,7 @@ function colorMix(srgbA, srgbB, {unit = 256, interp = "pixelated"} = {}) {
 // document.body.append(colorMix([1, 1, 1], [0, 0, 0]));
 // document.body.append(colorMix([1, 1, 1], [0, 0, 0], {interp: "auto"}));
 
-const {left, right, submits, sources, exampleimg, logarea, fileinput, dither, palette} = document.all;
+const {left, right, submits, sources, exampleimg, logarea, fileinput, dither, palette, select} = document.all;
 
 left.addEventListener("change", () => right.setTransform(left));
 right.addEventListener("change", () => left.setTransform(right));
@@ -139,20 +139,15 @@ async function getImage() {
   }
 }
 
-function getDither() {
+function getSection(name) {
+  const section = document.getElementById(name);
+  const selection = section.querySelector("select").value;
   return {
-    dither: dither.querySelector("select").value,
-    opts: {}
+    [name]: selection,
+    opts: Object.fromEntries([...section.querySelectorAll(`#${selection} input, #${selection} select`)].map(el => ([el.name, el.value]))),
   }; 
 }
 
-function getPalette() {
-  let name = palette.querySelector("select").value
-  return {
-    palette: name,
-    opts: Object.fromEntries([...palette.querySelectorAll(`#${name} input, #${name} select`)].map(el => ([el.name, el.value])))
-  }; 
-}
 
 submits.addEventListener("click", async ev => {
   const {target} = ev.target.dataset;
@@ -160,8 +155,9 @@ submits.addEventListener("click", async ev => {
   const image = await getImage();
   if(!image) return;
   const opts = {
-    dither: getDither(),
-    palette: getPalette()
+    dither: getSection("dither"),
+    palette: getSection("palette"),
+    closestcolor: getSection("closestcolor"),
   };
   let dithered;
   if(opts.dither.dither === "original") {
