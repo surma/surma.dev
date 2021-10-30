@@ -131,10 +131,10 @@ async function getImage() {
           log(`No image selected`);
           return;
         }
-        return blobToImageData(src); 
+        return {url: URL.createObjectURL(src), imgdata: await blobToImageData(src)}; 
       break;
       case "example":
-        return imageToImageData(exampleimg); 
+          return {url: exampleimg.src, imgdata: await imageToImageData(exampleimg)}; 
         break;
   }
 }
@@ -149,11 +149,13 @@ function getSection(name) {
 }
 
 
+const cache = {};
 submits.addEventListener("click", async ev => {
   const {target} = ev.target.dataset;
   document.all[target].firstElementChild.src = "";
-  const image = await getImage();
-  if(!image) return;
+  const original = await getImage();
+  if(!original) return;
+  cache.original = original.url;
   const opts = {
     dither: getSection("dither"),
     palette: getSection("palette"),
@@ -163,32 +165,23 @@ submits.addEventListener("click", async ev => {
   if(opts.dither.dither === "original") {
     dithered = image;
   } else {
-    dithered = await ditherImage(image, opts);
+    dithered = await ditherImage(original.imgdata, opts);
   }
-  const blob = await imageDataToPNG(dithered);
-  document.all[target].firstElementChild.src = URL.createObjectURL(blob);
+  const blob = URL.createObjectURL(await imageDataToPNG(dithered));
+  cache[target] = blob;
+  document.all[target].firstElementChild.src = blob;
 });
-// document.body.addEventListener("change", async ev => {
-//   const btn = ev.target.closest(".examplebtn");
-//   if (!btn) {
-//     return;
-//   }
-//   try {
-//     const img = btn.querySelector("img");
-//     const imgData = await imageToImageData(img);
-//     dither(imgData);
-//   } catch (e) {
-//     log.innerHTML += `${e.message}\n`;
-//   }
-// });
 
-// fileinput.addEventListener("change", async () => {
-//   const file = fileinput.files[0];
-//   try {
-//     const imgData = await blobToImageData(file);
-//     const imgUrl = URL.createObjectURL(await imageDataToPNG(imgData));
-//     dither(imgData);
-//   } catch (e) {
-//     log.innerHTML += `${e.message}\n`;
-//   }
-// });
+document.body.addEventListener("keydown", ev => {
+  if(ev.key === ".") {
+    document.all.right.firstElementChild.src = cache.original;
+    document.all.left.firstElementChild.src = cache.original;
+  } 
+});
+
+document.body.addEventListener("keyup", ev => {
+  if(ev.key === ".") {
+    document.all.right.firstElementChild.src = cache.right;
+    document.all.left.firstElementChild.src = cache.left;
+  } 
+});

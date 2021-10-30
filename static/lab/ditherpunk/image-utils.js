@@ -306,8 +306,8 @@ export class RGBImageF32N0F8 extends Image {
   }
 
   mapSelf(f) {
-    for (const { x, y, i, pixel } of this.allPixels()) {
-      pixel.set(f(pixel, { x, y, i }));
+    for (const p of this.allPixels()) {
+      p.pixel.set(f(p.pixel, p));
     }
     return this;
   }

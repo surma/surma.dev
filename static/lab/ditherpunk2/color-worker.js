@@ -113,11 +113,11 @@ const dithers = {
   atkinson(color, opts, quantF) {
     return matrixErrorDiffusion(color.copy(), atkinson, color => quantF(new Color("srgb", [...color])).coords);
   },
-  riemersma(color, opts, quantF) {
+  riemersma(color, {n ,r}, quantF) {
     return curveErrorDiffusion(
       color.copy(),
       hilbertCurveGenerator,
-      weightGenerator(32, 1 / 16),
+      weightGenerator(n, 1 / r),
       color => quantF(new Color("srgb", [...color])).coords
     );
   },
@@ -130,10 +130,23 @@ const dithers = {
  */
 function euclidDistance(a, b) {
   let sum = 0;
-  for(const [i, v] of a.entries()) {
-    sum += (v - b[i])**2;
+  for (let i = 0; i < 3; i++) {
+    sum += (a[i] - b[i]) ** 2;
   }
   return Math.sqrt(sum);
+}
+
+function min(els, f) {
+  let minItem;
+  let minVal = Number.POSITIVE_INFINITY;
+  for(const el of els) {
+    const val = f(el);
+    if(val < minVal) {
+      minItem = el;
+      minVal = val;
+    }
+  }
+  return minItem;
 }
 
 const closestcolors = {
@@ -141,9 +154,8 @@ const closestcolors = {
     const newPalette = palette.map(c => c.to("srgb").coords);
     return color => {
       const newColor = color.to("srgb").coords;
-      let idx = newPalette
-        .map((c, i) => ([i, euclidDistance(c, newColor)]))
-        .sort((a,b) => a[1] - b[1])[0][0];
+      let idx = min(newPalette
+        .map((c, i) => ([i, euclidDistance(c, newColor)])), a => a[1])[0];
       return palette[idx];
     };
   },
@@ -151,9 +163,8 @@ const closestcolors = {
     const newPalette = palette.map(c => c.to("xyz").coords);
     return color => {
       const newColor = color.to("xyz").coords;
-      let idx = newPalette
-        .map((c, i) => ([i, euclidDistance(c, newColor)]))
-        .sort((a,b) => a[1] - b[1])[0][0];
+      let idx = min(newPalette
+        .map((c, i) => ([i, euclidDistance(c, newColor)])), a => a[1])[0];
       return palette[idx];
     };
   },
@@ -161,17 +172,15 @@ const closestcolors = {
     const newPalette = palette.map(c => c.to("lab").coords);
     return color => {
       const newColor = color.to("lab").coords;
-      let idx = newPalette
-        .map((c, i) => ([i, euclidDistance(c, newColor)]))
-        .sort((a,b) => a[1] - b[1])[0][0];
+      let idx = min(newPalette
+        .map((c, i) => ([i, euclidDistance(c, newColor)])), a => a[1])[0];
       return palette[idx];
     };
   },
   de2k(palette) {
     return color => {
-      let idx = palette
-        .map((c, i) => ([i, color.deltaE(c, {method: "2000"})]))
-        .sort((a,b) => a[1] - b[1])[0][0];
+      let idx = min(palette
+        .map((c, i) => ([i, color.deltaE(c, {method: "2000"})])), a=> a[1])[0];
       return palette[idx];
     };
   },

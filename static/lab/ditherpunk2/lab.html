@@ -31,6 +31,9 @@ two-up img {
 two-up > * {
   width: 100%;
 }
+label {
+  display: block;
+}
 fieldset {
   display: flex;
   gap: 1em;
@@ -57,16 +60,21 @@ fieldset {
 <fieldset id="dither">
   <legend>Dithering Algorithm</legend>
   <select>
-    <option value="original">Original</option>
     <option value="none">No dithering</option>
     <option value="riemersma">Riemersma</option>
     <option value="atkinson">Atkinson</option>
   </select>
   <div id="riemersma" class="subcontrol">
-    Weights and stuff
+    <label>
+      List length
+      <input type="number" name="n" min=2 value=32>
+    </label>
+    <label>
+      1/r
+      <input type="number" name="r" min=2 value=16>
+    </label>
   </div>
   <div id="atkinson" class="subcontrol"> </div>
-  <div id="original" class="subcontrol"> </div>
   <div id="none" class="subcontrol"> </div>
 </fieldset>
 <fieldset id="palette">
