@@ -21,3 +21,9 @@ settings.addEventListener("change", () => {
   left.querySelector("img").src = assembleFileName(leftsettings);
   right.querySelector("img").src = assembleFileName(rightsettings);
 });
+
+document.body.addEventListener("keydown", ev => {
+  if(ev.code === "Digit1") twoup.style = `--split-point: 0px`;
+  if(ev.code === "Digit2") twoup.style = `--split-point: ${twoup.clientWidth/2}px`;
+  if(ev.code === "Digit3") twoup.style = `--split-point: ${twoup.clientWidth}px`;
+});
