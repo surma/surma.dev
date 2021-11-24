@@ -1,18 +1,42 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
+<meta name="viewport" content="minimum-scale=1, width=device-width" />
+<script type="importmap">
+  {
+    "imports": {
+      "two-up-element/": "/node_modules/two-up-element/",
+      "pinch-zoom-element/": "/node_modules/pinch-zoom-element/"
+    }
+  }
+</script>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  #settings {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  two-up {
+    flex-grow: 1;
+  }
+
+</style>
 <title>Films</title>
-<div id="selection">
-  <fieldset>
+<div id="settings">
+  <fieldset id="leftsettings">
     <legend>Left</legend>
-    <select>
+    <select class="film">
       <option disabled>Film stock</option>
       <option value="delta3200">Delta 3200</option>
       <option value="ilfordhp5">Ilford HP5+</option>
       <option value="kodaktrix">Kodak Tri-X 400</option>
       <option value="tmax100">T-Max 100</option>
     </select>
-    <select>
+    <select class="developer">
       <option disabled>Developer</option>
       <option value="cinstilldf96">Cinestill Df96</option>
       <option value="kodakd76">Kodak D-76</option>
@@ -29,4 +53,8 @@
     </select>
   </fieldset>
 </div>
-<script src="script.js"></script>
+  <two-up id="twoup">
+    <pinch-zoom id="left"><img></pinch-zoom>
+    <pinch-zoom id="right"><img></pinch-zoom>
+  </two-up>
+<script type="module" src="script.js"></script>
