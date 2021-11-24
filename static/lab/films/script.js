@@ -15,10 +15,12 @@ function assembleFileName(settings) {
   const developer = settings.querySelector(".developer").value;
   return `${film}-${developer}.avif`;
 }
-settings.addEventListener("change", () => {
+function updateImages() {
   left.querySelector("img").src = assembleFileName(leftsettings);
   right.querySelector("img").src = assembleFileName(rightsettings);
-});
+}
+updateImages(); 
+settings.addEventListener("change", () => updateImages());
 
 document.body.addEventListener("keydown", (ev) => {
   if (ev.code === "Digit1") twoup.style = `--split-point: 0px`;

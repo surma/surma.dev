@@ -19,9 +19,18 @@
   #settings {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    padding: 0 0.4em 0.4em 0.4em;
   }
   two-up {
     flex-grow: 1;
+  }
+  footer {
+    font-size: 16px;
+    padding: 0.2em;
+  }
+  footer p {
+    margin: 0;
+    text-align: center;
   }
 
 </style>
@@ -57,4 +66,8 @@
     <pinch-zoom id="left"><img></pinch-zoom>
     <pinch-zoom id="right"><img></pinch-zoom>
   </two-up>
+  <footer>
+    <p>Site made by <a href="https://twitter.com/dassurma" target="_blank" rel="noopener">Surma</a>, pictures taken by XXX. Code on <a>GitHub</a>.</p>
+    <p>Drag the slider, or press 1, 2 and 3 to put the slider to the extreme positions.</p>
+  </footer>
 <script type="module" src="script.js"></script>
