@@ -47,16 +47,7 @@
   );
 </script>
 
-<style>
-  /* Workaround for https://github.com/parcel-bundler/parcel/issues/5475 */
-<% 
-  for(const [social, link] of Object.entries(author.socials)) {
-%>
-  .social_<%= social %> {
-    --mask: url(/icons/<%= social %>.svg);
-  }
-<% } %>
-</style>
+
 <meta name="twitter:site" content="@DasSurma" />
 <link rel="canonical" href="<%= meta.domain %><%= page.url %>" />
 <link
@@ -96,6 +87,7 @@
     <% } %>
   }
 </style>
+<link rel="stylesheet" href="/social.css" media="screen" />
 <link rel="stylesheet" href="/styles.css" media="screen" />
 <!-- <link rel="stylesheet" href="/styles-print.css" media="print" /> -->
 <link rel="icon" href="/avatars/surma.jpg" />

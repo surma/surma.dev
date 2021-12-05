@@ -1,0 +1,13 @@
+---
+layout: false
+permalink: /social.css
+---
+
+  /* Workaround for https://github.com/vitejs/vite/issues/5968 */
+<% 
+  for(const [social, link] of Object.entries(author.socials)) {
+%>
+  .social_<%= social %> {
+    --mask: url(/icons/<%= social %>.svg);
+  }
+<% } %>
