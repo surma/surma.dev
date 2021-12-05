@@ -377,14 +377,14 @@ After doing some [profiling with d8] on a build with debugging symbols (`--debug
   18670   96.1%  /usr/lib/system/libsystem_platform.dylib
   13530   72.5%    Function: *~lib/rt/itcms/__renew
   13530  100.0%      Function: *~lib/array/ensureSize
-  13530  100.0%        Function: *~lib/array/Array<f32>#push
-  13530  100.0%          Function: *binaryheap_optimized/BinaryHeap<f32>#push
+  13530  100.0%        Function: *~lib/array/Array&lt;f32&gt;#push
+  13530  100.0%          Function: *binaryheap_optimized/BinaryHeap&lt;f32&gt;#push
   13530  100.0%            Function: *binaryheap_optimized/push
    5119   27.4%    Function: *~lib/rt/itcms/__new
    5119  100.0%      Function: *~lib/rt/itcms/__renew
    5119  100.0%        Function: *~lib/array/ensureSize
-   5119  100.0%          Function: *~lib/array/Array<f32>#push
-   5119  100.0%            Function: *binaryheap_optimized/BinaryHeap<f32>#push
+   5119  100.0%          Function: *~lib/array/Array&lt;f32&gt;#push
+   5119  100.0%            Function: *binaryheap_optimized/BinaryHeap&lt;f32&gt;#push
 ```
 
 Clearly, we have a problem with allocations here. But JavaScript somehow manages to make an ever-growing array fast, so why can’t AssemblyScript? Luckily, the standard library of AssemblyScript is rather small and approachable, so let’s go and [take a look][array push impl] at this ominous `push()` function of the `Array<T>` class:

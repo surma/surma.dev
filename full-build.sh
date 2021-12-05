@@ -11,6 +11,4 @@ export BRANCH
 
 PUBLIC_URL=${PUBLIC_URL:-"https://${TARGET_DOMAIN}"}
 npx eleventy
-cd .tmp
-npm i
-npx parcel build index.html --dist-dir ../_site --public-url "${PUBLIC_URL}"
+npx vite -c ./vite.config.js build --outDir ../_site .tmp

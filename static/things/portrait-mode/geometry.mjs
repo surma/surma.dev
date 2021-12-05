@@ -434,9 +434,9 @@ export class Lens extends Geometry {
     const bottom = this.bottom();
     const r = top.difference(this.focalPoint()).length();
     return svg`
-        <path class="lens" d="M ${top.toSVG()} A ${r} ${r} 0 0 1 ${bottom.toSVG()} A ${r} ${r} 0 0 1 ${top.toSVG()} z" 
+        <path d="M ${top.toSVG()} A ${r} ${r} 0 0 1 ${bottom.toSVG()} A ${r} ${r} 0 0 1 ${top.toSVG()} z" 
       data-name="${this.name}"
-      class="type-lens ${this.classList()}"
+      class="type-lens lens ${this.classList()}"
       />`;
   }
 
