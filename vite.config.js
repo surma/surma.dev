@@ -4,7 +4,6 @@ const glob = require('glob')
 
 const root = resolve(__dirname, ".tmp/");
 const files = glob.sync(resolve(__dirname, "./.tmp/**/*.html"))
-console.log(files);
 
 module.exports = defineConfig({
   build: {
