@@ -10,52 +10,53 @@
   }
 </script>
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-body {
-  display: flex;
-  flex-direction: column;
-  gap: .3em;
-}
-two-up {
-  display: block;
-  width: 100%;
-  flex-grow: 1;
-}
-two-up img {
-  image-rendering: pixelated;
-}
-two-up > * {
-  width: 100%;
-}
-label {
-  display: block;
-}
-fieldset {
-  display: flex;
-  gap: 1em;
-}
-.subcontrol {
-  display: none;
-}
-#submits {
-  display: flex;
-  justify-content: space-around;
-}
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+  }
+  two-up {
+    display: block;
+    width: 100%;
+    flex-grow: 1;
+  }
+  two-up img {
+    image-rendering: pixelated;
+  }
+  two-up > * {
+    width: 100%;
+  }
+  label {
+    display: block;
+  }
+  fieldset {
+    display: flex;
+    gap: 1em;
+  }
+  .subcontrol {
+    display: none;
+  }
+  #submits {
+    display: flex;
+    justify-content: space-around;
+  }
 </style>
 <fieldset id="sources">
   <legend>Image</legend>
   <label>
-    <input type="radio" name="source" value="custom">
+    <input type="radio" name="source" value="custom" />
     <input type="file" id="fileinput" />
-</label>
-<label>
-  <input type="radio" name="source" value="example" checked>
-  <img src="./color-image.png" id="exampleimg" height="40" />
-</label>
+  </label>
+  <label>
+    <input type="radio" name="source" value="example" checked />
+    <img src="./color-image.png" id="exampleimg" height="40" />
+  </label>
 </fieldset>
 <fieldset id="dither">
   <legend>Dithering Algorithm</legend>
@@ -67,26 +68,26 @@ fieldset {
   <div id="riemersma" class="subcontrol">
     <label>
       List length
-      <input type="number" name="n" min=2 value=32>
+      <input type="number" name="n" min="2" value="32" />
     </label>
     <label>
       1/r
-      <input type="number" name="r" min=2 value=16>
+      <input type="number" name="r" min="2" value="16" />
     </label>
   </div>
-  <div id="atkinson" class="subcontrol"> </div>
-  <div id="none" class="subcontrol"> </div>
+  <div id="atkinson" class="subcontrol"></div>
+  <div id="none" class="subcontrol"></div>
 </fieldset>
 <fieldset id="palette">
   <legend>Palette</legend>
   <select>
     <option value="evenspaced">Evenly spaced</option>
-    <option value="kmeans">k-means Clustering</option>
+    <option value="kmeans">k-means++ Clustering</option>
   </select>
   <div id="evenspaced" class="subcontrol">
     <label>
       Items per dimension:
-      <input type="number" name="n" min=2 value=4>
+      <input type="number" name="n" min="2" value="4" />
     </label>
     <label>
       Space:
@@ -101,11 +102,19 @@ fieldset {
   <div id="kmeans" class="subcontrol">
     <label>
       Num colors
-      <input type="number" name="n" min=2 value=4>
+      <input type="number" name="n" min="2" value="4" />
     </label>
     <label>
       Max Iterations
-      <input type="number" name="maxit" min=0 value=10 value=1000>
+      <input type="number" name="maxit" min="0" value="10" value="1000" />
+    </label>
+    <label>
+      Space:
+      <select name="space">
+        <option value="srgb">sRGB</option>
+        <option value="xyz">XYZ</option>
+        <option value="lab">Lab</option>
+      </select>
     </label>
   </div>
 </fieldset>
@@ -127,8 +136,8 @@ fieldset {
   <button data-target="right">Put right</button>
 </div>
 <two-up id="twoup">
-  <pinch-zoom id="left"> <img></pinch-zoom>
-  <pinch-zoom id="right"> <img></pinch-zoom>
+  <pinch-zoom id="left"> <img /></pinch-zoom>
+  <pinch-zoom id="right"> <img /></pinch-zoom>
 </two-up>
 <pre id="logarea"></pre>
 <script type="module" src="./color.js"></script>

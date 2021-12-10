@@ -237,31 +237,41 @@ const palettes = {
    * @params {RGBImageF32N0F8} color
    */
   kmeans(color, { n, space = "srgb", maxit } = {}) {
-    let centers = Array.from({ length: n }, () =>
-      srgb_to[space]([Math.random(), Math.random(), Math.random()])
-    );
-    const colors = [...color.allPixels()].map((color) =>
-      srgb_to[space](color.pixel)
-    );
-
-    function closestCenterIdx(point) {
-      // console.log(JSON.stringify(centers));
+    function closestCenterIdx(centers, point) {
       const centerIdx = min(
-        centers.map(
-          (center, i) => [euclidDistance(center, point), i]),
-          (a) => a[0]
+        centers.map((center, i) => [euclidDistance(center, point), i]),
+        (a) => a[0]
       )[1];
       return centerIdx;
     }
 
+    let centers = [];
+    const colors = [...color.allPixels()].map((color) =>
+      srgb_to[space](color.pixel)
+    );
+    const tempColors = colors.slice();
+    centers[0] = tempColors.splice(Math.random() * tempColors.length, 1)[0];
+    for (let i = 1; i < n; i++) {
+      const assignedColors = colors.map((color) => [
+        euclidDistance(centers[closestCenterIdx(centers, color)], color),
+        color,
+      ]);
+      const farthestColor = min(
+        assignedColors,
+        ([distance, _]) => -distance
+      )[1];
+      centers.push(farthestColor);
+    }
+
     for (let i = 0; i < maxit; i++) {
-      const colorBuckets = Array.from({length: n}, () => []);
-      for(const [centerIdx, color] of colors.map((color) => [closestCenterIdx(color), color])) {
+      const colorBuckets = Array.from({ length: n }, () => []);
+      for (const [centerIdx, color] of colors.map((color) => [
+        closestCenterIdx(centers, color),
+        color,
+      ])) {
         colorBuckets[centerIdx].push(color);
       }
-      centers = colorBuckets.map((colorBucket) =>
-        avgColor(colorBucket)
-      );
+      centers = colorBuckets.map((colorBucket) => avgColor(colorBucket));
     }
     return centers;
   },
