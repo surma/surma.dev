@@ -1,28 +1,28 @@
-import Color from "/node_modules/colorjs.io/src/main.js";
-self.Color = Color;
+
 import {
   RGBImageF32N0F8,
   GrayImageF32N0F8,
   clamp,
 } from "../ditherpunk/image-utils.js";
 
+import * as color4 from "./color4/index.js";
+
 import {
   hilbertCurveGenerator,
   weightGenerator,
 } from "../ditherpunk/curve-utils.js";
 
-function createEvenPaletteQuantizer(n) {
-  n = clamp(2, n, 255) - 1;
-  return (p) => {
-    if (typeof p === "number") {
-      p = [p];
-    }
-    return p.map((p) => clamp(0, Math.round(p * n) / n, 1));
-  };
-}
 
-function remap(a, b) {
-  return (v) => v * (b - a) + a;
+const srgb_to = {
+  srgb(c) {
+    return c.slice();
+  },
+  xyz(c) {
+    return color4.lin_sRGB_to_XYZ(color4.lin_sRGB(c));
+  },
+  lab(c) {
+    return color4.XYZ_to_Lab(srgb_to.xyz(c))
+  }
 }
 
 /**
@@ -108,17 +108,17 @@ const dithers = {
    * @params {RGBImageF32N0F8} color
    */
   none(color, opts, quantF) {
-    return color.copy().mapSelf(color => quantF(new Color("srgb", [...color])).coords)
+    return color.copy().mapSelf(color => quantF(color))
   },
   atkinson(color, opts, quantF) {
-    return matrixErrorDiffusion(color.copy(), atkinson, color => quantF(new Color("srgb", [...color])).coords);
+    return matrixErrorDiffusion(color.copy(), atkinson, color => quantF(color));
   },
   riemersma(color, {n ,r}, quantF) {
     return curveErrorDiffusion(
       color.copy(),
       hilbertCurveGenerator,
       weightGenerator(n, 1 / r),
-      color => quantF(new Color("srgb", [...color])).coords
+      color => quantF(color)
     );
   },
 };
@@ -151,36 +151,36 @@ function min(els, f) {
 
 const closestcolors = {
   srgb(palette) {
-    const newPalette = palette.map(c => c.to("srgb").coords);
     return color => {
-      const newColor = color.to("srgb").coords;
-      let idx = min(newPalette
-        .map((c, i) => ([i, euclidDistance(c, newColor)])), a => a[1])[0];
+      let idx = min(palette
+        .map((c, i) => ([i, euclidDistance(c, color)])), a => a[1])[0];
       return palette[idx];
     };
   },
   xyz(palette) {
-    const newPalette = palette.map(c => c.to("xyz").coords);
+    const newPalette = palette.map(c => srgb_to.xyz(c));
     return color => {
-      const newColor = color.to("xyz").coords;
+      const newColor = srgb_to.xyz(color);
       let idx = min(newPalette
         .map((c, i) => ([i, euclidDistance(c, newColor)])), a => a[1])[0];
       return palette[idx];
     };
   },
   lab(palette) {
-    const newPalette = palette.map(c => c.to("lab").coords);
+    const newPalette = palette.map(c => srgb_to.lab(c))
     return color => {
-      const newColor = color.to("lab").coords;
+      const newColor = srgb_to.lab(color);
       let idx = min(newPalette
         .map((c, i) => ([i, euclidDistance(c, newColor)])), a => a[1])[0];
       return palette[idx];
     };
   },
   de2k(palette) {
+    const newPalette = palette.map(c => srgb_to.lab(c))
     return color => {
-      let idx = min(palette
-        .map((c, i) => ([i, color.deltaE(c, {method: "2000"})])), a=> a[1])[0];
+      const newColor = srgb_to.lab(color);
+      let idx = min(newPalette
+        .map((c, i) => ([i, color4.deltaE2000(c, newColor)])), a=> a[1])[0];
       return palette[idx];
     };
   },
@@ -190,14 +190,14 @@ const palettes = {
   evenspaced(image, { n, space }) {
     // Try to auto-compute all values
     const dims = new Array(3);
-      const white = new Color("srgb", [1, 1, 1]).to(space);
-      const black = new Color("srgb", [0, 0, 0]).to(space);
-      for (let i = 0; i < dims.length; i++) {
-        dims[i] = {
-          min: black.coords[i],
-          max: white.coords[i],
-        };
-      }
+    const white = srgb_to[space]([1, 1, 1]);
+    const black = srgb_to[space]([0, 0, 0]);
+    for (let i = 0; i < dims.length; i++) {
+      dims[i] = {
+        min: black[i],
+        max: white[i],
+      };
+    }
     // Correct for conical spaces
     switch (space) {
       case "lch": 
@@ -217,18 +217,18 @@ const palettes = {
         for (let d3 = 0; d3 < n; d3++) {
           const indices = [d1, d2, d3];
           colors.push(
-            new Color(
-              space,
-              indices.map((idx, i) => dims[i].min + dims[i].inc * idx)
-            )
-              .to("srgb", {inGamut: true})
+            indices.map((idx, i) => dims[i].min + dims[i].inc * idx)
           );
         }
       }
     }
     return colors;
   },
-  kmeans(color, {n}) {
+  kmeans(color, {n, space}) {
+    const p = Array.from({length: n}, () => ([Math.random(), Math.random(), Math.random()]));
+    for(let i = 0; i < 10; i++) {
+      
+    }
   }
 };
 
