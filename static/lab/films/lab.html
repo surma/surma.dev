@@ -1,73 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="minimum-scale=1, width=device-width" />
-<script type="importmap">
-  {
-    "imports": {
-      "two-up-element/": "/node_modules/two-up-element/",
-      "pinch-zoom-element/": "/node_modules/pinch-zoom-element/"
-    }
-  }
-</script>
-<style>
-  html, body {
-    margin: 0;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-  #settings {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    padding: 0 0.4em 0.4em 0.4em;
-  }
-  two-up {
-    flex-grow: 1;
-  }
-  footer {
-    font-size: 16px;
-    padding: 0.2em;
-  }
-  footer p {
-    margin: 0;
-    text-align: center;
-  }
 
-</style>
-<title>Films</title>
-<div id="settings">
-  <fieldset id="leftsettings">
-    <legend>Left</legend>
-    <select class="film">
-      <option disabled>Film stock</option>
-      <option value="delta3200">Delta 3200</option>
-      <option value="ilfordhp5">Ilford HP5+</option>
-      <option value="kodaktrix">Kodak Tri-X 400</option>
-      <option value="tmax100">T-Max 100</option>
-    </select>
-    <select class="developer">
-      <option disabled>Developer</option>
-      <option value="cinstilldf96">Cinestill Df96</option>
-      <option value="kodakd76">Kodak D-76</option>
-      <option value="kodakhc100">Kodak HC-110</option>
-      <option value="ilfordid11">Ilford ID-11</option>
-      <option value="ilfordilfosol3">Ilford Ilfosol 3</option>
-      <option value="ilfotecddx">Ilfotec DDX</option>
-      <option value="ilfotechc">Ilfotec HC</option>
-      <option value="ilfordmicrophen">Ilford Microphen</option>
-      <option value="ilfordperceptol">Ilford Perceptol</option>
-      <option value="compardr09">Compard R09</option>
-      <option value="kodaktmax">Kodak T-Max</option>
-      <option value="kodakxtol">Kodak XTOL</option>
-    </select>
-  </fieldset>
-</div>
-  <two-up id="twoup">
-    <pinch-zoom id="left"><img></pinch-zoom>
-    <pinch-zoom id="right"><img></pinch-zoom>
-  </two-up>
-  <footer>
-    <p>Site made by <a href="https://twitter.com/dassurma" target="_blank" rel="noopener">Surma</a>, pictures taken by <a href="https://www.youtube.com/watch?v=tn0VBt1h-1k" target="_blank" rel="noopener">Andrew & Denae</a>. Code on <a href="https://github.com/surma/surma.dev" target="_blank" rel="noopener">GitHub</a>.</p>
-    <p>Drag the slider, or press 1, 2 and 3 to put the slider to the extreme positions.</p>
-  </footer>
-<script type="module" src="script.js"></script>
+<ul>
+	<li><a href="./developer/lab.html">B/W Film Stock w/ different developers</a></li>
+	<li><a href="./filter/lab.html">Different color filters on b/w film</a></li>
+</ul>

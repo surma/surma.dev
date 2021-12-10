@@ -1,0 +1,67 @@
+
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="minimum-scale=1, width=device-width" />
+<script type="importmap">
+  {
+    "imports": {
+      "two-up-element/": "/node_modules/two-up-element/",
+      "pinch-zoom-element/": "/node_modules/pinch-zoom-element/"
+    }
+  }
+</script>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  #settings {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0 0.4em 0.4em 0.4em;
+  }
+  two-up {
+    flex-grow: 1;
+  }
+  footer {
+    font-size: 16px;
+    padding: 0.2em;
+  }
+  footer p {
+    margin: 0;
+    text-align: center;
+  }
+
+</style>
+<title>Filter</title>
+<div id="settings">
+  <fieldset id="leftsettings">
+    <legend>Left</legend>
+    <select class="subject">
+      <option disabled>Photo</option>
+      <option value="river-delta100">River (Delta 100)</option>
+      <option value="house-delta400">House (Delta 400)</option>
+      <option value="park-delta400">Park (Delta 400)</option>
+    </select>
+    <select class="filter">
+      <option disabled>Filter</option>
+      <option value="none">No Filter</option>
+      <option value="red">Tiffen #25 Red</option>
+      <option value="orange">Tiffen #12 Orange</option>
+      <option value="yellow">Tiffen #12 Yellow</option>
+      <option value="green">Tiffen #11 Green</option>
+    </select>
+  </fieldset>
+</div>
+  <two-up id="twoup">
+    <pinch-zoom id="left"><img></pinch-zoom>
+    <pinch-zoom id="right"><img></pinch-zoom>
+  </two-up>
+  <footer>
+    <p>Site made by <a href="https://twitter.com/dassurma" target="_blank" rel="noopener">Surma</a>, pictures taken  <a href="https://thedarkroom.com/color-filters-with-bw-film/" target="_blank" rel="noopener">The Dark Room</a>. Code on <a href="https://github.com/surma/surma.dev" target="_blank" rel="noopener">GitHub</a>.</p>
+    <p>Drag the slider, or press 1, 2 and 3 to put the slider to the extreme positions.</p>
+  </footer>
+<script type="module" src="script.js"></script>
