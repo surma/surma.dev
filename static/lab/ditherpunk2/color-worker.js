@@ -1,4 +1,3 @@
-
 import {
   RGBImageF32N0F8,
   GrayImageF32N0F8,
@@ -12,18 +11,17 @@ import {
   weightGenerator,
 } from "../ditherpunk/curve-utils.js";
 
-
 const srgb_to = {
   srgb(c) {
-    return c.slice();
+    return [...c];
   },
   xyz(c) {
     return color4.lin_sRGB_to_XYZ(color4.lin_sRGB(c));
   },
   lab(c) {
-    return color4.XYZ_to_Lab(srgb_to.xyz(c))
-  }
-}
+    return color4.XYZ_to_Lab(srgb_to.xyz(c));
+  },
+};
 
 /**
  * @param {RGBImageF32N0F8} img
@@ -108,17 +106,19 @@ const dithers = {
    * @params {RGBImageF32N0F8} color
    */
   none(color, opts, quantF) {
-    return color.copy().mapSelf(color => quantF(color))
+    return color.copy().mapSelf((color) => quantF(color));
   },
   atkinson(color, opts, quantF) {
-    return matrixErrorDiffusion(color.copy(), atkinson, color => quantF(color));
+    return matrixErrorDiffusion(color.copy(), atkinson, (color) =>
+      quantF(color)
+    );
   },
-  riemersma(color, {n ,r}, quantF) {
+  riemersma(color, { n, r }, quantF) {
     return curveErrorDiffusion(
       color.copy(),
       hilbertCurveGenerator,
       weightGenerator(n, 1 / r),
-      color => quantF(color)
+      (color) => quantF(color)
     );
   },
 };
@@ -139,9 +139,9 @@ function euclidDistance(a, b) {
 function min(els, f) {
   let minItem;
   let minVal = Number.POSITIVE_INFINITY;
-  for(const el of els) {
+  for (const el of els) {
     const val = f(el);
-    if(val < minVal) {
+    if (val < minVal) {
       minItem = el;
       minVal = val;
     }
@@ -151,42 +151,53 @@ function min(els, f) {
 
 const closestcolors = {
   srgb(palette) {
-    return color => {
-      let idx = min(palette
-        .map((c, i) => ([i, euclidDistance(c, color)])), a => a[1])[0];
+    return (color) => {
+      let idx = min(
+        palette.map((c, i) => [i, euclidDistance(c, color)]),
+        (a) => a[1]
+      )[0];
       return palette[idx];
     };
   },
   xyz(palette) {
-    const newPalette = palette.map(c => srgb_to.xyz(c));
-    return color => {
+    const newPalette = palette.map((c) => srgb_to.xyz(c));
+    return (color) => {
       const newColor = srgb_to.xyz(color);
-      let idx = min(newPalette
-        .map((c, i) => ([i, euclidDistance(c, newColor)])), a => a[1])[0];
+      let idx = min(
+        newPalette.map((c, i) => [i, euclidDistance(c, newColor)]),
+        (a) => a[1]
+      )[0];
       return palette[idx];
     };
   },
   lab(palette) {
-    const newPalette = palette.map(c => srgb_to.lab(c))
-    return color => {
+    const newPalette = palette.map((c) => srgb_to.lab(c));
+    return (color) => {
       const newColor = srgb_to.lab(color);
-      let idx = min(newPalette
-        .map((c, i) => ([i, euclidDistance(c, newColor)])), a => a[1])[0];
+      let idx = min(
+        newPalette.map((c, i) => [i, euclidDistance(c, newColor)]),
+        (a) => a[1]
+      )[0];
       return palette[idx];
     };
   },
   de2k(palette) {
-    const newPalette = palette.map(c => srgb_to.lab(c))
-    return color => {
+    const newPalette = palette.map((c) => srgb_to.lab(c));
+    return (color) => {
       const newColor = srgb_to.lab(color);
-      let idx = min(newPalette
-        .map((c, i) => ([i, color4.deltaE2000(c, newColor)])), a=> a[1])[0];
+      let idx = min(
+        newPalette.map((c, i) => [i, color4.deltaE2000(c, newColor)]),
+        (a) => a[1]
+      )[0];
       return palette[idx];
     };
   },
-}
+};
 
 const palettes = {
+  /**
+   * @params {RGBImageF32N0F8} image
+   */
   evenspaced(image, { n, space }) {
     // Try to auto-compute all values
     const dims = new Array(3);
@@ -200,37 +211,73 @@ const palettes = {
     }
     // Correct for conical spaces
     switch (space) {
-      case "lch": 
-        dims[1] = { min: 0, max: 131};
-        dims[2] = { min: 0, max: 360};
+      case "lch":
+        dims[1] = { min: 0, max: 131 };
+        dims[2] = { min: 0, max: 360 };
         break;
-      case "hsl": 
-        dims[0] = { min: 0, max: 360};
-        dims[1] = { min: 0, max: 100};
+      case "hsl":
+        dims[0] = { min: 0, max: 360 };
+        dims[1] = { min: 0, max: 100 };
         break;
     }
-    dims.forEach(v => v.inc = (v.max - v.min) / (n-1));
+    dims.forEach((v) => (v.inc = (v.max - v.min) / (n - 1)));
 
     const colors = [];
     for (let d1 = 0; d1 < n; d1++) {
       for (let d2 = 0; d2 < n; d2++) {
         for (let d3 = 0; d3 < n; d3++) {
           const indices = [d1, d2, d3];
-          colors.push(
-            indices.map((idx, i) => dims[i].min + dims[i].inc * idx)
-          );
+          colors.push(indices.map((idx, i) => dims[i].min + dims[i].inc * idx));
         }
       }
     }
     return colors;
   },
-  kmeans(color, {n, space}) {
-    const p = Array.from({length: n}, () => ([Math.random(), Math.random(), Math.random()]));
-    for(let i = 0; i < 10; i++) {
-      
+  /**
+   * @params {RGBImageF32N0F8} color
+   */
+  kmeans(color, { n, space = "srgb", maxit } = {}) {
+    let centers = Array.from({ length: n }, () =>
+      srgb_to[space]([Math.random(), Math.random(), Math.random()])
+    );
+    const colors = [...color.allPixels()].map((color) =>
+      srgb_to[space](color.pixel)
+    );
+
+    function closestCenterIdx(point) {
+      // console.log(JSON.stringify(centers));
+      const centerIdx = min(
+        centers.map(
+          (center, i) => [euclidDistance(center, point), i]),
+          (a) => a[0]
+      )[1];
+      return centerIdx;
     }
-  }
+
+    for (let i = 0; i < maxit; i++) {
+      const colorBuckets = Array.from({length: n}, () => []);
+      for(const [centerIdx, color] of colors.map((color) => [closestCenterIdx(color), color])) {
+        colorBuckets[centerIdx].push(color);
+      }
+      centers = colorBuckets.map((colorBucket) =>
+        avgColor(colorBucket)
+      );
+    }
+    return centers;
+  },
 };
+
+function avgColor(v) {
+  return v.reduce(
+    (sum, c) => {
+      sum[0] += c[0] / v.length;
+      sum[1] += c[1] / v.length;
+      sum[2] += c[2] / v.length;
+      return sum;
+    },
+    [0, 0, 0]
+  );
+}
 
 addEventListener("message", async (ev) => {
   const { image, dither, palette, closestcolor } = ev.data;

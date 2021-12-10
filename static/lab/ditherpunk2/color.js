@@ -1,4 +1,3 @@
-import Color from "colorjs.io/color.js";
 import {imageToImageData, imageDataToPNG, blobToImageData} from "../ditherpunk/image-utils.js";
 import "two-up-element/dist/two-up.js";
 import "pinch-zoom-element/dist/pinch-zoom.js";
