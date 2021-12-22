@@ -23,6 +23,18 @@ const srgb_to = {
   },
 };
 
+const to_srgb = {
+  srgb(c) {
+    return [...c];
+  },
+  xyz(c) {
+    return color4.gam_sRGB(color4.XYZ_to_lin_sRGB(c));
+  },
+  lab(c) {
+    return to_srgb.xyz(color4.Lab_to_XYZ(c));
+  }
+}
+
 /**
  * @param {RGBImageF32N0F8} img
  * @param {GrayImageF32N0F8} diffusor
@@ -273,7 +285,7 @@ const palettes = {
       }
       centers = colorBuckets.map((colorBucket) => avgColor(colorBucket));
     }
-    return centers;
+    return centers.map(center => to_srgb[space](center));
   },
 };
 
