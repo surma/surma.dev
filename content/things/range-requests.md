@@ -1,0 +1,260 @@
+---
+title: "<video>, HTTP range requests & WHATWG streams"
+date: "2021-12-24"
+live: false
+socialmediaimage: "social.jpg"
+---
+
+Range requests allow a `<video>` tag seek through a video file. Adding support to your dev server is a fun challenge and shows the composable design of WHATWG Streams.
+
+<!-- more -->
+
+I working on my backup server and, among other things, I  want to use [Perkeep] as one of my main data stores. I am going to write about my backup server and Perkeep some other time, but for now, it’s enough to know that Perkeep is a file storage system (kinda) and that their default web UI is somewhat slow. Of course, this caused me to look into writing something myself, which in turn caused me to look into their APIs.
+
+## Perkeep
+
+[Perkeep] stores data (like a file) as a series of chunks (called blobs). Each blob is content-addressable, meaning that each blob is identified via its SHA224 hash. And _everything_ is a blob. If, upon upload, the server can parse the blob’s content as JSON and finds a `camliVersion` and a `camliType` property on that JSON object, some special functionality will get invoked. For example, if you upload a file, the CLI will break the file into chunks, upload each chunk, and then upload a <a name="blobdef">blob</a> that looks something like this:
+
+```json
+{
+  "camliVersion": 1,
+  "camliType": "file",
+  "fileName": "my_diary.txt",
+  "parts": [
+    {
+      "blobRef": "sha224-a3a58c8a25f7206342bc1b5b0b5e542f97e2c6a467194aa5c37dc80d", 
+      "size": 32451
+    },
+    {
+      "blobRef": "sha224-7c4ba3bb272a5ce9d4f6f8d9106e0180f24e465d7b73e3788e030108", 
+      "size": 421
+    }
+  ]
+}
+```
+
+Perkeep knows that if a well-known schema `camliType: "file"` comes in, it has to add this blob to an bunch of indexes, allowing you to find it quickly if you search by file name, file size, etc. As mentioned, a file’s contents are not store as a single blob but broken up into multiple, smaller blobs that are linked together by the `parts` property. Perkeep uses [a rolling checksum algorithm][rollsum], similar to what rsync does, where the previous $n$ bytes are used to decide whether the current byte is a boundary. The paramerts of this chunkling algorithm are calibrated to make each chunk roughly 64KiB in size on average. This has the advantage that if two files share a lot of content or the same file is re-uploaded after some minor modifications, the majority of the data does not have to be re-uploaded.
+
+To download a file as a whole, you need to request each chunk and assemble the whole file. I can do that in the browser, but things become messy when you want to use the full file for an `<img>` tag or view the resulting PDF. As I was also planning to write some CLI tools, I decided to add a special API endpoint in my [Deno] backend that would do the assembly of the full file, which would also be quicker as the Deno server runs on the same machine as my Perkeep instance. Since the parts are listed in order, it would also be good to stream the blob contents, as bigger files (like videos) are likely to not fit into RAM very well.
+
+## WHATWG Streams
+
+Since I’m using [Deno] for the backend of my UI, which implements the exact same APIs as the web platform, you can already tell that streams are going to play a central role in this article. Since the web platform uses [WHATWG streams], so does Deno!
+
+Deno also uses [a ServiceWorker-inspired API to start a low-level HTTP server][Deno.serveHTTP], and each request and response comes with a `ReadableStream`. However, as with many low-level APIs, using them puts a lot of the burden on the developer, specifically when it comes to efficient usage and error handling. The standard library comes with a [`serve` function][Deno/std/http/serve], that invokes a handler function for every request that comes in and expects a promise for a `Response` in return. Just like `Response` on the web, `response.body` is a `ReadableStream<Uint8Array>`. So this handler function works exactly like `fetch()`:
+
+```ts
+import { serve } from "https://deno.land/std@0.118.0/http/server.ts";
+import { serveFile } from "https://deno.land/std@0.118.0/http/file_server.ts";
+import { join } from "https://deno.land/std@0.118.0/path/mod.ts";I
+
+const STATIC_ROOT = new URL("./static", import.meta.url).pathname;
+
+function handle(request: Request): Promise<Response> {
+  const parsedURL = new URL(request.url);
+  // Requests for `/raw/<some sha224 hash>`
+  if (parsedURL.pathname.startsWith("/raw/")) {
+    const ref = parsedURL.pathname.slice("/raw/".length);
+    return streamBlob(req, ref); // TODO!
+  } else {
+    return serveFile(request, join(STATIC_ROOT, parsedURL.pathname));
+  }
+}
+
+await serve(handle, { port: 8080 });
+```
+
+Most requests are handled by the standard libary’s [`serveFile` function][Deno/std/http/file_server/serveFile], which I use to serve files from `STATIC_ROOT` on the local filesystem. If a file from `/raw/` is requested, our special logic kicks in, extracts the blob hash and calls `streamBlob()`. This is where it gets interesting:
+
+```ts
+// perkeep.ts is a class that wraps the JSON HTTP API of Perkeep.
+import Perkeep from "./perkeep.ts";
+
+const PERKEEP_URL = new URL(Deno.env.get("PERKEEP_URL") 
+                      ?? "http://localhost:3179");
+const perkeep = new Perkeep(PERKEEP_URL);
+async function streamBlob(
+  req: Request,
+  ref: string,
+): Promise<Response> {
+  const { camliType, parts } = await perkeep.getJSONBlob(ref);
+  if(camliType !== "file") {
+    return new Response(
+      `Request was for a ${camliType}. Expected "file"`
+      {status: 400}
+    );
+  }
+
+  const {readable, writable} = new TransformStream();
+  (async () => {
+    // Stream each part
+    for(const part of parts) {
+      const resp = await fetch(perkeep.blobURL(part.blobRef));
+      await resp.body.pipeTo(writable, {preventClose: true});
+    }
+    // … and signal that we are finished afterwards.
+    await writable.close();
+  })();
+  return new Response(readable);
+}
+```
+
+We create a `TransformStream`. `TransformStream`s without a `transform` function will forward everything that is written into their `writable` to their `readable`, without any transformation inbetween. The `readable` will be our `Response`’s body. In a concurrent async IIFE, we fetch each part’s contents using `fetch()`, grab the `ReadableStream<Uint8Array>` body and feed them into our `writable` using `pipeTo`, which will cause all chunks to come out the `readadable` in order. We just re-assembled the file on the fly!
+
+In the case of using the output of one stream as the input to another, there are three scenarios that we need to think about:
+
+- Successfully forwarding all of the input stream
+- The input stream encountres an error
+- The output stream encounters an error
+
+Each of these events, by default, are forwarded with the approrpiate semantics. If the input stream is _finished_, the output stream is closed. If the input stream _errors_, the output stream is “aborted”. If the output stream _errors_, the input stream is “cancelled”. In our scenario, we want to propagate errors (there’s no point in continuing streaming if the source or the destination encountered some form of error). However, the response consists of multiple parts, so we don’t want to close the stream just because one part is finished. That’s what the `preventClose: true` option achieves.
+
+> **Note:** For more details “abort”, “cancel” and  other terminology on WHATWG streams, I genuinely recommend looking at the [WHATWG Streams spec][WHATWG Streams].
+
+And that’s how you concatenate multiple streams into one. `pipeTo` makes it fairly uncomplicated. However, the attentive observer might have noticed that we are potentially not catching some errors.
+
+### Error handling
+
+We put our concatenation loop in an async IIFE (“AIIFE”?) so we can return the `ReadableStream` without having to wait for all parts finish streaming. If we were to run the for-loop without the AIIFE, the function would be in deadlock: `fetch()` streams make use of WHATWG Stream’s backpressure signalling, meaning that they streams can you know how much data they have buffered up. If that data reaches a certain limit (called the “high water mark” in the spec), the underlying HTTP connection will request the server to stop sending data until further notice. The input stream can’t finish until someone starts consuming the buffered up data. The buffered data can’t be consumed until the `ReadableStream` has been returned from the function. The function can’t return a value until all input streams have been forwarded. An async IIFE let’s us resolve this circular dependency by running the stream forwarding concurrently.
+
+The downside is that the function will return its `ReadableStream` before knowing whether or not the forwarding will succeed in the end. If something goes wrong, it will surface as the `pipeTo` function throwing an exception, that currently no one is catching. There’s many different ways to handle this, and it depends on the context what the right way forward is. For this experiment, I am just going to attach a `catch()` handler to the AIIFE and log the error:
+
+```ts
+  const {readable, writable} = new TransformStream();
+  (async () => {
+    // ... same as before ..
+  })()
+    .catch(err => console.error(err));
+  return new Response(readable);
+```
+
+## Range requests
+
+So far, so good. This works really well and I can now request full files, no matter how large, from the `/raw` endpoint. However, video files were posing a challenge: They played just fine, but I was not able to skip ahead in a video. Why not? Well in most browsers the `<video>` tag using HTTP Range requests to seek ahead in a vide. Range requests allow you to request a range (or a chunk) of a file by specifying a start and an end byte in the request header:
+
+```ts
+fetch("/")
+  .then(resp => resp.text())
+  .then(v => console.log(v.length));
+// Logs 11629 (or something similar)
+
+fetch("/", {headers: {"Range": "bytes=0-10"}})
+  .then(resp => resp.text())
+  .then(v => console.log(v.length));
+// Logs 11
+```
+
+We just requested only the first 11 bytes of a file to transferred via the network. Handy!
+
+Note that many development webservers like `superstatic`, `http-serve` or similar do _not_ support range requests. Most production webservers, however, do. Deno’s `std/http/file_server` also supports range requests out of the box.
+
+## `<video>` and range requests
+
+Observing what a `<video>` tag does in Chrome when loading a video file, is quite interesting: The GET request to grab start streamign the video file contains the header `Range: bytes=0-`. This is valid syntax and means “start at byte 0 and stream it all the way to the end”. If the server supports range requests, it will respond with a HTTP status code 206 (“Partial content”). If the server does _not_ support range requests, it will respon with a normal HTTP 200 (“OK”) and the `<video>` tag will disable skipping while the full file loads.
+
+When developing with a local web server, the video will buffer incredibly quickly. I used DevTool’s network throttling to slow that down and allow me to get ahead of the buffer indicator. However, it turns out that DevTools does not completely faithfully emulate low network conditions: It doesn’t signal the backpressure to the webserver. So while the browser -rendering process only sees data come in at the slowed-down rate, the server will be allowed to keep sending data at full speed. It seems that some other parts of Chrome are also doing their work _before_ network throttling is applied, because the requested ranges on the server side didn’t quite add up with what I was seeing in the network panel.
+
+To make sure I have consistent behavior, I implemented a `TransformStream` that throttles the delivery of any network data to rate of my choice. It’s not 100% exact, but it does the job:
+
+```ts
+function throttle(targetBytesPerSecond: number): TransformStream<Uint8Array, Uint8Array> {
+	return new TransformStream({
+		async transform(chunk, controller) {
+      // Send a 1/10th of the data quota every 100ms
+			while(chunk.byteLength > 0) {
+				const boundary = Math.floor(targetBytesPerSecond/10);
+				controller.enqueue(chunk.subarray(0, boundary));
+				chunk = chunk.subarray(boundary);
+				await sleep(100);
+			}
+		}
+	});
+}
+
+function handle(request: Request): Promise<Response> {
+  // ... as before ...
+  const throttledBody = response.body!.pipeThrough(throttle(54000));
+  // `response.body` is read-only (i.e. a getter function). Luckily,
+  // creating an identical response with a new body is well-supported
+  // by the constructor.
+  return new Response(throttledBody, response);
+}
+```
+
+I also augmented my Deno development server to log which range has been requested and how many bytes have been sent. Those two values needn’t be the same as the browser can cancel the transmission of a response early. With all of this in place, I could take a closer look at the `<video>` tag and its use of range requests.
+
+If you load an MP4 file, the metadata that allows the browser to map a time code to a byte offset in the file is usually placed at the end of the file. You can see the browser loads the start of the file (in my experiments it was roughly the first 32K), I assume to look up the size of the footer. It then aborts that request and sends another range request for the footer of the file with the metadata. It then continues to buffer up the start of the video to allow instant playback. It’s worth noting that MP4 _can_ have the necessary metadata at the start, which will save you an entire roundtrip and will make your MP4 play earlier. If you use ffmpeg, make sure you add `-movflags faststart` to your enconding parameters!
+
+<figure>
+  <img loading="lazy" width="2082" height="576" src="./mp4-requests.png">
+  <figcaption>DevTools showing the three range requests to load a MP4 file.</figcaption>
+</figure>
+
+With WebM, which is a Matroska container with a VP8 video stream, the metadata seems to be placed at the end of the file as well, but for some reason Chrome’s `<video>` tag only grabs it once you press play, making playback start with a delay.
+
+If you skip ahead in the video (past the buffer indicator), the browser will cancel the currently on-going response for the main content. It well then use the the video file’s metadata to map your desired time stamp to a byte offset and use it for a new range request.
+
+## Implementing range requests
+
+Back to your [perkeep data structure](#blobdef). We have a reference to a chunk of the file together with that chunk’s size. Supporting range requests on these resources would be somewhat straight forward: We go through the `parts` list, adding up the `size` properties until we reach the start byte. We send the chunks (cropping them if required) until we reach the end byte. Fin.
+
+But wouldn’t it be fun to rather have a generic `TransformStream` that extracts a byte range from any `ReadableStream<Uint8Array>`? It’s less efficient because under the hood we are still streaming the whole response,  but right now I care about making it work and having fun, rather than doing it _right_, let alone _fast_. 
+
+```ts
+export function slice(
+  start: number = 0,
+  end: number = Number.POSITIVE_INFINITY
+): TransformStream<Uint8Array, Uint8Array> {
+  return rs.pipeThrough(
+    new TransformStream({
+      transform(chunk, controller) {
+        // `+1` because the ranges in the `Range` request 
+        // header are inclusive, the `end parameter of 
+        //`subarray()` however is not.
+        controller.enqueue(chunk.subarray(start, end + 1));
+        start -= chunk.byteLength;
+        end -= chunk.byteLength;
+        if (end < 0) controller.terminate();
+      },
+    })
+  );
+}
+
+async function streamBlob(
+  req: Request,
+  ref: string,
+): Promise<Response> {
+  // ... as before ...
+  const size = sum(parts.map(part => part.size));
+  const requestedRange = parseRequestRange(req);
+  const rangeStart = requestedRange?.start ?? 0;
+  const rangeEnd = requestedRange?.end ?? (size - 1);
+  const headers = { "Content-Length": (rangeEnd + 1) - rangeStart };
+  if (requestedRange) {
+    headers["Content-Range"] = `bytes ${rangeStart}-${rangeEnd}/${size}`;
+  }
+  return new Response(
+    readable.pipeThrough(slice(rangeStart, rangeEnd)),
+    {
+      status: requestRange ? 206 : 200
+      headers
+    }
+  );
+}
+```
+
+All [ArrayBufferView]s (except `DataView`) have a method `view.subarray(start, end?)` that creates a new _view_ on the underlying buffer, starting at index `start` and ending before `end`. The really nice thing about this method is that it handles out-of-bound indices gracefully by clamping. That means, negative indices are clamped to 0, indices that go beyond the length of the original view are clamped to its length.
+
+## Conclusion
+
+This was just me playing around with the `<video>` tag and their usage of range requests, which unexpectedly led me down the path of WHATWG streams. Whenever I use them, I can’t help but appreciate how composable their design is. I do think they are one of the most useful things to have in your toolbelt. That’s also what led me to write [obserables-with-streams], a collection of helper functions for streams. 
+
+[perkeep]: https://perkeep.org/
+[rollsum]: https://github.com/apenwarr/bup/blob/master/lib/bup/bupsplit.c
+[deno]: https://deno.land
+[WHATWG Streams]: https://streams.spec.whatwg.org/
+[ArrayBufferview]: https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView
+[observables-with-streams]: https://github.com/surma/observables-with-streams
+[Deno.serveHTTP]: https://doc.deno.land/deno/stable/~/Deno.serveHttp
+[Deno/std/http/serve]: https://doc.deno.land/https://deno.land/std@0.119.0/http/mod.ts/~/serve
+[Deno/std/http/file_server/serveFile]: https://doc.deno.land/https://deno.land/std@0.119.0/http/file_server.ts/~/serveFile
