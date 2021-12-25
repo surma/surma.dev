@@ -5,15 +5,15 @@ live: false
 socialmediaimage: "social.jpg"
 ---
 
-Range requests allow a `<video>` tag seek through a video file. Adding support to your dev server is a fun challenge and shows the composable design of WHATWG Streams.
+Range requests allow a `<video>` tag to seek through a video file. Adding support to your dev server is a fun challenge and taught me some interesting things about WHATWG Streams.
 
 <!-- more -->
 
-I working on my backup server and, among other things, I want to use [Perkeep] as one of my main data stores. I am going to write about my backup server and Perkeep some other time, but for now, it’s enough to know that Perkeep is a file storage system (kinda) and that their default web UI is somewhat slow. Of course, this caused me to look into writing something myself, which in turn caused me to look into their APIs.
+I’m working on my backup server and, among other things, I want to use [Perkeep] as one of my main data stores. I am going to write about my backup server and Perkeep some other time, but for now it’s enough to know that Perkeep is a file storage system (kinda) and that their default web UI is somewhat clunky. This made me wanto write something myself. I looked up what APIs the servers expose and how the frontend I am going to build can consume the files stored in Perkeep.
 
 ## Perkeep
 
-[Perkeep] stores data (like a file) as a series of chunks (called blobs). Each blob is content-addressable, meaning that each blob is identified via its SHA224 hash. And _everything_ is a blob. If, upon upload, the server can parse the blob’s content as JSON and finds a `camliVersion` and a `camliType` property on that JSON object, some special functionality will get invoked. For example, if you upload a file, the CLI will break the file into chunks, upload each chunk, and then upload a <a name="blobdef">blob</a> that looks something like this:
+[Perkeep] stores data (like a file) as a series of chunks called blobs. Each blob is content-addressable, meaning that each blob is identified by its SHA224 hash. And _everything_ is a blob. Most data will be opaque binary data. But if upon upload the server can parse the blob’s content as JSON and finds a `camliVersion` and a `camliType` property on that JSON object, some type-specific code will run. For example, if you upload a file, the CLI will break the file into chunks, upload each chunk, and then upload another <a name="blobdef">blob</a> that ties all these chunks together. That blob looks something like this:
 
 ```json
 {
@@ -33,15 +33,13 @@ I working on my backup server and, among other things, I want to use [Perkeep] a
 }
 ```
 
-Perkeep knows that if a well-known schema `camliType: "file"` comes in, it has to add this blob to an bunch of indexes, allowing you to find it quickly if you search by file name, file size, etc. As mentioned, a file’s contents are not store as a single blob but broken up into multiple, smaller blobs that are linked together by the `parts` property. Perkeep uses [a rolling checksum algorithm][rollsum], similar to what rsync does, where the previous $n$ bytes are used to decide whether the current byte is a boundary. The paramerts of this chunkling algorithm are calibrated to make each chunk roughly 64KiB in size on average. This has the advantage that if two files share a lot of content or the same file is re-uploaded after some minor modifications, the majority of the data does not have to be re-uploaded.
+Perkeep knows that if a blob corresponding to their [file schema][perkeep file schema] comes in, it has to add this blob to an bunch of indexes, allowing you to find that file quickly by searching by file name, file size or other attributes. As mentioned, a file’s contents are not store as a single blob but broken up into multiple, smaller blobs that are linked together by the `parts` property. Perkeep uses [a rolling checksum algorithm][rollsum], similar to what rsync does, where the previous $n$ bytes are used to decide whether the current byte is a chunk boundary. The parameters of this chunking algorithm are calibrated to make the average chunk size roughly 64KiB. This has the advantage that if two files share a lot of content or the same file is re-uploaded after some minor modifications, the majority of the data does not have to be re-uploaded.
 
-To download a file as a whole, you need to request each chunk and assemble the whole file. I can do that in the browser, but things become messy when you want to use the full file for an `<img>` tag or view the resulting PDF. As I was also planning to write some CLI tools, I decided to add a special API endpoint in my [Deno] backend that would do the assembly of the full file, which would also be quicker as the Deno server runs on the same machine as my Perkeep instance. Since the parts are listed in order, it would also be good to stream the blob contents, as bigger files (like videos) are likely to not fit into RAM very well.
+To download a file as a whole, you need to request each chunk and reassemble the file. I can do that in the browser, but things become messy when you want to use the full file for an `<img>` tag or view the resulting PDF. As I was also planning to write some CLI tools, I decided to add a special API endpoint in my [Deno] backend that serve the entire content of a file. As a nice side effect, the assembly itself would be quicker as the Deno server runs on the same machine as my Perkeep instance. Since the parts are listed in order, it also opens up the possibility of streaming the file contents without having to store the entire file in RAM first.
 
 ## WHATWG Streams
 
-Since I’m using [Deno] for the backend of my UI, which implements the exact same APIs as the web platform, you can already tell that streams are going to play a central role in this article. Since the web platform uses [WHATWG streams], so does Deno!
-
-Deno also uses [a ServiceWorker-inspired API to start a low-level HTTP server][deno.servehttp], and each request and response comes with a `ReadableStream`. However, as with many low-level APIs, using them puts a lot of the burden on the developer, specifically when it comes to efficient usage and error handling. The standard library comes with a [`serve` function][deno/std/http/serve], that invokes a handler function for every request that comes in and expects a promise for a `Response` in return. Just like `Response` on the web, `response.body` is a `ReadableStream<Uint8Array>`. So this handler function works exactly like `fetch()`:
+Since I’m using [Deno] for the backend of my UI, which implements the exact same APIs as the web platform, [WHATWG streams] are available out of the box in Deno to achieve streaming, Deno also uses [a ServiceWorker-inspired API to start a low-level HTTP server][deno.servehttp], and each request and response comes with a `ReadableStream`. However, as with many low-level APIs, using them puts a lot of the burden on the developer, specifically when it comes to efficient usage and error handling. Deno’s standard library comes with a `std/http` module that contains a [`serve` function][deno/std/http/serve], that invokes a handler function for every request that comes in and expects a promise for a `Response` in return. Just like `Response` on the web, `response.body` is a `ReadableStream<Uint8Array>`. Basically, your HTTP handler function works exactly like `fetch()`:
 
 ```ts
 import { serve } from "https://deno.land/std@0.118.0/http/server.ts";
@@ -100,15 +98,15 @@ async function streamBlob(
 }
 ```
 
-We create a `TransformStream`. `TransformStream`s without a `transform` function will forward everything that is written into their `writable` to their `readable`, without any transformation inbetween. The `readable` will be our `Response`’s body. In a concurrent async IIFE, we fetch each part’s contents using `fetch()`, grab the `ReadableStream<Uint8Array>` body and feed them into our `writable` using `pipeTo`, which will cause all chunks to come out the `readadable` in order. We just re-assembled the file on the fly!
+To concatenate all the individual parts as one, consecutive stream, we create a `TransformStream`. `TransformStream`s without a `transform` function will forward everything that is written into their `writable` to their `readable`, without any transformation inbetween. The `readable` will be our `Response`’s body. In a concurrent async IIFE, we fetch each part’s contents using `fetch()`, grab the `ReadableStream<Uint8Array>` body and feed them into our `writable` using `pipeTo`, which will cause all chunks to come out the `readadable` in order. We just re-assembled the file on the fly!
 
 In the case of using the output of one stream as the input to another, there are three scenarios that we need to think about:
 
-- Successfully forwarding all of the input stream
-- The input stream encountres an error
-- The output stream encounters an error
+1. The entire input stream was forwarded successfully
+1. The input stream encountres an error
+1. The output stream encounters an error
 
-Each of these events, by default, are forwarded with the approrpiate semantics. If the input stream is _finished_, the output stream is closed. If the input stream _errors_, the output stream is “aborted”. If the output stream _errors_, the input stream is “cancelled”. In our scenario, we want to propagate errors (there’s no point in continuing streaming if the source or the destination encountered some form of error). However, the response consists of multiple parts, so we don’t want to close the stream just because one part is finished. That’s what the `preventClose: true` option achieves.
+Each of these events, by default, are forwarded with the approrpiate semantics. If the input stream is _finished_ (scenario 1), the output stream is closed. If the input stream _errors_ (scenario 2), the output stream is “aborted”. If the output stream _errors_ (scenario 3), the input stream is “cancelled”. In our scenario, we want to propagate errors, as there’s no point in continuing concatenating parts if the source or the destination encountered some form of error. However, the response consists of multiple parts, so we don’t want to close the stream just because one part is finished. That’s what the `preventClose: true` option achieves.
 
 > **Note:** For more details “abort”, “cancel” and other terminology on WHATWG streams, I genuinely recommend looking at the [WHATWG Streams spec][whatwg streams].
 
@@ -280,3 +278,4 @@ This was just me playing around with the `<video>` tag and their usage of range 
 [deno.servehttp]: https://doc.deno.land/deno/stable/~/Deno.serveHttp
 [deno/std/http/serve]: https://doc.deno.land/https://deno.land/std@0.119.0/http/mod.ts/~/serve
 [deno/std/http/file_server/servefile]: https://doc.deno.land/https://deno.land/std@0.119.0/http/file_server.ts/~/serveFile
+[perkeep file schema]: https://perkeep.org/doc/schema/file
