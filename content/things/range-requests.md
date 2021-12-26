@@ -103,7 +103,7 @@ To concatenate all the individual parts as one, consecutive stream, we create a 
 In the case of using the output of one stream as the input to another, there are three scenarios that we need to think about:
 
 1. The entire input stream was forwarded successfully
-1. The input stream encountres an error
+1. The input stream encounters an error
 1. The output stream encounters an error
 
 Each of these events, by default, are forwarded with the approrpiate semantics. If the input stream is _finished_ (scenario 1), the output stream is closed. If the input stream _errors_ (scenario 2), the output stream is “aborted”. If the output stream _errors_ (scenario 3), the input stream is “cancelled”. In our scenario, we want to propagate errors, as there’s no point in continuing concatenating parts if the source or the destination encountered some form of error. However, the response consists of multiple parts, so we don’t want to close the stream just because one part is finished. That’s what the `preventClose: true` option achieves.
@@ -114,9 +114,9 @@ And that’s how you concatenate multiple streams into one. `pipeTo` makes it fa
 
 ### Error handling
 
-One of the great features about WHATWG streams is their ability to communicate backpressure (take a look at the `desiredSize` property on the `ReadableStreamDefaultController` and `WritableStreamDefaultWriter`). `fetch()` uses this mechanism to detect when the internal buffer reaches a certain threshold (called the “high water mark” in the stream spec) and make a server to stop sending data. This prevents us from accidentally storing large amounts of data in memory without realizing it. The downside is that any given `pipeTo()` call might not finish until there is a consumer consuming the data. If were were to run the concatenation loop directly in the `streamBlob()` function, we’d potentially end up in a deadlock scenario: The input stream can’t finish until someone starts consuming the buffered up data. The buffered data can’t be consumed until the `ReadableStream` has been returned from the function. The function can’t return a value until all input streams have been forwarded. An AIIFE let’s us resolve this circular dependency by running the stream forwarding concurrently.
+One of the great features about WHATWG streams is their ability to communicate backpressure, that is to let the producer of data know at what rate the data is being consumed (take a look at the `desiredSize` property on the `ReadableStreamDefaultController` and `WritableStreamDefaultWriter`). `fetch()` uses this mechanism to detect when the internal buffer reaches a certain threshold (called the “high water mark” in the stream spec) and stop the server from sending more data. This prevents storing large amounts of data in memory by accident. The downside is that any given `pipeTo()` call might not finish until there is a consumer consuming all the data. If we were to run the concatenation loop directly in the `streamBlob()` function, we’d potentially end up in a deadlock scenario: The input stream can’t finish until someone starts consuming the buffered up data. The buffered data can’t be consumed until the `ReadableStream` has been returned from the function. The function can’t return a value until all input streams have been forwarded. An AIIFE let’s us resolve this circular dependency by running the concatenation loop concurrently.
 
-Something that is easy for forget with AIIFEs is that any thrown error will _not_ bubble up, but instead reject the promise the AIIFE returns. Since no one is actually doing anything with the return value of the AIIFE, that error will either get lost or, like in some runtimes, cause an error log and potentially end the process. There’s many different ways to handle this, and it depends on the context what the right way forward is. For this experiment, I am just going to attach a `catch()` handler to the AIIFE and log the error:
+Something that is easy for forget with AIIFEs is that any thrown error will _not_ bubble up, but instead reject the promise the AIIFE returns. Since no one is actually doing anything with the return value of the AIIFE, that error will either get lost or, like in some runtimes, cause an error log and potentially end the process. There’s many different ways to handle this, and it depends on the context what the right way forward is. Arguably the cleanest version would be to refactor the function to take a `WritableStream`, letting the caller decide which route to take. But for this experiment, I am just going to attach a `catch()` handler to the AIIFE and log the error:
 
 ```ts
 const { readable, writable } = new TransformStream();
@@ -128,9 +128,9 @@ return new Response(readable);
 
 ## Range requests
 
-So far, so good. This works really well and I can now request full files, no matter how large, from the `/raw` endpoint. However, video files were posing a challenge: They played just fine, but I was not able to skip ahead in a video. In most browsers, the `<video>` tag uses HTTP Range requests to implement seeking in a video, and my `streamBlob()` function doesn’t handle range requests at all. So let’s take a look at how HTTP does range request:
+This works really well as a way for my frontend to request full files, no matter how large, from the `/raw` endpoint. However, video files were not quite working as I expected: They played just fine, but I was not able to skip ahead in a video. Digging into the requests sent by the browser, it became clear that the `<video>` tag uses HTTP Range requests to jump ahead in a video, and my `streamBlob()` function doesn’t handle range requests at all.
 
-Range requests allow you to request a range of a file by specifying a start and an end byte in the request header:
+Range requests allow you to download a range within a file by specifying a start byte and an end byte via a request header:
 
 ```ts
 fetch("/")
@@ -138,13 +138,13 @@ fetch("/")
   .then((v) => console.log(v.length));
 // Logs 11629 (or something similar)
 
-fetch("/", { headers: { Range: "bytes=0-10" } })
+fetch("/", { headers: { range: "bytes=0-10" } })
   .then((resp) => resp.text())
   .then((v) => console.log(v.length));
 // Logs 11
 ```
 
-The `Range` header in a request specifies the start and the end byte that you want to request. Note that the end byte is optional and _inclusive_. If omitted, the resources is streamed until the end. The server should respond with a HTTP 206 (“Partial content”) status code and a `Content-Range` header, specifying the start byte, end byte and total size of the resource. `Content-Length` should be set to the length of the returned range, _not_ the total size. Note that many development webservers like `superstatic`, `http-serve` or similar do _not_ support range requests. Most production webservers, however, do. Deno’s `std/http/file_server` also supports range requests out of the box.
+The `Range` header in a request specifies the start and the end byte that you want to request. Note that the end byte is optional and _inclusive_. If omitted, the resources is streamed until the end. The server should respond with a HTTP 206 (“Partial content”) status code and a `Content-Range` header, specifying the start byte, end byte and total size of the resource. `Content-Length` should be set to the length of the returned range, _not_ the total size. If you want more details, take a look at the [MDN article][mdn range]. Note that many development webservers like `superstatic`, `http-serve` or similar do _not_ support range requests. Most production webservers, however, do. Deno’s `std/http/file_server` also supports range requests out of the box.
 
 ## `<video>` and range requests
 
@@ -152,7 +152,7 @@ Observing what a `<video>` tag does in Chrome when loading a video file is quite
 
 When developing with a local web server, the video will buffer incredibly quickly. I used DevTool’s network throttling to slow that down and allow me to get ahead of the buffer indicator. However, it turns out that DevTools does not completely faithfully emulate low network conditions: It doesn’t signal the backpressure to the webserver. So while the rendering process only sees data come in at the throttled rate, the server will be allowed to keep sending data at full speed. It seems that some other parts of Chrome are also doing their work _before_ network throttling is applied, because the requested ranges on the server side didn’t quite add up with what I was seeing in the network panel.
 
-To make sure I have consistent behavior — and in the spirit of using streams — I implemented a `TransformStream` that throttles the delivery of any network data to rate of my choice. It’s not 100% exact, but it does the job:
+To make sure I have consistent behavior — and in the spirit of using streams — I implemented a `TransformStream` that throttles the delivery of any network data to a rate of my choice. It’s not 100% exact, but it does the job:
 
 ```ts
 function throttle(
@@ -203,7 +203,7 @@ Sent: 71136
 ...
 ```
 
-If you load an MP4 file, the metadata that allows the browser to map a time code to a byte offset in the file is usually placed at the end of the file. You can see the browser loads the start of the file (in my experiments it was roughly the first 32K). I assume to look up the start and size of the footer data. It then aborts that request and sends another range request for the footer of the file. Now that the browser knows the dimension, duration and other important data about the video, it makes a new request from the start of the file and continues to buffer up the start of the video to allow instant playback. It’s worth noting that MP4 _can_ actually have the necessary metadata at the start, which will save that additional request and will make your MP4 play earlier. If you use ffmpeg, make sure you add `-movflags faststart` to your enconding parameters!
+If you load an MP4 file, the metadata that allows the browser to map a time code to a byte offset in the file is usually placed at the end of the file. You can see how the browser loads the start of the file (in my experiments it was roughly the first 32K). I assume to look up the start and size of the footer data. It then aborts that request and sends another range request for the footer of the file. Now that the browser knows the dimension, duration and other important data about the video, it can show the player controls and make a new request to buffer up the video data. It’s worth noting that MP4 _can_ actually have the necessary metadata at the start, which will save that additional request and will make your MP4 play earlier. If you use ffmpeg, you can achieve this by adding the `-movflags faststart` flag to your invocation.
 
 <figure>
   <img loading="lazy" width="2082" height="576" src="./mp4-requests.png">
@@ -212,11 +212,11 @@ If you load an MP4 file, the metadata that allows the browser to map a time code
 
 With WebM, which is a Matroska container with a VP8 video stream, the metadata seems to be placed at the end of the file as well, but for some reason Chrome’s `<video>` tag only grabs it once you press play, making playback start with a delay.
 
-If you skip ahead in the video (past the buffer indicator), the browser will cancel the currently on-going response for the main content. It well then use the the video file’s metadata to map your desired time stamp to a byte offset and use it for a new range request. If you pause a video, you can see the video buffer indicator buffer up a certain amount of content, and then stop. This is the backpressure at work! The buffer is full and the browser requests the server to stop sending data. The request is technically still on-going, just no data is being sent. If you press play again, the server will resume sending data (however, if you wait too long the request will instead be cancelled and a new request will be sent when you press play).
+If you skip ahead in the video (past the buffer indicator), the browser will cancel the currently on-going response for the video content. It will then use the the video file’s metadata to map your desired time stamp to a byte offset and use it for a new range request. If you pause a video, you can see the video buffer indicator buffer up a certain amount of content, and then stop. This is the backpressure at work! The buffer is full and the browser stops the server from sending more data. The request is technically still on-going, just no data is being sent. If you press play again, the server will resume sending data. However, if you wait too long between pausing and resuming, the request might have been cancelled and a new request will be sent when you press play.
 
 ## Implementing range requests
 
-Back to your [perkeep data structure](#blobdef). While `serveFile()` does support range requests, our own `streamBlob()` does not. Each part in the file’s `parts` list comes with the hash of that chunk as well as that chunk’s size. Supporting range requests on these resources would be somewhat straight forward: We go through the `parts` list, adding up the `size` properties until we reach the start byte. We send the chunks (cropping them if required) until we reach the end byte. Fin.
+Back to our [perkeep data structure](#blobdef). While `serveFile()` does support range requests, our own `streamBlob()` does not. Each part in the file’s `parts` list comes with the hash of that chunk as well as that chunk’s size. Supporting range requests on these resources would be somewhat straight forward: Go through the `parts` list, add up the `size` properties until we reach the start byte, then send the chunks (cropping them if required) until the end byte is reached. Fin.
 
 But wouldn’t it be fun to rather have a generic `TransformStream` that extracts a byte range from any `ReadableStream<Uint8Array>`? It’s less efficient because under the hood we are still streaming the whole response, but right now I care about making it work and having fun, rather than doing it _right_, let alone _fast_.
 
@@ -225,19 +225,17 @@ export function slice(
   start: number = 0,
   end: number = Number.POSITIVE_INFINITY
 ): TransformStream<Uint8Array, Uint8Array> {
-  return rs.pipeThrough(
-    new TransformStream({
-      transform(chunk, controller) {
-        // `+1` because the ranges in the `Range` request
-        // header are inclusive, the `end parameter of
-        //`subarray()` however is not.
-        controller.enqueue(chunk.subarray(start, end + 1));
-        start -= chunk.byteLength;
-        end -= chunk.byteLength;
-        if (end < 0) controller.terminate();
-      },
-    })
-  );
+  return new TransformStream({
+    transform(chunk, controller) {
+      // `+1` because the ranges in the `Range` request
+      // header are inclusive. The `end` parameter of
+      //`subarray()` however is not.
+      controller.enqueue(chunk.subarray(start, end + 1));
+      start -= chunk.byteLength;
+      end -= chunk.byteLength;
+      if (end < 0) controller.terminate();
+    },
+  });
 }
 
 async function streamBlob(
@@ -263,11 +261,11 @@ async function streamBlob(
 }
 ```
 
-All [ArrayBufferView]s (except `DataView`) have a method `view.subarray(start, end?)` that creates a new _view_ on the underlying buffer, i.e. there’s no data being copied or duplicated. The really nice thing about this method is that it handles out-of-bound indices gracefully through clamping. That means, negative indices are clamped to 0, indices that go beyond the length of the original view are clamped to its length. And now all of the sudden I can seek ahead in the videos!
+All [ArrayBufferView]s (except `DataView`) have a method `view.subarray(start, end?)` that returns a new _view_ on the underlying buffer, that is without copying. The really nice thing about this method is that it handles out-of-bound indices gracefully through clamping. That means, negative indices are clamped to 0, indices that go beyond the length of the original view are clamped to its length. And now all of the sudden I can seek ahead in the videos!
 
 ## Conclusion
 
-This was just me playing around with the `<video>` tag and their usage of range requests, which unexpectedly led me down the path of WHATWG streams. Whenever I use them, I can’t help but appreciate how composable their design is. I do think they are one of the most useful things to have in your toolbelt. That’s also what led me to write [obserables-with-streams], a collection of helper functions for streams.
+This was just me playing around with the `<video>` tag and their usage of range requests, which unexpectedly led me down the path of WHATWG streams. Whenever I use them, I can’t help but appreciate how composable their design is. I do think they are one of the most useful things to have in your toolbelt. That’s also what led me to write [observables-with-streams], a collection of helper functions for streams.
 
 [perkeep]: https://perkeep.org/
 [rollsum]: https://github.com/apenwarr/bup/blob/master/lib/bup/bupsplit.c
@@ -279,3 +277,4 @@ This was just me playing around with the `<video>` tag and their usage of range 
 [deno/std/http/serve]: https://doc.deno.land/https://deno.land/std@0.119.0/http/mod.ts/~/serve
 [deno/std/http/file_server/servefile]: https://doc.deno.land/https://deno.land/std@0.119.0/http/file_server.ts/~/serveFile
 [perkeep file schema]: https://perkeep.org/doc/schema/file
+[mdn range]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range
