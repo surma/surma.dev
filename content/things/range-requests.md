@@ -233,7 +233,6 @@ export function slice(
       controller.enqueue(chunk.subarray(start, end + 1));
       start -= chunk.byteLength;
       end -= chunk.byteLength;
-      if (end < 0) controller.terminate();
     },
   });
 }
