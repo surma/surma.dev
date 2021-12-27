@@ -227,12 +227,13 @@ export function slice(
 ): TransformStream<Uint8Array, Uint8Array> {
   return new TransformStream({
     transform(chunk, controller) {
-      // `+1` because the ranges in the `Range` request
-      // header are inclusive. The `end` parameter of
-      //`subarray()` however is not.
-      controller.enqueue(chunk.subarray(start, end + 1));
       start -= chunk.byteLength;
       end -= chunk.byteLength;
+      const subchunk = chunk.subarray(
+        clamp(0, start, chunk.byteLength),
+        clamp(0, end + 1, chunk.byteLength)
+      );
+      if(subchunk.byteLength > 0) controller.enqueue(subchunk);
     },
   });
 }
@@ -260,7 +261,7 @@ async function streamBlob(
 }
 ```
 
-All [ArrayBufferView]s (except `DataView`) have a method `view.subarray(start, end?)` that returns a new _view_ on the underlying buffer, that is without copying. The really nice thing about this method is that it handles out-of-bound indices gracefully through clamping. That means, negative indices are clamped to 0, indices that go beyond the length of the original view are clamped to its length. And now all of the sudden I can seek ahead in the videos!
+Instead of counting the number of bytes we have sent, we move the start and end bytes backwards with every chunk that we forward. We also make use of `typedArrayView.subarray(start, end?)`, which returns a new _view_ onto the underlying buffer; so without having to do any copying. And with this in place, seeking in videos works!
 
 ## Conclusion
 
