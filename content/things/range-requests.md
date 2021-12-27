@@ -227,12 +227,12 @@ export function slice(
 ): TransformStream<Uint8Array, Uint8Array> {
   return new TransformStream({
     transform(chunk, controller) {
-      start -= chunk.byteLength;
-      end -= chunk.byteLength;
       const subchunk = chunk.subarray(
         clamp(0, start, chunk.byteLength),
         clamp(0, end + 1, chunk.byteLength)
       );
+      start -= chunk.byteLength;
+      end -= chunk.byteLength;
       if(subchunk.byteLength > 0) controller.enqueue(subchunk);
     },
   });
