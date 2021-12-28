@@ -1,7 +1,7 @@
 ---
 title: "&lt;video&gt;, HTTP range requests & WHATWG streams"
-date: "2021-12-24"
-live: false
+date: "2021-12-28"
+live: true
 socialmediaimage: "social.jpg"
 ---
 
