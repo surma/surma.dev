@@ -34,14 +34,14 @@ main {
   margin-top: calc(3 * var(--grid-height));
   padding: var(--grid-gutter);
 }
-a {
+a:link {
   color: var(--red);
   text-decoration: none;
 }
 a > code {
   color: inherit !important;
 }
-a:hover {
+a:link:hover {
   text-decoration: underline;
 }
 p,
@@ -217,7 +217,7 @@ blockquote > p:first-child {
 blockquote > p:last-child {
   margin-bottom: 0;
 }
-blockquote a {
+blockquote a:link {
   color: var(--orange);
 }
 blockquote.warning {
@@ -480,7 +480,7 @@ footer .back {
 
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
-  html:not(.forcelight) a:not(.nothing) {
+  html:not(.forcelight) a:link:not(.nothing) {
     color: var(--lightblue);
   }
   html:not(.forcelight) figure img,
@@ -502,7 +502,7 @@ footer .back {
     color: var(--orange);
   }
 }
-html.forcedark a {
+html.forcedark a:link, html.forcedark a:visited {
   color: var(--lightblue);
 }
 html.forcedark blockquote.warning {

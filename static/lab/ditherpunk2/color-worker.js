@@ -1,219 +1,314 @@
-import { MessageStream, message } from "../ditherpunk/worker-utils.js";
 import {
   RGBImageF32N0F8,
   GrayImageF32N0F8,
-  clamp
+  clamp,
 } from "../ditherpunk/image-utils.js";
 
-const numBayerLevels = 4;
-let bayerWorker;
-  bayerWorker = new Worker(new URL("../ditherpunk/bayer-worker.js", import.meta.url), {
-    name: "bayer",
-    type: "module"
-  });
-bayerWorker.addEventListener("error", () =>
-  console.error("Something went wrong in the Bayer worker")
-);
-const bayerLevels = Array.from({ length: numBayerLevels }, (_, id) => {
-  bayerWorker.postMessage({
-    level: id,
-    id
-  });
-  return message(bayerWorker, id).then(m =>
-    Object.setPrototypeOf(m.result, GrayImageF32N0F8.prototype)
-  );
-});
+import * as color4 from "./color4/index.js";
 
-const myBluenoisePromise = message(self, "bluenoise").then(({ mask }) => {
-  Object.setPrototypeOf(mask, GrayImageF32N0F8.prototype);
-  return mask;
-});
+import {
+  hilbertCurveGenerator,
+  weightGenerator,
+} from "../ditherpunk/curve-utils.js";
 
-function createEvenPaletteQuantizer(n) {
-  n = clamp(2, n, 255) - 1;
-  return p => p.map(p => clamp(0, Math.round(p * n) / n, 1), 1);
+const srgb_to = {
+  srgb(c) {
+    return [...c];
+  },
+  xyz(c) {
+    return color4.lin_sRGB_to_XYZ(color4.lin_sRGB(c));
+  },
+  lab(c) {
+    return color4.XYZ_to_Lab(srgb_to.xyz(c));
+  },
+};
+
+const to_srgb = {
+  srgb(c) {
+    return [...c];
+  },
+  xyz(c) {
+    return color4.gam_sRGB(color4.XYZ_to_lin_sRGB(c));
+  },
+  lab(c) {
+    return to_srgb.xyz(color4.Lab_to_XYZ(c));
+  }
 }
 
-function remap(a, b) {
-  return v => v * (b - a) + a;
-}
-
-const numColors = 3;
-const pipeline = [
-  ...Array.from({ length: numColors }, (_, i) => {
-    const colorsPerAxis = i + 2;
-    const n = colorsPerAxis ** 3;
-    const q = createEvenPaletteQuantizer(colorsPerAxis);
-    const vmap = remap(-1 / colorsPerAxis, 1 / colorsPerAxis);
-    return [
-      {
-        id: `quantized:${n}`,
-        title: `Quantized (${n} colors)`,
-        async process(color) {
-          return color.copy().mapSelf(q);
-        }
-      },
-      {
-        id: `dither:${n}`,
-        title: `Dithering (${n} colors)`,
-        async process(color) {
-          return color
-            .copy()
-            .mapSelf(v => q(v.map(v => v + vmap(Math.random()))));
-        }
-      },
-      {
-        id: `bayer1:${n}`,
-        title: `Bayer Level 1 (${n} colors)`,
-        async process(color, { bayerLevels }) {
-          const bayerLevel = await bayerLevels[1];
-          return color
-            .copy()
-            .mapSelf((v, { x, y }) =>
-              q(
-                v.map(
-                  v => v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true }))
-                )
-              )
-            );
-        }
-      },
-      {
-        id: `bayer3:${n}`,
-        title: `Bayer Level 3 (${n} colors)`,
-        async process(color, { bayerLevels }) {
-          const bayerLevel = await bayerLevels[3];
-          return color
-            .copy()
-            .mapSelf((v, { x, y }) =>
-              q(
-                v.map(
-                  v => v + vmap(bayerLevel.valueAt({ x, y }, { wrap: true }))
-                )
-              )
-            );
-        }
-      },
-      {
-        id: `2ded:${n}`,
-        title: `Simple Error Diffusion (${n} colors)`,
-        async process(color) {
-          return errorDiffusion(
-            color.copy(),
-            new GrayImageF32N0F8(new Float32Array([0, 1, 1, 0]), 2, 2),
-            q
-          );
-        }
-      },
-      {
-        id: `fsed:${n}`,
-        title: `Floyd-Steinberg Error Diffusion (${n} colors)`,
-        async process(color) {
-          return errorDiffusion(
-            color.copy(),
-            new GrayImageF32N0F8(new Float32Array([0, 0, 7, 1, 5, 3]), 3, 2),
-            q
-          );
-        }
-      },
-      {
-        id: `jjned:${n}`,
-        title: `Jarvis-Judice-Ninke Error Diffusion (${n} colors)`,
-        async process(color) {
-          return errorDiffusion(
-            color.copy(),
-            new GrayImageF32N0F8(
-              new Float32Array([0, 0, 0, 7, 5, 3, 5, 7, 5, 3, 1, 3, 5, 3, 1]),
-              5,
-              3
-            ),
-            q
-          );
-        }
-      },
-      {
-        id: `bluenoise:${n}`,
-        title: `Blue Noise (${n} colors)`,
-        async process(color) {
-          const bluenoise = await myBluenoisePromise;
-          return color
-            .copy()
-            .mapSelf((v, { x, y }) =>
-              q(
-                v.map(
-                  v => v + vmap(bluenoise.valueAt({ x, y }, { wrap: true }))
-                )
-              )
-            );
-        }
-      }
-    ];
-  }).flat()
-];
-
-function errorDiffusion(img, diffusor, quantizeFunc) {
-  diffusor.normalizeSelf();
+/**
+ * @param {RGBImageF32N0F8} img
+ * @param {GrayImageF32N0F8} diffusor
+ * @param {function (Float32Array): Float32Array} quantizeFunc
+ */
+function matrixErrorDiffusion(
+  img,
+  diffusor,
+  quantizeFunc,
+  { normalize = true } = {}
+) {
+  if (normalize) {
+    diffusor.normalizeSelf();
+  }
   for (const { x, y, pixel } of img.allPixels()) {
-    const quantized = quantizeFunc(pixel);
-    const error = pixel.map((v, i) => v - quantized[i]);
+    const original = pixel.slice();
+    const quantized = quantizeFunc(original);
     pixel.set(quantized);
+    const error = original.map((v, i) => v - quantized[i]);
     for (const {
       x: diffX,
       y: diffY,
-      pixel: diffPixel
+      pixel: diffPixel,
     } of diffusor.allPixels()) {
       const offsetX = diffX - Math.floor((diffusor.width - 1) / 2);
       const offsetY = diffY;
       if (img.isInBounds(x + offsetX, y + offsetY)) {
         const pixel = img.pixelAt(x + offsetX, y + offsetY);
-        pixel.set(pixel.map((v, i) => v + error[i] * diffPixel[0]));
+        pixel.forEach((v, i, arr) => (arr[i] = v + error[i] * diffPixel[0]));
       }
     }
   }
   return img;
 }
 
-async function init() {
-  const reader = MessageStream().getReader();
+const atkinson = new GrayImageF32N0F8(
+  // prettier-ignore
+  new Float32Array([ 
+        0,     0, 1 / 8, 1 / 8,
+    1 / 8, 1 / 8, 1 / 8,     0,
+        0, 1 / 8,     0,     0,
+  ]),
+  4,
+  3
+);
 
-  while (true) {
-    const {
-      value: { image, id }
-    } = await reader.read();
-    if (id != "image") {
+/**
+ * @param {RGBImageF32N0F8} img
+ * @param {function (number, number): Iterable<{x: number, y: number}>} curve
+ * @param {number[]} weights
+ * @param {function (Float32Array): Float32Array} quantF
+ * @returns {RGBImageF32N0F8}
+ */
+function curveErrorDiffusion(img, curve, weights, quantF) {
+  const curveIt = curve(img.width, img.height);
+  const errors = Array.from(
+    weights,
+    () => new Float32Array(img.constructor.NUM_CHANNELS)
+  );
+  for (const p of curveIt) {
+    if (!img.isInBounds(p.x, p.y)) {
       continue;
     }
+    const original = img.pixelAt(p.x, p.y);
+    const quantized = quantF(
+      original.map(
+        (p, ch) =>
+          p +
+          errors.map((v) => v[ch]).reduce((sum, c, i) => sum + c * weights[i])
+      )
+    );
+    errors.pop();
+    errors.unshift(original.map((v, i) => v - quantized[i]));
+    original.set(quantized);
+  }
+  return img;
+}
 
-    postMessage({
-      type: "result",
-      id: "original",
-      title: "Original",
-      imageData: image
-    });
+const dithers = {
+  /**
+   * @params {RGBImageF32N0F8} color
+   */
+  none(color, opts, quantF) {
+    return color.copy().mapSelf((color) => quantF(color));
+  },
+  atkinson(color, opts, quantF) {
+    return matrixErrorDiffusion(color.copy(), atkinson, (color) =>
+      quantF(color)
+    );
+  },
+  riemersma(color, { n, r }, quantF) {
+    return curveErrorDiffusion(
+      color.copy(),
+      hilbertCurveGenerator,
+      weightGenerator(n, 1 / r),
+      (color) => quantF(color)
+    );
+  },
+};
 
-    const color = RGBImageF32N0F8.fromImageData(image);
+/**
+ * @param {Float32Array | number[]} a
+ * @param {Float32Array | number[]} b
+ * @returns number
+ */
+function euclidDistance(a, b) {
+  let sum = 0;
+  for (let i = 0; i < 3; i++) {
+    sum += (a[i] - b[i]) ** 2;
+  }
+  return Math.sqrt(sum);
+}
 
-    for (const step of pipeline) {
-      let title = step.title;
-      if (typeof step.title === "function") {
-        title = step.title();
-      }
-      postMessage({
-        type: "started",
-        id: step.id,
-        title
-      });
-      const result = await step.process(color, { bayerLevels });
-      if (typeof step.title === "function") {
-        title = step.title();
-      }
-      postMessage({
-        type: "result",
-        title,
-        id: step.id,
-        imageData: result.toImageData()
-      });
+function min(els, f) {
+  let minItem;
+  let minVal = Number.POSITIVE_INFINITY;
+  for (const el of els) {
+    const val = f(el);
+    if (val < minVal) {
+      minItem = el;
+      minVal = val;
     }
   }
+  return minItem;
 }
-init();
+
+const closestcolors = {
+  srgb(palette) {
+    return (color) => {
+      let idx = min(
+        palette.map((c, i) => [i, euclidDistance(c, color)]),
+        (a) => a[1]
+      )[0];
+      return palette[idx];
+    };
+  },
+  xyz(palette) {
+    const newPalette = palette.map((c) => srgb_to.xyz(c));
+    return (color) => {
+      const newColor = srgb_to.xyz(color);
+      let idx = min(
+        newPalette.map((c, i) => [i, euclidDistance(c, newColor)]),
+        (a) => a[1]
+      )[0];
+      return palette[idx];
+    };
+  },
+  lab(palette) {
+    const newPalette = palette.map((c) => srgb_to.lab(c));
+    return (color) => {
+      const newColor = srgb_to.lab(color);
+      let idx = min(
+        newPalette.map((c, i) => [i, euclidDistance(c, newColor)]),
+        (a) => a[1]
+      )[0];
+      return palette[idx];
+    };
+  },
+  de2k(palette) {
+    const newPalette = palette.map((c) => srgb_to.lab(c));
+    return (color) => {
+      const newColor = srgb_to.lab(color);
+      let idx = min(
+        newPalette.map((c, i) => [i, color4.deltaE2000(c, newColor)]),
+        (a) => a[1]
+      )[0];
+      return palette[idx];
+    };
+  },
+};
+
+const palettes = {
+  /**
+   * @params {RGBImageF32N0F8} image
+   */
+  evenspaced(image, { n, space }) {
+    // Try to auto-compute all values
+    const dims = new Array(3);
+    const white = srgb_to[space]([1, 1, 1]);
+    const black = srgb_to[space]([0, 0, 0]);
+    for (let i = 0; i < dims.length; i++) {
+      dims[i] = {
+        min: black[i],
+        max: white[i],
+      };
+    }
+    // Correct for conical spaces
+    switch (space) {
+      case "lch":
+        dims[1] = { min: 0, max: 131 };
+        dims[2] = { min: 0, max: 360 };
+        break;
+      case "hsl":
+        dims[0] = { min: 0, max: 360 };
+        dims[1] = { min: 0, max: 100 };
+        break;
+    }
+    dims.forEach((v) => (v.inc = (v.max - v.min) / (n - 1)));
+
+    const colors = [];
+    for (let d1 = 0; d1 < n; d1++) {
+      for (let d2 = 0; d2 < n; d2++) {
+        for (let d3 = 0; d3 < n; d3++) {
+          const indices = [d1, d2, d3];
+          colors.push(indices.map((idx, i) => dims[i].min + dims[i].inc * idx));
+        }
+      }
+    }
+    return colors;
+  },
+  /**
+   * @params {RGBImageF32N0F8} color
+   */
+  kmeans(color, { n, space = "srgb", maxit } = {}) {
+    function closestCenterIdx(centers, point) {
+      const centerIdx = min(
+        centers.map((center, i) => [euclidDistance(center, point), i]),
+        (a) => a[0]
+      )[1];
+      return centerIdx;
+    }
+
+    let centers = [];
+    const colors = [...color.allPixels()].map((color) =>
+      srgb_to[space](color.pixel)
+    );
+    const tempColors = colors.slice();
+    centers[0] = tempColors.splice(Math.random() * tempColors.length, 1)[0];
+    for (let i = 1; i < n; i++) {
+      const assignedColors = colors.map((color) => [
+        euclidDistance(centers[closestCenterIdx(centers, color)], color),
+        color,
+      ]);
+      const farthestColor = min(
+        assignedColors,
+        ([distance, _]) => -distance
+      )[1];
+      centers.push(farthestColor);
+    }
+
+    for (let i = 0; i < maxit; i++) {
+      const colorBuckets = Array.from({ length: n }, () => []);
+      for (const [centerIdx, color] of colors.map((color) => [
+        closestCenterIdx(centers, color),
+        color,
+      ])) {
+        colorBuckets[centerIdx].push(color);
+      }
+      centers = colorBuckets.map((colorBucket) => avgColor(colorBucket));
+    }
+    return centers.map(center => to_srgb[space](center));
+  },
+};
+
+function avgColor(v) {
+  return v.reduce(
+    (sum, c) => {
+      sum[0] += c[0] / v.length;
+      sum[1] += c[1] / v.length;
+      sum[2] += c[2] / v.length;
+      return sum;
+    },
+    [0, 0, 0]
+  );
+}
+
+addEventListener("message", async (ev) => {
+  const { image, dither, palette, closestcolor } = ev.data;
+  const color = RGBImageF32N0F8.fromImageData(image, { linearize: false });
+
+  const genPalette = palettes[palette.palette](color, palette.opts);
+  const quantF = closestcolors[closestcolor.closestcolor](genPalette);
+  const result = await dithers[dither.dither](color, dither.opts, quantF);
+  postMessage({
+    imageData: result.toImageData({ delinearize: false }),
+  });
+});

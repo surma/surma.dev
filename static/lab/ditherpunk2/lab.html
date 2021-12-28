@@ -1,23 +1,143 @@
 <!DOCTYPE html>
 <meta name="viewport" content="minimum-scale=1, width=device-width" />
+<script type="importmap">
+  {
+    "imports": {
+      "colorjs.io/": "/node_modules/colorjs.io/",
+      "two-up-element/": "/node_modules/two-up-element/",
+      "pinch-zoom-element/": "/node_modules/pinch-zoom-element/"
+    }
+  }
+</script>
 <style>
-img {
-  image-rendering: pixelated;
-}
-table {
-  text-align: center;
-}
-td {
-  padding: 1em;
-}
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+  }
+  two-up {
+    display: block;
+    width: 100%;
+    flex-grow: 1;
+  }
+  two-up img {
+    image-rendering: pixelated;
+  }
+  two-up > * {
+    width: 100%;
+  }
+  label {
+    display: block;
+  }
+  fieldset {
+    display: flex;
+    gap: 1em;
+  }
+  .subcontrol {
+    display: none;
+  }
+  #submits {
+    display: flex;
+    justify-content: space-around;
+  }
 </style>
-<!-- Invisible image to Parcel is aware of it and we can use it-->
-<img src="./bluenoise.png" id="bluenoiseimg" style="display: none">
-<input type="file" id="fileinput" />
-<button id="examplebtn">
-  <img src="./color-image.png" id="exampleimg" height="40" />
-</button>
+<fieldset id="sources">
+  <legend>Image</legend>
+  <label>
+    <input type="radio" name="source" value="custom" />
+    <input type="file" id="fileinput" />
+  </label>
+  <label>
+    <input type="radio" name="source" value="example" checked />
+    <img src="./color-image.png" id="exampleimg" height="40" />
+  </label>
+</fieldset>
+<fieldset id="dither">
+  <legend>Dithering Algorithm</legend>
+  <select>
+    <option value="none">No dithering</option>
+    <option value="riemersma">Riemersma</option>
+    <option value="atkinson">Atkinson</option>
+  </select>
+  <div id="riemersma" class="subcontrol">
+    <label>
+      List length
+      <input type="number" name="n" min="2" value="32" />
+    </label>
+    <label>
+      1/r
+      <input type="number" name="r" min="2" value="16" />
+    </label>
+  </div>
+  <div id="atkinson" class="subcontrol"></div>
+  <div id="none" class="subcontrol"></div>
+</fieldset>
+<fieldset id="palette">
+  <legend>Palette</legend>
+  <select>
+    <option value="evenspaced">Evenly spaced</option>
+    <option value="kmeans">k-means++ Clustering</option>
+  </select>
+  <div id="evenspaced" class="subcontrol">
+    <label>
+      Items per dimension:
+      <input type="number" name="n" min="2" value="4" />
+    </label>
+    <label>
+      Space:
+      <select name="space">
+        <option value="srgb">sRGB</option>
+        <option value="xyz">XYZ</option>
+        <option value="hsl">HSL</option>
+        <option value="lch">LCH</option>
+      </select>
+    </label>
+  </div>
+  <div id="kmeans" class="subcontrol">
+    <label>
+      Num colors
+      <input type="number" name="n" min="2" value="4" />
+    </label>
+    <label>
+      Max Iterations
+      <input type="number" name="maxit" min="0" value="10" value="1000" />
+    </label>
+    <label>
+      Space:
+      <select name="space">
+        <option value="srgb">sRGB</option>
+        <option value="xyz">XYZ</option>
+        <option value="lab">Lab</option>
+      </select>
+    </label>
+  </div>
+</fieldset>
+<fieldset id="closestcolor">
+  <legend>Closest Color Algorithm</legend>
+  <select>
+    <option value="srgb">Euclidian in sRGB</option>
+    <option value="xyz">Euclidan in XYZ</option>
+    <option value="lab">Euclidan in Lab</option>
+    <option value="de2k">Delta E 2000</option>
+  </select>
+  <div id="srgb" class="subcontrol"></div>
+  <div id="xyz" class="subcontrol"></div>
+  <div id="lab" class="subcontrol"></div>
+  <div id="de2k" class="subcontrol"></div>
+</fieldset>
+<div id="submits">
+  <button data-target="left">Put left</button>
+  <button data-target="right">Put right</button>
+</div>
+<two-up id="twoup">
+  <pinch-zoom id="left"> <img /></pinch-zoom>
+  <pinch-zoom id="right"> <img /></pinch-zoom>
+</two-up>
+<pre id="logarea"></pre>
 <script type="module" src="./color.js"></script>
-<pre id="log"></pre>
-<table id="results">
-</table>

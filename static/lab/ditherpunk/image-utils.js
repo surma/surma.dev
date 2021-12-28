@@ -46,14 +46,20 @@ export function clamp(min, v, max) {
   return v;
 }
 
-export function brightnessN0F8(r, g, b) {
-  return (
-    0.21 * srgbToLinear(r) + 0.72 * srgbToLinear(g) + 0.07 * srgbToLinear(b)
+export function linearBrightnessN0F8(r, g, b) {
+  return 0.21 * r + 0.72 * g + 0.07 * b;
+}
+
+export function srgbBrightnessN0F8(r, g, b) {
+  return linearBrightnessN0F8(
+    srgbToLinear(r),
+    srgbToLinear(g),
+    srgbToLinear(b)
   );
 }
 
-export function brightnessU8(r, g, b) {
-  return brightnessN0F8(r / 255, g / 255, b / 255);
+export function srgbBrightnessU8(r, g, b) {
+  return srgbBrightnessN0F8(r / 255, g / 255, b / 255);
 }
 
 export class Image {
@@ -97,6 +103,11 @@ export class Image {
     return { x, y };
   }
 
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @returns {Float32Array}
+   */
   pixelAt(x, y, { wrap = false } = {}) {
     if (wrap) {
       ({ x, y } = this.wrapCoordinates({ x, y }));
@@ -152,6 +163,20 @@ export class Image {
     return this.pixel(i);
   }
 
+  toSrgbSelf() {
+    for (const { pixel } of this.allPixels()) {
+      pixel.set(pixel.map(linearToSrgb));
+    }
+    return this;
+  }
+
+  toLinearSelf() {
+    for (const { pixel } of this.allPixels()) {
+      pixel.set(pixel.map(srgbToLinear));
+    }
+    return this;
+  }
+
   *allCoordinates() {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
@@ -160,6 +185,9 @@ export class Image {
     }
   }
 
+  /**
+   * @returns {Iterable<{x: number, y: number, i: number, pixel: Float32Array}>}
+   */
   *allPixels() {
     let i = 0;
     for (const { x, y } of this.allCoordinates()) {
@@ -255,41 +283,62 @@ export class RGBImageF32N0F8 extends Image {
     return 3;
   }
 
-  static fromImageData(sourceImage) {
-    sourceImage = RGBAImageU8.fromImageData(sourceImage);
-
-    const img = new RGBImageF32N0F8(
-      new Float32Array(
+  static fromImageData(sourceImage, {linearize = true} = {}) {
+    const img = new this(
+      new this.BUFFER_TYPE(
         sourceImage.width * sourceImage.height * this.NUM_CHANNELS
       ),
       sourceImage.width,
       sourceImage.height
     );
     for (let i = 0; i < sourceImage.width * sourceImage.height; i++) {
-      img.data[3 * i + 0] = sourceImage.data[4 * i + 0] / 255;
-      img.data[3 * i + 1] = sourceImage.data[4 * i + 1] / 255;
-      img.data[3 * i + 2] = sourceImage.data[4 * i + 2] / 255;
+      if(linearize) {
+        img.data[3 * i + 0] = srgbToLinear(sourceImage.data[4 * i + 0] / 255);
+        img.data[3 * i + 1] = srgbToLinear(sourceImage.data[4 * i + 1] / 255);
+        img.data[3 * i + 2] = srgbToLinear(sourceImage.data[4 * i + 2] / 255);
+      } else {
+        img.data[3 * i + 0] = sourceImage.data[4 * i + 0] / 255;
+        img.data[3 * i + 1] = sourceImage.data[4 * i + 1] / 255;
+        img.data[3 * i + 2] = sourceImage.data[4 * i + 2] / 255;
+      }
     }
     return img;
   }
 
   mapSelf(f) {
-    for (const { x, y, i, pixel } of this.allPixels()) {
-      pixel.set(f(pixel, { x, y, i }));
+    for (const p of this.allPixels()) {
+      p.pixel.set(f(p.pixel, p));
     }
     return this;
   }
 
-  toImageData() {
+  /**
+   * @param {{delinearize: boolean}}
+   */
+  toImageData({delinearize = true} = {}) {
     const img = new Uint8ClampedArray(this.width * this.height * 4);
     for (let i = 0; i < this.width * this.height; i++) {
       // Clamping and floor’ing is done implicitly by Uint8ClampedArray
-      img[4 * i + 0] = linearToSrgb(this.data[3 * i + 0]) * 255;
-      img[4 * i + 1] = linearToSrgb(this.data[3 * i + 1]) * 255;
-      img[4 * i + 2] = linearToSrgb(this.data[3 * i + 2]) * 255;
+      if(delinearize) {
+        img[4 * i + 0] = linearToSrgb(this.data[3 * i + 0]) * 255;
+        img[4 * i + 1] = linearToSrgb(this.data[3 * i + 1]) * 255;
+        img[4 * i + 2] = linearToSrgb(this.data[3 * i + 2]) * 255;
+      } else {
+        img[4 * i + 0] =this.data[3 * i + 0] * 255;
+        img[4 * i + 1] =this.data[3 * i + 1] * 255;
+        img[4 * i + 2] =this.data[3 * i + 2] * 255;
+      }
       img[4 * i + 3] = 255;
     }
     return new ImageData(img, this.width, this.height);
+  }
+
+  toGray() {
+    const img = GrayImageF32N0F8.empty(this.width, this.height);
+    for (const { x, y, pixel } of this.allPixels()) {
+      img.setValueAt({ x, y }, linearBrightnessN0F8(...pixel));
+    }
+    return img;
   }
 }
 
@@ -333,6 +382,7 @@ export class GrayImageF32N0F8 extends Image {
   }
 
   static fromImageData(sourceImage) {
+    console.log("OMG");
     sourceImage = RGBAImageU8.fromImageData(sourceImage);
 
     const img = new GrayImageF32N0F8(
@@ -341,7 +391,7 @@ export class GrayImageF32N0F8 extends Image {
       sourceImage.height
     );
     for (let i = 0; i < sourceImage.width * sourceImage.height; i++) {
-      img.data[i] = brightnessU8(...sourceImage.pixel(i));
+      img.data[i] = srgbBrightnessU8(...sourceImage.pixel(i));
     }
     return img;
   }
