@@ -1,5 +1,5 @@
 ---
-title: "&lt;video&gt;, HTTP range requests & WHATWG streams"
+title: "<video>, HTTP range requests & WHATWG streams"
 date: "2021-12-28"
 live: true
 socialmediaimage: "social.jpg"
