@@ -99,7 +99,7 @@ In the case of using the output of one stream as the input to another, there are
 
 Each of these events, by default, are forwarded with the approrpiate semantics. If the input stream is _finished_ (scenario 1), the output stream is closed. If the input stream _errors_ (scenario 2), the output stream is “aborted”. If the output stream _errors_ (scenario 3), the input stream is “cancelled”. In our scenario, we want to propagate errors, as there’s no point in continuing concatenating parts if the source or the destination encountered some form of error. However, the response consists of multiple parts, so we don’t want to close the stream just because one part is finished. That’s what the `preventClose: true` option achieves. `pipeTo` also provides options to opt out of forwarding errors.
 
-> **Note:** For more details “abort”, “cancel” and other terminology on WHATWG streams, I genuinely recommend looking at the [WHATWG Streams spec][whatwg streams].
+> **Note:** For more details on “abort”, “cancel” and other terminology on WHATWG streams, I genuinely recommend looking at the [WHATWG Streams spec][whatwg streams].
 
 And that’s how you concatenate multiple streams into one. `pipeTo` makes it fairly uncomplicated.
 
