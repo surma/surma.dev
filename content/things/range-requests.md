@@ -174,7 +174,7 @@ function handle(request: Request): Promise<Response> {
 }
 ```
 
-I also added some detailled logging to my development server to compare which range has been requested and how many bytes have actually been sent. Those two values needn’t be the same as the browser can cancel the transmission of a response early. With all of this in place, I could take a closer look at the `<video>` tag and its use of range requests.
+I also added some detailed logging to my development server to compare which range has been requested and how many bytes have actually been sent. Those two values needn’t be the same as the browser can cancel the transmission of a response early. With all of this in place, I could take a closer look at the `<video>` tag and its use of range requests.
 
 ```
 $ deno run --allow-net --allow-read testserver.ts
