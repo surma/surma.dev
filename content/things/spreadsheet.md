@@ -2,7 +2,7 @@
 title: "Optimizing for iteration in coding interviews"
 date: "2022-01-06"
 live: false
-socialmediaimage: "social.jpg"
+socialmediaimage: "social.png"
 ---
 
 The task is to build a spreadsheet app. You can fall into many rabbit holes along the way, but that’s usually not what the interviewer wants.
@@ -360,7 +360,7 @@ For any given cell, we eval the cell value by wrapping it into an IIFE, mostly t
   }
 ```
 
-I have to say, a spreadsheet app that just uses JavaScript actually seems very desirabel to me. And since it doesn’t store user data or cookies, there’s nothing to really exploit.
+I have to say, a spreadsheet app that just uses JavaScript actually seems very desirabel to me. And since it doesn’t store user data or cookies, there’s nothing to really exploit with the evil `eval()`.
 
 <figure>
   <video width="882" height="366" src="./step4.webm" type="video/webm" autoplay muted loop controls></video>
