@@ -57,26 +57,27 @@ class SpreadsheetData {
   }
 
   computeAllCells() {
-    while(true) {
-      let hasChanged = false;
-      for (const y of range(this.rows)) {
-        for (const x of range(this.cols)) {
-          hasChanged = hasChanged || this.computeCell(x, y);
-        }
-      }
-      if(!hasChanged) {
-        break;
+    let hasChanged = false;
+    for (const y of range(this.rows)) {
+      for (const x of range(this.cols)) {
+        hasChanged = hasChanged || this.computeCell(x, y);
       }
     }
+    return hasChanged;
+  }
+
+  propagateAllUpdates() {
+    while(this.computeAllCells());
   }
 }
+
 
 function useSpreadsheetData(rows, cols) {
   const [{ data }, dispatch] = useReducer(
     ({ data }, { x, y, value }) => {
       const cell = data.getCell(x, y);
       cell.value = value;
-      data.computeAllCells();
+      data.propagateAllUpdates();
       // Shallow copy so that preact doesn’t skip rendering.
       return { data };
     },
