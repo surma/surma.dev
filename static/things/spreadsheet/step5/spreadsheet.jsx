@@ -36,7 +36,7 @@ class SpreadsheetData {
         .map((cell, idx) => {
           const [x, y] = this.idxToCoords(idx);
           const cellName = `${spreadsheetColumn(x)}${y}`;
-          return `const ${cellName} = ${cell.value};`;
+          return `const ${cellName} = ${JSON.stringify(cell.computedValue)};`;
         })
         .join("\n")}
       return ${cell.value};
@@ -67,10 +67,9 @@ class SpreadsheetData {
   }
 
   propagateAllUpdates() {
-    while(this.computeAllCells());
+    while (this.computeAllCells());
   }
 }
-
 
 function useSpreadsheetData(rows, cols) {
   const [{ data }, dispatch] = useReducer(
