@@ -321,7 +321,7 @@ I don’t know if drilling down to a DOM element using `ev.target.value` is idio
 
 ### eval
 
-In Excel, formulas are only evaluated when you start with `=`. In this context, I expect that the interviewer doesn’t care for an _exact_ implementation of the syntax that Excel uses. So that’s a shortcut that saves a tiny amount of code, but I still took it because any branching can potentially cause unexpected complications in the future. By using `eval()`, the user gets access to all of JS, including `Math.sqrt()`, `Math.pow()` and even `if` statements. That’s pretty great, but is not without problems: The user also gets access to `while(true)`, which can freeze the entire app indefinitely. The user could also register a ServiceWorker. Whether or not those are bad things requires careful consideration, something I don’t have time for in an interview. But that should be acceptable in an interview as long as you point it out!
+In Excel, formulas are only evaluated when you start with `=`. In this context, I expect that the interviewer doesn’t care for an _exact_ implementation of the syntax that Excel uses. Instead of branching depending on whether or not a formula starts with `=`, I just treat every value as something that needs to get `eval()`’d. It’s another shortcut that only saves a tiny amount of code, but avoiding code branches can save me from unexpected complications in the future. Through `eval()`, the user gets access to all of JS, including `Math.sqrt()`, `Math.pow()` and even `if` statements. That’s pretty great, but is not without problems: The user also gets access to `while(true)`, which can freeze the entire app indefinitely. The user could also register a ServiceWorker. You could also implement an entire spreadsheet app within a cell of this spreadsheet app. Whether or not those are bad things requires careful consideration, something I don’t have time for in an interview. Point it out to the interviewer and move on (unless they stop you).
 
 ```diff
   class SpreadsheetData {
@@ -346,7 +346,7 @@ In Excel, formulas are only evaluated when you start with `=`. In this context, 
   }
 ```
 
-I decided to generate the code I pass to `eval()` in a separate function. Code-as-a-string is often hard to read, due to the lack of syntax highlighting and the injected variables. Putting it in a function encapsualtes that grossness and also lets me easily log the generated code to the console to check that it’s correct. I also generate an IIFE wrapper, mostly as a primitive safe-guard against any unintended side-effects of the formula. A formula like `Math.sin(123) + 1` would generate the following code:
+I decided to generate the code I pass to `eval()` in a separate function. Code-as-a-string is often hard to read, due to the lack of syntax highlighting and the mixture of code and variable interpolation. Putting it in a function encapsualtes that grossness and also lets me easily log the generated code to the console to check that it’s correct. I also added an IIFE wrapper around the code, mostly to give me a way to make helper functions available in cell formulas. A cell value like `Math.sin(123) + 1` would generate the following code:
 
 ```js
 (function() {
@@ -383,7 +383,7 @@ If `eval()` throws, I catch the exception and show the oh-so-familiar `#ERROR` s
   }
 ```
 
-I have to say, a spreadsheet app that just uses JavaScript actually seems very desirabel to me. And since it doesn’t store user data or cookies, I actually don’t really know what there would be to exploit with evil `eval()`.
+I have to say, a spreadsheet app that just uses JavaScript actually seems totally desirable to me. And since it doesn’t store user data or cookies, I actually don’t really see what there would be to exploit with evil `eval()`.
 
 <figure>
   <video width="882" height="366" src="./step4.webm" type="video/webm" autoplay muted loop controls></video>
@@ -392,11 +392,11 @@ I have to say, a spreadsheet app that just uses JavaScript actually seems very d
 
 Here is the [live demo][step4 demo] and the [source code][step4 source].
 
-Only one more iteration left! Referencing the values of other cells.
+Only one more iteration left: Referencing the values of other cells!
 
 ## Cell referencing
 
-Formulas in Excel can reference the value of another cell by using the cell’s name. For example `=A0 * 2` in Excel would show the value of cell A0 doubled. Since our app evaluates the cell’s formula as plain JavaScript, I can make the other cell values available by declaring variables with the cell names:
+Formulas in Excel can reference the value of another cell by using the cell’s name. For example `=A1 * 2` in Excel would show the value of cell A1 doubled. Since our app evaluates the cell’s formula as plain JavaScript, I can make the other cell values available by declaring variables with the cell names:
 
 ```diff
   class SpreadsheetData {
@@ -420,7 +420,7 @@ Formulas in Excel can reference the value of another cell by using the cell’s 
     }
 ```
 
-This augmented `generateCode()` function injects the values of _all_ cells into the “prelude” of the IIFE. A formula like `Math.sin(A0) + A1` would generate the following code:
+This augmented `generateCode()` function adds the values of _all_ cells to the IIFE before finally evaluating the formula. A formula like `Math.sin(A0) + A1` would generate the following code:
 
 ```js
 (function () {
@@ -432,7 +432,7 @@ This augmented `generateCode()` function injects the values of _all_ cells into 
 })();
 ```
 
-This code will grow substantially with the size of the spreadsheet. Again, not every efficient, but good enough for a prototype written during an interview. With the ability to reference the value of another cell, I can now write more complex formulas and get the right result. However, if I had a reference _chain_ — like A0 references A1, A1 reference A2 and A2 references A3 — and I changed the value in the last chain member, only the immediately previous chain member would get updated. In a polished version of this app I’d expect to find a proper parser that explicitly maintains the dependencies of each cell. That would allow me to figure out which cells needed recomputing in response to a value update and also let me detect cyclic dependencies. But I don’t have that here. Instead, I can just keep recomputing all cells until no more updates are happening. That will break in the case of two cells referencing each other, but — once again — I’d say that’s acceptable in the context of an interview.
+This size of the generated code will grow substantially with the size of the spreadsheet. Again, not every efficient, but good enough for a prototype written during an interview. With the ability to reference the value of another cell, I can now write more complex formulas and get the right result. However, if I had a reference _chain_ — like A0 references A1, A1 reference A2 and A2 references A3 — and I changed the value in the last chain member, only the immediately previous chain member would get updated. In a polished version of this app I’d expect to find a proper parser that explicitly maintains the references of each cell. That would allow me to figure out which cells needed recomputing in response to a value update and also let me detect cyclic references. But I don’t have that here. Instead, I can just keep recomputing all cells until no more updates are happening. That will break in the case of two cells referencing each other, but — once again — I’d say that’s acceptable in the context of an interview.
 
 ```diff
   class SpreadsheetData {
@@ -480,7 +480,7 @@ And for one last time, here’s [live demo][step5 demo] and the [source code][st
 
 ## Conclusion
 
-Sadly, I didn’t exactly time when I was done, but I do know that I was under the 60 minute time limit. And that was mostly thanks to some cheeky shortcuts and optimizing for iteration. Of course, this is a very opinionated take on how to tackle coding interviews, but I have fared quite well with “Make it work, make it right, make it fast” both inside and outside of interviews.
+Sadly, I didn’t exactly time when I was done, but I do know that I was under the 60 minute time limit. And that was mostly thanks to some cheeky shortcuts and optimizing for iteration. Well and the fact that it was a completely simulated interview with no real interviewer and a complete lack of stress and nerves. Of course, this is a very opinionated take on how to tackle coding interviews, but I have fared quite well with “Make it work, make it right, make it fast” both inside and outside of interviews.
 
 I did play around afterwards a bit and moved the spreadsheet logic to a worker (because of course I did) and added cycle detection, but both would make this blog post prohibitively long and are, quite honestly, not _that_ interesting. I guess I’m leaving those as an exercise for the reader.
 
