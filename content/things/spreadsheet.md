@@ -1,6 +1,6 @@
 ---
-title: "Coding interviews step-by-step: Optimize for iteration"
-date: "2022-01-06"
+title: "My approach to coding interviews: Optimize for iteration"
+date: "2022-01-10"
 live: false
 socialmediaimage: "social.png"
 ---
