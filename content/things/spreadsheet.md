@@ -15,11 +15,11 @@ I have done a bunch of interviews as an interviewer during my time at Google, an
 
 A friend of mine told me about this interview question:
 
-> Build a spreadsheet-like web app from scratch using React Hooks. Start simple, with a 10 by 10 grid, and add features like cell referencing as we go along.
+> Build a spreadsheet-like web app from scratch. Start simple, with a 10 by 10 grid, and add features like cell referencing as we go along.
 
-This interview question seems fairly representative of the type of questions that I was tasked with. You can choose your editor and tech stack, you create a fully working app in what is less of an exam, and more of a pair programming session. In this case, the tech stack is actually partly prescribed in the question, but often you’ll be left to choose whatever you are comfortable with. For the purpose of the blog post, I’ll use Preact and hooks. Because why not.
+This interview question seems fairly representative of the type of questions that I was tasked with. You can choose your editor and tech stack, you create a fully working app in what is less of an exam, and more of a pair programming session. For the purpose of the blog post, I’ll use Preact and hooks. Everyone is using React with hooks, but I’ll continue using Preact until I’m old otherwise.
 
-Let me be clear that I didn’t encounter this question in an interview. I’ll be pretending to go through a ~60 minute interview with an imaginary interviewer. And what you will read here is how I would tackle this question and how I predict the interview would go. While readingt all of this, it’s importen to remember that **the most important part of an interview is communication**. Keep your interviewer in the loop! Not only on what you are currently doing, but also what you are working towards. Think out loud and describe what your ideas are and how you plan to implement them. Most interviewers want to help and will reinforce good ideas and try and prevent you from going down the wrong path. A coder that can’t articulate what they are doing is likely not going to do well in a team environment.
+Let me be clear that I didn’t encounter this question in an interview. I’ll be pretending to go through a ~60 minute interview with an imaginary interviewer. And what you will read here is how I would tackle this question and how I predict the interview would go. While reading all of this, it’s important to remember that **the most important part of an interview is communication**. Keep your interviewer in the loop! Not only on what you are currently doing, but also what you are working towards. Think out loud and describe what your ideas are and how you plan to implement them. Most interviewers want to help and will reinforce good ideas and try and prevent you from going down the wrong path. A coder that can’t articulate what they are doing is likely not going to do well in a team environment.
 
 ### Think Before You Code
 
@@ -29,7 +29,7 @@ Before starting to code, I find it helpful to plan ahead and analyze the task at
 - Vagueness means more room to interpret the problem in way that plays to your strengths.
 - You can show off that you can spot vagueness early on and are able to create clarity with well-phrased questions.
 
-Most coding interviews are between 40 minutes and 2 hours long. Different people work at different paces, so in my experience interviewers start with a very minimal version of the problem and grow the problem over time. That also lets the interviewer see how the candiate adapts to a changing environment. While interviewers should strive to evaluate a candidate to their strengths, I think that many interviewers use “how far” you got into a problem as an indicator for your engineering skill. If you make the interviewer run out of constraints to add, you probably did well.
+Most coding interviews are between 40 minutes and 2 hours long. Different people work at different paces, so in my experience interviewers start with a very minimal version of the problem and grow the problem over time. That also lets the interviewer see how the candiate adapts to a changing constraints. While interviewers should strive to evaluate a candidate to their strengths, I think that many interviewers use “how far” you got into a problem as an indicator for your engineering skill. If you make the interviewer run out of constraints to add, you probably did well.
 
 However, even for the fastest of engineers, the time alloted to a coding problem is rarely enough to produce polished, production-ready code. Consequently, I believe that **coding interviews are about optimizing for iteration**.
 
@@ -39,11 +39,11 @@ Optimizing for Iteration, to me, means starting small, and doing many, small inc
 
 Each iteration should be runnable and allows you to verify that it works as expected. This way, if it doesn’t work, you only have to comb through a small amount of code changes to find where you went wrong. This also makes it easy for the interviewer to follow along. In fact, in my interviews I even created a git repositories and made commits for each iteration. That way I could inspect diffs or reset to the previous iteration if I went down a fruitless path.
 
-Optimizing for Iteration also means to write code in a way that allows you to switch out parts easily as new constraints come in. My general advice to keep your code flexible is to not hard-code constants, to use many small, well-named functions and to keep code [DRY]. Keeping functions small makes it easier to verify just by reading that a function does what it’s supposed to do. If constrainst change, it’s often a matter of augmenting or replacing a single function, without having to touch any of the other parts. Another nice side-effect is that a good function name is basically docmentation and helps the interviewer understand what you are doing.
+Optimizing for Iteration also means to write code in a way that allows you to switch out parts easily as new constraints come in. My general advice to keep code flexible is to not hard-code constants, to use many small, well-named functions and to keep code [DRY]. Keeping functions small makes it easier to verify just by reading that a function does what it’s supposed to do. If constrainst change, it’s often a matter of augmenting or replacing a single function, without having to touch any of the other parts. Another nice side-effect is that a good function name is basically docmentation and helps the interviewer understand what you are doing.
 
-When I think through the problem and how I want to structure my code, I think about those two things: Enabling me to move fast so I can go as far as possible into the problem and allow to build up the solution incrementally, keeping additions small and verifiable, switching out code bit by bit over time.
+When I think through the problem and how I want to structure my code, I think about those two things: Enabling me to move fast so I can go as far as possible into the problem and allowing me to build up the solution incrementally, keeping additions small and verifiable, switching out code bit by bit over time.
 
-This has also influenced how I tackle coding outside of interviews: **My main mantra for any given coding task is “make it work, make it right, make it fast”.** In an interview, I don’t intend to get beyond the “make it work” phase. I actually double down on it by _taking shortcuts_ wherever possible. If I have an idea for a shortcut, I check with the interviewer whether this is acceptable or not. Most of the time, the interviewers are completely fine with shortcuts, as the goal is not make me find find the solution that they had in mind, but rather observing how I solve the problem with my skills and strengths. I’ll talk more about shortcuts later.
+This has also influenced how I tackle coding outside of interviews: **My main mantra for any given coding task is “make it work, make it right, make it fast”.** In an interview, I don’t intend to get beyond the “make it work” phase. I actually double down on it by taking shortcuts and even simplifying the problem scope, if it allows me to finish iterations even quicker. If I am not sure whether a simplification is too much of a shortcut, I check with the interviewer whether this is acceptable or not. Most of the time, the interviewers are completely fine with shortcuts, as the goal is not make me find find the solution that they had in mind, but rather observing how I solve the problem with my skills and strengths. I’ll talk more about shortcuts later.
 
 Let’s put all of this into practice by working through the spreadsheet problem.
 
@@ -119,7 +119,7 @@ I chose to start with generating a table as a first iteration. There’s no busi
 
 <figure>
   <img loading="lazy" width="924" height="846" style="max-width: 900px" src="./step1.webp">
-  <figcaption>Not pretty, but a <code>&lt;table&gt;</code> is a quick way to render a spreadsheet-style document.</figcaption>
+  <figcaption>Not pretty, but a <code>&lt;table&gt;</code> is a quick (and semantically correct!) way to render a spreadsheet-style document.</figcaption>
 </figure>
 
 The plan is that the `<Spreadsheet>` component will handle the overall state and contain the logic for processing the formulas later on. The `<Cell>`’s job is mostly to be a toggle between showing a cell’s value and an `<input>` field so the user can edit the formula. I’ll implement that a bit later.
@@ -192,7 +192,7 @@ Now that I have the visuals set up, I need to think what my next iteration is. W
 
 ## State object
 
-The state object is just a JSON object, and we will have our core logic work on that object later on. Controversly, I do think that OOP has a place when you want to tie data objects together with the logic that operates on them. But this is definitely a question of taste and there’s many roads that lead to Rome. For the purpose of this blog post, I wrote a class that will contain all the logic a spreadsheet needs.
+The state object is just a JSON object, and we will have our core logic work on that object later on. Controversly, I do think that OOP has a place when you want to tie data objects together with the logic that operates on them. But this is definitely a question of taste and many roads lead to Rome. For the purpose of this blog post, I wrote a class that will contain all the logic a spreadsheet needs.
 
 ```js
 class SpreadsheetData {
@@ -278,7 +278,7 @@ My first thought when reading the problem description was that even a two hour t
 
 > **Note:** If writing parsers is your strength, go for it! Use the ambiguous phrasing to interpret the problem in a way that makes you look good!
 
-I’d expect that the interviewer to reply with “that’s fine!”, unless you are interviewing to work as a compiler engineer.
+I’d expect that the interviewer to reply with “that’s fine!”, unless you are interviewing to work as a compiler engineer. But then I’d seriously question the interviewer’s choice of question here.
 
 ### Formulas
 
@@ -296,9 +296,9 @@ Currently, each cell has a `value` property in the state object. But now a cell 
     }
 ```
 
-Of course, I need to allow the user to input expressions somehow. So here is a brand new `<Cell>` component:
+Of course, I need to allow the user to input expressions somehow. So we switch out our one-line `<Cell>` componentfor a brand new one:
 
-```js
+```jsx
 function Cell({ x, y, cell, set }) {
   const [isEditing, setEditing] = useState(false);
 
@@ -319,7 +319,7 @@ function Cell({ x, y, cell, set }) {
 }
 ```
 
-I don’t know if drilling down to a DOM element using `ev.target.value` is idiomatic for React, but it works like a charm! Notice how I display `cell.computedValue` when the user is not editing, but use `cell.value` as the value for the input field.
+I don’t know if drilling down to a DOM element using `ev.target.value` is idiomatic in React, but it works like a charm! Notice how I display `cell.computedValue` when the user is not editing, but use `cell.value` as the value for the input field.
 
 ### eval
 
@@ -436,7 +436,7 @@ This augmented `generateCode()` function adds the values of _all_ cells to the I
 
 This size of the generated code will grow substantially with the size of the spreadsheet. Again, not every efficient, but good enough for a prototype written during an interview. 
 
-With the ability to reference the value of another cell, I can now write more complex formulas and get the right result. However, if I had a reference _chain_ — like A0 references A1, A1 reference A2 and A2 references A3 — and I changed the value in the last chain member, only the immediately previous chain member would get updated. In a polished version of this app I’d expect to find a proper parser that explicitly maintains the references of each cell. That would allow me to figure out which cells needed recomputing in response to a value update and also let me detect cyclic references. But I don’t have that here. Instead, I can just keep recomputing all cells until nothing is changing anymore. That will break in the case of two cells referencing each other, but — once again — I’d say that’s acceptable in the context of an interview.
+With the ability to reference the value of another cell, I can now write more complex formulas and get the right result. However, if I had a reference _chain_ — like A0 references A1, A1 reference A2 and A2 references A3 — and I changed the value in the last chain member, only the immediately previous chain member would get updated. In a polished version of this app I’d expect to find a proper parser that explicitly maintains a list of references per cell. That would allow me to figure out which cells needed recomputing in response to a value update and also let me detect cyclic references. But I don’t have that here. Instead, I can just keep recomputing all cells until nothing is changing anymore. That will break in the case of two cells referencing each other, but — once again — I’d say that’s acceptable in the context of an interview.
 
 ```diff
   class SpreadsheetData {
