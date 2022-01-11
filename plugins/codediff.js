@@ -57,8 +57,6 @@ module.exports = (md, options) => {
     for(const line of lines) {
       const nextMode = line[0] ?? ' ';
      
-      console.log({line, nextMode, mode, h: highlightedLines[currentOutputLine], h1: highlightedLines[currentOutputLine-1]});
-
       if(mode != nextMode) {
         // mode is null in the first line, so we shouldn’t try to
         // append anything to the previous line 🙄
