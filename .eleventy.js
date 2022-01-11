@@ -21,12 +21,14 @@ const markdownItKatex = require("./plugins/markdown-it-katex");
 const options = {
   html: true,
 };
+const codediffPlugin = require("./plugins/codediff");
 const geometryPlugin = require("./plugins/geometry");
 const dataTablePlugin = require("./plugins/data-table");
 const markdownLib = markdownIt(options)
   .use(markdownItKatex)
   .use(dataTablePlugin)
   .use(geometryPlugin)
+  .use(codediffPlugin)
 
 module.exports = function (config) {
   // Copy /static to /

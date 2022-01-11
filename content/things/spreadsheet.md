@@ -8,7 +8,7 @@ socialmediaimage: "social.png"
 A big part of interviews, I think, is development velocity and agility. And that can be optimized for.
 
 <!-- more -->
-
+    
 I have done a bunch of interviews as an interviewer during my time at Google, and I recently went through a couple of interviews to eventually land my new gig at Shopify. I have spent some time thinking how I evaluated candidates as an interviewer, and how I approached my technical interview questions as a candidate. I realized that there’s probably some experience worth sharing, hence this blog post.
 
 ## The Coding Problem
@@ -130,8 +130,8 @@ If, for some reason, you want to look at this demo, here’s the [live demo][ste
 
 In interviews I usually ignore aesthetics. After all, I am building a Proof Of Concept (POC), something even more crude than a Minimal Viable Product (MVP). The browser’s default styling will do just fine. However, the UI still needs to be _clear_; and this is not. Without labels for the rows and columns it will be hard to effectively communicate with the interviewer. So let’s fix that:
 
-```diff
-...
+|||codediff|javascript
+  // ...
 + function spreadsheetColumn(idx) {
 +   return String.fromCharCode("A".charCodeAt(0) + idx);
 + }
@@ -158,10 +158,10 @@ In interviews I usually ignore aesthetics. After all, I am building a Proof Of C
       </table>
     );
   }
-...
-```
+  // ...
+|||
 
-```diff
+|||codediff|html
   <!doctype html>
 + <style>
 +   table {
@@ -177,7 +177,7 @@ In interviews I usually ignore aesthetics. After all, I am building a Proof Of C
 + </style>
   <main></main>
   <script type="module" src="./main.jsx"></script>
-```
+||||
 
 `spreadsheetColumn` turns a column _number_ into the letters we know and love from Excel & co. This is an example of a shortcut. This function will create nonesense if it’s given a column index above 25, but the interviewer limited the columns to 10 for now, so that will work just fine. This way I can avoid spending time on the _slightly_ more complex code that returns `"AA"` for `idx = 26` and so on. If the interviewer decides they want a bigger spreadsheet, I only need to go back to this one function and fix it.
 
@@ -235,12 +235,12 @@ I can’t use an instance of the `SpreadsheetData` class with `useReducer` direc
 
 Now on to pipe the state object to our `<Cell>` components:
 
-```diff
+|||codediff|jsx
   export default function Spreadsheet({ rows, cols }) {
 +   const [data, dispatch] = useSpreadsheetData(rows, cols);
 
     return (
-      ...
+      // ...
         <td>
 -         <Cell x={x} y={y} />
 +         <Cell
@@ -250,7 +250,7 @@ Now on to pipe the state object to our `<Cell>` components:
 +           set={(value) => dispatch({ x, y, value })}
 +         />
         </td>
-      ...
+      // ...
     );
   }
 
@@ -259,7 +259,7 @@ Now on to pipe the state object to our `<Cell>` components:
 + function Cell({ x, y, cell, set }) {
 +   return <span onclick={() => set(cell.value + 1)}>{cell.value}</span>;
   }
-```
+|||
 
 This iteration is all about making sure that there’s an underlying state object, that it gets visualized correctly and that it reflects updates to the state object. To test and debug that, I need to be able to make changes to the state object. I am not confident that I would implement the toggle to a `<input>` field right on the first try, and I don’t want to lose time debugging the functionality that itself is supposed to help me debug. Instead, my choice here is a simple `onClick` handler that just increments the cell’s value by $1$ — something I’m fairly certain I can write without error on the first try.
 
@@ -284,7 +284,7 @@ I’d expect that the interviewer to reply with “that’s fine!”, unless you
 
 Currently, each cell has a `value` property in the state object. But now a cell needs to have a formula and a _computed_ value. So I added a second property to each cell:
 
-```diff
+|||codediff|javascript
   class SpreadsheetData {
     constructor(rows, cols) {
       this.rows = rows;
@@ -294,7 +294,7 @@ Currently, each cell has a `value` property in the state object. But now a cell 
 +       computedValue: 0,
       }));
     }
-```
+|||
 
 Of course, I need to allow the user to input expressions somehow. So we switch out our one-line `<Cell>` componentfor a brand new one:
 
@@ -325,9 +325,9 @@ I don’t know if drilling down to a DOM element using `ev.target.value` is idio
 
 In Excel, formulas are only evaluated when you start with `=`. In this context, I expect that the interviewer doesn’t care for an exact implementation of the syntax that Excel uses. Instead of having a two code branches, one for formulas and one for constants, I just treat every value as something that needs to get `eval()`’d. It’s another shortcut that only saves a tiny amount of code, but avoiding code branches can save me from unexpected complications in the future. Through `eval()`, the user gets access to all of JS, including `Math.sqrt()`, `Math.pow()` and even `if` statements. That’s pretty great, but is not without problems: The user also gets access to `while(true)`, which can freeze the entire app indefinitely. The user could also register a ServiceWorker. The user could also implement an entire spreadsheet app within a cell of this spreadsheet app. Whether or not those are bad things requires careful consideration, something I don’t have time for in an interview. I’d point it out to the interviewer and move on (unless they stop me and want to talk more about this).
 
-```diff
+|||codediff|javascript
   class SpreadsheetData {
-    ...
+    // ...
 +   generateCode(x, y) {
 +     const cell = this.getCell(x, y);
 +     return `(function () {
@@ -346,7 +346,7 @@ In Excel, formulas are only evaluated when you start with `=`. In this context, 
 +     cell.computedValue = result;
 +   }
   }
-```
+|||
 
 I decided to generate the code I pass to `eval()` in a separate function. Code-as-a-string is often hard to read, due to the lack of syntax highlighting and the mixture of code and variable interpolation. Putting it in a function encapsulates that grossness and also lets me easily log the generated code to the console to check that it’s correct. I also added an IIFE wrapper around the generated code, mostly to give me a quick way to make helper functions available in cell formulas — a feature I ended up not using at all. A cell value like `Math.sin(123) + 1` would generate the following code:
 
@@ -358,9 +358,9 @@ I decided to generate the code I pass to `eval()` in a separate function. Code-a
 
 If `eval()` throws, I catch the exception and show the oh-so-familiar `#ERROR` symbol. Since I know the interviewer will ask me to add cell referencing later, I also know that a change to one cell can affect other cells in the future. So I’ll just recompute every cell’s `computedValue` every time. That’s inefficient, but keeps things simple.
 
-```diff
+|||codediff|javascript
   class SpreadsheetData {
-    ...
+    // ...
 +   computeAllCells() {
 +     for(const y of range(this.rows)) {
 +       for(const x of range(this.cols)) {
@@ -383,7 +383,7 @@ If `eval()` throws, I catch the exception and show the oh-so-familiar `#ERROR` s
     );
     return [data, dispatch];
   }
-```
+|||
 
 I have to say, a spreadsheet app that just uses JavaScript actually seems totally desirable to me. And since it doesn’t store user data or cookies, I actually don’t really see what there would be to exploit with evil `eval()`.
 
@@ -400,9 +400,9 @@ Only one more iteration left: Referencing the values of other cells!
 
 Formulas in Excel can reference the value of another cell by using the cell’s name. For example `=A1 * 2` in Excel would show the value of cell A1 doubled. Since our app evaluates the cell’s formula as plain JavaScript, I can make the other cell values available by declaring variables with the cell names:
 
-```diff
+|||codediff|javascript
   class SpreadsheetData {
-    ...
+    // ...
 +   idxToCoords(idx) {
 +     return [idx % this.cols, Math.floor(idx / this.cols)];
 +   }
@@ -420,7 +420,7 @@ Formulas in Excel can reference the value of another cell by using the cell’s 
         return ${cell.value};
       })();`;
     }
-```
+|||
 
 This augmented `generateCode()` function adds the values of _all_ cells to the IIFE before finally evaluating the formula. A formula like `Math.sin(A0) + A1` would generate the following code:
 
@@ -438,11 +438,11 @@ This size of the generated code will grow substantially with the size of the spr
 
 With the ability to reference the value of another cell, I can now write more complex formulas and get the right result. However, if I had a reference _chain_ — like A0 references A1, A1 reference A2 and A2 references A3 — and I changed the value in the last chain member, only the immediately previous chain member would get updated. In a polished version of this app I’d expect to find a proper parser that explicitly maintains a list of references per cell. That would allow me to figure out which cells needed recomputing in response to a value update and also let me detect cyclic references. But I don’t have that here. Instead, I can just keep recomputing all cells until nothing is changing anymore. That will break in the case of two cells referencing each other, but — once again — I’d say that’s acceptable in the context of an interview.
 
-```diff
+|||codediff|javascript
   class SpreadsheetData {
-    ...
+    // ...
     computeCell(x, y) {
-        ...
+        // ...
 +       const hasChanged = result != cell.computedValue;
         cell.computedValue = result;
 +       return hasChanged;
@@ -462,16 +462,16 @@ With the ability to reference the value of another cell, I can now write more co
 +     propagateAllUpdates() {
 +       while(this.computeAllCells());
 +     }
-      ...
+      // ...
   }
 
   function useSpreadsheetData(rows, cols) {
-    ...
+    // ...
 -   data.computeAllCells();
 +   data.propagateAllUpdates();
-    ...
+    // ...
   }
-```
+|||
 
 And now for the grand reveal/proof that this is actually a functioning spreadsheet:
 
