@@ -1,31 +1,25 @@
 ---
 title: "My approach to coding interviews: Optimize for iteration"
-date: "2022-01-10"
+date: "2022-01-24"
 live: false
-socialmediaimage: "social.png"
+socialmediaimage: "social.jpg"
 ---
 
-A big part of interviews, I think, is development velocity and agility. And that can be optimized for.
+A big part of interviews is development velocity and agility. And that can be optimized for.
 
 <!-- more -->
-    
+
 I recently went through a couple of interviews to eventually land my new gig at Shopify. Afterwards, I spent some time thinking how I evaluated candidates as an interviewer and how I approached my technical interview questions as a candidate. I realized that there’s probably some experience worth sharing, hence this blog post.
 
-This is probably not good general guidance for tech interviewing. This is about describing _my_ approach to pair programming interviews for a front-end engineering position, where I had to build an app that does _something_ in a given time frame, and the interviewer assisting and assessing me. 
+It’s important to keep in mind that every company interviews their candidate differently and on top of that each interviewer own way of assessing a candidate — not to speak of all the unconscious biases that do (but shouldn’t) factor into interviews. What I am describing here is an observation of how _I_ have tackled coding interviews. This means that this is strictly my experience and your mileage may vary.
 
 ## The Coding Problem
 
-A friend of mine told me about this interview question:
-
-> Build a spreadsheet-like web app from scratch. Start simple, with a 10 by 10 grid, and add features like cell referencing as we go along.
-
-This interview question seems fairly representative of the type of question that is really popular right now for technical interviews. You create a fully working app in what is less of an exam, and more of a pair programming session with a tech stack of your choice. For the purpose of the blog post, I’ll use Preact and hooks. Everyone is using React with hooks, but I’ll continue using Preact until I’m told otherwise.
-
-Let me be clear that I didn’t encounter this question in an interview. I’ll be pretending to go through a ~60 minute interview with an imaginary interviewer. And what you will read here is how I would tackle this question and how I predict the interview would go, informed by my experience in interviews. While reading all of this, it’s important to remember that **the most important part of an interview is communication**. Keep your interviewer in the loop! Not only tell them what you are currently doing, but also what you are working towards. Think out loud and describe what your ideas are and how you plan to implement them. Most interviewers want to help and will reinforce good ideas and try and prevent you from going down the wrong path. A coder that can’t articulate what they are doing is likely not going to do well in a team environment.
+Coding problems are supposed to show how a candidate behaves with the task they will likely spend most of their time on: coding. For that reason these interviews are usually less of an exam and more of a pair programming session, where the candidate can use their tech stack and tooling of choice and the interviewer observes and even helps along the way. The problem often entails building something that _works_, so the interviewer can work through all stages of an app’s lifecycle. This has many advantages, like letting the candidate be in their comfort zone and show off their relevant skills. However, it also has drawbacks. The time frame of building a working “app” in 2 hours or less is clearly unrealistic and will force the candidate to make tradeoffs. This is also an important skill to have as a developer, but which tradeoffs are “good” or “bad” is highly subjective and evaluation should be done with care by the interviewer.
 
 ### Think Before You Code
 
-Before starting to code, I find it helpful to plan ahead and analyze the task at hand. The coding problems I encountered are often _intentionally_ short and vague. Don’t let this frighten you. In my experience, you can use that to your advantage:
+Before starting to code, I find it helpful to plan ahead and analyze the task at hand. The coding problems I encountered are often _intentionally_ short and vague. Don’t let this frighten you! In my experience, you can use that to your advantage:
 
 - A short description can’t hide details and gotchas in a wall of text.
 - Vagueness means more room to interpret the problem in way that plays to your strengths.
@@ -33,9 +27,7 @@ Before starting to code, I find it helpful to plan ahead and analyze the task at
 
 Most coding interviews are between 40 minutes and 2 hours long. Different people work at different paces, so in my experience interviewers start with a very minimal version of the problem and grow the problem over time. That also lets the interviewer see how the candiate adapts to a changing constraints. While interviewers should strive to evaluate a candidate to their strengths, I think that many interviewers use “how far” you got into a problem as an indicator for your engineering skill. If you make the interviewer run out of constraints to add, you probably did well.
 
-However, even for the fastest of engineers, the time alloted to a coding problem is rarely enough to produce polished, production-ready code. Consequently, I believe that **coding interviews are about optimizing for iteration**.
-
-**Disclaimer:** You should ask your interviewer what they are assessing. Is it development velocity? Accuracy? App performance? Polish? Accessibility? This all depends on the position and the company you are interviewing for and depending on the answer, my techniques in this blog post might not be helpful or even counter-productive.
+However, even for the fastest of engineers, the time alloted to a coding problem is rarely enough to produce polished, production-ready code. Consequently, I believe that **optimizing for iteration** is a good bet to do well in coding interviews.
 
 ### Optimizing for Iteration
 
@@ -45,13 +37,25 @@ Each iteration should be runnable and allows you to verify that it works as expe
 
 Optimizing for Iteration also means to write code in a way that allows you to switch out parts easily as new constraints come in. My general advice to keep code flexible is to not hard-code constants, to use many small, well-named functions and to keep code [DRY]. Keeping functions small makes it easier to verify just by reading that a function does what it’s supposed to do. If constrainst change, it’s often a matter of augmenting or replacing a single function, without having to touch any of the other parts. Another nice side-effect is that a good function name is basically docmentation and helps the interviewer understand what you are doing.
 
+**Disclaimer:** You should ask your interviewer what they are assessing. Is it development velocity? Accuracy? App performance? Polish? Accessibility? The answer can have strong implications for how valuable this blog post is for you. 
+
 When I think through the problem and how I want to structure my code, I think about those two things: Enabling me to move fast so I can go as far as possible into the problem and allowing me to build up the solution incrementally, keeping additions small and verifiable, switching out code bit by bit over time.
 
-This has also influenced how I tackle coding outside of interviews: **My main mantra for any given coding task is “make it work, make it right, make it fast”.** In an interview, I don’t intend to get beyond the “make it work” phase. I actually double down on it by taking shortcuts and even simplifying the problem scope, if it allows me to finish iterations even quicker. If I am not sure whether a simplification is too much of a shortcut, I check with the interviewer whether this is acceptable or not. Most of the time, the interviewers are completely fine with shortcuts, as the goal is not to make me find the solution that they had in mind, but rather observing how I solve the problem with my skills and strengths. 
+This has also influenced how I tackle coding outside of interviews: **My main mantra for any given coding task is “make it work, make it right, make it fast”.** In an interview, I rarely expect to get beyond the “make it work” phase. To move as fast as possible I also consider taking shortcuts with techniques that would probably not fly in production code. If a shortcut seems particularly cheeky, I recommend checking with the interviewer. At worst it shows you are thinking about the problem in a creative way and can come up with multiple solutions, at best the interviewer is completely fine with the shortcut. In my experience, interviewers are often fine with shortcuts as the goal is not to find _their_ solution, but rather observing how I solve the problem with my skills and strengths. 
 
-For the rest of the blog post, I’ll work through the interview question above as an example. I hope that will help make things like “taking shortcuts” clearer. Let’s go!
+Technically, that’s all there is for this blog post. Optimize for iteration. What prompted me to write this blog post is a friend of mine sharing an interview question they got with me and me trying to solve it. So for the remainder of the blog post, I’ll work through that interview question as an example. I hope that will help make things like “taking shortcuts” clearer. Let’s go!
 
-## Level 1: Scaffold
+## The problem 
+
+The interview question, as expected, is rather short and to the point:
+
+> Build a spreadsheet-like web app from scratch. Start simple, with a 10 by 10 grid, and add features like cell referencing as we go along.
+
+Just to be clear: I didn’t encounter this question in an interview personally. I’ll be pretending to go through a ~60 minute interview with an imaginary interviewer. And what you will read here is how I would tackle this question and how I predict the interview would go, informed by my experience in interviews. While reading all of this, it’s important to remember that **the most important part of an interview is communication**. Keep your interviewer in the loop! Not only tell them what you are currently doing, but also what you are working towards. Think out loud and describe what your ideas are and how you plan to implement them. Most interviewers want to help and will reinforce good ideas and try and prevent you from going down the wrong path. A coder that can’t articulate what they are doing is likely not going to do well in a team environment.
+
+It’s also worth nothing that this might not actually be a great interview question. Spreadsheets (like Google Spreadsheets) have a whole team of engineers working on multiple aspects of the app. So tasking you with building something similar in 60 minutes could be seen as unreasonable and the shortcuts I felt forced to take might be absolute dealbreakers for production code. Whether or not that is also a dealbreaker for an interview depends in the interviewer, the position and the company. Again: Communicate with the interviewer to make sure you are not going in a wrong direciton.
+
+## Level 1: Scaffolding
 
 Before I start to write any code, it’s a good idea to set everything up. As I said, time is crucial in an interview, so I don’t like messing around with a build system unless absolutely necessary. In most interviews I end up writing vanilla JavaScript, CSS and HTML, and use something like `npx superstatic .` to spin up a web server. If I need to build any dynamic UI, I often assemble HTML strings and assign them to `.innerHTML`. That has all kinds of issues, especially when processing user input, but that is usally fine to do in an interview (check with your interviewer!). Remember: In my approach, “make it work” comes first. “Right” and “fast” can come later.
 
@@ -126,7 +130,7 @@ I chose to start with generating a table as a first iteration. There’s no busi
   <figcaption>Not pretty, but a <code>&lt;table&gt;</code> is a quick (and semantically correct!) way to render a spreadsheet-style document.</figcaption>
 </figure>
 
-**Disclaimer:** You might feel an itch to point out that I didn’t use HTML tables 100% correctly (where’s `<thead>` and `<th>`? This all depends on the position and the company you are interviewing for and) and that this will be increasingly hard to make accessible. Both is true. I forgot about table headers and didn’t want to pretend that I wrote perfect markup when I didn’t. Regarding accessibility, I chose a table which is already better than `<div>` and a CSS-based grid. However, in my experience most interviews still focus on algorithmic knowledge and framework knowledge, so accessibility often isn’t required. However, the more senior your role, the more I’d expect interviewers to at least expect you to know when you are letting accessessibility fall to the wayside. Depending on what you're being asked to build, accessibility could either be expected (like when you are building a check out form) or not (maybe for something like a canvas-based game).
+**Disclaimer:** You might feel an itch to point out that I didn’t use HTML tables correctly (where’s `<thead>` and `<th>`?) and that this will be increasingly hard to make accessible. Both is true. Using a table is, in fact, the semantically correct element to use and will do better than `<div>` soup with CSS grid. That, of course, doesn’t mean that this is properly accessible by any means and it depends on the position and the role whether or not this is acceptable. The more senior your role, the more I’d expect interviewers to insist on at least basic platform-provided accessibility. Depending on what you're being asked to build, accessibility could either be expected (like when you are building a check out form) or not (maybe for something like a canvas-based game).
 
 The plan is that the `<Spreadsheet>` component will handle the overall state and contain the logic for processing the formulas later on. The `<Cell>`’s job is mostly to be a toggle between showing a cell’s value and an `<input>` field so the user can edit the formula. I’ll implement that a bit later.
 
@@ -492,7 +496,7 @@ And for one last time, here’s [live demo][step5 demo] and the [source code][st
 
 Sadly, I didn’t exactly time when I was done, but I do know that I was under the 60 minute time limit. And that was mostly thanks to some cheeky shortcuts and optimizing for iteration. Well and the fact that it was a completely simulated interview with no real interviewer and a complete lack of stress and nerves. And again: The most important thing is to communicate with your interviewer so you know what they expect and what is and is not okay to do. Overall, though, I have fared well with “Make it work, make it right, make it fast” both inside and outside of interviews.
 
-I did play around afterwards a bit and moved the spreadsheet logic to a worker (because of course I did) and added cycle detection, but both would make this blog post prohibitively long and are, quite honestly, not _that_ interesting. I guess I’m leaving those as an exercise for the reader.
+I did play around afterwards a bit and moved the spreadsheet logic to a worker (because of course I did) and added cycle detection, but both would make this blog post prohibitively long and are left as an exercise for the reader. In fact, [Luca Casonato] from the Deno team and I have been “producitonizing” this `eval()`-based spreadsheet as fun experiment, and you can find it on [here][spreadsheet app].
 
 [dry]: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
 [vite]: https://vitejs.dev/
@@ -508,3 +512,5 @@ I did play around afterwards a bit and moved the spreadsheet logic to a worker (
 [step4 source]: https://github.com/surma/surma.dev/tree/master/static/things/spreadsheet/step4/
 [step5 demo]: ./step5/dist/index.html
 [step5 source]: https://github.com/surma/surma.dev/tree/master/static/things/spreadsheet/step5/
+[luca casonato]: https://twitter.com/lcasdev
+[spreadsheet app]: https://spreadsheet.surma.technology
