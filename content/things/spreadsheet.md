@@ -9,7 +9,7 @@ A big part of interviews is development velocity and agility. And that can be op
 
 <!-- more -->
 
-I recently went through a interviews at a couple of companies to eventually land my new gig at Shopify. Afterwards, I spent some time thinking how I evaluated candidates as an interviewer and how I approached my technical interview questions as a candidate. I realized that there’s probably some experience worth sharing, hence this blog post.
+I recently went through interviews at a couple of companies to eventually land my new gig at Shopify. Afterwards, I spent some time thinking how I evaluated candidates as an interviewer and how I approached my technical interview questions as a candidate. I realized that there’s probably some experience worth sharing, hence this blog post.
 
 A blog post like this is highly opinionated, but I want to share it anyway in case it’s useful for anyone. It’s important to keep in mind that every company interviews their candidate differently.On top of that, each interviewer has their own way of assessing a candidate, not to speak of all the unconscious biases that shouldn’t, but _do_ factor into interviews. What I am describing here is an observation of how _I_ have tackled coding interviews. This means that this is strictly my experience and your mileage may vary.
 
@@ -61,7 +61,7 @@ Before I start to write any code, it’s a good idea to set everything up. As I 
 
 > **Note:** This is highly subjective. In the “make it work” stage, in my opinion, everything goes. Use whatever you know the best, what you are comfortable with and what allows you to move fast. For me, that’s vanilla JS and using the platform directly. If it’s React for you, use React. However, if you deviate from industry best practices or the company’s tech stack, it might not work in your favor.
 
-For this problem, I’m going to use Preact, so I need something to process JSX. I love using [Jason]’s [htm] to avoid a build stage altogether, but it confuse the interviewer. For a quick dev setup that supports JSX, I’d currently go for [Vite]. It’s default config is sensible, it compiles fast and has very little magic. It also support TypeScript, but I rarely use it in interviews for the sake of velocity. Let’s set up the basic structure of the project.
+For this problem, I’m going to use Preact, so I need something to process JSX. I love using [Jason]’s [htm] to avoid a build stage altogether, but it might confuse the interviewer. For a quick dev setup that supports JSX, I’d currently go for [Vite]. It’s default config is sensible, it compiles fast and has very little magic. It also supports TypeScript, but I rarely use it in interviews for the sake of velocity. Let’s set up the basic structure of the project.
 
 ```
 $ npm init -y
