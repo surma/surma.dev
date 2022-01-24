@@ -121,3 +121,21 @@ pre[class*="language-"] {
 .token.entity {
   cursor: help;
 }
+
+/************************/
+
+:root {
+  --diff-green: hsl(122, 23%, 22%);
+  --diff-red: hsl(0, 64%, 22%);
+}
+.diff {
+  display: inline;
+  padding: 0.2em 0;
+}
+.diff.added {
+  background-color: var(--diff-green);
+}
+.diff.removed {
+  background-color: var(--diff-red);
+  opacity: 0.6;
+}

@@ -27,6 +27,7 @@ body {
 }
 * {
   font-variation-settings: inherit;
+  font-synthesis: none;
 }
 main {
   max-width: var(--width);
