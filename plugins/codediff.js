@@ -36,7 +36,7 @@ module.exports = (md, options) => {
       
     
     const highlighted = Prism.highlight(codeToHighlight, Prism.languages[language], language);
-    const highlightedLines = highlighted.split("\n")
+    const highlightedLines = highlighted.split("\n").map(line => line.replaceAll(">><", ">&gt;<"));
     
     function removeLeadingSpan(line) {
       if(!highlightedLines[line].trim().startsWith("</span>")) return "";
@@ -69,14 +69,14 @@ module.exports = (md, options) => {
             highlightedLines[currentOutputLine] = `${leader}<span class="diff added">${highlightedLines[currentOutputLine]}`;
           break;
           case '-': 
-            highlightedLines.splice(currentOutputLine, 0,  `${leader}<span class="diff removed">${lines[currentOutputLine].slice(2).replaceAll("<", "&lt;")}`);
+            highlightedLines.splice(currentOutputLine, 0,  `${leader}<span class="diff removed">${lines[currentOutputLine].slice(2).replaceAll("<", "&lt;").replaceAll(">", "&gt;")}`);
           break;
           default:
             highlightedLines[currentOutputLine] = `${leader}<span class="diff same">${highlightedLines[currentOutputLine]}`;
         }
       } else {
         if(nextMode === "-") {
-            highlightedLines.splice(currentOutputLine, 0,  lines[currentOutputLine].slice(2).replaceAll("<", "&lt;"));
+            highlightedLines.splice(currentOutputLine, 0,  lines[currentOutputLine].slice(2).replaceAll("<", "&lt;").replace(">", "&gt;"));
         }
       }
       mode = nextMode;

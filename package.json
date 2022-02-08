@@ -20,7 +20,7 @@
     "rollup": "^1.27.9",
     "rollup-plugin-node-resolve": "^5.2.0",
     "two-up-element": "^1.0.1",
-    "vite": "^2.6.14",
+    "vite": "^2.7.13",
     "web-vitals": "^1.1.0"
   },
   "browserslist": [
