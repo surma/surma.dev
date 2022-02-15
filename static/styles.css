@@ -551,4 +551,6 @@ html.forcedark figure video {
   font-size: 1em !important;
   white-space: nowrap;
 }
-
+mark {
+  background-color: var(--pink) !important;
+}
