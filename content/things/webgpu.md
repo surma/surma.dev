@@ -105,18 +105,29 @@ In this example, we are just creating a function called `main` and marking it as
 
 So what is that `@workgroup_size(64)` attribute?
 
-### Workgroups
+### Parallelism
 
 GPUs are optimized for throughput at the cost of latency. To understand this, we have to look a bit at the architecture of GPUs.
 I don’t want to (and, honestly, can’t) explain it in its entirety, but this [13-part blog post series][GPU Architecture] by [Fabian Giesen] is really good.
 
-<mark>FUCK EUs HAVE 7 THREADS, I NEED TO REWRITE THIS ALL</mark>
+Something that is quite well-known is the fact that GPUs have an extensive number of cores that allow for massively parallel work. However, the cores are not as independent as you might be used to from when programming for a CPU. GPU cores are grouped hierarchically. While the terminology for the different elements of the hierarchy isn’t consistent across vendors and APIs, this [documentation by Intel][intel eu] gives some good insight that applies generally to today’s GPUs: The lowest level in the hierarchy is the “Execution Unit” (EU), which has seven [SIMT] cores. That means it has seven cores that operate in lock-step and always all execute the same instructions. They do, however, each have their own registers and even stack pointer. This is also the reason why branching (via `if`/`else`) is avoided when writing for GPUs: Unless all cores take the same branch, all cores have to execute _both_ branches, as they all have to execute the same instructions. The core’s local state will be set up so that the execution of the instructions in the false-y branch will not actually have any effect.
 
-Something that is quite well-known is the fact that GPUs have an extensive number of cores that allow for massively parallel work. However, the cores are not as independent as you might be used to from when programming for a CPU. GPU cores are grouped hierarchically. While the terminology for the different elements of the hierarchy isn’t consistent across vendors and APIs, this [documentation by Intel][intel eu] explains it well: The lowest level in the hierarchy is a single, SIMD-capable “Execution Unit” (EU), which is the most comparable to a CPU core. Multiple EUs are grouped into a “SubSlice”, which have access to a small amount of shared memory (in Intel’s case around 64KiB). Multiple Subslices are then grouped into a Slice, which forms the GPU. For an Intel Built-in GPU, you end up with a total of 170-700 cores. Discrete GPUs can easily have 1500 and more cores. Again, the naming here is taken from Intel, and other vendors probably use different names, but the general architecture is similar in every GPU.
+Despite the core’s frequency, getting data from memory (or pixels from textures) still takes relatively long, which would be wasted cycles. Instead, these cores are heavily oversubscribed with work items and are fast at context switching. Whenver an EU would end up idling, it instead switches to the next work item. This is what I mean by optimizing for throughput at the cost of latency. Individual work items will take longer, but the overall utilization is higher. There should always be work in the queue to keep EU utilization consistently high.
 
-To make efficient use of all these cores, it is important to utilize as many cores as possible as any given time. However, you can’t really schedule at the EU level, you can only schedule work at the SubSlice level. Additionally, if the program contains any form of synchronization between the EUs, it has to be in the same SubSlice, as only they have shared memory to synchronize with. Furthermore, certain operations can take a bit of time on the GPU, like sampling a pixel from a texture. In these cases, the GPU scheduler can decide to pause the work item the SubSlice is currently working on and start working on the next work item while all the pixels are being sampled for the EUs and then switch back when the required data is available. This is what I mean by optimizing for throughput at the cost of latency. Individual work items will take longer, but the overall utilization is higher. There should always be work in the queue to keep EU utilization consistently high.
+<figure>
+  <img loading="lazy" width=548 height=492 src="./intel.avif">
+  <figcaption>The architecture of an Intel Iris Xe Graphics chip. EUs have 7 SIMT cores. SubSlices have 8 EUs. 8 SubSlices form a Slice.</figcaption>
+</figure>
 
-To achieve this high utiliation, graphics API expose a [threading model][thread group hierarchy] that naturally allows for work to be dissected this way. In WebGPU,...
+EUs are just the lowest level in the hierarchy of cores. Multiple EUs are grouped into what Intel calls a “SubSlice”, which have access to a small amount of shared memory, which is about 64KiB in Intel’s case. If the program to be run has any synchronization commands, it has to be executed within the same SubSlice, as only they have shared memory to synchronize with.
+
+In the last layer multiple SubSlices are grouped into a Slice, which forms the GPU. For an integrated Intel GPU, you end up with a total of 170-700 cores. Discrete GPUs can easily have 1500 and more cores. Again, the naming here is taken from Intel, and other vendors probably use different names, but the general architecture is similar in every GPU.
+
+As this shows, the program to be executed needs to be architected in a specific way so it can be easily scheduled by the GPU and maximize utilizations of all EUs available. As a result, the graphics API expose a [threading model][thread group hierarchy] that naturally allows for work to be dissected this way. In WebGPU, the important primitive here is the “workgroup”.
+
+### Workgroups
+
+In WebGPU,
 
 <figure>
   <img loading="lazy" width=2048 height=1280 src="./workgroups.avif">
@@ -141,3 +152,4 @@ To achieve this high utiliation, graphics API expose a [threading model][thread 
 [fabian giesen]: https://twitter.com/rygorous
 [thread group hierarchy]: https://github.com/googlefonts/compute-shader-101/blob/main/docs/glossary.md
 [intel eu]: https://www.intel.com/content/www/us/en/develop/documentation/oneapi-gpu-optimization-guide/top/intel-processors-with-intel-uhd-graphics.html
+[simt]: https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads
