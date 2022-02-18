@@ -70,7 +70,7 @@ If you have ever done any work with WebGL, you are probably familiar with vertex
 
 Before the next step, the triangles are “colored in”. That is, the GPU figures out what pixels each triangle covers on the screen. Each pixel is then processed by the _fragment shader_, which has access to the pixel coordinates but also the auxilliary data to decide which color that pixel should be. This system of passing data to a vertex shader, then to a fragment shader and then outputting it directly onto the screen is called a _pipeline_, and in WebGPU you have to explicitly define a pipeline’s layout.
 
-Currently, WebGPU allows you to create two types of pipelines: A Render Pipeline and a Compute Pipeline. As the name suggest, the Render Pipeline renders something, meaning it creates a 2D image. That image needn’t be on screen, but could just be rendered to memory, called a Framebuffer. A Compute Pipeline is more generic in that it returns a buffer. For the remainder of this blog post I’ll focus on Compute Pipelines, as I like to think of Render Pipelines as a specialization/optimization of Compute Pipelines, even though that is historically backwards. In the future, it seems likely that more types of pipelines — maybe a Raytracing Pipeline — gets added.
+Currently, WebGPU allows you to create two types of pipelines: A Render Pipeline and a Compute Pipeline. As the name suggest, the Render Pipeline renders something, meaning it creates a 2D image. That image needn’t be on screen, but could just be rendered to memory, called a Framebuffer. A Compute Pipeline is more generic in that it returns a buffer. For the remainder of this blog post I’ll focus on Compute Pipelines, as I like to think of Render Pipelines as a specialization/optimization of Compute Pipelines. Now, this is not only historically backwards, but actually considerably understates how diffferent these pipelines are. Both are often completely separate units in the hardware and have contain considerable optimizations and shortcuts for their specific use-case. In terms of the API, however, I find my mental model quite good. In the future, it seems likely that more types of pipelines — maybe a Raytracing Pipeline — get added to WebGPU.
 
 With WebGPU, a pipeline consists of one (or more) programmable stages, where each stage is defined by a shader and an entry point. A Compute Pipline has a single `compute` stage (while a Render Pipeline has a `vertex` and a `fragment` stage):
 
@@ -94,7 +94,7 @@ const pipeline = device.createComputePipeline({
 
 <mark>Should I recommend using `createComputePipelineAsync` instead?</mark>
 
-This is the first time [WGSL], the WebGPU Shading Language, makes an appearance. WGSL is a somewhat Rust-inspired language <mark>that compiles to [SPIR-V]. SPIR-V is a binary format standardized by the Khronos Group that acts as an intermediate representation between multiple source and destination languages for parallel programming. You can think of it as the LLVM of parallel programming language compilers.</mark>
+This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Language, makes an appearance. WGSL is a somewhat Rust-inspired language <mark>that most likely is compiled to [SPIR-V] by your browser. SPIR-V is a binary format standardized by the Khronos Group that acts as an intermediate representation between multiple source and destination languages for parallel programming. You can think of it as the LLVM of parallel programming language compilers. The SPIR-V variant of your shader is then further compile to whatever your operating system and/or driver accepts.</mark>
 
 <figure>
   <img loading="lazy" width=1400 height=697 src="./spirv.avif">
@@ -107,9 +107,16 @@ So what is that `@workgroup_size(64)` attribute?
 
 ### Workgroups
 
-I don’t want to explain the entirety of [GPU Architecture], but we should at least talk about how GPUs handle the massively parallel workloads they are made for.
+GPUs are optimized for throughput at the cost of latency. To understand this, we have to look a bit at the architecture of GPUs.
+I don’t want to (and, honestly, can’t) explain it in its entirety, but this [13-part blog post series][GPU Architecture] by [Fabian Giesen] is really good.
 
-GPUs have Execution Units.... something something.
+<mark>FUCK EUs HAVE 7 THREADS, I NEED TO REWRITE THIS ALL</mark>
+
+Something that is quite well-known is the fact that GPUs have an extensive number of cores that allow for massively parallel work. However, the cores are not as independent as you might be used to from when programming for a CPU. GPU cores are grouped hierarchically. While the terminology for the different elements of the hierarchy isn’t consistent across vendors and APIs, this [documentation by Intel][intel eu] explains it well: The lowest level in the hierarchy is a single, SIMD-capable “Execution Unit” (EU), which is the most comparable to a CPU core. Multiple EUs are grouped into a “SubSlice”, which have access to a small amount of shared memory (in Intel’s case around 64KiB). Multiple Subslices are then grouped into a Slice, which forms the GPU. For an Intel Built-in GPU, you end up with a total of 170-700 cores. Discrete GPUs can easily have 1500 and more cores. Again, the naming here is taken from Intel, and other vendors probably use different names, but the general architecture is similar in every GPU.
+
+To make efficient use of all these cores, it is important to utilize as many cores as possible as any given time. However, you can’t really schedule at the EU level, you can only schedule work at the SubSlice level. Additionally, if the program contains any form of synchronization between the EUs, it has to be in the same SubSlice, as only they have shared memory to synchronize with. Furthermore, certain operations can take a bit of time on the GPU, like sampling a pixel from a texture. In these cases, the GPU scheduler can decide to pause the work item the SubSlice is currently working on and start working on the next work item while all the pixels are being sampled for the EUs and then switch back when the required data is available. This is what I mean by optimizing for throughput at the cost of latency. Individual work items will take longer, but the overall utilization is higher. There should always be work in the queue to keep EU utilization consistently high.
+
+To achieve this high utiliation, graphics API expose a [threading model][thread group hierarchy] that naturally allows for work to be dissected this way. In WebGPU,...
 
 <figure>
   <img loading="lazy" width=2048 height=1280 src="./workgroups.avif">
@@ -131,3 +138,6 @@ GPUs have Execution Units.... something something.
 [WGSL]: https://gpuweb.github.io/gpuweb/wgsl
 [spir-v]: https://www.khronos.org/spir/
 [gpu architecture]: https://fgiesen.wordpress.com/2011/07/09/a-trip-through-the-graphics-pipeline-2011-index/
+[fabian giesen]: https://twitter.com/rygorous
+[thread group hierarchy]: https://github.com/googlefonts/compute-shader-101/blob/main/docs/glossary.md
+[intel eu]: https://www.intel.com/content/www/us/en/develop/documentation/oneapi-gpu-optimization-guide/top/intel-processors-with-intel-uhd-graphics.html
