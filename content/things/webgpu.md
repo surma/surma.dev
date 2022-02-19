@@ -107,10 +107,12 @@ So what is that `@workgroup_size(64)` attribute?
 
 ### Parallelism
 
+<mark>This section needs to be scrutinized by someone with expertise!</mark>
+
 GPUs are optimized for throughput at the cost of latency. To understand this, we have to look a bit at the architecture of GPUs.
 I don’t want to (and, honestly, can’t) explain it in its entirety, but this [13-part blog post series][GPU Architecture] by [Fabian Giesen] is really good.
 
-Something that is quite well-known is the fact that GPUs have an extensive number of cores that allow for massively parallel work. However, the cores are not as independent as you might be used to from when programming for a CPU. GPU cores are grouped hierarchically. While the terminology for the different elements of the hierarchy isn’t consistent across vendors and APIs, this [documentation by Intel][intel eu] gives some good insight that applies generally to today’s GPUs: The lowest level in the hierarchy is the “Execution Unit” (EU), which has seven [SIMT] cores. That means it has seven cores that operate in lock-step and always all execute the same instructions. They do, however, each have their own registers and even stack pointer. This is also the reason why branching (via `if`/`else`) is avoided when writing for GPUs: Unless all cores take the same branch, all cores have to execute _both_ branches, as they all have to execute the same instructions. The core’s local state will be set up so that the execution of the instructions in the false-y branch will not actually have any effect.
+Something that is quite well-known is the fact that GPUs have an extensive number of cores that allow for massively parallel work. However, the cores are not as independent as you might be used to from when programming for a CPU. GPU cores are grouped hierarchically. While the terminology for the different elements of the hierarchy isn’t consistent across vendors and APIs, this [documentation by Intel][intel eu] gives some good insight that applies generally to today’s GPUs: The lowest level in the hierarchy is the “Execution Unit” (EU), which has seven [SIMT] cores. That means it has seven cores that operate in lock-step and always execute the same instructions. They do, however, each have their own registers and even stack pointer. This is also the reason why GPU performance expertes avoid branches (like using `if`/`else`): Unless all cores take the same branch, all cores have to execute _both_ branches, as they all have to execute the same instructions. The core’s local state will be set up so that the execution of the instructions in the false-y branch will not actually have any effect.
 
 Despite the core’s frequency, getting data from memory (or pixels from textures) still takes relatively long, which would be wasted cycles. Instead, these cores are heavily oversubscribed with work items and are fast at context switching. Whenver an EU would end up idling, it instead switches to the next work item. This is what I mean by optimizing for throughput at the cost of latency. Individual work items will take longer, but the overall utilization is higher. There should always be work in the queue to keep EU utilization consistently high.
 
@@ -127,15 +129,64 @@ As this shows, the program to be executed needs to be architected in a specific 
 
 ### Workgroups
 
-In WebGPU,
+Your shader will be invoked once for each work item that you have scheduled. In the traditional setting, the vertex shader would get invoked once for each vertex, and the fragment shader once for each pixel (I’m glossing over some details here, I know). In the GPGPU setting, it is up to us to define what a work item entails.
+
+The collection of all work items (which I will call the “workload”) is broken down into workgroups. All work items in a workgroup are scheduled to run together as they have access to a bit of shared memory (so it corresponds to the SubSlice in the previous section). In WebGPU, the work load is modelled as a 3-dimensional grid, where each “cube” is a work item, and work items are grouped into bigger cuboids to form a workgroup.
 
 <figure>
   <img loading="lazy" width=2048 height=1280 src="./workgroups.avif">
-  <figcaption></figcaption>
+  <figcaption>White-bordered cubes are a work item. Red-bordered cubiods are a workgroup. All red cubes contain the work load.</figcaption>
 </figure>
 
-[Corentin]: TL;DR use 64 unless you know what GPU you are targeting or that your workload needs something different.
+Finally, we have enough information to talk about the `@workgroup_size(x, y, z)` attribute: This allows you to tell the GPU what the required workgroup size for this shader is. I.e. what the dimensions of the red-bordered cubes should be along each spatial dimension. Any skipped parameter is assumed to be 1, so in our case, `@workgroup_size(64)` is equivalent to `@workgroup_size(64, 1, 1)`.
 
+Of course, the actual EUs are not arranged in the 3D grid on the chip. The aim of modelling work items in a 3D grid was to increase locality. That is, neighboring work groups would access similar areas in memory, so subsequent runs would have less cache misses.  However, most hardware seemingly just runs workgroups in a serial order, so this concept is considered somewhat legacy. The same shader will run pretty much the same, whether you declare it `@workgroup_size(64)` or `@workgroup_size(8, 8)`.
+
+However, workgroup are restricted in multiple ways: `device.limits` has a bunch of properties that are worth knowing:
+
+```js
+// device.limits
+{
+  // ...
+  maxComputeInvocationsPerWorkgroup: 256,
+  maxComputeWorkgroupSizeX: 256,
+  maxComputeWorkgroupSizeY: 256,
+  maxComputeWorkgroupSizeZ: 64,
+  maxComputeWorkgroupsPerDimension: 65535,
+  // ...
+}
+```
+
+The size of each dimension of a workgroup size is restricted, but so is the volume ($ = X \times Y \times Z$) of a workgroup. Lastly, you can only have so many workgroups per dimension.
+
+This is all a bit much, I get it. So I’d like to give you the same advice that [Corentin] gave me: “Use [a workgroup size] of 64 unless you know what GPU you are targeting or that your workload needs something different.”
+
+### Commands
+
+We are about to finish our minimal and admittedly useless WebGPU sample. We have written our shader and set up the pipeline. All that’s left to do is actually invoke the GPU to execute it all. As a GPU _can_ be a completely separate card with it’s own memory chip, you control it via a so-called command buffer or command queue. The command queue is a chunk of memory that contains encoded commands for the GPU to execute in order. The encoding is highly specific to the GPU and is abstracted by the driver. As such, WebGPU exposes a `CommendEncoder` that does exactly what it says on the tin.
+
+```js
+const commandEncoder = device.createCommandEncoder();
+const passEncoder = commandEncoder.beginComputePass();
+passEncoder.setPipeline(pipeline);
+passEncoder.dispatch(1);
+passEncoder.end();
+const commands = commandEncoder.finish();
+device.queue.submit([commands]);
+```
+
+`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures, but it also allows you to queue up “passes”, which are invocations of one of the pipelines. In this case, we have compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and use `dispatch(x, y, z)` to tell the GPU how many workgroups there are along each dimension. That is, the number of times our compute shader will be invoked is equal to $\text{\#Workgroups} \times \text{size}(\text{workgroup})$.
+
+The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them noticing. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
+
+With this in place we are in fact spawning 64 threads on the GPU and having them do _absolutely nothing_. We haven’t even given the GPU any data to process, let alone a way to return any results. Since I am refusing to use the GPU for graphics in this blog post, I’ll be run a simple physics simulation on the GPU and visualize it using good ol’ Canvas2D.
+
+## Balls
+
+
+
+- How stable is this? Until recently we had `endPass()` instead of `end()`, and attributes were declared using `[[]]` instead of `@`.
+- I’m not gonna make you GPU perf expert, because I am not one. Just enough to have a good mental model for this.
 
 [inigo quilez]: https://twitter.com/iquilezles
 [shadertoy]: https://shadertoy.com
