@@ -11,6 +11,12 @@ WebGPU is an upcoming Web API (even in Safari!) that gives you low-level access 
 
 I am not very experienced with graphics. I picked up bits and bobs of WebGL by reading through tutorials on how to build game engines with OpenGL and learned more about shaders by watching [Inigo Quilez] do amazing things on [ShaderToy]. This got me far enough to do build things like the background animation in [PROXX], but I was never _comfortable_ with WebGL.
 
+After scraping together multiple intros to WebGPU and getting my feet wet, I realized that WebGPU is an API that I feel like I can understand and utilize. I have seen a couple people say that WebGPU has more boilerplate, but to be honest, I  don’t think it’s that different from WebGL boilerplate and WebGPU’s boilerplate is more intuitive.
+
+In this blog post I want to give you an introduction to WebGPU and how to use it to get access to that raw computing power a GPU can give you. I won’t use WebGPU to generate graphics, but maybe that can be a follow-up blog post at somepoint. I will say that I’m writing this blog post from the perspective of a web developer. So while I will go as deep as necessary, I won’t make you a GPU performance expert, mostly because I can’t because I am not one myself.
+
+This is going to be a long one. Buckle in!
+
 ## WebGL
 [WebGL] came about in 2011, up to this point, was the only way to utilize the GPU on the web. WebGL’s API design is really the same as OpenGL ES 2.0 with some thin wrappers and helpers to make it web-compatible. Both WebGL and OpenGL are standardized by the Khronos Group.
 
@@ -114,7 +120,7 @@ I don’t want to (and, honestly, can’t) explain it in its entirety, but this 
 
 Something that is quite well-known is the fact that GPUs have an extensive number of cores that allow for massively parallel work. However, the cores are not as independent as you might be used to from when programming for a CPU. GPU cores are grouped hierarchically. While the terminology for the different elements of the hierarchy isn’t consistent across vendors and APIs, this [documentation by Intel][intel eu] gives some good insight that applies generally to today’s GPUs: The lowest level in the hierarchy is the “Execution Unit” (EU), which has seven [SIMT] cores. That means it has seven cores that operate in lock-step and always execute the same instructions. They do, however, each have their own registers and even stack pointer. This is also the reason why GPU performance expertes avoid branches (like using `if`/`else`): Unless all cores take the same branch, all cores have to execute _both_ branches, as they all have to execute the same instructions. The core’s local state will be set up so that the execution of the instructions in the false-y branch will not actually have any effect.
 
-Despite the core’s frequency, getting data from memory (or pixels from textures) still takes relatively long, which would be wasted cycles. Instead, these cores are heavily oversubscribed with work items and are fast at context switching. Whenver an EU would end up idling, it instead switches to the next work item. This is what I mean by optimizing for throughput at the cost of latency. Individual work items will take longer, but the overall utilization is higher. There should always be work in the queue to keep EU utilization consistently high.
+Despite the core’s frequency, getting data from memory (or pixels from textures) still takes relatively long — typically a couple hundred clock cycles — which are a couple hundred cycles that could be spent on computation instead. To not waste these cycles, these cores are heavily oversubscribed with work items and are fast at context switching. Whenever an EU would end up idling, it instead switches to the next work item. This is what I mean by optimizing for throughput at the cost of latency. Individual work items will take longer, but the overall utilization is higher. There should always be work in the queue to keep EU utilization consistently high.
 
 <figure>
   <img loading="lazy" width=548 height=492 src="./intel.avif">
@@ -159,6 +165,8 @@ However, workgroup are restricted in multiple ways: `device.limits` has a bunch 
 
 The size of each dimension of a workgroup size is restricted, but so is the volume ($ = X \times Y \times Z$) of a workgroup. Lastly, you can only have so many workgroups per dimension.
 
+> **Pro tip:** Don’t spawn the maximum number of threads. Despite the GPU being managed by the OS and an underlying scheduler, individual jobs can’t be preempted on the GPU. So [a long-running GPU program can just leave your entire system visually frozen][frozen tweet].
+
 This is all a bit much, I get it. So I’d like to give you the same advice that [Corentin] gave me: “Use [a workgroup size] of 64 unless you know what GPU you are targeting or that your workload needs something different.”
 
 ### Commands
@@ -179,14 +187,167 @@ device.queue.submit([commands]);
 
 The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them noticing. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
 
-With this in place we are in fact spawning 64 threads on the GPU and having them do _absolutely nothing_. We haven’t even given the GPU any data to process, let alone a way to return any results. Since I am refusing to use the GPU for graphics in this blog post, I’ll be run a simple physics simulation on the GPU and visualize it using good ol’ Canvas2D.
+With this in place we are in fact spawning 64 threads on the GPU and having them do _absolutely nothing_. We haven’t even given the GPU any data to process, so let’s change that.
 
 ## Balls
 
+I am refusing to use WebGPU for graphics, at least for now, so I’ll be running a physics simulation on the GPU and visualizing it using Canvas2D. Maybe I am flattering myself calling it a “physics simulation”. What I am doing is generating a whole bunch of circles, have them roll around on a plane in random directions and letting them collide.
 
+This is arguably the hairiest part of WebGPU, as there’s lot of upfront declaration and seemingly pointless copying of data, but this is what allows WebGPU to be a device-agnostic API that will still allow you to operate at the highest level of performance.
+
+Before we talk about what the actual data looks like, we need be able to exchange data with the GPU. This is achieved by extending our pipeline definition with a bind group layout. A bind group is a group of GPU entities (memory buffers, textures, samplers, etc) that are bound to variables in our WGSL code (or other parts of the GPU). The bind group _layout_ defines the different purposes of these GPU entities, which allows the GPU figure out how to guarnatee the best possible performance characteristics ahead of time. Let’s keep it simple in this initial step and give our pipeline a single memory buffer:
+
+|||codediff|js
++ const bindGroupLayout = device.createBindGroupLayout({
++   entries: [{
++     binding: 1,
++     visibility: GPUShaderStage.COMPUTE,
++     buffer: {
++       type: "storage",
++     },
++   }],
++ });
+
+  const pipeline = device.createComputePipeline({
++   layout: device.createPipelineLayout({
++     bindGroupLayouts: [bindGroupLayout],
++   }),
+    compute: {
+      module,
+      entryPoint: "main",
+    },
+  });
+|||
+
+The `binding` number can be freely chosen and we’ll use it in our WGSL code to tell which variable should reflect the contents of which buffer from the bind group.  Our `bindGroupLayout` also defines the purpose for each buffer, which in this case is `"storage"`. Another option is `"read-only-storage"`, which is read-only (duh!), and allows the GPU to make further optimizations on the basis that this buffer will never be written to and as such doesn’t need to be synchronized. The last possible value for the buffer type is `"uniform"`, which in the context of a compute pipeline is not very useful and mostly functionally equivalent, but with more restrictions.
+
+With out bind group layout in place, we can now create the actual bind group itself: the collection of buffers that adheres to the layout. But there’s a hurdle: Staging Buffers.
+
+### Staging Buffers
+
+I will say it again: GPUs are heavily optimized for throughput at the cost of latency. A GPU needs to be able feed data to the cores at an incredibly high rate to sustaing that throughput. Fabian did some [back-of-napkin math][texture bandwidth] in his blog post series from 2011, and arrived at the conclusion that GPUs needs to sustain 3.3GB/s _just for texture samples_ for a shader running at 1280x720 resolution. To accommodate today’s graphics demands, GPUs need to be even faster. This is only possible to achieve  if the memory of the GPU is very tightly integrated with the cores. It’s just not possible to _also_ expose the same memory to the host machine and make it writable directly.
+
+Instead, GPUs have additional memory banks that are both visible to the host machine as well as having access to those high-performance memory banks. Staging buffers are allocated in this intermediate memory realm so that they can be [mapped][memory mapping] to the host system and then be written to. Then in a second step, the data can be copied from the staging realm to the high-performance memory realm and be processed by the GPU. For reading memory from the GPU, the same process is used but in reverse.
+
+Back to our code: The plan for this example is to provide an empty buffer to be filled in by the compute shader. We will provide a writable buffer for the bind group, that will be located in the high-performance memory section. We will also create a second, equally sized buffer that will act as a staging buffer. Instead of providing high-level flags like `isStaging`, WebGPU requires you to define a `usage` bitmap for each buffer, where you declare what you want to use this buffer for. The GPU will then tell you if it can create a buffer for this use-case.
+
+```rust
+const BUFFER_SIZE = 1000;
+
+const output = device.createBuffer({
+  size: BUFFER_SIZE,
+  usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+});
+
+const stagingBuffer = device.createBuffer({
+  size: BUFFER_SIZE,
+  usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+});
+
+const bindGroup = device.createBindGroup({
+  layout: bindGroupLayout,
+  entries: [{
+    binding: 1,
+    resource: {
+      buffer: output,
+    },
+  }],
+});
+```
+
+Note that `createBuffer()` returns a `GPUBuffer`, not an `ArrayBuffer`. They can’t be read or written to. For that, they need to be mappable and explicitly mapped, which will do next!
+
+Now that we not only have the bind group _layout_, but even the actual bind group itself, we need to update our dispatch code to make use of this bind group and map our staging buffer to be able to read the results.
+
+|||codediff|js
+  const commandEncoder = device.createCommandEncoder();
+  const passEncoder = commandEncoder.beginComputePass();
+  passEncoder.setPipeline(pipeline);
++ passEncoder.setBindGroup(0, bindGroup);
+- passEncoder.dispatch(1);
++ passEncoder.dispatch(Math.ceil(BUFFER_SIZE / 64));
+  passEncoder.end();
++ commandEncoder.copyBufferToBuffer(
++   output,
++   0, // Source offset
++   stagingBuffer,
++   0, // Destination offset
++   BUFFER_SIZE
++ );
+  const commands = commandEncoder.finish();
+  device.queue.submit([commands]);
+
++ await stagingBuffer.mapAsync(GPUMapMode.READ, 0, BUFFER_SIZE);
++ const copyArrayBuffer = stagingBuffer.getMappedRange(0, BUFFER_SIZE);
++ const data = copyArrayBuffer.slice();
++ stagingBuffer.unmap();
++ console.log(new Float32Array(data));
+|||
+
+Since our pipeline has been extended with a bind group layout, our dispatch code would not fail if we didn’t also provide a bind group, as we are doing with `passEncoder.setBindGroup()`. After we define our “pass”, we add an additional command via our command encoder to copy the data from our output buffer to the staging buffer and submit our command buffer to the queue. The GPU will start working hard to crunching through our code (which still does nothing), while we already submit our request for the `stagingBuffer` to be mapped. This function is async as it needs to wait until all commands currently in the device’s queue have been processed. Once that promise is resolved, the buffer is mapped, but not exposed to JavaScript yet. With `stagingBuffer.getMappedRange()` we can request for a subsection (or the entire buffer) to be exposed to JavaScript as an good ol’ `ArrayBuffer`. This is real mapped memory, meaning the data will disappear (the `ArrayBuffer` will be “detached”), when `stagingBuffer` gets unmapped. `slice()` is a quick way to create a copy.
+
+<figure>
+  <img loading="lazy" width=1024 height=429 src="./emptybuffer.avif">
+  <figcaption>Not very exciting, but these zeroes were generted by our GPU.</figcaption>
+</figure>
+
+Before we start doing any advanced calculation on our GPU, let’s just fill in some data to see that our pipeline is _indeed_ working as intended. This is our _new_ compute shader code, with extra spacing for clarity.
+
+```rust
+@group(0) @binding(1)
+var<storage, write> output: array<f32>;
+
+@stage(compute) @workgroup_size(64)
+fn main(
+
+  @builtin(global_invocation_id)
+  global_id : vec3<u32>,
+
+  @builtin(local_invocation_id)
+  local_id : vec3<u32>,
+
+) {
+  output[global_id.x] = f32(global_id.x) * 100. + f32(local_id.x);
+}
+```
+
+The first two lines declare a module-scope variable called `output`, which is a dynamically-sized array of `f32`. The attributes declare where the data comes from: From our first (0th) binding group, the entry with `binding` value 1.
+
+Our `main()` has been augmented with two parameters: `global_id` and `local_id`. I could have chosen any name, their value is determined by the attributes preceding them: The `global_invocation_id` is a built-in value that corresponds to the glboal x/y/z coordinates of this shader invocation in the work _load_. The `local_invocation_id` are the x/y/z coordinates of this shader vocation in the work _group_. Our workgroup size is $(64, 1, 1)$, so `local_id.x ` will range from 0 to 64. I am “encoding” both a float here, where the last two digits are the local invocation ID, while everything else is the global invocation ID:
+
+<figure>
+  <img loading="lazy" width=1024 height=565 src="./fullbuffer.avif">
+  <figcaption>Actual values filled in by the GPU. Notice how the local invocation ID starts wrapping around after 63, while the global invocation ID keeps going.</figcaption>
+</figure>
+
+The astude observer might have notices that our current number of invocations (`Math.ceil(BUFFER_SIZE / 64)`) will result in `global_id.x` getting bigger than our our buffer has slots. Array index access will get clamped, so every value that tries to access beyond the end of the array will end up access the last element of the array. That avoids bad memory access faults, but might still generate unsuable data. And indeed, if you check the last 3 elements of the returned buffer, you’ll find the numbers 24755, 24856 and 60832. It’s up to us, to prevent that from happening. A simple early exit will do:
+
+|||codediff|rust
+  fn main( /* ... */) {
++   if(global_id.x > arrayLength(&output)) {
++     return;
++   }
+    output[global_id.x] = f32(global_id.x) * 100. + f32(local_id.x);
+  }
+|||
+
+If you want, you can run this [demo][demo1] and inspect the full source.
+
+```rust
+struct Ball {
+  size: f32;
+  position: vec2<f32>;
+}
+
+struct Scene {
+  width: f32;
+  height: f32;
+  balls: array<Ball>;
+};
+```
 
 - How stable is this? Until recently we had `endPass()` instead of `end()`, and attributes were declared using `[[]]` instead of `@`.
-- I’m not gonna make you GPU perf expert, because I am not one. Just enough to have a good mental model for this.
+- not just if/else, also loops! Especially loops!
 
 [inigo quilez]: https://twitter.com/iquilezles
 [shadertoy]: https://shadertoy.com
@@ -204,3 +365,7 @@ With this in place we are in fact spawning 64 threads on the GPU and having them
 [thread group hierarchy]: https://github.com/googlefonts/compute-shader-101/blob/main/docs/glossary.md
 [intel eu]: https://www.intel.com/content/www/us/en/develop/documentation/oneapi-gpu-optimization-guide/top/intel-processors-with-intel-uhd-graphics.html
 [simt]: https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads
+[frozen tweet]: https://twitter.com/DasSurma/status/1495096911333842946
+[texture bandwidth]: https://fgiesen.wordpress.com/2011/07/04/a-trip-through-the-graphics-pipeline-2011-part-4/#:~:text=that%E2%80%99s%203.3%20GB/s%20just%20for%20texture%20request%20payloads.%20Lower%20bound%2C
+[memory mapping]: https://en.wikipedia.org/wiki/Memory-mapped_I/O
+[demo1]: ./step1/index.html

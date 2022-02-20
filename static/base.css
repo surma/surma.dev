@@ -28,7 +28,7 @@
   --body-font-width: 300;
   --body-font-weight: 300;
   --body-font-slant: 0;
-  
+
   --bold-font-weight: 800;
 
   --heading-lineheight: 1;
@@ -58,6 +58,7 @@
   /* prettier-ignore */
   --arrow-right-file: url(/arrow-right.svg);
 }
+
 
 body {
   font-family: "Vinila", "Helvetica", sans-serif;
