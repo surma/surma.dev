@@ -333,18 +333,62 @@ The astude observer might have notices that our current number of invocations (`
 
 If you want, you can run this [demo][demo1] and inspect the full source.
 
+### A structure for the madness
+
+Our goal here is to have a whole lotta balls moving through 2D space and have happy little collisions. We could just continue working on `array<f32>`, but that’s not what I would call ergonomic. Luckily, WGSL allows us to define our own structs to pack multiple pieces of data together. The Downside: We have to talk about [alignment].
+
+If you have ever work with system programming languages close to the metal, you probably have encountered memory alignment restrictions and it won’t surprise you that GPUs have similar restrictions about how they can read data from and write data to memory. The next step in our demo will bring us into contact with alignment issues.
+
+Our shader is supposed to simulate the physics interaction between a bunch of balls rolling around in 2D space. Each ball has a size, a position and a velocity vector. To be able to input and output arrays of these balls, we need a `struct`. And before we start implementing physics, lets just put some hand-picked numbers in to see how they are laid out in memory. Here’s our new compute shader:
+
 ```rust
 struct Ball {
-  size: f32;
+  radius: f32;
   position: vec2<f32>;
+  velocity: vec2<f32>;
 }
 
-struct Scene {
-  width: f32;
-  height: f32;
-  balls: array<Ball>;
-};
+@group(0) @binding(1)
+var<storage, write> output: array<Ball>;
+
+@stage(compute) @workgroup_size(64)
+fn main(
+  @builtin(global_invocation_id) global_id : vec3<u32>,
+  @builtin(local_invocation_id) local_id : vec3<u32>,
+) {
+  let num_balls = arrayLength(&output);
+  if(global_id.x >= num_balls) {
+    return;
+  }
+
+  output[global_id.x].radius = 999.;
+  output[global_id.x].position = vec2<f32>(global_id.xy);
+  output[global_id.x].velocity = vec2<f32>(local_id.xy);
+}
 ```
+
+<mark title="Need to add teh demo!">If you run this [demo][demo2], you’ll see this in your console:</mark>
+
+<figure>
+  <img loading="lazy" width=479 height=440 src="./alignment.avif">
+  <figcaption>The struct has a hole (padding) in its memory layout due to aligment constraints.</figcaption>
+</figure>
+
+`999` denotes the first field of the struct, which are followed by 5 other numbers until we reach the next `999`. Hang on, 5 numbers? Apart from the radius, our struct only contains two `vec2<f32>`, which each consist of two numbers. What’s the 5th number? The boring answer is: Padding.
+
+Each data WGSL type has well-defined [alignemnt requirements][wgsl alignment]. For example, a `f32` has an alignment of 4, while a `vec2<f32>` has an alignment of 8. If a datatype has an alignment of $N$, it means that a value of that data type can only be stored at an address that is a multiple of $N$. This has to do with how a processor can access memory via the data bus. Technically, any value can be loaded from any address, but it can only be loaded _efficiently_ from an address with the right alignment.
+
+<figure>
+  <img loading="lazy" width=797 height=605 src="./alignmenttable.avif">
+  <figcaption>The (shortened) alignment table from the WGSL spec.</figcaption>
+</figure>
+
+If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as it is a multiple of 4, the required alignment for `f32`. The next available address is 4 (as an `f32` is 4 bytes long), but the next field in the struct is `vec2<f32>`, which has an alignment of 8. So the next possible address for the `vec<f32>` is 8, which is exactly where it ends up, leaving 4 bytes unused in the middle.
+
+Now that we know how our struct is laid out in memory, we can populate it from JavaScript to generate our initial state of balls.
+
+> **Note:** <mark>Talk about buffer-backed-object</mark>
+
 
 - How stable is this? Until recently we had `endPass()` instead of `end()`, and attributes were declared using `[[]]` instead of `@`.
 - not just if/else, also loops! Especially loops!
@@ -369,3 +413,5 @@ struct Scene {
 [texture bandwidth]: https://fgiesen.wordpress.com/2011/07/04/a-trip-through-the-graphics-pipeline-2011-part-4/#:~:text=that%E2%80%99s%203.3%20GB/s%20just%20for%20texture%20request%20payloads.%20Lower%20bound%2C
 [memory mapping]: https://en.wikipedia.org/wiki/Memory-mapped_I/O
 [demo1]: ./step1/index.html
+[alignment]: https://en.wikipedia.org/wiki/Data_structure_alignment
+[wgsl alignment]: https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
