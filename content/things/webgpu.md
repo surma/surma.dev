@@ -335,11 +335,11 @@ If you want, you can run this [demo][demo1] and inspect the full source.
 
 ### A structure for the madness
 
-Our goal here is to have a whole lotta balls moving through 2D space and have happy little collisions. We could just continue working on `array<f32>`, but that’s not what I would call ergonomic. Luckily, WGSL allows us to define our own structs to pack multiple pieces of data together. The Downside: We have to talk about [alignment].
+Our goal here is to have a whole lotta balls moving through 2D space and have happy little collisions. We could just continue working on `array<f32>`, and say the first float is the first ball’s x position, the second float is the first ball’s y position and so on, and so forth. That’s not what I would call ergonomic. Luckily, WGSL allows us to define our own structs to pack multiple pieces of data together. The downside: we have to talk about [alignment].
 
-If you have ever work with system programming languages close to the metal, you probably have encountered memory alignment restrictions and it won’t surprise you that GPUs have similar restrictions about how they can read data from and write data to memory. The next step in our demo will bring us into contact with alignment issues.
+If you know what memory alignment is, you can skip this section (although do take a look at the code sample as I will be building off of that). If you don’t know what it is, I won’t really explain the why and how, but show you how it manifests and how to work with it.
 
-Our shader is supposed to simulate the physics interaction between a bunch of balls rolling around in 2D space. Each ball has a size, a position and a velocity vector. To be able to input and output arrays of these balls, we need a `struct`. And before we start implementing physics, lets just put some hand-picked numbers in to see how they are laid out in memory. Here’s our new compute shader:
+Each ball has a radius, a position and a velocity vector, so it makes sense to group them together in a struct and treat them as a single entity. Instead of using an `array<f32>` as output, we can now use a `array<Ball>`.
 
 ```rust
 struct Ball {
@@ -367,28 +367,140 @@ fn main(
 }
 ```
 
-<mark title="Need to add teh demo!">If you run this [demo][demo2], you’ll see this in your console:</mark>
+If you run this [demo][demo2], you’ll see this in your console:
 
 <figure>
   <img loading="lazy" width=479 height=440 src="./alignment.avif">
   <figcaption>The struct has a hole (padding) in its memory layout due to aligment constraints.</figcaption>
 </figure>
 
-`999` denotes the first field of the struct, which are followed by 5 other numbers until we reach the next `999`. Hang on, 5 numbers? Apart from the radius, our struct only contains two `vec2<f32>`, which each consist of two numbers. What’s the 5th number? The boring answer is: Padding.
+I used the compute shader store `999` the first field of the struct as to mark where the struct begins in the ArrayBuffer. There’s a total of 6 numbers until we reach the next `999`, which might be surprising because the struct really only has 5 numbers to store: `radius`, `position.x`, `position.y`, `velocity.x` and `velocity.y`. Taking a closer look, it is clear that the number after `radius` is always $0$. This is because of alignment.
 
-Each data WGSL type has well-defined [alignemnt requirements][wgsl alignment]. For example, a `f32` has an alignment of 4, while a `vec2<f32>` has an alignment of 8. If a datatype has an alignment of $N$, it means that a value of that data type can only be stored at an address that is a multiple of $N$. This has to do with how a processor can access memory via the data bus. Technically, any value can be loaded from any address, but it can only be loaded _efficiently_ from an address with the right alignment.
+Each data WGSL type has well-defined [alignemnt requirements][wgsl alignment]. If a datatype has an alignment of $N$, it means that a value of that data type can only be stored at an address that is a multiple of $N$. For example, a `f32` has an alignment of 4, while a `vec2<f32>` has an alignment of 8. If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as it is a multiple of 4. The next available address is 4 (as an `f32` is 4 bytes long), but the next field in the struct is `vec2<f32>`, which has an alignment of 8, which doesn’t work. So the compiler adds padding (4 unused bytes) to get to the next address that is a multiple of 8 to fullfil the alignment requirement of `vec2<f32>`.
 
 <figure>
   <img loading="lazy" width=797 height=605 src="./alignmenttable.avif">
-  <figcaption>The (shortened) alignment table from the WGSL spec.</figcaption>
+  <figcaption>
+
+The (shortened) [alignment table][wgsl alignment] from the WGSL spec.
+
+  </figcaption>
 </figure>
 
-If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as it is a multiple of 4, the required alignment for `f32`. The next available address is 4 (as an `f32` is 4 bytes long), but the next field in the struct is `vec2<f32>`, which has an alignment of 8. So the next possible address for the `vec<f32>` is 8, which is exactly where it ends up, leaving 4 bytes unused in the middle.
 
-Now that we know how our struct is laid out in memory, we can populate it from JavaScript to generate our initial state of balls.
+Now that we know how our struct is laid out in memory, we can populate it from JavaScript to generate our initial state of balls and also read it back to visualize it.
 
 > **Note:** <mark>Talk about buffer-backed-object</mark>
 
+### Input & Output
+
+So far we have used the compute shader to generate data pretty much out of thin air. It’s much more interesting to pass existing data into the compute shader and have it process that. Generating a random set of balls is quite easy:
+
+```js
+let inputBalls = new Float32Array(new ArrayBuffer(BUFFER_SIZE));
+for (let i = 0; i < NUM_BALLS; i++) {
+  inputBalls[i * 6 + 0] = random(2, 10);
+  inputBalls[i * 6 + 1] = 0; // Padding
+  inputBalls[i * 6 + 2] = random(0, ctx.canvas.width);
+  inputBalls[i * 6 + 3] = random(0, ctx.canvas.height);
+  inputBalls[i * 6 + 4] = random(-100, 100);
+  inputBalls[i * 6 + 5] = random(-100, 100);
+}
+```
+
+We also already know how to expose data to our shader. We just need to adjust our pipeline bing group layout to expect another buffer:
+
+|||codediff|js
+  const bindGroupLayout = device.createBindGroupLayout({
+    entries: [
++     {
++       binding: 0,
++       visibility: GPUShaderStage.COMPUTE,
++       buffer: {
++         type: "read-only-storage",
++       },
++     },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: {
+          type: "storage",
+        },
+      },
+    ],
+  });
+|||
+
+and create a GPU buffer that we can bind using our bind group:
+
+|||codediff|js
++ const input = device.createBuffer({
++   size: BUFFER_SIZE,
++   usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
++ });
+
+  const bindGroup = device.createBindGroup({
+    layout: bindGroupLayout,
+    entries: [
++     {
++       binding: 0,
++       resource: {
++         buffer: input,
++       },
++     },
+      {
+        binding: 1,
+        resource: {
+          buffer: output,
+        },
+      },
+    ],
+  });
+|||
+
+Now for the new part: Sending data to the GPU. Just like with reading data, we technically have to create a staging buffer that we can map, copy our data over and then issue a command to copy our data from the staging buffer into the storage buffer. However, WebGPU offers a convenience function that will choose the most performance way of getting data to the GPU for you:
+
+```js
+device.queue.writeBuffer(input, 0, inputBalls);
+```
+
+That’s it? That’s it! We don’t even need a command encoder. We can just put it directly in the command queue. `device.queue` offers similar convenience functions for textures as well. Let’s augment the shader to do some work with it:
+
+```rust
+struct Ball {
+  radius: f32;
+  position: vec2<f32>;
+  velocity: vec2<f32>;
+}
+
+@group(0) @binding(0)
+var<storage, read> input: array<Ball>;
+
+@group(0) @binding(1)
+var<storage, write> output: array<Ball>;
+
+let TIME_STEP: f32 = 0.016;
+
+@stage(compute) @workgroup_size(64)
+fn main(
+  @builtin(global_invocation_id)
+  global_id : vec3<u32>,
+) {
+  let num_balls = arrayLength(&output);
+  if(global_id.x >= num_balls) {
+    return;
+  }
+  let src_ball = input[global_id.x];
+  let dst_ball = &output[global_id.x];
+
+  (*dst_ball) = src_ball;
+  (*dst_ball).position = (*dst_ball).position + (*dst_ball).velocity * TIME_STEP;
+}
+```
+
+I hope that the vast majority of this shader code is no surprise to you at this point. The only thing that is worth pointing out is that WGSL has the notion of pointers. This is important as the default behavior in WGSL is to copy a value. So in this case `dst_ball` is a _pointer_ to the field in the array that this shader invocation is supposed to populate.
+
+Lastly, all we need to do is read the `output` buffer back into JavaScript and write some Canvas2D code to visualize our scene, which you can see in action in this [demo][demo3].
 
 - How stable is this? Until recently we had `endPass()` instead of `end()`, and attributes were declared using `[[]]` instead of `@`.
 - not just if/else, also loops! Especially loops!
@@ -415,3 +527,5 @@ Now that we know how our struct is laid out in memory, we can populate it from J
 [demo1]: ./step1/index.html
 [alignment]: https://en.wikipedia.org/wiki/Data_structure_alignment
 [wgsl alignment]: https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
+[demo2]: ./step2/index.html
+[demo3]: ./step3/index.html
