@@ -516,10 +516,27 @@ The previous demo just moves each ball along their velocity vector. Not exactly 
   <figcaption>... now with bouncy walls and bouncy balls!</figcaption>
 </figure>
 
-I don’t want to shine too much light on the exact performance characteristics. I haven’t really optimized anything, as I lack the in-depth understanding, but even this naïve implementation performs really well, show-casing the computation power that WebGPU gives you access to. On my M1 MacBook Air, I can go to around 2500 balls before we drop below 60fps. However, looking at a trace that’s because Canvas2D is taking too long to draw all the balls every frame. So disabled rendering and instead used [`performance.measure()`][measure] to see how many balls I can simulate before exhausting my frame budget of 16ms. It turns out, that happens at around 14000 balls on this machine.
+I don’t want to shine too much light on the exact performance characteristics. I haven’t really optimized neither the physics algorithm nor my usage of WebGPU, but even this naïve implementation performs really well. On my M1 MacBook Air, I can go to around 2500 balls before we drop below 60fps. However, looking at a trace that’s because Canvas2D is taking too long to draw all the balls every frame.
 
+<figure>
+  <img loading="lazy" width=1024 height=625 src="./performance.avif">
+  <figcaption>At 14000 balls, the raw GPU computation time reaches ~16ms on a M1 MBA.</figcaption>
+</figure>
 
-- How stable is this? Until recently we had `endPass()` instead of `end()`, and attributes were declared using `[[]]` instead of `@`.
+So disabled rendering and instead used [`performance.measure()`][measure] to see how many balls I can simulate before exhausting my frame budget of 16ms. It turns out, that happens at around 14000 balls on this machine. Something this unoptimized running this fast, really makes me drunk on power on how much computational power WebGPU gives me access to.
+
+## Stability & Availability
+
+WebGPU has been worked on for a while and I think most browser vendors are eager to declare the API as stable. That being said, the API is only available in Chrome and Firefox behind a flag. I’m optimistic about Safari shipping this API but at the time of writing there’s nothing to see in Safari TP just yet.
+
+In terms of stability, some changes landed even while I was doing the research for this article. For example, attributes like `@stage(compute) @workgroup_size(64)` used to be `[[stage(compute), workgroup_size(64)]]` and they still are in Firefox. `passEncoder.end()` used to be `passEncoder.endPass()` and so on. There are also some things in the spec that haven’t been implemented in any browser yet like [shader constants][constants] or the API being enabled on mobile devices.
+
+Basically what I am saying is: Expect some more breaking changes to land while the browser and standards folks are on the home stretch of this API’s journey to ✨stable✨.
+
+## Conclusion
+
+Having a modern API to talk to GPUs on the web is going to be very interesting. After investing time to overcome the initial learning curve, I really feel empowered to run massively parallel workloads on the GPU using JavaScript. There is also [wgpu], which implements the WebGPU API in Rust, allowing you to use the API outside the browser (although they also support WebAssembly as a compile target). As a result, [Deno] already ships support for WebGPU, allowing you to tap into you GPU when writing your backend. Exciting times.
+
 - not just if/else, also loops! Especially loops!
 - `let` vs `var`?
 
@@ -549,3 +566,6 @@ I don’t want to shine too much light on the exact performance characteristics.
 [demo3]: ./step3/index.html
 [demo4]: ./step4/index.html
 [measure]: https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure
+[constants]: https://gpuweb.github.io/gpuweb/#dom-gpuprogrammablestage-constants
+[wgpu]: https://github.com/gfx-rs/wgpu
+[deno]: https://deno.land
