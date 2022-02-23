@@ -500,10 +500,28 @@ fn main(
 
 I hope that the vast majority of this shader code is no surprise to you at this point. The only thing that is worth pointing out is that WGSL has the notion of pointers. This is important as the default behavior in WGSL is to copy a value. So in this case `dst_ball` is a _pointer_ to the field in the array that this shader invocation is supposed to populate.
 
-Lastly, all we need to do is read the `output` buffer back into JavaScript and write some Canvas2D code to visualize our scene, which you can see in action in this [demo][demo3].
+<figure>
+  <video width="512" height="512" src="./step3.webm" type="video/webm" style="max-width: 512px" muted loop controls></video>
+  <figcaption>Every frame, WebGPU is used to update the position of the balls. They drawn to screen using Canvas2D.</figcaption>
+</figure>
+
+Lastly, all we need to do is read the `output` buffer back into JavaScript, write some Canvas2D code to visualize the contents of the buffer and put it all in a `requestAnimationFrame()` loop. You can see the result this [demo][demo3].
+
+## Performance
+
+The previous demo just moves each ball along their velocity vector. Not exactly thrilling. Before we look at the performance characteristics of our creation, let me drop in some proper physics calculations in the shader. I won’t explain them here — the blog post is long enough as it is. If you are curious, you can take a look at the source code of the [final demo][demo4].
+
+<figure>
+  <video width="512" height="512" src="./step4.webm" type="video/webm" style="max-width: 512px" autoplay muted loop controls></video>
+  <figcaption>... now with bouncy walls and bouncy balls!</figcaption>
+</figure>
+
+I don’t want to shine too much light on the exact performance characteristics. I haven’t really optimized anything, as I lack the in-depth understanding, but even this naïve implementation performs really well, show-casing the computation power that WebGPU gives you access to. On my M1 MacBook Air, I can go to around 2500 balls before we drop below 60fps. However, looking at a trace that’s because Canvas2D is taking too long to draw all the balls every frame. So disabled rendering and instead used [`performance.measure()`][measure] to see how many balls I can simulate before exhausting my frame budget of 16ms. It turns out, that happens at around 14000 balls on this machine.
+
 
 - How stable is this? Until recently we had `endPass()` instead of `end()`, and attributes were declared using `[[]]` instead of `@`.
 - not just if/else, also loops! Especially loops!
+- `let` vs `var`?
 
 [inigo quilez]: https://twitter.com/iquilezles
 [shadertoy]: https://shadertoy.com
@@ -529,3 +547,5 @@ Lastly, all we need to do is read the `output` buffer back into JavaScript and w
 [wgsl alignment]: https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
 [demo2]: ./step2/index.html
 [demo3]: ./step3/index.html
+[demo4]: ./step4/index.html
+[measure]: https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure
