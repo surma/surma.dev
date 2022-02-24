@@ -104,31 +104,31 @@ const pipeline = device.createComputePipeline({
 
 <mark>Should I recommend using `createComputePipelineAsync` instead?</mark>
 
-This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Language, makes an appearance. WGSL is a somewhat Rust-inspired language <mark>that most likely is compiled to [SPIR-V] by your browser. SPIR-V is a binary format standardized by the Khronos Group that acts as an intermediate representation between multiple source and destination languages for parallel programming. You can think of it as the LLVM of parallel programming language compilers. You probably won’t come into contact with SPIR-V directly, but it’s interesting to know that it’s there.</mark>
+This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Language, makes an appearance. WGSL feels like a cross-over of Rust and GLSL to me. It’s Rust syntax with GLSL’ global functions (like `dot()`, `norm()`, `len()`, ...), types (like `vec2`, `mat4x4`, ...) and the swizzling notation (like `some_vec.xxy`, ...). The browser <mark>will most likely is compile your WGSL to [SPIR-V], which is a binary intermediate format standardized by the Khronos Group. You can think of SPIR-V as the LLVM of parallel programming language compilers, but you probably won’t come into direct contact with SPIR-V.</mark>
 
-In this example, we are just creating a function called `main` and marking it as an entry point for the compute stage by using the `@stage(compute)` attribute. You can have multiple functions marked as an entry point in a shader module, as you can reuse the same shader module for multiple pipelines and choose different functions to invoke via the `entryPoint` options. But what is that `@workgroup_size(64)` attribute?
+In the shader module above we are just creating a function called `main` and marking it as an entry point for the compute stage by using the `@stage(compute)` attribute. You can have multiple functions marked as an entry point in a shader module, as you can reuse the same shader module for multiple pipelines and choose different functions to invoke via the `entryPoint` options. But what is that `@workgroup_size(64)` attribute?
 
 ### Parallelism
 
 <mark>This section needs to be scrutinized by someone with expertise!</mark>
 
 GPUs are optimized for throughput at the cost of latency. To understand this, we have to look a bit at the architecture of GPUs.
-I don’t want to (and, honestly, can’t) explain it in its entirety, but this [13-part blog post series][GPU Architecture] by [Fabian Giesen] is really good.
+I don’t want to (and, honestly, can’t) explain it in its entirety. If you want to now more, this [13-part blog post series][GPU Architecture] by [Fabian Giesen] is really good.
 
-Something that is quite well-known is the fact that GPUs have an extensive number of cores that allow for massively parallel work. However, the cores are not as independent as you might be used to from when programming for a CPU. GPU cores are grouped hierarchically. While the terminology for the different elements of the hierarchy isn’t consistent across vendors and APIs, this [documentation by Intel][intel eu] gives some good insight that applies generally to today’s GPUs: The lowest level in the hierarchy is the “Execution Unit” (EU), which has seven [SIMT] cores. That means it has seven cores that operate in lock-step and always execute the same instructions. They do, however, each have their own registers and even stack pointer. This is also the reason why GPU performance experts avoid branches (like using `if`/`else`): Unless all cores take the same branch, all cores have to execute _both_ branches, as they all have to execute the same instructions. The same applies for loops: If one core finishes their loop early, it will have to keep executing the loop instructions until _all_ cores have finished the loop. In these cases, thes cores’ local state will be set up so that the execution of the instructions will not actually have any effect.
+Something that is quite well-known is the fact that GPUs have an extensive number of cores that allow for massively parallel work. However, the cores are not as independent as you might be used to from when programming for a multi-core CPU. Firstly, GPU cores are grouped hierarchically. The terminology for the different layers of the hierarchy isn’t consistent across vendors and APIs. Intel as a good piece of [documentation][intel eu] that gives an high-level overview of their architecture and it’s safe to say that other GPUs work at least similarly: The lowest level in the hierarchy is the “Execution Unit” (EU), which has multiple (in this case seven) [SIMT] cores. That means it has seven cores that operate in lock-step and always execute the same instructions. However, each core has its own set of registers at own stack pointer, so they can execute the same code on completely different data. This is also the reason why GPU performance experts avoid branches (like using `if`/`else`): Unless all cores take the same branch, all cores have to execute _both_ branches, as they all get fed the same instructions. The compiler will make sure that only the execution of the right branch will actually have an effect. The same applies to loops! If one core finishes their loop early, it will have to keep executing the loop body until _all_ cores have finished the loop.
 
-Despite the core’s frequency, getting data from memory (or pixels from textures) still takes relatively long — typically a couple hundred clock cycles — which are a couple hundred cycles that could be spent on computation instead. To not waste these cycles, these cores are heavily oversubscribed with work items and are fast at context switching. Whenever an EU would end up idling, it instead switches to the next work item. This is what I mean by optimizing for throughput at the cost of latency. Individual work items will take longer, but the overall utilization is higher. There should always be work in the queue to keep EU utilization consistently high.
+Despite the core’s frequency, getting data from memory (or pixels from textures) still takes relatively long — typically a couple hundred clock cycles. These couple hundred cycles could be spent on computation instead. To make use of these otherwise idle cycles, each EU is heavily oversubscribed with work. Whenever an EU would end up idling, it instead switches to the next work item and will keep working on it until this one would hit an idle period. And this is what I mean by optimizing for throughput at the cost of latency: Individual work items will take longer as a context switch might stop execution for longer than necessary, but the overall utilization is higher. There should always be work in the queue to keep EU busy at all times.
 
 <figure>
-  <img loading="lazy" width=548 height=492 src="./intel.avif">
+  <img loading="lazy" width=548 height=492 style="max-width: 512px" src="./intel.avif">
   <figcaption>The architecture of an Intel Iris Xe Graphics chip. EUs have 7 SIMT cores. SubSlices have 8 EUs. 8 SubSlices form a Slice.</figcaption>
 </figure>
 
-EUs are just the lowest level in the hierarchy of cores. Multiple EUs are grouped into what Intel calls a “SubSlice”, which have access to a small amount of shared memory, which is about 64KiB in Intel’s case. If the program to be run has any synchronization commands, it has to be executed within the same SubSlice, as only they have shared memory to synchronize with.
+EUs are just the lowest level in the hierarchy, though. Multiple EUs are grouped into what Intel calls a “SubSlice”. All the EUs in a SubSlice have access to a small amount of shared memory, which is about 64KiB in Intel’s case. If the program to be run has any synchronization commands, it has to be executed within the same SubSlice, as only they have shared memory for synchronization.
 
 In the last layer multiple SubSlices are grouped into a Slice, which forms the GPU. For an integrated Intel GPU, you end up with a total of 170-700 cores. Discrete GPUs can easily have 1500 and more cores. Again, the naming here is taken from Intel, and other vendors probably use different names, but the general architecture is similar in every GPU.
 
-As this shows, the program to be executed needs to be architected in a specific way so it can be easily scheduled by the GPU and maximize utilizations of all EUs available. As a result, the graphics API expose a [threading model][thread group hierarchy] that naturally allows for work to be dissected this way. In WebGPU, the important primitive here is the “workgroup”.
+As this shows, the program to be executed needs to be architected in a specific way so it can be easily scheduled by the GPU and maximize utilizations of all EUs available. As a result, graphics APIs expose a [threading model][thread group hierarchy] that naturally allows for work to be dissected this way. In WebGPU, the important primitive here is the “workgroup”.
 
 ### Workgroups
 
@@ -141,9 +141,9 @@ The collection of all work items (which I will call the “workload”) is broke
   <figcaption>White-bordered cubes are a work item. Red-bordered cubiods are a workgroup. All red cubes contain the work load.</figcaption>
 </figure>
 
-Finally, we have enough information to talk about the `@workgroup_size(x, y, z)` attribute: This allows you to tell the GPU what the required workgroup size for this shader is. I.e. what the dimensions of the red-bordered cubes should be along each spatial dimension. Any skipped parameter is assumed to be 1, so in our case, `@workgroup_size(64)` is equivalent to `@workgroup_size(64, 1, 1)`.
+Finally, we have enough information to talk about the `@workgroup_size(x, y, z)` attribute: This allows you to tell the GPU what the required workgroup size is for this shader. Or, analogous to the picture above, the `@workgroup_size` attribute defines the dimensions of the red-bordered cubes. $x \times y \times z$ is the number of work items per workgroup. Any skipped parameter is assumed to be 1, so in our case, `@workgroup_size(64)` is equivalent to `@workgroup_size(64, 1, 1)`.
 
-Of course, the actual EUs are not arranged in the 3D grid on the chip. The aim of modelling work items in a 3D grid was to increase locality. That is, neighboring work groups would access similar areas in memory, so subsequent runs would have less cache misses. However, most hardware seemingly just runs workgroups in a serial order, so this concept is considered somewhat legacy. The same shader will run pretty much the same, whether you declare it `@workgroup_size(64)` or `@workgroup_size(8, 8)`.
+Of course, the actual EUs are not arranged in the 3D grid on the chip. The aim of modelling work items in a 3D grid is to increase locality. That is, it is likely that neighboring work groups will access similar areas in memory, so the chances of already having values in the memory cache and avoiding scheduling cost incrases. However, most hardware seemingly just runs workgroups in a serial order, so this concept is considered somewhat legacy. The same shader will run pretty much the same, whether you declare it `@workgroup_size(64)` or `@workgroup_size(8, 8)`.
 
 However, workgroup are restricted in multiple ways: `device.limits` has a bunch of properties that are worth knowing:
 
@@ -160,15 +160,15 @@ However, workgroup are restricted in multiple ways: `device.limits` has a bunch 
 }
 ```
 
-The size of each dimension of a workgroup size is restricted, but so is the volume ($ = X \times Y \times Z$) of a workgroup. Lastly, you can only have so many workgroups per dimension.
+The size of each dimension of a workgroup size is restricted, but even if x, y and z individually are within the limits, their product ($= x \times y \times z$) might not be, as it has a limit of its own. Lastly, you can only have so many workgroups per dimension.
 
 > **Pro tip:** Don’t spawn the maximum number of threads. Despite the GPU being managed by the OS and an underlying scheduler, individual jobs can’t be preempted on the GPU. So [a long-running GPU program can just leave your entire system visually frozen][frozen tweet].
 
-This is all a bit much, I get it. So I’d like to give you the same advice that [Corentin] gave me: “Use [a workgroup size] of 64 unless you know what GPU you are targeting or that your workload needs something different.”
+So what _is_ the right workgroup size? Well, it really depends on what meaning put on the work item coordinates. But I want to give you the same advice that [Corentin] gave me: “Use [a workgroup size of] 64 unless you know what GPU you are targeting or that your workload needs something different.” It seems to be a safe number that performs well across many GPUs and allows the GPU scheduler to keep as many EUs as possible busy.
 
 ### Commands
 
-We are about to finish our minimal and admittedly useless WebGPU sample. We have written our shader and set up the pipeline. All that’s left to do is actually invoke the GPU to execute it all. As a GPU _can_ be a completely separate card with it’s own memory chip, you control it via a so-called command buffer or command queue. The command queue is a chunk of memory that contains encoded commands for the GPU to execute in order. The encoding is highly specific to the GPU and is abstracted by the driver. As such, WebGPU exposes a `CommendEncoder` that does exactly what it says on the tin.
+We have written our shader and set up the pipeline. All that’s left to do is actually invoke the GPU to execute it all. As a GPU _can_ be a completely separate card with it’s own memory chip, you control it via a so-called command buffer or command queue. The command queue is a chunk of memory that contains encoded commands for the GPU to execute. The encoding is highly specific to the GPU and is taken care of by the driver. WebGPU exposes a `CommendEncoder` that taps into exactly that functionality.
 
 ```js
 const commandEncoder = device.createCommandEncoder();
@@ -180,19 +180,21 @@ const commands = commandEncoder.finish();
 device.queue.submit([commands]);
 ```
 
-`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures, but it also allows you to queue up “passes”, which are invocations of one of the pipelines. In this case, we have compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and use `dispatch(x, y, z)` to tell the GPU how many workgroups there are along each dimension. That is, the number of times our compute shader will be invoked is equal to $\text{\#Workgroups} \times \text{size}(\text{workgroup})$.
+`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures, but it also allows you to queue up “passes”, which are invocations of pipelines. In this case, we have a compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and use `dispatch(w_x, w_y, w_z)` to tell the GPU how many workgroups there are along each dimension. That is, the number of times our compute shader will be invoked is equal to $w_x \times w_y \times w_z \times x \times y \times z$.
 
-The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them noticing. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
+> **Note:** The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them noticing. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
 
-With this in place we are in fact spawning 64 threads on the GPU and having them do _absolutely nothing_. We haven’t even given the GPU any data to process, so let’s change that.
+With this in place we are in fact spawning 64 threads on the GPU and having them do _absolutely nothing_. But it works, so that’s cool. Let’s talk about how to move data to and from the GPU.
 
-## Balls
+## Exchanging data
 
-I am refusing to use WebGPU for graphics, at least for now, so I’ll be running a physics simulation on the GPU and visualizing it using Canvas2D. Maybe I am flattering myself calling it a “physics simulation”. What I am doing is generating a whole bunch of circles, have them roll around on a plane in random directions and letting them collide.
+As promised, I won’t be using WebGPU for graphics, so instead I thought it’d be fun to run a physics simulation on the GPU and visualizing it using Canvas2D. Maybe I am flattering myself calling it a “physics simulation”. What I am doing is generating a whole bunch of circles, have them roll around on a plane in random directions and letting them collide.
 
-This is arguably the hairiest part of WebGPU, as there’s lot of upfront declaration and seemingly pointless copying of data, but this is what allows WebGPU to be a device-agnostic API that will still allow you to operate at the highest level of performance.
+For this to become reality, we need to be able to input the simulation parameters and initial state _to_ the GPU and read the simulation results _from_ the GPU. This is arguably the hairiest part of WebGPU, as there’s lot of upfront declaration and seemingly pointless copying of data, but this is what allows WebGPU to be a device-agnostic API running at the highest level of performance.
 
-Before we talk about what the actual data looks like, we need be able to exchange data with the GPU. This is achieved by extending our pipeline definition with a bind group layout. A bind group is a group of GPU entities (memory buffers, textures, samplers, etc) that are bound to variables in our WGSL code (or other parts of the GPU). The bind group _layout_ defines the different purposes of these GPU entities, which allows the GPU figure out how to guarnatee the best possible performance characteristics ahead of time. Let’s keep it simple in this initial step and give our pipeline a single memory buffer:
+### Bind Group Layouts
+
+To exchange data with the GPU, we need to extend our pipeline definition with a bind group layout. A bind group is a group of GPU entities (memory buffers, textures, samplers, etc) that are bound to variables in our WGSL code (or other parts of the GPU). The bind group _layout_ pre-defines the slots and purposes of these GPU entities, which allows the GPU figure out how to guarantee the best possible performance characteristics ahead of time. Let’s keep it simple in this initial step and give our pipeline a single memory buffer:
 
 |||codediff|js
 + const bindGroupLayout = device.createBindGroupLayout({
