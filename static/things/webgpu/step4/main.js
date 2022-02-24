@@ -239,7 +239,6 @@ while (true) {
   if (render !== 0) {
     drawScene(outputBalls);
   } else {
-    console.log("doing");
     i++;
     ctx.fillStyle = (i%2 == 0)?'red':'blue';
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);

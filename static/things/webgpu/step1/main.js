@@ -26,7 +26,7 @@ const module = device.createShaderModule({
       // if(global_id.x > arrayLength(&output)) {
       //   return;
       // }
-      output[global_id.x] = f32(global_id.x) * 100. + f32(local_id.x);
+      output[global_id.x] = f32(global_id.x) * 1000. + f32(local_id.x);
     }
   `,
 });
