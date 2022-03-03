@@ -84,7 +84,7 @@ This system of passing data to a vertex shader, then to a fragment shader and th
 
 ### Pipelines
 
-Currently, WebGPU allows you to create two types of pipelines: A Render Pipeline and a Compute Pipeline. As the name suggest, the Render Pipeline renders something, meaning it creates a 2D image. That image needn’t be on screen, but could just be rendered to memory (which is called a Framebuffer). A Compute Pipeline is more generic in that it returns a buffer, which can contain any sort of data. For the remainder of this blog post I’ll focus on Compute Pipelines, as I like to think of Render Pipelines as a specialization/optimization of Compute Pipelines. Now, this is not only historically backwards — the compute pipeline was built as an abstraction over the very purpose-built rendering pipeline — but actually considerably understates that these pipelines are physically different circuits in your GPU. In terms of the API, however, I find my mental model quite good. <mark>In the future, it seems likely that more types of pipelines — maybe a Raytracing Pipeline — get added to WebGPU.</mark>
+Currently, WebGPU allows you to create two types of pipelines: A Render Pipeline and a Compute Pipeline. As the name suggest, the Render Pipeline renders something, meaning it creates a 2D image. That image needn’t be on screen, but could just be rendered to memory (which is called a Framebuffer). A Compute Pipeline is more generic in that it returns a buffer, which can contain any sort of data. For the remainder of this blog post I’ll focus on Compute Pipelines, as I like to think of Render Pipelines as a specialization/optimization of Compute Pipelines. Now, this is not only historically backwards — the compute pipeline was built as an abstraction over the very purpose-built rendering pipeline — but actually considerably understates that these pipelines are physically different circuits in your GPU. In terms of the API, however, I find my mental model quite good. In the future, it seems likely that more types of pipelines — maybe a Raytracing Pipeline — get added to WebGPU.
 
 With WebGPU, a pipeline consists of one (or more) programmable stages, where each stage is defined by a shader and an entry point. A Compute Pipline has a single `compute` stage, while a Render Pipeline would have a `vertex` and a `fragment` stage:
 
@@ -113,8 +113,6 @@ This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Lan
 In the shader module above we are just creating a function called `main` and marking it as an entry point for the compute stage by using the `@stage(compute)` attribute. You can have multiple functions marked as an entry point in a shader module, as you can reuse the same shader module for multiple pipelines and choose different functions to invoke via the `entryPoint` options. But what is that `@workgroup_size(64)` attribute?
 
 ### Parallelism
-
-<mark>This section needs to be scrutinized by someone with expertise!</mark>
 
 GPUs are optimized for throughput at the cost of latency. To understand this, we have to look a bit at the architecture of GPUs.  I don’t want to (and, honestly, can’t) explain it in its entirety. I’ll go as deep as I feel is necessary, but if you want to know more, this [13-part blog post series][GPU Architecture] by [Fabian Giesen] is really good.
 
