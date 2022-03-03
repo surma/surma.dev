@@ -35,7 +35,7 @@ With the advent of ML, neural networks, and dare I say cryptocurrencies, GPUs ha
 
 Outside of the web, a new generation of graphics APIs have established themselves which expose a more low-level interface to graphics cards and accommodate multiple requirements. On the one hand, GPUs are almost ubiquitous now. Even our mobile devices have capable GPUs built in. As a result, _both_ modern graphics programming (like ray tracing) and GPGPU use-cases are increasingly common. On the other hand, most of our devices have multi-core processors, so being able to interact with the GPU from multiple threads can be an important optimization vector. While they were at it, they also revisited some design decisions of the previous APIs and front-loaded a lot of the validation work that GPUs have to do, allowing the developer to squeeze more performance out of the GPUs.
 
-The most popular of the next-gen GPU APIs are Vulcan by the Khronos Group, Metal by Apple and DirectX 12 by Microsoft. To bring these new capabilities to the web, WebGPU was born. It abstracts the idiosyncrasies of these different APIs and has been standardized in the W3C with all major browser vendors having a seat at the table. Due to their low-level nature and their sheer power, WebGPU has a bit of a learning curve and is relatively heavy on the setup, but I’ll try to break it down as best I can. As the title of this blog post implies, I will restrict myself to GPGPU use-case without using WebGPU to draw pixels. I think it may make it easier to grasp as an introduction to WebGPU.
+The most popular of the next-gen GPU APIs are Vulcan by the Khronos Group, Metal by Apple and DirectX 12 by Microsoft. To bring these new capabilities to the web, WebGPU was born. While WebGL is just a thing wrapper around OpenGL, WebGPU is more than that. It introduces its own abstractions and doesn’t directly mirror any of these native APIs. This is partially because no single API is available on all systems, but also because many concepts (such as extremely low-level memory management) aren’t idiomatic for a web-facing API. As a result, a new API was designed that feels “webby”, and can be implemented on top of each of these APIs. It abstracts the idiosyncrasies of these different APIs and has been standardized in the W3C with all major browser vendors having a seat at the table. Due to its comparatively low-level nature and its sheer power, WebGPU has a bit of a learning curve and is relatively heavy on the setup, but I’ll try to break it down as best I can. As the title of this blog post implies, I will restrict myself to GPGPU use-case without using WebGPU to draw pixels. I think it may make it easier to grasp as an introduction to WebGPU.
 
 ### Adapters and Devices
 
@@ -54,7 +54,11 @@ The GPU is a shared resource that not only needs to be used by many applications
 
 Adapters, in turn, are the translation layer from operation system’s native graphics API to WebGPU. As the browser is a single OS-level application that can run multiple web applications, there is yet again a need for multiplexing, so that each web app feels like it has sole control of the GPU. This is modelled in WebGPU with the concept of _logical_ devices.
 
-To get access to an adapter, you call `navigator.gpu.getAdapter()`. At the time of writing, [`requestAdapter()`][requestAdapter] takes very few options. The options allow you to request a high-performance or low-energy adapter (and, by extension, GPU). If this succeeds, i.e. the returned adapter is non-`null`, you can inspect the adapter’s capabilities and request a logical device from the adapter using [`adapter.requestDevice()`][requestDevice].
+To get access to an adapter, you call `navigator.gpu.getAdapter()`. At the time of writing, [`requestAdapter()`][requestAdapter] takes very few options. The options allow you to request a high-performance or low-energy adapter (and, by extension, GPU).
+
+> **Software rendering:** Some implementations also offer a “fallback adapter” for systems with no GPU or a GPU that isn’t sufficiently capable. Fallback adapters are effectively a pure software implementation, which will not be very fast but keeps your app functional.
+
+If this succeeds, i.e. the returned adapter is non-`null`, you can inspect the adapter’s capabilities and request a logical device from the adapter using [`adapter.requestDevice()`][requestDevice].
 
 ```js
 if (!navigator.gpu) throw Error("WebGPU not supported.");
@@ -72,7 +76,7 @@ Without any options, `requestDevice()` will return a device that does _not_ nece
 
 If you have ever done any work with WebGL, you are probably familiar with vertex shaders and fragment shaders. Without going too much into depth, the traditional setup works something like this: You upload a data buffer to your GPU and tell it how interpret that data as a series of triangles. Each vertex occupies a chunk of that data buffer, describing that vertex’ position in 3D space, but probably also additional attributes like color, texture IDs, normals and other things. Each vertex in the list is processed by the GPU in the _vertex stage_, running the _vertex shader_ on each vertex, which will apply translation, rotation or perspective distortion.
 
-> **Note:** The term “shader” used to confuse me, because you can do _so much more_ than just shading. But in the olden days (late 1980s!), that term was appropriate: It was a small piece of code that ran on the GPU to decide for each pixel what color it should be so that you could _shade_ the objects being rendered, achieving the illusion of lighting and shadows. Nowadays, shaders loosely refer to any program that runs on the GPU.
+> **Shaders:** The term “shader” used to confuse me, because you can do _so much more_ than just shading. But in the olden days (late 1980s!), that term was appropriate: It was a small piece of code that ran on the GPU to decide for each pixel what color it should be so that you could _shade_ the objects being rendered, achieving the illusion of lighting and shadows. Nowadays, shaders loosely refer to any program that runs on the GPU.
 
 The GPU now rasterizes the triangles, meaning the GPU figures out which pixels each triangle covers on the screen. Each pixel is then processed by the _fragment shader_, which has access to the pixel coordinates but also the auxillary data to decide which color that pixel should be. When used correctly, amazing 3D graphics can be created with this process.
 
@@ -102,9 +106,9 @@ const pipeline = device.createComputePipeline({
 });
 ```
 
-<mark>Should I recommend using `createComputePipelineAsync` instead?</mark>
+This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Language, makes an appearance. WGSL feels like a cross-over of Rust and GLSL to me. It’s Rust syntax with GLSL’ global functions (like `dot()`, `norm()`, `len()`, ...), types (like `vec2`, `mat4x4`, ...) and the swizzling notation (like `some_vec.xxy`, ...). The browser will compile your WGSL to whatever the underlying system expects. That’s likely to be HLSL for DirectX 12, MSL for Metal and [SPIR-V] for Vulkan.
 
-This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Language, makes an appearance. WGSL feels like a cross-over of Rust and GLSL to me. It’s Rust syntax with GLSL’ global functions (like `dot()`, `norm()`, `len()`, ...), types (like `vec2`, `mat4x4`, ...) and the swizzling notation (like `some_vec.xxy`, ...). The browser <mark>will most likely is compile your WGSL to [SPIR-V], which is a binary intermediate format standardized by the Khronos Group. You can think of SPIR-V as the LLVM of parallel programming language compilers, but you don’t need to learn it as you probably won’t come into direct contact with SPIR-V.</mark>
+> **SPIR-V:** [SPIR-V] is interesting because it’s an open, binary intermediate format standardized by the Khronos Group. You can think of SPIR-V as the LLVM of parallel programming language compilers, and there is support to compile many languages _to_ SPIR-V as well as compiling SPIR-V to many other languages.
 
 In the shader module above we are just creating a function called `main` and marking it as an entry point for the compute stage by using the `@stage(compute)` attribute. You can have multiple functions marked as an entry point in a shader module, as you can reuse the same shader module for multiple pipelines and choose different functions to invoke via the `entryPoint` options. But what is that `@workgroup_size(64)` attribute?
 
@@ -181,7 +185,7 @@ const commands = commandEncoder.finish();
 device.queue.submit([commands]);
 ```
 
-`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures, but it also allows you to queue up “passes”, which are invocations of pipelines. In this case, we have a compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and finally call `dispatch(w_x, w_y, w_z)` to tell the GPU how many workgroups to create along each dimension. That is, the number of times our compute shader will be invoked is equal to $w_x \times w_y \times w_z \times x \times y \times z$.
+`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures. It also allows you to create a nested `PassEncoder`, which encodes the setup and invocation of pipelines. In this case, we have a compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and finally call `dispatch(w_x, w_y, w_z)` to tell the GPU how many workgroups to create along each dimension. That is, the number of times our compute shader will be invoked is equal to $w_x \times w_y \times w_z \times x \times y \times z$. This, by the way, is WebGPU’s alternative to that internal, global state object I was ranting about at the start of this blog post. All data and pointers needed to run the pipeline are explicitely given to the pass encoder.
 
 > **Note:** The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them noticing. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
 
@@ -551,7 +555,13 @@ Basically what I am saying is: Expect some more breaking changes to happen while
 
 ## Conclusion
 
-Having a modern API to talk to GPUs on the web is going to be very interesting. After investing time to overcome the initial learning curve, I really feel empowered to run massively parallel workloads on the GPU using JavaScript. There is also [wgpu], which implements the WebGPU API in Rust, allowing you to use the API outside the browser. wgpu also support WebAssembly as a compile target, so you could run your WebGPU program natively outside the browser and inside the browser via WebAssembly. Fun fact: [Deno] is the first runtime also support WebGPU out of the box (thanks to wgpu). Exciting times.
+Having a modern API to talk to GPUs on the web is going to be very interesting. After investing time to overcome the initial learning curve, I really feel empowered to run massively parallel workloads on the GPU using JavaScript. There is also [wgpu], which implements the WebGPU API in Rust, allowing you to use the API outside the browser. wgpu also support WebAssembly as a compile target, so you could run your WebGPU program natively outside the browser and inside the browser via WebAssembly. Fun fact: [Deno] is the first runtime also support WebGPU out of the box (thanks to wgpu).
+
+If you have further questions or are running into problems, there is [a Matrix channel][webgpu matrix] with many WebGPU user, browser engineers and standards folks that have been incredibly helpful to me. Go get your feet wet! Exciting times.
+
+_Thanks to [Brendan Jones][tojiro] for proof-reading this article._
+
+
 
 [inigo quilez]: https://twitter.com/iquilezles
 [shadertoy]: https://shadertoy.com
@@ -584,3 +594,5 @@ Having a modern API to talk to GPUs on the web is going to be very interesting. 
 [deno]: https://deno.land
 [buffer-backed-object]: https://github.com/GoogleChromeLabs/buffer-backed-object
 [Khronos Group]: https://www.khronos.org/
+[webgpu matrix]: https://matrix.to/#/#WebGPU:matrix.org
+[tojiro]: https://twitter.com/tojiro
