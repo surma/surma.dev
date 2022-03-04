@@ -559,7 +559,7 @@ Having a modern API to talk to GPUs on the web is going to be very interesting. 
 
 If you have further questions or are running into problems, there is [a Matrix channel][webgpu matrix] with many WebGPU user, browser engineers and standards folks that have been incredibly helpful to me. Go get your feet wet! Exciting times.
 
-_Thanks to [Brendan Jones][tojiro] for proof-reading this article and the [WebGPU Matrix channel][webgpu matrix] for answering all my questions._
+_Thanks to [Brandon Jones][tojiro] for proof-reading this article and the [WebGPU Matrix channel][webgpu matrix] for answering all my questions._
 
 
 
