@@ -61,7 +61,7 @@ To get access to an adapter, you call `navigator.gpu.getAdapter()`. At the time 
 If this succeeds, i.e. the returned adapter is non-`null`, you can inspect the adapter’s capabilities and request a logical device from the adapter using [`adapter.requestDevice()`][requestDevice].
 
 ```js
-if (!navigator.gpu) throw Error("WebGPU not supported.");
+if (!navigator.gpu) throw Error("WebGPU not supported. Please enable it in about:flags in Chrome or in about:config in Firefox.");
 
 const adapter = await navigator.gpu.requestAdapter();
 if (!adapter) throw Error("Couldn’t request WebGPU adapter.");
@@ -108,7 +108,7 @@ const pipeline = device.createComputePipeline({
 
 This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Language, makes an appearance. WGSL feels like a cross-over of Rust and GLSL to me. It’s Rust syntax with GLSL’ global functions (like `dot()`, `norm()`, `len()`, ...), types (like `vec2`, `mat4x4`, ...) and the swizzling notation (like `some_vec.xxy`, ...). The browser will compile your WGSL to whatever the underlying system expects. That’s likely to be HLSL for DirectX 12, MSL for Metal and [SPIR-V] for Vulkan.
 
-> **SPIR-V:** [SPIR-V] is interesting because it’s an open, binary intermediate format standardized by the Khronos Group. You can think of SPIR-V as the LLVM of parallel programming language compilers, and there is support to compile many languages _to_ SPIR-V as well as compiling SPIR-V to many other languages.
+> **SPIR-V:** [SPIR-V] is interesting because it’s an open binary, intermediate format standardized by the Khronos Group. You can think of SPIR-V as the LLVM of parallel programming language compilers, and there is support to compile many languages _to_ SPIR-V as well as compiling SPIR-V to many other languages.
 
 In the shader module above we are just creating a function called `main` and marking it as an entry point for the compute stage by using the `@stage(compute)` attribute. You can have multiple functions marked as an entry point in a shader module, as you can reuse the same shader module for multiple pipelines and choose different functions to invoke via the `entryPoint` options. But what is that `@workgroup_size(64)` attribute?
 
@@ -165,7 +165,7 @@ However, workgroup are restricted in multiple ways: `device.limits` has a bunch 
 
 The size of each dimension of a workgroup size is restricted, but even if x, y and z individually are within the limits, their product ($= x \times y \times z$) might not be, as it has a limit of its own. Lastly, you can only have so many workgroups per dimension.
 
-> **Pro tip:** Don’t spawn the maximum number of threads. Despite the GPU being managed by the OS and an underlying scheduler, you may [freeze your entire system a long-running GPU program][frozen tweet].
+> **Pro tip:** Don’t spawn the maximum number of threads. Despite the GPU being managed by the OS and an underlying scheduler, you may [freeze your entire system with a long-running GPU program][frozen tweet].
 
 So what _is_ the right workgroup size? It really depends on the semantics you assign the work item coordinates. I do realize that this is not really an helpful answer, so I want to give you the same advice that [Corentin] gave me: “Use [a workgroup size of] 64 unless you know what GPU you are targeting or that your workload needs something different.” It seems to be a safe number that performs well across many GPUs and allows the GPU scheduler to keep as many EUs as possible busy.
 
@@ -326,7 +326,7 @@ The signature of our `main()` function has been augmented with two parameters: `
   <figcaption>An example of three work items a, b and c marked in the workload.</figcaption>
 </figure>
 
-This image shows one possible interpretation of the coordinate system for a workload with `@workgroup_size(4, 4, 4)`. It is up to you to define what the coordinate system is for your use-cae. If we agreed on the axes as drawn above, we’d see the following `main()` parameters for a, b and c:
+This image shows one possible interpretation of the coordinate system for a workload with `@workgroup_size(4, 4, 4)`. It is up to you to define what the coordinate system is for your use-case. If we agreed on the axes as drawn above, we’d see the following `main()` parameters for a, b and c:
 
 - a: `local_id=(x=0, y=0, z=0)`, `global_id=(x=0, y=0, z=0)`
 - b: `local_id=(x=0, y=0, z=0)`, `global_id=(x=4, y=0, z=0)`

@@ -3,7 +3,7 @@ function fatal(msg) {
   throw Error(msg);
 }
 
-if (!("gpu" in navigator)) fatal("WebGPU not supported.");
+if (!("gpu" in navigator)) fatal("WebGPU not supported. Please enable it in about:flags in Chrome or in about:config in Firefox.");
 
 const adapter = await navigator.gpu.requestAdapter();
 if (!adapter) fatal("Couldn’t request WebGPU adapter.");

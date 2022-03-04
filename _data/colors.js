@@ -9,7 +9,7 @@ module.exports = {
     orange: "rgb(207, 121, 100)",
     yellow: "rgb(247, 240, 194)",
     white: "rgb(251, 248, 228)",
-    "diff-green": "hsl(122, 87%, 85%)",
+    "diff-green": "hsl(122, 61%, 87%)",
     "diff-red": "hsl(0, 86%, 27%)"
   },
   darkpalette: {
