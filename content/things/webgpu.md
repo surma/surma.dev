@@ -557,7 +557,7 @@ Basically what I am saying is: Expect some more breaking changes to happen while
 
 Having a modern API to talk to GPUs on the web is going to be very interesting. After investing time to overcome the initial learning curve, I really feel empowered to run massively parallel workloads on the GPU using JavaScript. There is also [wgpu], which implements the WebGPU API in Rust, allowing you to use the API outside the browser. wgpu also support WebAssembly as a compile target, so you could run your WebGPU program natively outside the browser and inside the browser via WebAssembly. Fun fact: [Deno] is the first runtime also support WebGPU out of the box (thanks to wgpu).
 
-If you have further questions or are running into problems, there is [a Matrix channel][webgpu matrix] with many WebGPU user, browser engineers and standards folks that have been incredibly helpful to me. Go get your feet wet! Exciting times.
+If you have further questions or are running into problems, there is [a Matrix channel][webgpu matrix] with many WebGPU users, browser engineers and standards folks that have been incredibly helpful to me. Go get your feet wet! Exciting times.
 
 _Thanks to [Brandon Jones][tojiro] for proof-reading this article and the [WebGPU Matrix channel][webgpu matrix] for answering all my questions._
 
