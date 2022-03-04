@@ -183,9 +183,9 @@ const commands = commandEncoder.finish();
 device.queue.submit([commands]);
 ```
 
-`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures. It also allows you to create a nested `PassEncoder`, which encodes the setup and invocation of pipelines. In this case, we have a compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and finally call `dispatch(w_x, w_y, w_z)` to tell the GPU how many workgroups to create along each dimension. That is, the number of times our compute shader will be invoked is equal to $w_x \times w_y \times w_z \times x \times y \times z$. This, by the way, is WebGPU’s alternative to that internal, global state object I was ranting about at the start of this blog post. All data and pointers needed to run the pipeline are explicitely given to the pass encoder.
+`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures. It also allows you to create `PassEncoder`, which encodes the setup and invocation of pipelines. In this case, we have a compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and finally call `dispatch(w_x, w_y, w_z)` to tell the GPU how many workgroups to create along each dimension. In other words, the number of times our compute shader will be invoked is equal to $w_x \times w_y \times w_z \times x \times y \times z$. This, by the way, is WebGPU’s abstraction to avoid that internal, global state object I was ranting about at the start of this blog post. All data and state required to run a GPU pipeline is explicitly passed along through the pass encoder.
 
-> **Note:** The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them noticing. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
+> **Abstraction:** The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them noticing. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
 
 Running this code, we are in fact spawning 64 threads on the GPU and they do _absolutely nothing_. But it works, so that’s cool. Let’s talk about how to move data to and from the GPU.
 
@@ -258,6 +258,8 @@ const bindGroup = device.createBindGroup({
 ```
 
 Note that `createBuffer()` returns a `GPUBuffer`, not an `ArrayBuffer`. They can’t be read or written to just yet. For that, they need to be mapped, which is a separate API call and will only succeed for buffers that have `GPUBufferUsage.MAP_READ` or `GPUBufferUsage.MAP_WRITE`.
+
+> **TypeScript:** I found TypeScript to be quite helpful when exploring new APIs. Luckily, Chrome’s WebGPU team maintains [`@webgpu/types`][types] so you can enjoy accurate auto-completion.
 
 Now that we not only have the bind group _layout_, but even the actual bind group itself, we need to update our dispatch code to make use of this bind group. Afterwards we map our staging buffer to read the results back into JavaScript.
 
@@ -594,3 +596,4 @@ _Thanks to [Brendan Jones][tojiro] for proof-reading this article and the [WebGP
 [Khronos Group]: https://www.khronos.org/
 [webgpu matrix]: https://matrix.to/#/#WebGPU:matrix.org
 [tojiro]: https://twitter.com/tojiro
+[types]: https://npm.im/@webgpu/types
