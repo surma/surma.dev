@@ -503,7 +503,7 @@ Now we need to bind this new buffer to a variable in WGSL and do something with 
 
 + let TIME_STEP: f32 = 0.016;
 
-@stage(compute) @workgroup_size(64)
+  @stage(compute) @workgroup_size(64)
   fn main(
     @builtin(global_invocation_id)
     global_id : vec3<u32>,
