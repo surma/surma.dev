@@ -519,7 +519,7 @@ Now we need to bind this new buffer to a variable in WGSL and do something with 
 I hope that the vast majority of this shader code contains no surprises for you at this point.
 
 <figure>
-  <video width="512" height="512" src="./step3.webm" type="video/webm" style="max-width: 512px" muted loop controls></video>
+  <video width="512" height="512" src="./step3.webm" type="video/webm" style="max-width: 512px" autoplay muted loop controls></video>
   <figcaption>Every frame, WebGPU is used to update the position of the balls. They are drawn to screen using Canvas2D.</figcaption>
 </figure>
 
@@ -557,7 +557,7 @@ Having a modern API to talk to GPUs on the web is going to be very interesting. 
 
 If you have further questions or are running into problems, there is [a Matrix channel][webgpu matrix] with many WebGPU user, browser engineers and standards folks that have been incredibly helpful to me. Go get your feet wet! Exciting times.
 
-_Thanks to [Brendan Jones][tojiro] for proof-reading this article._
+_Thanks to [Brendan Jones][tojiro] for proof-reading this article and the [WebGPU Matrix channel][webgpu matrix] for answering all my questions._
 
 
 
