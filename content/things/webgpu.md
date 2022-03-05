@@ -185,21 +185,21 @@ const commands = commandEncoder.finish();
 device.queue.submit([commands]);
 ```
 
-`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures. It also allows you to create `PassEncoder`, which encodes the setup and invocation of pipelines. In this case, we have a compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and finally call `dispatch(w_x, w_y, w_z)` to tell the GPU how many workgroups to create along each dimension. In other words, the number of times our compute shader will be invoked is equal to $w_x \times w_y \times w_z \times x \times y \times z$. This, by the way, is WebGPU’s abstraction to avoid that internal, global state object I was ranting about at the start of this blog post. All data and state required to run a GPU pipeline is explicitly passed along through the pass encoder.
+`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures. It also allows you to create `PassEncoder`, which encodes the setup and invocation of pipelines. In this case, we have a compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and finally call `dispatch(w_x, w_y, w_z)` to tell the GPU how many workgroups to create along each dimension. In other words, the number of times our compute shader will be invoked is equal to $w_x \times w_y \times w_z \times x \times y \times z$. The pass encoder, by the way, is WebGPU’s abstraction to avoid that internal, global state object I was ranting about at the start of this blog post. All data and state required to run a GPU pipeline is explicitly passed along through the pass encoder.
 
-> **Abstraction:** The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them noticing. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
+> **Abstraction:** The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them interfering with each other. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
 
-Running this code, we are in fact spawning 64 threads on the GPU and they do _absolutely nothing_. But it works, so that’s cool. Let’s talk about how to move data to and from the GPU.
+Running this code, we are in fact spawning 64 threads on the GPU and they do _absolutely nothing_. But it works, so that’s cool. Let’s talk about how we give the GPU some data to work.
 
 ## Exchanging data
 
 As promised, I won’t be using WebGPU for graphics, so instead I thought it’d be fun to run a physics simulation on the GPU and visualizing it using Canvas2D. Maybe I am flattering myself calling it a “physics simulation” — what I am doing is generating a whole bunch of circles, have them roll around on a plane in random directions and letting them collide.
 
-For this to work, we need to push our simulation parameters and initial state _to_ the GPU and read the simulation results _from_ the GPU. This is arguably the hairiest part of WebGPU, as there’s a bunch of data acrobatics (not to say seemingly pointless copying), but this is what allows WebGPU to be a device-agnostic API running at the highest level of performance.
+For this to work, we need to push our simulation parameters and initial state _to_ the GPU, run the simulation _on_ the GPU and read the simulation results _from_ the GPU. This is arguably the hairiest part of WebGPU, as there’s a bunch of data acrobatics (not to say seemingly pointless copying), but this is what allows WebGPU to be a device-agnostic API running at the highest level of performance.
 
 ### Bind Group Layouts
 
-To exchange data with the GPU, we need to extend our pipeline definition with a bind group layout. A bind group groups a bunch of GPU entities (memory buffers, textures, samplers, etc) together as one semantic unit, and are made accessible during the execution of the pipeline. The bind group _layout_ pre-defines the types, purposes and uses of these GPU entities, which allows the GPU figure out how to run a pipeline most efficiently ahead of time. Let’s keep it simple in this initial step and give our pipeline access a single memory buffer:
+To exchange data with the GPU, we need to extend our pipeline definition with a bind group layout. A bind group is a collection of GPU entities (memory buffers, textures, samplers, etc) that are made accessible during the execution of the pipeline. The bind group _layout_ pre-defines the types, purposes and uses of these GPU entities, which allows the GPU figure out how to run a pipeline most efficiently ahead of time. Let’s keep it simple in this initial step and give our pipeline access a single memory buffer:
 
 |||codediff|js
 + const bindGroupLayout = device.createBindGroupLayout({
@@ -223,17 +223,17 @@ To exchange data with the GPU, we need to extend our pipeline definition with a 
   });
 |||
 
-The `binding` number can be freely chosen. It is used tell which variable in our WGSL code should be backed by the contents the buffer. Our `bindGroupLayout` also defines the purpose for each buffer, which in this case is `"storage"`. Another option is `"read-only-storage"`, which is read-only (duh!), and allows the GPU to make further optimizations on the basis that this buffer will never be written to and as such doesn’t need to be synchronized. The last possible value for the buffer type is `"uniform"`, which in the context of a compute pipeline with a single stage is not very useful and mostly functionally equivalent to a storage buffer.
+The `binding` number can be freely chosen. We will use it to tell which variable in our WGSL code should be backed by the contents the buffer. Our `bindGroupLayout` also defines the purpose for each buffer, which in this case is `"storage"`. Another option is `"read-only-storage"`, which is read-only (duh!), and allows the GPU to make further optimizations on the basis that this buffer will never be written to and as such doesn’t need to be synchronized. The last possible value for the buffer type is `"uniform"`, which in the context of a compute pipeline with a single stage is not very useful and mostly functionally equivalent to a storage buffer.
 
-The bind group layout is in place. Now we can create the bind group itself, so we can read data from the GPU. But there’s a hurdle: Staging Buffers.
+The bind group layout is in place. Now we can create the bind group itself, containing the actual instances of the GPU entities the bind group layout expects. This will allow us to read data from the GPU. But there’s a hurdle: Staging Buffers.
 
 ### Staging Buffers
 
 I will say it again: GPUs are heavily optimized for throughput at the cost of latency. A GPU needs to be able feed data to the cores at an incredibly high rate to sustain that throughput. Fabian did some [back-of-napkin math][texture bandwidth] in his blog post series from 2011, and arrived at the conclusion that GPUs needs to sustain 3.3GB/s _just for texture samples_ for a shader running at 1280x720 resolution. To accommodate today’s graphics demands, GPUs need shovel data even faster. This is only possible to achieve if the memory of the GPU is very tightly integrated with the cores. This tight integration makes it hard to also expose the same memory to the host machine for reading and writing.
 
-Instead, GPUs have additional memory banks that are accessible to both the host machine as well as the GPU, but are not as tightly integrated and can’t provide data as fast. Staging buffers are allocated in this intermediate memory realm and can be [mapped][memory mapping] to the host system for reading and writing. So for reading data from the GPU, we copy data from an internal, high-performance buffer to a staging buffer, and then map the staging buffer to the host machine so we can read the data back into main memory. For writing, the process is the same but in reverse.
+Instead, GPUs have additional memory banks that are accessible to both the host machine as well as the GPU, but are not as tightly integrated and can’t provide data as fast. Staging buffers are buffers that are allocated in this intermediate memory realm and can be [mapped][memory mapping] to the host system for reading and writing. To read data from the GPU, we copy data from an internal, high-performance buffer to a staging buffer, and then map the staging buffer to the host machine so we can read the data back into main memory. For writing, the process is the same but in reverse.
 
-Back to our code: The plan for this example is to provide an empty buffer, and have the compute shader fill it in. We will create a writable buffer and add it to the bind group. We will also create a second buffer with the same size that will act as a staging buffer. Each buffer is created with a `usage` bitmask, where you can declare how you intend to use that buffer. The GPU will then figure out where the buffer should be located to fulfill all these use-cases or throw an error if the combination of flags is unfulfillable.
+Back to our code: The plan for this example is to provide an empty buffer, and have the compute shader fill it with data. We will create a writable buffer and add it to the bind group. We will also create a second buffer with the same size that will act as a staging buffer. Each buffer is created with a `usage` bitmask, where you can declare how you intend to use that buffer. The GPU will then figure out where the buffer should be located to fulfill all these use-cases or throw an error if the combination of flags is unfulfillable.
 
 ```js
 const BUFFER_SIZE = 1000;
@@ -290,14 +290,14 @@ Now that we not only have the bind group _layout_, but even the actual bind grou
 + console.log(new Float32Array(data));
 |||
 
-Since we added a bing group layout to our pipeline, any invocation without providing a bind group would now fail. After we define our “pass”, we add an additional command via our command encoder to copy the data from our output buffer to the staging buffer and submit our command buffer to the queue. The GPU will start working through the command queue. We don’t know when the GPU will be done exactly, but we we can already submit our request for the `stagingBuffer` to be mapped. This function is async as it needs to wait until the command queue has been fully processed. When the returned promise resolves, the buffer is mapped, but not exposed to JavaScript yet. `stagingBuffer.getMappedRange()` let’s us request for a subsection (or the entire buffer) to be exposed to JavaScript as an good ol’ `ArrayBuffer`. This is real mapped memory, meaning the data will disappear (the `ArrayBuffer` will be “detached”), when `stagingBuffer` gets unmapped, so I’m using `slice()` to create JavaScript-owned copy.
+Since we added a bing group layout to our pipeline, any invocation without providing a bind group would now fail. After we define our “pass”, we add an additional command via our command encoder to copy the data from our output buffer to the staging buffer and submit our command buffer to the queue. The GPU will start working through the command queue. We don’t know when the GPU will be done exactly, but we can already submit our request for the `stagingBuffer` to be mapped. This function is async as it needs to wait until the command queue has been fully processed. When the returned promise resolves, the buffer is mapped, but not exposed to JavaScript yet. `stagingBuffer.getMappedRange()` let’s us request for a subsection (or the entire buffer) to be exposed to JavaScript as a good ol’ `ArrayBuffer`. This is real mapped memory, meaning the data will disappear (the `ArrayBuffer` will be “detached”), when `stagingBuffer` gets unmapped, so I’m using `slice()` to create JavaScript-owned copy.
 
 <figure>
   <img loading="lazy" width=1024 height=429 src="./emptybuffer.avif">
-  <figcaption>Not very exciting, but these zeroes were somewhat generated by our GPU.</figcaption>
+  <figcaption>Not very exciting, but we copied those zeroes from the GPU’s memory.</figcaption>
 </figure>
 
-Before we start doing any advanced calculation on our GPU, let’s just fill in some data to see that our pipeline is _indeed_ working as intended. This is our new compute shader code, with extra spacing for clarity.
+Something other than zeroes would probably a but more convining. But before we start doing any advanced calculation on our GPU, let’s just fill in some hand-picked data as proof that our pipeline is _indeed_ working as intended. This is our new compute shader code, with extra spacing for clarity.
 
 ```rust
 @group(0) @binding(1)
@@ -319,9 +319,9 @@ fn main(
 
 The first two lines declare a module-scope variable called `output`, which is a dynamically-sized array of `f32`. The attributes declare where the data comes from: From the buffer in our first (0th) binding group, the entry with `binding` value 1. The length of the array will automatically reflect the length of the underlying buffer (rounded down).
 
-> **Variables:** WGSL diverges from Rust in that a variable declared with `let` is immutable. If you want a variable to be mutable, you have to use `var`.
+> **Variables:** WGSL diverges from Rust in that a variable declared with `let` is immutable. If you want a variable to be mutable, they keyword to use is `var`.
 
-The signature of our `main()` function has been augmented with two parameters: `global_id` and `local_id`. I could have chosen any name as their value is determined by the attributes associated with them: The `global_invocation_id` is a built-in value that corresponds to the global x/y/z coordinates of this shader invocation in the work _load_. The `local_invocation_id` are the x/y/z coordinates of this shader vocation in the work _group_.
+The signature of our `main()` function has been augmented with two parameters: `global_id` and `local_id`. I could have chosen any name as their value is determined by the attributes associated with them: The `global_invocation_id` is a built-in value that corresponds to the global x/y/z coordinates of this shader invocation in the work _load_. The `local_invocation_id` is the x/y/z coordinates of this shader vocation in the work _group_.
 
 <figure>
   <img loading="lazy" width=2048 height=1280 src="./coordinates.avif">
@@ -343,7 +343,7 @@ In our shader, we have `@workgroup_size(64, 1, 1)`, so `local_id.x` will range f
 
 ### Overdispatching
 
-The astute observer might have noticed that the number of workgroups we are dispatching (`Math.ceil(BUFFER_SIZE / 64)`) will result in `global_id.x` getting bigger than the length of our array. Luckily, accessing an array is safe-guarded by an implicit clamp, so every value that tries to access beyond the end of the array will end up access the last element of the array. That avoids memory access faults, but might still generate unusable data. And indeed, if you check the last 3 elements of the returned buffer, you’ll find the numbers 24755, 24856 and 60832. It’s up to us to prevent that from happening in our shader code with an early exit:
+The astute observer might have noticed that the number of workgroups we are dispatching (`Math.ceil(BUFFER_SIZE / 64)`) will result in `global_id.x` getting bigger than the length of our array. Luckily, accessing an array is safe-guarded by an implicit clamp, so every value that tries to access beyond the end of the array will end up access the last element of the array. That avoids memory access faults, but might still generate unusable data. And indeed, if you check the last 3 elements of the returned buffer, you’ll find the numbers 247055, 248056 and 608032. It’s up to us to prevent that from happening in our shader code with an early exit:
 
 |||codediff|rust
   fn main( /* ... */) {
@@ -362,33 +362,34 @@ Our goal here is to have a whole lotta balls moving through 2D space and have ha
 
 If you know what memory alignment is, you can skip this section (although do take a look at the code sample). If you don’t know what it is, I won’t really explain the why, but show you how it manifests and how to work with it.
 
-For the simulation, each ball has a radius, a position and a velocity vector. It makes sense to group them together in a struct and treat a ball as a single entity. This turns our `array<f32>` into `array<Ball>`.
+For the simulation, I want each ball to have a radius, a position and a velocity vector. It makes sense to group them together in a struct and treat a ball as a single entity. This turns our `array<f32>` into `array<Ball>`.
 
-```rust
-struct Ball {
-  radius: f32;
-  position: vec2<f32>;
-  velocity: vec2<f32>;
-}
+|||codediff|rust
++ struct Ball {
++   radius: f32;
++   position: vec2<f32>;
++   velocity: vec2<f32>;
++ }
 
-@group(0) @binding(1)
-var<storage, write> output: array<Ball>;
+  @group(0) @binding(1)
+- var<storage, write> output: array<f32>;
++ var<storage, write> output: array<Ball>;
 
-@stage(compute) @workgroup_size(64)
-fn main(
-  @builtin(global_invocation_id) global_id : vec3<u32>,
-  @builtin(local_invocation_id) local_id : vec3<u32>,
-) {
-  let num_balls = arrayLength(&output);
-  if(global_id.x >= num_balls) {
-    return;
+  @stage(compute) @workgroup_size(64)
+  fn main(
+    @builtin(global_invocation_id) global_id : vec3<u32>,
+    @builtin(local_invocation_id) local_id : vec3<u32>,
+  ) {
+    let num_balls = arrayLength(&output);
+    if(global_id.x >= num_balls) {
+      return;
+    }
+
++   output[global_id.x].radius = 999.;
++   output[global_id.x].position = vec2<f32>(global_id.xy);
++   output[global_id.x].velocity = vec2<f32>(local_id.xy);
   }
-
-  output[global_id.x].radius = 999.;
-  output[global_id.x].position = vec2<f32>(global_id.xy);
-  output[global_id.x].velocity = vec2<f32>(local_id.xy);
-}
-```
+|||
 
 If you run this [demo][demo2], you’ll see this in your console:
 
@@ -397,9 +398,9 @@ If you run this [demo][demo2], you’ll see this in your console:
   <figcaption>The struct has a hole (padding) in its memory layout due to alignment constraints.</figcaption>
 </figure>
 
-I used the compute shader to store `999` the first field of the struct, to mark where the struct begins in the ArrayBuffer. There’s a total of 6 numbers until we reach the next `999`, which is a bit surprising because the struct really only has 5 numbers to store: `radius`, `position.x`, `position.y`, `velocity.x` and `velocity.y`. Taking a closer look, it is clear that the number after `radius` is always $0$. This is because of alignment.
+I used the compute shader to store `999` the first field of the struct, to mark where the struct begins in the buffer. There’s a total of 6 numbers until we reach the next `999`, which is a bit surprising because the struct really only has 5 numbers to store: `radius`, `position.x`, `position.y`, `velocity.x` and `velocity.y`. Taking a closer look, it is clear that the number after `radius` is always 0. This is because of alignment.
 
-Each WGSL data type has well-defined [alignemnt requirements][wgsl alignment]. If a data type has an alignment of $N$, it means that a value of that data type can only be stored at an address that is a multiple of $N$. `f32` has an alignment of 4, while `vec2<f32>` has an alignment of 8. If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as 0 is a multiple of 4. The next field in the struct is `vec2<f32>`, which has an alignment of 8, and the first free address is 4, which is _not_ a multiple of 8. To remedy this, the compiler adds padding of 4 bytes to get to the next address that is a multiple of 8. This explains what we see in the DevTools console.
+Each WGSL data type has well-defined [alignemnt requirements][wgsl alignment]. If a data type has an alignment of $N$, it means that a value of that data type can only be stored at a memory address that is a multiple of $N$. `f32` has an alignment of 4, while `vec2<f32>` has an alignment of 8. If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as 0 is a multiple of 4. The next field in the struct is `vec2<f32>`, which has an alignment of 8. However, the first free address after `radius` is 4, which is _not_ a multiple of 8. To remedy this, the compiler adds padding of 4 bytes to get to the next address that is a multiple of 8. This explains what we see in the DevTools console.
 
 <figure>
   <img loading="lazy" width=797 height=605 src="./alignmenttable.avif">
@@ -531,14 +532,14 @@ Lastly, all we need to do is read the `output` buffer back into JavaScript, writ
 
 ## Performance
 
-The previous demo just moves each ball along their velocity vector. Not exactly thrilling or computationally complex. Before we look at the performance characteristics of our creation, let me drop in some proper physics calculations in the shader. I won’t explain them here — the blog post is long enough as it is. If you are curious, you can take a look at the source code of the [final demo][demo4], which also contains links to the resources I used.
+The previous demo just moves each ball along their velocity vector. Not exactly thrilling or computationally complex. Before we look at the performance characteristics of our creation, let me drop in some proper physics calculations in the shader. I won’t explain them here — the blog post is long enough as it is. If you are curious, you can take a look at the source code of the [final demo][demo4], which also contains links to the resources I used to write the physics-y bits.
 
 <figure>
   <video width="512" height="512" src="./step4.webm" type="video/webm" style="max-width: 512px" autoplay muted loop controls></video>
   <figcaption>... now with bouncy walls and bouncy balls!</figcaption>
 </figure>
 
-I don’t want to take any exact measurements of this experiment as I haven’t optimized the physics algorithm nor my usage of WebGPU. However, the fact that even this naïve implementation performs really well, on my M1 MacBook Air, is impressive to me. I can go to around 2500 balls before we drop below 60fps. However, looking at the trace, it’s clear that the jank comes from Canvas2D trying to draw the scene, not from the WebGPU calculations.
+I don’t want to take any exact measurements of this experiment as I haven’t optimized the physics algorithm nor my usage of WebGPU. However, the fact that even this naïve implementation performs really well, on my M1 MacBook Air, is impressive to me. I can go to around 2500 balls before we drop below 60fps. However, looking at the trace, it’s clear that the bottleneck is Canvas2D trying to draw the scene, not the WebGPU calculations.
 
 <figure>
   <img loading="lazy" width=1024 height=625 src="./performance.avif">
@@ -551,7 +552,7 @@ To see how fast this really is, I disabled rendering and instead used [`performa
 
 WebGPU has been worked on for a while and I think the standards group is eager to declare the API as stable. That being said, the API is only available in Chrome and Firefox behind a flag. I’m also optimistic about Safari shipping this API but at the time of writing there’s nothing to see in Safari TP just yet.
 
-In terms of stability, some changes landed even while I was doing the research for this article. For example, the syntax attributes like `@stage(compute) @workgroup_size(64)` were `[[stage(compute), workgroup_size(64)]]` before and still are written like that in Firefox. `passEncoder.end()` used to be `passEncoder.endPass()` and so on. There are also some things in the spec that haven’t been implemented in any browser yet like [shader constants][constants] or the API being available on mobile devices.
+In terms of stability, some changes landed even while I was doing the research for this article. For example, the syntax for attributes was changed from `[[stage(compute), workgroup_size(64)]]` to `@stage(compute) @workgroup_size(64)`. At the time of writing, Firefox is still on the old syntax. `passEncoder.end()` used to be `passEncoder.endPass()`. You see what I mean. There are also some things in the spec that haven’t been implemented in any browser yet like [shader constants][constants] or the API being available on mobile devices.
 
 Basically what I am saying is: Expect some more breaking changes to happen while the browsers and standards folks are on the home stretch of this API’s journey to ✨stable✨.
 
