@@ -56,7 +56,7 @@ The GPU is a shared resource. It is not only used by many applications at the sa
 
 Adapters, in turn, are the translation layer from operation system’s native graphics API to WebGPU. As the browser is a single OS-level application that can run multiple web applications, there is yet again a need for multiplexing, so that each web app feels like it has sole control of the GPU. This is modelled in WebGPU with the concept of _logical_ devices.
 
-To get access to an adapter, you call `navigator.gpu.getAdapter()`. At the time of writing, [`requestAdapter()`][requestAdapter] takes very few options. The options allow you to request a high-performance or low-energy adapter.
+To get access to an adapter, you call `navigator.gpu.requestAdapter()`. At the time of writing, [`requestAdapter()`][requestAdapter] takes very few options. The options allow you to request a high-performance or low-energy adapter.
 
 > **Software rendering:** Some implementations also offer a “fallback adapter” for systems with no GPU or a GPU that isn’t sufficiently capable. Fallback adapters are effectively a pure software implementation, which will not be very fast but keeps your app functional.
 
