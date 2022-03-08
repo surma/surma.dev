@@ -35,7 +35,7 @@ main {
   margin-top: calc(3 * var(--grid-height));
   padding: var(--grid-gutter);
 }
-a:link {
+a:link, a:visited {
   color: var(--red);
   text-decoration: none;
 }
@@ -551,4 +551,6 @@ html.forcedark figure video {
   font-size: 1em !important;
   white-space: nowrap;
 }
-
+mark {
+  background-color: var(--pink) !important;
+}

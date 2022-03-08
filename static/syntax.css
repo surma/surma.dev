@@ -124,10 +124,6 @@ pre[class*="language-"] {
 
 /************************/
 
-:root {
-  --diff-green: hsl(122, 23%, 22%);
-  --diff-red: hsl(0, 64%, 22%);
-}
 .diff {
   display: inline;
   padding: 0.2em 0;

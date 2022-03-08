@@ -8,7 +8,9 @@ module.exports = {
     red: "rgb(218, 59, 59)",
     orange: "rgb(207, 121, 100)",
     yellow: "rgb(247, 240, 194)",
-    white: "rgb(251, 248, 228)"
+    white: "rgb(251, 248, 228)",
+    "diff-green": "hsl(122, 61%, 87%)",
+    "diff-red": "hsl(0, 86%, 27%)"
   },
   darkpalette: {
     white: "rgb(47, 43, 69)",
@@ -19,7 +21,9 @@ module.exports = {
     purple: "rgb(128, 65, 200)",
     lightblue: "rgb(183, 86, 184)",
     blue: "rgb(184, 111, 170)",
-    darkblue: "rgb(206, 166, 186)"
+    darkblue: "rgb(206, 166, 186)",
+    "diff-green": "hsl(122, 23%, 22%)",
+    "diff-red": "hsl(0, 64%, 22%)",
   },
   convertToHex(s) {
     return (
