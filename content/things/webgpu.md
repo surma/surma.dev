@@ -108,7 +108,7 @@ const pipeline = device.createComputePipeline({
 });
 ```
 
-This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Language, makes an appearance. WGSL feels like a cross-over of Rust and GLSL to me. It has a lot of Rust-y syntax with GLSL’s global functions (like `dot()`, `norm()`, `len()`, ...), types (like `vec2`, `mat4x4`, ...) and the swizzling notation (like `some_vec.xxy`, ...). The browser will compile your WGSL to whatever the underlying system expects. That’s likely to be HLSL for DirectX 12, MSL for Metal and [SPIR-V] for Vulkan.
+This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Language, makes an appearance. WGSL feels like a cross-over of Rust and GLSL to me. It has a lot of Rust-y syntax with GLSL’s global functions (like `dot()`, `norm()`, `len()`, ...), types (like `vec2`, `mat4x4`, ...) and the [swizzling] notation (like `some_vec.xxy`, ...). The browser will compile your WGSL to whatever the underlying system expects. That’s likely to be HLSL for DirectX 12, MSL for Metal and [SPIR-V] for Vulkan.
 
 > **SPIR-V:** [SPIR-V] is interesting because it’s an open, binary, intermediate format standardized by the Khronos Group. You can think of SPIR-V as the LLVM of parallel programming language compilers, and there is support to compile many languages _to_ SPIR-V as well as compiling SPIR-V to many other languages.
 
@@ -621,3 +621,4 @@ _Thanks to [Brandon Jones][tojiro] for proof-reading this article and the [WebGP
 [vulkan]: https://www.vulkan.org/
 [metal]: https://developer.apple.com/metal/
 [dx12]: https://docs.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-graphics
+[swizzling]: https://en.wikipedia.org/wiki/Swizzling_(computer_graphics)
