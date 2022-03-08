@@ -125,7 +125,10 @@ In the case of Intel, the lowest level in the hierarchy is the “Execution Unit
 Despite the core’s frequency, getting data from memory (or pixels from textures) still takes relatively long — Fabian says it takes a couple hundred clock cycles. These couple hundred cycles could be spent on computation instead. To make use of these otherwise idle cycles, each EU is heavily oversubscribed with work. Whenever an EU would end up idling (e.g. to wait for a value from memory), it instead switches to another work item and will only switch back once the new work item needs to wait for something. This is the key trick how GPUs optimize for throughput at the cost of latency: Individual work items will take longer as a switch to another work item might stop execution for longer than necessary, but the overall utilization is higher and results in a higher throughput. The GPU strives to always have work queued up to keep EUs busy at all times.
 
 <figure>
-  <img loading="lazy" width=548 height=492 style="max-width: 512px" src="./intel.avif">
+  <picture loading="lazy" width=548 height=492 style="max-width: 512px" >
+    <source srcset="./intel.avif" type="image/avif">
+    <img src="./intel.jpeg">
+  </picture>
   <figcaption>The architecture of an Intel Iris Xe Graphics chip. EUs have 7 SIMT cores. SubSlices have 8 EUs. 8 SubSlices form a Slice.</figcaption>
 </figure>
 
@@ -142,7 +145,10 @@ In the traditional setting, the vertex shader would get invoked once for each ve
 The collection of all work items (which I will call the “workload”) is broken down into workgroups. All work items in a workgroup are scheduled to run together. In WebGPU, the work load is modelled as a 3-dimensional grid, where each “cube” is a work item, and work items are grouped into bigger cuboids to form a workgroup.
 
 <figure>
-  <img loading="lazy" width=2048 height=1280 src="./workgroups.avif">
+	<picture loading="lazy" width=2048 height=1280>
+    <source srcset="./workgroups.avif" type="image/avif">
+    <img src="./workgroups.jpeg">
+  </picture>
   <figcaption>This is a workload. White-bordered cubes are a work item. Red-bordered cuboids are a workgroup.</figcaption>
 </figure>
 
@@ -299,7 +305,10 @@ Now that we not only have the bind group _layout_, but even the actual bind grou
 Since we added a bing group layout to our pipeline, any invocation without providing a bind group would now fail. After we define our “pass”, we add an additional command via our command encoder to copy the data from our output buffer to the staging buffer and submit our command buffer to the queue. The GPU will start working through the command queue. We don’t know when the GPU will be done exactly, but we can already submit our request for the `stagingBuffer` to be mapped. This function is async as it needs to wait until the command queue has been fully processed. When the returned promise resolves, the buffer is mapped, but not exposed to JavaScript yet. `stagingBuffer.getMappedRange()` let’s us request for a subsection (or the entire buffer) to be exposed to JavaScript as a good ol’ `ArrayBuffer`. This is real, mapped GPU memory, meaning the data will disappear (the `ArrayBuffer` will be “detached”), when `stagingBuffer` gets unmapped, so I’m using `slice()` to create JavaScript-owned copy.
 
 <figure>
-  <img loading="lazy" width=1024 height=429 src="./emptybuffer.avif">
+	<picture loading="lazy" width=1024 height=429>
+    <source srcset="./emptybuffer.avif" type="image/avif">
+    <img src="./emptybuffer.jpeg">
+  </picture>
   <figcaption>Not very exciting, but we copied those zeroes from the GPU’s memory.</figcaption>
 </figure>
 
@@ -331,7 +340,10 @@ The first two lines declare a module-scope variable called `output`, which is a 
 The signature of our `main()` function has been augmented with two parameters: `global_id` and `local_id`. I could have chosen any name — their value is determined by the attributes associated with them: The `global_invocation_id` is a built-in value that corresponds to the global x/y/z coordinates of this shader invocation in the work _load_. The `local_invocation_id` is the x/y/z coordinates of this shader vocation in the work _group_.
 
 <figure>
-  <img loading="lazy" width=2048 height=1280 src="./coordinates.avif">
+	<picture loading="lazy" width=2048 height=1280>
+    <source srcset="./coordinates.avif" type="image/avif">
+    <img src="./coordinates.jpeg">
+  </picture>
   <figcaption>An example of three work items a, b and c marked in the workload.</figcaption>
 </figure>
 
@@ -350,7 +362,10 @@ This image shows one possible interpretation of the coordinate system for a work
 In our shader, we have `@workgroup_size(64, 1, 1)`, so `local_id.x` will range from 0 to 63. To be able to inspect both values, I am “encoding” them into a single number. Note that WGSL is strictly typed: Both `local_id` and `global_id` are `vec3<u32>`, so we have to explicitly cast their values to `f32` to be able to assign them to our `f32` output buffer.
 
 <figure>
-  <img loading="lazy" width=1024 height=565 src="./fullbuffer.avif">
+	<picture loading="lazy" width=1024 height=565>
+    <source srcset="./fullbuffer.avif" type="image/avif">
+    <img src="./fullbuffer.jpeg">
+  </picture>
   <figcaption>Actual values filled in by the GPU. Notice how the local invocation ID starts wrapping around after 63, while the global invocation ID keeps going.</figcaption>
 </figure>
 
@@ -410,7 +425,10 @@ So it makes sense to define a `struct Ball` with all these components and turn o
 If you run this [demo][demo2], you’ll see this in your console:
 
 <figure>
-  <img loading="lazy" width=479 height=440 src="./alignment.avif">
+	<picture loading="lazy" width=479 height=440>
+    <source srcset="./alignment.avif" type="image/avif">
+    <img src="./alignment.jpeg">
+  </picture>
   <figcaption>The struct has a hole (padding) in its memory layout due to alignment constraints.</figcaption>
 </figure>
 
@@ -419,7 +437,10 @@ I put `999` the first field of the struct to make it easy to see where the struc
 Each WGSL data type has well-defined [alignemnt requirements][wgsl alignment]. If a data type has an alignment of $N$, it means that a value of that data type can only be stored at a memory address that is a multiple of $N$. `f32` has an alignment of 4, while `vec2<f32>` has an alignment of 8. If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as 0 is a multiple of 4. The next field in the struct is `vec2<f32>`, which has an alignment of 8. However, the first free address after `radius` is 4, which is _not_ a multiple of 8. To remedy this, the compiler adds padding of 4 bytes to get to the next address that is a multiple of 8. This explains what we see an unused field with the value 0 in the DevTools console.
 
 <figure>
-  <img loading="lazy" width=797 height=605 src="./alignmenttable.avif">
+  <picture loading="lazy" width=797 height=605>
+    <source srcset="./alignmenttable.avif" type="image/avif">
+    <img src="./alignmenttable.jpeg">
+  </picture>
   <figcaption>
 
 The (shortened) [alignment table][wgsl alignment] from the WGSL spec.
@@ -558,7 +579,10 @@ The previous demo just moves each ball along their velocity vector. Not exactly 
 I don’t want to take any exact measurements of this experiment as I haven’t optimized the physics algorithm nor my usage of WebGPU. However, the fact that even this naïve implementation performs really well (on my M1 MacBook Air) is impressive to me. I can go to around 2500 balls before we drop below 60fps. However, looking at the trace, it’s clear that at 2500 balls the bottleneck is Canvas2D trying to draw the scene, not the WebGPU calculations.
 
 <figure>
-  <img loading="lazy" width=1024 height=625 src="./performance.avif">
+	<picture loading="lazy" width=1024 height=625>
+    <source srcset="./performance.avif" type="image/avif">
+    <img src="./performance.jpeg">
+  </picture>
   <figcaption>At 14000 balls, the raw GPU computation time reaches ~16ms on a M1 MBA.</figcaption>
 </figure>
 
