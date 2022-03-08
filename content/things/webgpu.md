@@ -1,7 +1,7 @@
 ---
 title: "WebGPU — All of the cores, none of the canvas"
-date: "2022-02-24"
-live: false
+date: "2022-03-08"
+live: true
 socialmediaimage: "social.jpg"
 ---
 
@@ -365,7 +365,8 @@ The astute observer might have noticed that the total number of shader invocatio
 +   if(global_id.x >= arrayLength(&output)) {
 +     return;
 +   }
-    output[global_id.x] = f32(global_id.x) * 100. + f32(local_id.x);
+    output[global_id.x] =
+      f32(global_id.x) * 100. + f32(local_id.x);
   }
 |||
 
@@ -436,7 +437,7 @@ We have successfully managed to read data from the GPU, bring it to JavaScript a
 let inputBalls = new Float32Array(new ArrayBuffer(BUFFER_SIZE));
 for (let i = 0; i < NUM_BALLS; i++) {
   inputBalls[i * 6 + 0] = randomBetween(2, 10); // radius
-  inputBalls[i * 6 + 1] = 0; // Padding
+  inputBalls[i * 6 + 1] = 0; // padding
   inputBalls[i * 6 + 2] = randomBetween(0, ctx.canvas.width); // position.x
   inputBalls[i * 6 + 3] = randomBetween(0, ctx.canvas.height); // position.y
   inputBalls[i * 6 + 4] = randomBetween(-100, 100); // velocity.x
