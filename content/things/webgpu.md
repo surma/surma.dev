@@ -37,7 +37,7 @@ With the advent of ML, neural networks, and dare I say cryptocurrencies, GPUs ha
 
 Outside of the web, a new generation of graphics APIs have established themselves which expose a more low-level interface to graphics cards. These new APIs accommodate new use-cases and constraints that weren’t around when OpenGL was designed. On the one hand, GPUs are almost ubiquitous now. Even our mobile devices have capable GPUs built in. As a result, _both_ modern graphics programming (3D rendering and ray tracing) and GPGPU use-cases are increasingly common. On the other hand, most of our devices have multi-core processors, so being able to interact with the GPU from multiple threads can be an important optimization vector. While the WebGPU folks were at it, they also revisited some previous design decisions and front-loaded a lot of the validation work that GPUs have to do, allowing the developer to squeeze more performance out of their GPUs.
 
-The most popular of the next-gen GPU APIs are [Vulcan] by the Khronos Group, [Metal] by Apple and [DirectX 12][dx12] by Microsoft. To bring these new capabilities to the web, WebGPU was born. While WebGL is just a thing wrapper around OpenGL, WebGPU chose a different approach. It introduces its own abstractions and doesn’t directly mirror any of these native APIs. This is partially because no single API is available on all systems, but also because many concepts (such as extremely low-level memory management) aren’t idiomatic for a web-facing API. Instead, WebGPU was designed to both feel “webby” and to comfortably sit on top of any of the native graphics APIs  while abstracting their idiosyncrasies. It’s being standardized in the W3C with all major browser vendors having a seat at the table. Due to its comparatively low-level nature and its sheer power, WebGPU has a bit of a learning curve and is relatively heavy on the setup, but I’ll try to break it down as best I can.
+The most popular of the next-gen GPU APIs are [Vulkan] by the Khronos Group, [Metal] by Apple and [DirectX 12][dx12] by Microsoft. To bring these new capabilities to the web, WebGPU was born. While WebGL is just a thing wrapper around OpenGL, WebGPU chose a different approach. It introduces its own abstractions and doesn’t directly mirror any of these native APIs. This is partially because no single API is available on all systems, but also because many concepts (such as extremely low-level memory management) aren’t idiomatic for a web-facing API. Instead, WebGPU was designed to both feel “webby” and to comfortably sit on top of any of the native graphics APIs  while abstracting their idiosyncrasies. It’s being standardized in the W3C with all major browser vendors having a seat at the table. Due to its comparatively low-level nature and its sheer power, WebGPU has a bit of a learning curve and is relatively heavy on the setup, but I’ll try to break it down as best I can.
 
 ### Adapters and Devices
 
@@ -50,7 +50,7 @@ WebGPU’s first abstractions that you come into contact with are _adapters_ and
 
 A _physical_ device is the GPU itself, often distinguished between built-in GPUs and discrete GPUs. Commonly, any given device has exactly one GPU, but it also possible to have two or more GPUs. For example, Microsoft’s SurfaceBook famously has a low-powered integrated GPU and a high-performance discrete GPU between which the operating system will switch on demand.
 
-The _driver_ — provided by the GPU manufacturer — will expose the GPU’s capabilities to the operating system in a way the OS understands and expects. The operating system in turn can expose it to applications, using the graphics APIs the operating system offers, like Vulcan or Metal.
+The _driver_ — provided by the GPU manufacturer — will expose the GPU’s capabilities to the operating system in a way the OS understands and expects. The operating system in turn can expose it to applications, using the graphics APIs the operating system offers, like Vulkan or Metal.
 
 The GPU is a shared resource. It is not only used by many applications at the same time, but also controls what you see on your monitor. There needs to be something that enables multiple processes to use the GPU concurrently, so that each app can put their own UI on screen without interfering with other apps or even maliciously reading other apps’ data. To each process, it looks like they have sole control over the physical GPU, but that is obviously not really the case. This multiplexing is mostly done by the driver and the operating system.
 
@@ -618,6 +618,6 @@ _Thanks to [Brandon Jones][tojiro] for proof-reading this article and the [WebGP
 [types]: https://npm.im/@webgpu/types
 [webgpu samples]: https://austin-eng.com/webgpu-samples
 [threejs]: https://threejs.org/
-[vulcan]: https://www.vulkan.org/
+[vulkan]: https://www.vulkan.org/
 [metal]: https://developer.apple.com/metal/
 [dx12]: https://docs.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-graphics
