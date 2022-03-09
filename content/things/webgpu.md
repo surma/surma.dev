@@ -302,7 +302,7 @@ Now that we not only have the bind group _layout_, but even the actual bind grou
 + console.log(new Float32Array(data));
 |||
 
-Since we added a bing group layout to our pipeline, any invocation without providing a bind group would now fail. After we define our “pass”, we add an additional command via our command encoder to copy the data from our output buffer to the staging buffer and submit our command buffer to the queue. The GPU will start working through the command queue. We don’t know when the GPU will be done exactly, but we can already submit our request for the `stagingBuffer` to be mapped. This function is async as it needs to wait until the command queue has been fully processed. When the returned promise resolves, the buffer is mapped, but not exposed to JavaScript yet. `stagingBuffer.getMappedRange()` let’s us request for a subsection (or the entire buffer) to be exposed to JavaScript as a good ol’ `ArrayBuffer`. This is real, mapped GPU memory, meaning the data will disappear (the `ArrayBuffer` will be “detached”), when `stagingBuffer` gets unmapped, so I’m using `slice()` to create JavaScript-owned copy.
+Since we added a bind group layout to our pipeline, any invocation without providing a bind group would now fail. After we define our “pass”, we add an additional command via our command encoder to copy the data from our output buffer to the staging buffer and submit our command buffer to the queue. The GPU will start working through the command queue. We don’t know when the GPU will be done exactly, but we can already submit our request for the `stagingBuffer` to be mapped. This function is async as it needs to wait until the command queue has been fully processed. When the returned promise resolves, the buffer is mapped, but not exposed to JavaScript yet. `stagingBuffer.getMappedRange()` let’s us request for a subsection (or the entire buffer) to be exposed to JavaScript as a good ol’ `ArrayBuffer`. This is real, mapped GPU memory, meaning the data will disappear (the `ArrayBuffer` will be “detached”), when `stagingBuffer` gets unmapped, so I’m using `slice()` to create JavaScript-owned copy.
 
 <figure>
 	<picture loading="lazy" width=1024 height=429>
@@ -434,7 +434,7 @@ If you run this [demo][demo2], you’ll see this in your console:
 
 I put `999` the first field of the struct to make it easy to see where the struct begins in the buffer. There’s a total of 6 numbers until we reach the next `999`, which is a bit surprising because the struct really only has 5 numbers to store: `radius`, `position.x`, `position.y`, `velocity.x` and `velocity.y`. Taking a closer look, it is clear that the number after `radius` is always 0. This is because of alignment.
 
-Each WGSL data type has well-defined [alignemnt requirements][wgsl alignment]. If a data type has an alignment of $N$, it means that a value of that data type can only be stored at a memory address that is a multiple of $N$. `f32` has an alignment of 4, while `vec2<f32>` has an alignment of 8. If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as 0 is a multiple of 4. The next field in the struct is `vec2<f32>`, which has an alignment of 8. However, the first free address after `radius` is 4, which is _not_ a multiple of 8. To remedy this, the compiler adds padding of 4 bytes to get to the next address that is a multiple of 8. This explains what we see an unused field with the value 0 in the DevTools console.
+Each WGSL data type has well-defined [alignment requirements][wgsl alignment]. If a data type has an alignment of $N$, it means that a value of that data type can only be stored at a memory address that is a multiple of $N$. `f32` has an alignment of 4, while `vec2<f32>` has an alignment of 8. If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as 0 is a multiple of 4. The next field in the struct is `vec2<f32>`, which has an alignment of 8. However, the first free address after `radius` is 4, which is _not_ a multiple of 8. To remedy this, the compiler adds padding of 4 bytes to get to the next address that is a multiple of 8. This explains what we see an unused field with the value 0 in the DevTools console.
 
 <figure>
   <picture loading="lazy" width=797 height=605>
@@ -468,7 +468,7 @@ for (let i = 0; i < NUM_BALLS; i++) {
 
 > **Buffer-backed-object:** With more complex data structures, it can get quite tedious to manipulate the data from JavaScript. While originally written for worker use-cases, my library [`buffer-backed-object`][buffer-backed-object] can come in handy here!
 
-We also already know how to expose a buffer to our shader. We just need to adjust our pipeline bing group layout to expect another buffer:
+We also already know how to expose a buffer to our shader. We just need to adjust our pipeline bind group layout to expect another buffer:
 
 |||codediff|js
   const bindGroupLayout = device.createBindGroupLayout({
