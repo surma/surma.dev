@@ -555,3 +555,18 @@ html.forcedark figure video {
 mark {
   background-color: var(--pink) !important;
 }
+
+blockquote.twitter-tweet {
+  /* display */
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1em;
+  background-color: white;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+}
+blockquote.twitter-tweet:before {
+  display: none;
+}

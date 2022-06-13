@@ -13,7 +13,10 @@ For the longest time, I worked as a Developer Advocate for the Open Web Platform
 
 I now work at Shopify, focusing on their Developer Experience (DX). Shopify provides a platform for developers to build custom stores or write new functionality for other people’s stores through apps. The platform Shopify provides is built on top of the web. (They also provide integrations in other platform. Wherever merchants need to be, Shopify wants to be there, too, to support them.) I started by trying as many of the things Shopify offers as I could. Many are great, some other made me go “this feels wrong”. I tried to extract what the distinguishing factor between these two experiences was, and the result is this blog post.
 
-https://twitter.com/youyuxi/status/1535987671868137472
+<figure>
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">I noticed that I get extra frustrated, sometimes almost angry when a tech product (especially software) breaks in a way that I can’t fix. Maybe I’m too used to being able to hack the source code of my npm deps.</p>&mdash; Evan You (@youyuxi) <a href="https://twitter.com/youyuxi/status/1535987671868137472?ref_src=twsrc%5Etfw">June 12, 2022</a></blockquote>
+<figcaption>Evan You talking is frustrated about his tools being taken away.</figcaption>
+</figure>
 
 ## The Web Platform
 
@@ -142,3 +145,5 @@ Don’t force developers to do something your way when they already have a way o
 [ref]: https://reactjs.org/docs/refs-and-the-dom.html
 [Threejs]: https://threejs.org/
 [primer]: https://primer.style/
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
