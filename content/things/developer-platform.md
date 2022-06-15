@@ -2,7 +2,7 @@
 title: "Build layers, not frameworks."
 date: "2022-06-09"
 live: false
-socialmediaimage: "social.jpg"
+socialmediaimage: "framework.png"
 ---
 
 Being a developer building for developers requires discipline: It is tempting to build abstractions so developers have to do less and get to build stuff faster. However, this can easily end up having the opposite effect.
