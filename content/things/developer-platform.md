@@ -27,25 +27,25 @@ A lot of the Web Platform has been designed with the [Extensible Web Manifesto] 
 
 Web developers, in general, learn this The Web Platform, despite its flaws. They learn HTML, JavaScript, CSS. They learn about `npm`, about [Rollup], [Webpack], [vite] or any of the other build tools. They learn to embrace the arcane Web Platform APIs like `pushState` and love the more modern additions like CSS Grid or `async`/`await`. Gaps and shortcomings in the platform are often addressed through libraries or frameworks like jQuery, Lo-dash or even React, which for the rest of this blog post I will group under “abstractions”.
 
-## Cost of learning & fixing
+## Learning & fixing
 
 No matter from whose perspective you are reading this, there is a universal truth: Developers want do build _something_. And usually, they want to get it done. Friction in the process of building things will likely manifest as frustration, and the more frustrated a developer gets, the more likely they are to abandon the effort. If you are working on a platform, it’s in your interest to prevent these frustrations.
 
-After a bit of thought I found two major commonalities across all my frustrations when trying Shopify DX products:
+After a bit of reflection, I concluded that there are two major causes for my frustrations when trying Shopify DX products:
 
-1. I knew how to solve a problem with web technologies, but the abstraction prevented me from using my knowledge. Instead I had to **learn** somethin new.
-2. I was prevented from fixing a shortcoming in the abstraction (apart from forking and monkey-patching the abstraction).
+1. I knew how to solve a problem with web technologies, but the abstraction prevented me from using my knowledge. Instead I had to **learn** something new.
+2. I was prevented from fixing a shortcoming in the abstraction (short of creating a custom fork), because the abstraction was too watertight .
 
-By complete coincidence, [Evan You] voiced a similar feeling:
+By complete coincidence, [Evan You] voiced a similar feeling that week:
 
 <figure>
 <blockquote class="twitter-tweet"><p lang="en" dir="ltr">I noticed that I get extra frustrated, sometimes almost angry when a tech product (especially software) breaks in a way that I can’t fix. Maybe I’m too used to being able to hack the source code of my npm deps.</p>&mdash; Evan You (@youyuxi) <a href="https://twitter.com/youyuxi/status/1535987671868137472?ref_src=twsrc%5Etfw">June 12, 2022</a></blockquote>
 <figcaption>Evan You talking is frustrated about his tools being taken away.</figcaption>
 </figure>
 
-The implies something very counter-intuitive: Even if it seem like the uneven shape of the Web Platform is a major source of friction, and that your abstraction saves developers time or is more convenient to use — it might not be a net-positive. If a developer already has the skill to solve a problem, but the abstraction doesn’t allow them to use that skill and rather forces them to spend time learning the idioms, quirks and bugs of something new, frustration happens.
+This makes me arrive at a conclusion that might be very counter-intuitive: While the uneven shape of the Web Platform may seem like a major source of friction, it’s likely that the developer has already learned and mastered it. If you _force_ the developer to use your abstraction, it might not be a net-positive. If a developer already has the skill to solve a problem, but the abstraction doesn’t allow them to use that skill and rather forces them to spend time learning the idioms, quirks and bugs of something new, frustration happens.
 
-
+This is especially important for framework-like abstractions.
 
 ## Libraries & frameworks
 
@@ -57,9 +57,9 @@ All the code we write either integrates into the platform or connects blocks to 
 
 ### Frameworks
 
-I distinguish between a library and a framework by looking at _Inversion of Control_. When you use a library, you slot the library into your code and call into the library at the appropriate places. A framework, on the other hand, makes itself the center of the universe and offers slots _for you to slot into_. It’s the Hollywood principle: You don’t call the framework, the framewark calls you.
+I distinguish between a library and a framework by looking at the _Inversion of Control_. When you use a library, you slot the library into your code and call into the library in the appropriate places. A framework, on the other hand, makes itself the center of the universe and offers slots _for you to slot into_. It’s the Hollywood principle: You don’t call the framework, the framewark calls you.
 
-This inversion of control and the framework being the center of the universe is not inherently bad. After all, the framework was designed to be in this place and probably provides some pretty sophisticated machinery to make your code run better, more efficiently and at the right time. Another upside of frameworks is that they usually provide elegantly designed and modern interfaces.
+This inversion of control is not inherently bad. After all, the framework was designed to be in this place and probably provides some pretty sophisticated machinery to make your code run better, more efficiently or at the right time. Another upside of frameworks is that they usually provide elegantly designed and modern interfaces.
 
 <figure>
 	<picture>
@@ -68,13 +68,13 @@ This inversion of control and the framework being the center of the universe is 
 	<figcaption>Frameworks (at least partially) abstract the underlying platform and call your code in the right mooments.</figcaption>
 </figure>
 
-The problems start when you need to do something that the abstraction (i.e. library or framework) didn’t antipicate.
+The problems start when you need to do something that the framework didn’t antipicate.
 
 ## Escape hatches
 
-When the abstractions provided by a library or framework prove to be insufficient or overbearing, it is often necessary to _pierce_ the abstraction and drill back through to the underlying platform. If a framework has built-in ways for the developer to pierce it, it’s often called an “escape hatch”. For example, React provides the [`ref` property][ref] do get access an components underlying DOM element, giving you access to the Web Platform primitive.
+When the abstractions provided by a library or framework prove to be insufficient or overbearing, it is often necessary to _pierce_ the abstraction and drill through to the underlying platform primitive. If an abstraction has built-in ways for the developer to pierce it, it’s often called an “escape hatch”. For example, React provides the [`ref` property][ref] do get access an components underlying DOM element, giving you access to the Web Platform primitive.
 
-Escape hatches are, in my opinion, an absolute necessity in any library or framework. It is hard for any author to anticipate every possible use-case, and providing escape hatches allows developers to work around a restriction and keep moving rather than getting stuck. Whether or not a code change that breaks escape hatch users is a breaking change, is an interesting discussion that I will avoid here.
+Escape hatches are, in my opinion, an absolute necessity in any library or framework. It is near impossible to anticipate every possible use-case, and providing escape hatches allows developers to work around a restriction and keep moving rather than getting stuck. (Whether or not a code change in the abstraction that breaks escape hatch users should be considered a breaking change, is an interesting discussion that I will not get into here.)
 
 <figure>
 	<picture>
@@ -83,15 +83,17 @@ Escape hatches are, in my opinion, an absolute necessity in any library or frame
 	<figcaption>While escape hatches are critical, they often put a burden on the developer having to now manually gap the bridge between platform and framework.</figcaption>
 </figure>
 
-The downside of escape hatches, especially in frameworks, is that you often drop _all_ the way down to the platform. Often that is fine. At other times, it can pose a challenge for the developer, as they now have to do the work that the framework did for them previously: Bridging the gap between platform and framework. The higher-level the abstraction you are working with, the more work that entails. For example, using `<canvas>` efficiently from within a React component can be somewhat challenging (especially in the era of hooks, in my opinion). Another example would be to pierce [ThreeJS]’s abstractions and writing low-level WebGL that integrates nicely with the rest of ThreeJS management code. This requires extensive knowledge of how ThreeJS works and its internals.
+The downside of escape hatches, especially in frameworks, is that you often drop _all_ the way down to the platform. That can be fine. At other times, it can pose a challenge for the developer, as they now have to do the work that the framework did for them previously: Bridging the gap between platform and framework. The higher-level the abstraction you are working with is, the more work that entails.
 
-In the end, using escape hatches are both necessary to not restrict developers, but can also be quite costly for developers to use. I think there is a middle ground.
+For example, using `<canvas>` efficiently from within a React component can be somewhat challenging (especially in the era of hooks, in my opinion). Another example would be to pierce [ThreeJS]’s abstractions and writing low-level WebGL that integrates nicely with the rest of ThreeJS management code. This requires extensive knowledge of how ThreeJS works and its internals.
+
+In the end, providing escape hatches is both necessary to not restrict developers, but is also not ideal as they can be quite costly for developers to use.
 
 ## Layers
 
 Many abstractions aim to sit on top of all primitives of the underlying platform. Sometimes this is done so that the underlying platform can be switched out for another without requiring code changes (see React Native), sometimes it is done so that the abstraction can be in control of how and when the underlying platform is actually utilized. The tradeoff here, even with escape hatches, is that the developer is left with a binary choice: Either work on top of the abstraction, or throw away _all_ utility provided by the abstraction and go back to the platform.
 
-What if instead of building one abstraction that hides everything, we build multiple abstractions, where each abstraction sits atop the previous one. Like a ladder. Each layer adds utility and convenience. Inevitably, by the nature of tradeoffs, it also adds opinions and constraints. Depending on what the developers knows and needs, they can choose which layer they feel at home one. They can even climb up or drop down a layer (or two, or three...) on a case-by-case basis. This means that the lower layers won’t necessarily be able to abstract away the playform. In fact, they shouldn’t. Instead they should embrace the primitives provided by the platform and follow their patterns, as developers already know them.
+I think the better approach is to build multiple abstractions that build on one another, like a ladder. Each layer adds utility and convenience. Inevitably, by the nature of tradeoffs, it also adds opinions and constraints. Depending on what the developers knows and needs in any given situation, they can choose which layer provides the appropriate level of convenience and abstraction. They can even climb up or drop down a layer (or two, or three...) on a case-by-case basis. This means that the lower layers won’t necessarily be able to abstract away the platform. In fact, they shouldn’t. Instead they should embrace the primitives provided by the platform and follow their patterns, as developers already know them.
 
 <figure>
 	<picture>
@@ -100,7 +102,23 @@ What if instead of building one abstraction that hides everything, we build mult
 	<figcaption>While escape hatches are critical, they often put a burden on the developer having to now manually gap the bridge between platform and framework.</figcaption>
 </figure>
 
-Design systems for the web are one example that I think could greatly benefit from a layered approach.At the bottom layer, we’d
+Another benefit of this approach is dog-fooding your own abstractions. If you are strict about any given layer only using the layer below (and platform primitives) to implement its functionality, you can be sure that it will be a useful escape _layer_ for developers. Whenever you need to cheat here and break that principle, it’s a sign that the underlying layer is either abstracting and hiding too much or doesn’t provide enough utility.
+
+### Patterns
+
+One thing that is important to keep in mind when designing the layers is to lean into existing patterns of the Web Platform. This is not a [`#useThePlatform`][polymer platform] revival, but rather motivated by my observations above: It is frustrating for developers to have a skill and not be allowed to use it. One of My favorite example here is that React components don’t have events and event bubbling, which is something that every developer learned to embrace (before React came along).
+
+But don’t swing too far the other way: Providing convenience to developers is still extremely valuable! The important part is to not _force_ it onto them, just because they chose to use your abstraction. Whenever there is a platform-provided pattern or API, it’s usually a good idea to use it. If it proves insufficient for certain use-cases, provide an opt-in to a higher abstraction with escape hatches.
+
+To me it seems that the perceived value of an abstraction rises when the developer truly understands how much heavy lifting is done for them.
+
+Let me try and illustrate all of this with an example.
+
+## Example
+
+Design systems for the web are one example that I think could greatly benefit from a layered approach. Let’s take a look at [GitHub’s Primer][primer] design system.
+
+Primer provides a pure CSS library
 
 
 ## Conclusion
@@ -162,3 +180,4 @@ Most of us web developers have not the mastered, or even gotten in contact with 
 [rollup]: https://rollupjs.org/
 [webpack]: https://webpack.js.org/
 [vite]: https://vitejs.dev/
+[polymer platform]: https://www.polymer-project.org/blog/2016-05-26-IO-2016-Recap
