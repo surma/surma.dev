@@ -1,7 +1,7 @@
 ---
 title: "The cost of convenience"
 date: "2022-06-17"
-live: false
+live: true
 socialmediaimage: "social.jpg"
 ---
 
@@ -34,9 +34,9 @@ Of course, there are still gaps and shortcomings in the platform, and those are 
 
 ## Learning & fixing
 
-No matter from whose perspective you are reading this, there is a universal truth: Developers want to build _something_. And usually, they want to get it done. I feel like more and more engineers in the ecosystem get that, and aim for their abstractions to make many processes a lot simpler and quicker and provide tools tailored to the use case. After a bit of reflection, I realized that the problem lied not in the “what” but in the “how”:
+No matter from whose perspective you are reading this, there is a universal truth: Developers want to build _something_. And usually, they want to get it done. The ecosystem is starting to focus on that more and more, designing abstractions to make many processes simpler and quicker. I think that is a good thing, and the problem lies not in the “what” but in the “how”:
 
-**I got frustrated whenever I had knowledge (specifically Web Platform knowledge) to solve a problem, but the abstraction prevented me from using my knowledge.**
+**I get frustrated whenever I have knowledge (specifically Web Platform knowledge) to solve a problem, but the abstraction prevents me from using my knowledge.**
 
 By complete coincidence, [Evan You] voiced a similar feeling that week:
 
@@ -45,7 +45,7 @@ By complete coincidence, [Evan You] voiced a similar feeling that week:
 <figcaption>Evan You is frustrated about being unable to use his skills.</figcaption>
 </figure>
 
-This made me realize something counter-intuitive: While the uneven shape of the Web Platform may seem like a major source of friction, it’s likely that the developer has already learned and mastered it. If developers are _forced_ to use an abstraction instead of their pre-existing skills, it might not be a net positive for them.
+This made me realize something counter-intuitive: While the uneven shape of the Web Platform may seem like a major source of friction, it’s likely that the developer has already learned and mastered it. If developers are _forced_ to use an abstraction instead of their pre-existing skills, it might not feel like a net positive for them.
 
 Let me explain my thinking in a bit more detail.
 
@@ -65,13 +65,13 @@ This inversion of control is not inherently bad. After all, the framework was de
 </figure>
 
 
-Especially abstractions that make it easier to write code have become incredibly popular, which only reinforces the trend of making a “good DX” a core part of a project. Abstraction authors want to take work off of developers and dig a [pit of success] for them. However, I believe that we haven’t figured out when and how to give a developer access to an abstraction or how to evaluate when an abstraction is worth using. Abstractions are usually designed with specific use-cases. The problems, however, start when a developer wants to do something that the abstraction did not anticipate.
+Especially abstractions that make it easier to write code have become incredibly popular, which only reinforces the trend of making a “good DX” a core part of a project. Abstraction authors want to take work off of developers and dig a [pit of success] for them. However, I believe that we haven’t figured out when and how to give a developer access to an abstraction or how to evaluate when an abstraction is worth using. Abstractions are usually designed for a set of specific use-cases. The problems, however, start when a developer wants to do something that the abstraction did not anticipate.
 
 ## Escape hatches
 
 When the abstraction proves to be insufficient or overbearing, it is often necessary to _pierce_ the abstraction and work under the hood. In some cases that means just not using the abstraction. However, as frameworks often put themselves at the core of any architecture, it can be hard to opt out. After all, the developer’s code is written for the framework and can’t run without it. To address this, frameworks sometimes provide intentional holes in their abstraction, little “escape hatches”, that allow the developer to access the underlying platform primitive. For example, React has the [`ref` property][ref] to get ahold of a component’s corresponding DOM element, exposing the underlying platform primitive.
 
-> **Offramp:** This is one of the strong benefits of libraries vs frameworks for me. Frameworks shape your code, and each framework is different. If, at some later point in time, you have outgrown the framework or the framework has stagnated for too long, it will be hard to switch it out for something else. The contact surface with libraries is often very small and as such switching out a library for another is a much smaller task.
+> **Offramp:** For me, this is one of the benefits of libraries vs frameworks. Especially at a larger scale, you start by using a framework, but at some later point in time, you find yourself having outgrown the framework (or the framework has stagnated for too long), and you want to switch. This can be really hard, because frameworks shape your code, and each framework is different, so there is no easy migration path. The contact surface with libraries, on the other hand, is often very small, making a switch from one library to another a much smaller task, with a low blast radius.
 
 Escape hatches are, in my opinion, an absolute necessity in any library or framework. It is near impossible to anticipate every possible use case, and providing escape hatches allows developers to work around a restriction and keep moving rather than getting stuck.
 
@@ -90,13 +90,13 @@ In the end, providing escape hatches is both necessary to not restrict developer
 
 Another part that abstractions often seem to get wrong is not reusing the patterns and idioms established by the Web Platform. This is not a [`#useThePlatform`][polymer platform] revival, but rather motivated by my observations about forced learning: If developers already have a skill but are forced to spend time learning a new way _to do the same thing_, frustration happens. Doubly so if there is no tangible benefit of doing it “the new way”, apart from maybe idiomaticism or purity.
 
-One example here could be how data passing from a child to a (far-away) ancestor works in React. Since the era of Web Components and extendable `Event`, I know how to dispatch a custom event and have the ancestor element listens for it. React with its impedance mismatch between component tree and DOM made that pattern hard. Of course, it has its own solutions: Explicit prop passing or Contexts. The first is really inconvenient and the other I have to learn _for clear no benefit_, apart from the fact that it’s yet another React component.
+One example here could be how data passing from a child to a (far-away) ancestor works in React. Since the era of Web Components and extendable `Event`, I know how to dispatch a custom event and have the ancestor element listen for it. React with its impedance mismatch between component tree and DOM made that pattern hard. Of course, it has its own solutions: Explicitly passing a callback down via props or putting it in a context. The first is really inconvenient and the other I have to learn _for no clear benefit_, apart from the fact that it’s idiomatic because it’s yet another React component.
 
-In my opinion, it is especially important to reuse patterns in tutorials or “Getting Started” guides. These resources are used by newcomers, and nothing is more discouraging than to be greeted with a wall of new concepts and idioms that have to be overcome just to take the first steps. If you care about DX and the adoption of your abstraction, it is much more beneficial to let developers use as much of their existing skills as possible and introduce new concepts one at a time. As a secondary benefit, by intellectually elevating the developer from platform to abstraction _slowly_, they are much more likely to understand how the abstraction works and how they can help themselves when they get stuck.
+In my opinion, it is especially important to reuse patterns in tutorials or “Getting Started” guides. These resources are used by newcomers, and nothing is more discouraging than to be greeted with a wall of new concepts and idioms that have to be understood and internalized just to take the first steps. If you care about DX and the adoption of your abstraction, it is much more beneficial to let developers use as much of their existing skills as possible and introduce new concepts one at a time. As a secondary benefit, by intellectually elevating the developer from platform to abstraction _slowly_, they are much more likely to understand how the abstraction works and how they can help themselves when they get stuck.
 
 ## Opt-in or Opt-out
 
-I’d summarize all of this as follows: **Frustration happens when the developer is _unable_ to use their existing skills or knowledge or feels _disproportionally punished_ for doing it their way instead of your way.**
+I’d summarize all of this as follows: **Frustration happens when the developer is _unable_ to use their existing skills or feels _disproportionally punished_ for doing it their way instead of your way.**
 
 To phrase it another way: Abstractions that take work off of developers are valuable! Of course, they are. The problems only occur when a developer feels chained to the abstractions in a situation where they’d rather do something differently. The important part is to not _force_ patterns onto them.
 
@@ -104,11 +104,11 @@ By giving developers choices on how to tackle a problem, developers can help the
 
 In the end, it depends on the goal and the use case, whether an abstraction would fare better with an opt-in or an opt-out mechanism. But from now on, I am treating the “opt” part to be mandatory!
 
-## The pitch: Layers
+## Layered architectures
 
-How does this manifest in code? Here’s the not-new-at-all insight I arrived at: Many abstractions aim to sit on top of all primitives of the underlying platform. Sometimes this is done so that the underlying platform can be switched out for another without requiring code changes (see React Native), sometimes it is done so that the abstraction can be in control of how and when the underlying platform is utilized. The tradeoff here, even with escape hatches, is that the developer is left with a binary choice: Either work on top of the abstraction or throw away _all_ utility provided by the abstraction and go back to the platform.
+Many abstractions aim to sit on top of all primitives of the underlying platform. Sometimes this is done so that the underlying platform can be switched out for another without requiring code changes (see React Native), sometimes it is done so that the abstraction can be in control of how and when the underlying platform is utilized. The tradeoff here, even with escape hatches, is that the developer is left with a binary choice: Either work on top of the abstraction or throw away _all_ utility provided by the abstraction and go back to the platform.
 
-I think the better approach is to build multiple abstractions that are built on top of one another. Like a ladder, or maybe like a parking lot. Each layer adds utility and convenience. Inevitably, by the nature of tradeoffs, it also adds opinions and constraints. Depending on what the developer knows and requires in any given situation, they can choose which layer provides the appropriate level of convenience and abstraction. They can drop down a layer (or two, or three...) on a case-by-case basis.
+There is a way to support developers that have to resort to escape hatches, which will also improve the architecture of the abstraction overall: Build multiple abstractions that are built on top of one another. Like a ladder, or maybe like a parking lot. Each layer adds utility and convenience. Inevitably, by the nature of tradeoffs, it also adds opinions and constraints. Depending on what the developer knows and requires in any given situation, they can choose which layer provides the appropriate level of convenience and abstraction. They can drop down a layer (or two, or three...) on a case-by-case basis.
 
 The lower layers should not aim to abstract away the platform. Instead they should embrace the primitives provided by the platform and follow the patterns & idioms established by the platform, as developers already learned them.
 
@@ -135,7 +135,7 @@ Of course, if they are a React user, it’s happy days. They pick the React vers
 
 If they are using a different framework than React, they have no choice but use option 3. That’s a lot of work they have to redo.
 
-How could this be different with a layered approach? One extremely valuable, additional layer would be an implementation of the components using Web Components. Web Components are a platform primitive that are well-understood and tested. They would be implemented using the CSS library, which will also be a forcing function to ensure the CSS library is modular and tree-shakable. Web Components can be implemented with behavior and interface similar to existing platform elements, making them feel familiar to web developers. Of course, having a React version is still extremely beneficial given how popular and wide spread React is. However, the React version of the design system should now make use of the Web Components, reducing it to a thin wrapper. Long story short, we end up with 3 layers: Pure CSS, Web Components, React.
+How could this be different with a layered approach? One extremely valuable, additional layer would be an implementation of the components using Web Components. Web Components are a platform primitive that are well-understood and tested. They would be implemented using the CSS library, which will also be a forcing function to ensure the CSS library is modular and tree-shakable. Web Components can be implemented with behavior and interface similar to existing platform elements, making them feel familiar to web developers. Of course, having a React version is still extremely beneficial given how popular and widespread React is. However, the React version of the design system should now make use of the Web Components, reducing it to a thin wrapper. Long story short, we end up with 3 layers: Pure CSS, Web Components, React.
 
 The benefits here are that React developers can use React. But when a component doesn’t quite do what they need (or has a bug), they can drop down a level and orchestrate Web Components, on a case-by-case basis, without having to give up all the tried-and-tested implementation work. People who prefer using other frameworks like [SolidJS] or [Svelte], can use the Web Components layer and only have to provide a framework-idiomatic wrapper for those custom elements, rather than start from scratch.
 
