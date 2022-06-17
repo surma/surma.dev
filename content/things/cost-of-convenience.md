@@ -1,8 +1,8 @@
 ---
 title: "The cost of convenience"
-date: "2022-06-16"
+date: "2022-06-17"
 live: false
-socialmediaimage: "framework.png"
+socialmediaimage: "social.jpg"
 ---
 
 It is tempting to build abstractions so developers have to do less and build more. However, this can easily end up causing frustrations with developers if not done right.
@@ -23,7 +23,7 @@ In summary, the web is uneven across at least three dimensions: Level of abstrac
 
 <figure>
 	<picture>
-		<img  width=1024 height=1024 src="./platform.png" alt="A platform with multiple blocks of different sizes and height. Each block represents a Web Platform API, while the block’s height represents the level of abstraction that API has.">
+		<img  width=1024 height=1024 src="./platform.jpeg" alt="A platform with multiple blocks of different sizes and height. Each block represents a Web Platform API, while the block’s height represents the level of abstraction that API has.">
 	</picture>
 	<figcaption>The Web Platform exposes many API surfaces of different sizes and with different levels of abstraction.</figcaption>
 </figure>
@@ -59,7 +59,7 @@ This inversion of control is not inherently bad. After all, the framework was de
 
 <figure>
 	<picture>
-		<img  width=1024 height=1024 src="./framework.png" alt="The platform is hidden by a nicely shaped and aesthetically pleasing layer at the top, with some blocks underneath forming the pillar that hold it up.">
+		<img  width=1024 height=1024 src="./framework.jpeg" alt="The platform is hidden by a nicely shaped and aesthetically pleasing layer at the top, with some blocks underneath forming the pillar that hold it up.">
 	</picture>
 	<figcaption>Frameworks abstract the underlying platform and call your code.</figcaption>
 </figure>
@@ -79,7 +79,7 @@ The downside of escape hatches, especially in frameworks, is that developers oft
 
 <figure>
 	<picture>
-		<img  width=1024 height=1024 src="./escapehatch.png" alt="The top layer has become transparent, the pillars have disappeared. The gap between the top layer and the platform feels large.">
+		<img  width=1024 height=1024 src="./escapehatch.jpeg" alt="The top layer has become transparent, the pillars have disappeared. The gap between the top layer and the platform feels large.">
 	</picture>
 	<figcaption>While escape hatches are critical, they often put a burden on the developer having to now manually fill the gap between platform and framework.</figcaption>
 </figure>
@@ -114,7 +114,7 @@ The lower layers should not aim to abstract away the platform. Instead they shou
 
 <figure>
 	<picture>
-		<img  width=1024 height=1024 src="./layers.png" alt="The top layer is still transparent, but there two other translucent layers in-between, making the gap between platform and top layer feel less scary.">
+		<img  width=1024 height=1024 src="./layers.jpeg" alt="The top layer is still transparent, but there two other translucent layers in-between, making the gap between platform and top layer feel less scary.">
 	</picture>
 	<figcaption>Providing incremental abstractions in the form of layers lets developers move up and down as needed without incurring a high cost.</figcaption>
 </figure>
