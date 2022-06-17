@@ -38,7 +38,7 @@ No matter from whose perspective you are reading this, there is a universal trut
 
 **I get frustrated whenever I have knowledge (specifically Web Platform knowledge) to solve a problem, but the abstraction prevents me from using my knowledge.**
 
-By complete coincidence, [Evan You] voiced a similar feeling that week:
+By complete coincidence, [Evan You] voiced a similar feeling:
 
 <figure>
 <blockquote class="twitter-tweet"><p lang="en" dir="ltr">I noticed that I get extra frustrated, sometimes almost angry when a tech product (especially software) breaks in a way that I can’t fix. Maybe I’m too used to being able to hack the source code of my npm deps.</p>&mdash; Evan You (@youyuxi) <a href="https://twitter.com/youyuxi/status/1535987671868137472?ref_src=twsrc%5Etfw">June 12, 2022</a></blockquote>
