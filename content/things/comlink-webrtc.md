@@ -6,12 +6,14 @@
 }
 ---
 
-> **Update 2017-11-06**: I updated the section about gathering ICE candidates.
 
 WebRTC is cool. WebRTC is hard. WebRTC is painful, actually. Partly due to how alien the API feels, partly due to many tutorials skipping a lot of the details. Here’s my attempt at describing WebRTC and how I used it for some fun [Comlink] experiments.
+
 <!--more-->
 
-> **TL;DR:** There couldn’t possibly be a TL;DR for WebRTC. But here’s a fun [demo].
+> **Update 2017-11-06**: I updated the section about gathering ICE candidates.
+
+There couldn’t possibly be a TL;DR for WebRTC. But here’s a fun [demo].
 
 <style>
   .yt-wrapper {
