@@ -2,7 +2,7 @@
 title: "The cost of convenience"
 date: "2022-06-17"
 live: true
-socialmediaimage: "social.jpg"
+socialmediaimage: "social2.jpg"
 ---
 
 It is tempting to build abstractions so developers have to do less and build more. However, this can easily end up causing frustrations with developers if not done right.
