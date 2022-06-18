@@ -172,6 +172,7 @@ pre > code,
 img,
 video {
   max-width: calc(100% - 2 * var(--grid-height));
+  max-height: calc(100vh - 2 * var(--grid-height));
   margin: 0 auto;
   display: block;
   width: 100%;
