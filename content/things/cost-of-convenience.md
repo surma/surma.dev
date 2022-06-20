@@ -51,9 +51,9 @@ Let me explain my thinking in a bit more detail.
 
 ## Libraries & frameworks as abstractions
 
-The distinction between “library” and “framework” has always been a matter of debate. I will not pretend that I can settle that debate, but for the context of this blog post, I’ll use the following mental model.
+The distinction between “library” and “framework” has always been a matter of debate. I will not pretend that I can settle that debate, but for the context of this blog post, I’ll use Martin Fowler’s mental model.
 
-I distinguish between a library and a framework by looking at the _Inversion of Control_. When I use a library, I slot the library into my code and call into the library in the appropriate places. A framework, on the other hand, makes itself the center of the universe and offers slots _for me to slot into_. It’s the Hollywood principle: You don’t call the framework, the framework calls you.
+Libraries and a frameworks can be distinguished by looking at the _Inversion of Control_. When I use a library, I slot the library into my code and call into the library in the appropriate places. A framework, on the other hand, makes itself the center of the universe and offers slots _for me to slot into_. It’s the Hollywood principle: You don’t call the framework, the framework calls you.
 
 This inversion of control is not inherently bad. After all, the framework was designed to be in this place and probably provides some pretty sophisticated machinery to make code easier to write, run more efficiently or utilizes other peripheral better.
 
