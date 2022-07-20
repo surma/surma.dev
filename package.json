@@ -33,7 +33,7 @@
   ],
   "scripts": {
     "clean": "rm -rf build _site .tmp",
-    "build": "vite build",
+    "build": "./full-build.sh",
     "dev": "run-p serve watch",
     "serve": "node server.js",
     "watch": "eleventy --watch",
