@@ -11,7 +11,7 @@ export default {
 		target: "esnext",
 		assetsInlineLimit: 0,
     emptyOutDir: true,
-		outDir: "../build",
+		outDir: "../_site",
 		rollupOptions: {
       input: {
         main: resolve(__dirname, ".tmp/index.html"),
