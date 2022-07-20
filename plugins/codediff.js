@@ -33,11 +33,11 @@ module.exports = (md, options) => {
       .map(line => line.startsWith("+") ? line.replace(/^\+/, ' ') : line)
       .map(line => line.slice(2))
       .join("\n");
-      
-    
+
+
     const highlighted = Prism.highlight(codeToHighlight, Prism.languages[language], language);
     const highlightedLines = highlighted.split("\n")
-    
+
     function removeLeadingSpan(line) {
       if(!highlightedLines[line].trim().startsWith("</span>")) return "";
       highlightedLines[line] = highlightedLines[line].replace(/^(\s*)<\/span>/, "$1")
@@ -56,7 +56,7 @@ module.exports = (md, options) => {
     let mode = null;
     for(const line of lines) {
       const nextMode = line[0] ?? ' ';
-     
+
       if(mode != nextMode) {
         // mode is null in the first line, so we shouldn’t try to
         // append anything to the previous line 🙄
@@ -65,10 +65,10 @@ module.exports = (md, options) => {
         }
         const leader = removeLeadingSpan(currentOutputLine);
         switch(nextMode) {
-          case '+': 
+          case '+':
             highlightedLines[currentOutputLine] = `${leader}<span class="diff added">${highlightedLines[currentOutputLine]}`;
           break;
-          case '-': 
+          case '-':
             highlightedLines.splice(currentOutputLine, 0,  `${leader}<span class="diff removed">${lines[currentOutputLine].slice(2).replaceAll("<", "&lt;")}`);
           break;
           default:
@@ -82,7 +82,6 @@ module.exports = (md, options) => {
       mode = nextMode;
       currentOutputLine++;
     }
-    // const html = Prism.highlight(code, Prism.languages[language], language);
     return `<pre><code>${highlightedLines.join("\n")}</code></pre>`;
   };
 };

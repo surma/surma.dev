@@ -1,5 +1,5 @@
 <!doctype html>
-<script src="./base64.nobabel.js"></script>
+<script type="module" src="./base64.nobabel.js"></script>
 <style>
   #container {
     width: 100%;
@@ -29,7 +29,7 @@
 </svg>
 
 <canvas width=128 height=128></canvas>
-<script>
+<script type="module">
 function img2dataURI(imgTag) {
   // Wait for image to be loaded
   return new Promise(resolve => {
