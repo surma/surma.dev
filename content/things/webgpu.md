@@ -93,7 +93,7 @@ With WebGPU, a pipeline consists of one (or more) programmable stages, where eac
 ```js
 const module = device.createShaderModule({
   code: `
-    @stage(compute) @workgroup_size(64)
+    @compute @workgroup_size(64)
     fn main() {
       // Pointless!
     }
@@ -112,7 +112,7 @@ This is the first time [WGSL] (pronounced “wig-sal”), the WebGPU Shading Lan
 
 > **SPIR-V:** [SPIR-V] is interesting because it’s an open, binary, intermediate format standardized by the Khronos Group. You can think of SPIR-V as the LLVM of parallel programming language compilers, and there is support to compile many languages _to_ SPIR-V as well as compiling SPIR-V to many other languages.
 
-In the shader module above we are just creating a function called `main` and marking it as an entry point for the compute stage by using the `@stage(compute)` attribute. You can have multiple functions marked as an entry point in a shader module, as you can reuse the same shader module for multiple pipelines and choose different functions to invoke via the `entryPoint` options. But what is that `@workgroup_size(64)` attribute?
+In the shader module above we are just creating a function called `main` and marking it as an entry point for the compute stage by using the `@compute` attribute. You can have multiple functions marked as an entry point in a shader module, as you can reuse the same shader module for multiple pipelines and choose different functions to invoke via the `entryPoint` options. But what is that `@workgroup_size(64)` attribute?
 
 ### Parallelism
 
@@ -185,13 +185,13 @@ We have written our shader and set up the pipeline. All that’s left to do is a
 const commandEncoder = device.createCommandEncoder();
 const passEncoder = commandEncoder.beginComputePass();
 passEncoder.setPipeline(pipeline);
-passEncoder.dispatch(1);
+passEncoder.dispatchWorkgroups(1);
 passEncoder.end();
 const commands = commandEncoder.finish();
 device.queue.submit([commands]);
 ```
 
-`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures. It also allows you to create `PassEncoder`, which encodes the setup and invocation of pipelines. In this case, we have a compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and finally call `dispatch(w_x, w_y, w_z)` to tell the GPU how many workgroups to create along each dimension. In other words, the number of times our compute shader will be invoked is equal to $w_x \times w_y \times w_z \times x \times y \times z$. The pass encoder, by the way, is WebGPU’s abstraction to avoid that internal, global state object I was ranting about at the start of this blog post. All data and state required to run a GPU pipeline is explicitly passed along through the pass encoder.
+`commandEncoder` has multiple methods that allows you to copy data from one GPU buffer to another and manipulate textures. It also allows you to create `PassEncoder`, which encodes the setup and invocation of pipelines. In this case, we have a compute pipline, so we have to create a compute pass, set it to use our pre-declared pipeline and finally call `dispatchWorkgroups(w_x, w_y, w_z)` to tell the GPU how many workgroups to create along each dimension. In other words, the number of times our compute shader will be invoked is equal to $w_x \times w_y \times w_z \times x \times y \times z$. The pass encoder, by the way, is WebGPU’s abstraction to avoid that internal, global state object I was ranting about at the start of this blog post. All data and state required to run a GPU pipeline is explicitly passed along through the pass encoder.
 
 > **Abstraction:** The command buffer is also the hook for the driver or operating system to let multiple applications use the GPU without them interfering with each other. When you queue up your commands, the abstraction layers below will inject additional commands into the queue to save the previous program’s state and restore your program’s state so that it feels like no one else is using the GPU.
 
@@ -277,8 +277,8 @@ Now that we not only have the bind group _layout_, but even the actual bind grou
   const passEncoder = commandEncoder.beginComputePass();
   passEncoder.setPipeline(pipeline);
 + passEncoder.setBindGroup(0, bindGroup);
-- passEncoder.dispatch(1);
-+ passEncoder.dispatch(Math.ceil(BUFFER_SIZE / 64));
+- passEncoder.dispatchWorkgroups(1);
++ passEncoder.dispatchWorkgroups(Math.ceil(BUFFER_SIZE / 64));
   passEncoder.end();
 + commandEncoder.copyBufferToBuffer(
 +   output,
@@ -316,9 +316,9 @@ Something other than zeroes would probably be a bit more convincing. Before we s
 
 ```rust
 @group(0) @binding(1)
-var<storage, write> output: array<f32>;
+var<storage, read_write> output: array<f32>;
 
-@stage(compute) @workgroup_size(64)
+@compute @workgroup_size(64)
 fn main(
 
   @builtin(global_invocation_id)
@@ -397,16 +397,16 @@ So it makes sense to define a `struct Ball` with all these components and turn o
 
 |||codediff|rust
 + struct Ball {
-+   radius: f32;
-+   position: vec2<f32>;
-+   velocity: vec2<f32>;
++   radius: f32,
++   position: vec2<f32>,
++   velocity: vec2<f32>,
 + }
 
   @group(0) @binding(1)
-- var<storage, write> output: array<f32>;
-+ var<storage, write> output: array<Ball>;
+- var<storage, read_write> output: array<f32>;
++ var<storage, read_write> output: array<Ball>;
 
-  @stage(compute) @workgroup_size(64)
+  @compute @workgroup_size(64)
   fn main(
     @builtin(global_invocation_id) global_id : vec3<u32>,
     @builtin(local_invocation_id) local_id : vec3<u32>,
@@ -530,20 +530,20 @@ Now we need to bind this new buffer to a variable in WGSL and do something with 
 
 |||codediff|rust
   struct Ball {
-    radius: f32;
-    position: vec2<f32>;
-    velocity: vec2<f32>;
+    radius: f32,
+    position: vec2<f32>,
+    velocity: vec2<f32>,
   }
 
 + @group(0) @binding(0)
 + var<storage, read> input: array<Ball>;
 
   @group(0) @binding(1)
-  var<storage, write> output: array<Ball>;
+  var<storage, read_write> output: array<Ball>;
 
-+ let TIME_STEP: f32 = 0.016;
++ const TIME_STEP: f32 = 0.016;
 
-  @stage(compute) @workgroup_size(64)
+  @compute @workgroup_size(64)
   fn main(
     @builtin(global_invocation_id)
     global_id : vec3<u32>,
@@ -592,7 +592,7 @@ To see how fast this really is, I disabled rendering and instead used [`performa
 
 WebGPU has been worked on for a while and I think the standards group is eager to declare the API as stable. That being said, the API is only available in Chrome and Firefox behind a flag. I’m optimistic about Safari shipping this API but at the time of writing there’s nothing to see in Safari TP just yet.
 
-In terms of stability, some changes landed even while I was doing the research for this article. For example, the syntax for attributes was changed from `[[stage(compute), workgroup_size(64)]]` to `@stage(compute) @workgroup_size(64)`. At the time of writing, Firefox is still on the old syntax. `passEncoder.end()` used to be `passEncoder.endPass()`. There are also some things in the spec that haven’t been implemented in any browser yet like [shader constants][constants] or the API being available on mobile devices.
+In terms of stability, some changes landed even while I was doing the research for this article. For example, the syntax for attributes was changed from `[[stage(compute), workgroup_size(64)]]` to `@compute @workgroup_size(64)`. At the time of writing, Firefox is still on the old syntax. `passEncoder.end()` used to be `passEncoder.endPass()`. There are also some things in the spec that haven’t been implemented in any browser yet like [shader constants][constants] or the API being available on mobile devices.
 
 Basically what I am saying is: Expect some more breaking changes to happen while the browsers and standards folks are on the home stretch of this API’s journey to ✨stable✨.
 
