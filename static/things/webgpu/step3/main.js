@@ -16,20 +16,20 @@ if (!device) fatal("Couldn’t request WebGPU device.");
 const module = device.createShaderModule({
   code: `
     struct Ball {
-      radius: f32;
-      position: vec2<f32>;
-      velocity: vec2<f32>;
+      radius: f32,
+      position: vec2<f32>,
+      velocity: vec2<f32>,
     }
 
     @group(0) @binding(0)
     var<storage, read> input: array<Ball>;
 
     @group(0) @binding(1)
-    var<storage, write> output: array<Ball>;
+    var<storage, read_write> output: array<Ball>;
 
-    let TIME_STEP: f32 = 0.016;
+    const TIME_STEP: f32 = 0.016;
 
-    @stage(compute) @workgroup_size(64)
+    @compute @workgroup_size(64)
     fn main(
       @builtin(global_invocation_id)
       global_id : vec3<u32>,
@@ -135,7 +135,7 @@ while (true) {
   passEncoder.setPipeline(pipeline);
   passEncoder.setBindGroup(0, bindGroup);
   const dispatchSize = Math.ceil(NUM_BALLS / 64);
-  passEncoder.dispatch(dispatchSize);
+  passEncoder.dispatchWorkgroups(dispatchSize);
   passEncoder.end();
   commandEncoder.copyBufferToBuffer(output, 0, stagingBuffer, 0, BUFFER_SIZE);
   const commands = commandEncoder.finish();
