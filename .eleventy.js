@@ -7,6 +7,7 @@ loader([
   "wasm",
   "bash",
   "c",
+  "cpp",
   "diff",
   "go",
   "typescript",
