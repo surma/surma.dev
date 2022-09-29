@@ -1,7 +1,7 @@
 ---
 
 title: "I turned JS into a compiled language (for fun and Wasm)"
-date: "2022-08-23"
+date: "2022-09-29"
 socialmediaimage: "social.png"
 live: false
 
@@ -10,7 +10,10 @@ live: false
 This is one of those times where I got so fascinated by the idea of a
 thing that I forgot to ask myself whether it’s a good idea to build the thing.
 
-Jeff Goldblum
+<figure>
+  <video width="720" height="390" src="./goldblum.webm" type="video/webm" autoplay muted loop></video>
+  <figcaption>Obligatory Jeff Goldblum.</figcaption>
+</figure>
 
 I have arrived at the conclusion that I don’t think _this specific approach_ is
 worth exploring further, but I also realized it's better to have an half-assed
@@ -18,8 +21,8 @@ blog post sharing my lessons learned than no blog post at all.
 
 Both the blog post, but especially the proof-of-concept implementation follows
 the principles of [evolutionary design]. I took many, many shortcuts and left
-many parts of this system incomplete to achieve something function. I hope
-despite the handwaviness that there's still some interesting bits in here for
+many parts of this system incomplete as I prioritized making it over the finish line. I hope
+despite the shortcuts and handwaviness that there's still some interesting bits in here for
 you.
 
 ## The Spark
@@ -33,9 +36,9 @@ too much into the business pitch, but Shopify Functions boil down to Shopify
 running _your_ code on _their_ servers, tightly integrated with the rest of
 their business logic. This allows developers to deeply customize Shopify. In
 ecommerce both security and performance are paramount, so WebAssembly made
-sense as the fundamental piece of technology. This allows third-party developer
-to inject arbitrary code written in theoretically any language, while letting
-Shopify continue to be in control over how these code fragments are allowed
+sense as the fundamental piece of technology. This way third-party developer
+can inject arbitrary code written in theoretically any language, while 
+Shopify can remain in control over how these code fragments are allowed
 to affect the rest of the system. Shopify accepts any [WASI]-compatible Wasm
 module with a maximum size of 250KB.
 
@@ -529,6 +532,10 @@ While exceptions got added last, I'll cover them now as they are just as boring
 as control structures: JS as `try{...}catch{...}`, C++ has `try{...}catch{...}
 `. You do the math. I did not bother to implement support for JS' `finally{...}
 `.
+
+Note that WASI SDK does not support C++ exceptions yet, even though they have
+landed in WebAssembly. Apparently, the Emscripten folks needs to upstream their
+patches to libunwind.
 
 ### Iterators
 
