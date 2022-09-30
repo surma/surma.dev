@@ -2,7 +2,7 @@
 
 title: "I turned JS into a compiled language (for fun and Wasm)"
 date: "2022-09-29"
-socialmediaimage: "social.png"
+socialmediaimage: "social.jpeg"
 live: false
 
 ---
@@ -138,9 +138,9 @@ literally learned C++20 for this. I used to write C++ many years ago, at a time
 where C++11 was considered bleeding edge. I did a lot of C when I was working
 on microprocessors, and it still shows. Nowadays I mostly write JavaScript
 and Rust. I used this as an opportunity to catch up on C++ and get a bit more
-familiar with all the new stuff that C++20 has to offer. [Sy Brand] recommended
-[Josh Lospinoso]'s book "C++ Crash Course", which I can now only recommend
-myself. And supporting Starch Press is an added benefit.
+familiar with all the new stuff that C++20 has to offer. When I asked them, [Sy
+Brand] recommended [Josh Lospinoso]'s book "C++ Crash Course", which now I can
+only recommend myself. And supporting No Starch Press is an added benefit.
 
 <figure>
 	<picture>
