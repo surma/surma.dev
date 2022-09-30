@@ -1,6 +1,7 @@
 import * as parse5 from "parse5";
 import * as glob from "glob";
 import {resolve} from "path";
+import {readFile} from "fs/promises";
 
 const root = resolve(__dirname, ".tmp/");
 const entryPoints = glob.sync(resolve(__dirname, "./.tmp/**/*.html"));
@@ -22,6 +23,27 @@ export default {
     },
 	},
 	plugins: [
+		{
+			name: 'social-image',
+			transformIndexHtml: {
+				async transform(html, {bundle}) {
+					// console.log(bundle);
+					const rx = /<meta property="og:image" content="([^"]+)">/g;
+					while(true) {
+						const matches = rx.exec(html);
+						if(!matches) return;
+						const imgUrl = new URL(matches[1]);
+						const path = `.${imgUrl.pathname}`;
+						const file = await readFile(`static${imgUrl.pathname}`);
+						bundle[path] = {
+							type: 'asset',
+							source: file,
+							fileName: path,
+						};						
+					}
+				}
+			}
+		},
 		{
 			name: 'vue-parser-workaround',
 			transformIndexHtml: {
