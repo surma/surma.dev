@@ -1,7 +1,7 @@
 ---
 
 title: "I turned JS into a compiled language (for fun and Wasm)"
-date: "2022-09-29"
+date: "2022-10-03"
 socialmediaimage: "social.jpeg"
 live: false
 
