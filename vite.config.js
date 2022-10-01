@@ -34,7 +34,7 @@ export default {
 						if(!matches) return;
 						const imgUrl = new URL(matches[1]);
 						const path = `.${imgUrl.pathname}`;
-						const file = await readFile(`static${imgUrl.pathname}`);
+						const file = await readFile(`.tmp${imgUrl.pathname}`);
 						bundle[path] = {
 							type: 'asset',
 							source: file,
