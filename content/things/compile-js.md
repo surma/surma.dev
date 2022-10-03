@@ -21,8 +21,8 @@ I have arrived at the conclusion that I don’t think _this specific approach_ i
 worth exploring further. This made it hard to write a blog post because I took
 so many shortcuts and introduced so many flaws, that I won’t be able to tell
 a consistent or coherent story. At the same time, I think it’s better to have
-an half-assed blog post where I can explain my thought process and share my
-lessons learned than have no blog post at all. So here we go.
+a half-assed blog post where I can explain my thought process and share my
+lessons learned than to have no blog post at all. So here we go.
 
 The proof-of-concept implementation, and by extension this blog post, follow
 the principles of [evolutionary design]. I took many, many shortcuts and left
@@ -59,23 +59,24 @@ compile to WebAssembly. _Or does it?_
 To run JavaScript in Wasm, one solution is to compile a JS _engine_ to Wasm,
 and have it parse and execute your JS code. Engines like V8 or SpiderMonkey are
 massive and won’t easily compile to Wasm, not to mention the fact that JIT’ing
-as a concept is not possible in Wasm right now. Although that hasn’t stopped
-the [ByteCodeAlliance from compiling Spidermonkey to WebAssembly][spiderwasm].
+as a concept is not possible in Wasm right now. That didn’t stop the
+[ByteCodeAlliance from compiling Spidermonkey to WebAssembly][spiderwasm], but
+I was pretty sure it wasn’t going to be a small output module.
 
 > **JIT’ing**: WebAssembly is designed to store the instructions immutably and
-separatly from the memory that the instructions work on. That means that, at
+separately from the memory that the instructions work on. That means that, at
 least as of now, a Wasm module cannot generate instructions and subsequently
 execute them.
 
-JS interpreters and VMs are more viable to bring to WebAssembly, though. The
-Shopify Functions team created [javy], a toolchain that compiles a JS VM to
-Wasm and embeds your JS in the Wasm module. The engine that javy relies on is
-[QuickJS], a small JavaScript VM that is fully ES2015 compliant. It was written
-by Fabrice Bellard, who also created qemu, ffmpeg and tcc. The problem is that
-the resulting Wasm module is over 250KB. To work around that, I tried removing
-the JS parser and only compile QuickJS’s byte code VM.  Alas, no cigar. Even
-removing unused globals (like `ArrayBuffer` or `Symbol`) did not get me under
-the limit.
+Instead I was looking at JS interpreters and VMs. The Shopify Functions team
+created [javy], a toolchain that compiles a JS VM to Wasm and embeds your
+JS in the Wasm module. The engine that javy relies on is [QuickJS], a small
+JavaScript VM that is fully ES2015 compliant. It was written by Fabrice
+Bellard, who also created qemu, ffmpeg and tcc. The problem is that the
+resulting Wasm module is slightly over 250KB. It was close enough that I tried
+removing the JS parser and only compile QuickJS’s byte code VM.  Alas, no
+cigar. Even removing unused globals (like `ArrayBuffer` or `Symbol`) did not
+get me under the limit.
 
 The Shopify Functions team is looking into blessing a way to write functions in
 JavaScript. In the meantime, I’ll be spending the rest of the blog post looking
@@ -88,7 +89,7 @@ of Wasm toolchains were focused on making C++ code run on the web, as C++
 is often at the foundation of many big software projects. LLVM’s `clang++`
 now supports Wasm out of the box, and [WASI-SDK] provides a sysroot (libc,
 libc++ etc) that works against WASI rather than, say, POSIX. This allows
-you to compile C/ C++ code to WebAssembly, and run it in any WASI-compatible
+you to compile C/C++ code to WebAssembly, and run it in any WASI-compatible
 environment (like [wasmtime]).
 
 Now here finally comes my rather amateurish observation that led to this
@@ -96,8 +97,9 @@ blog post: I think JavaScript looks a lot like C++. In fact, most of the
 features that JavaScript has to offer, C++20 has to offer as well. Often with
 extremely similar syntax. **What if I could write a transpiler of sorts that
 translates JavaScript to C++** and aims to maintain the semantics and behavior
-of JavaScript? Can I write a really dumb transpiler that defers all the difficult
-stuff like type checking and scoping to the C++ compiler? Would that yield
+of JavaScript? Can I write a really dumb transpiler that defers all the
+difficult stuff like type checking and scoping to the C++ compiler (mostly
+because of my lack of experience in building compilers)? Would that yield
 smaller binaries? Maybe even faster ones? Well, only one way to find out.
 
 ### The North Star
@@ -139,7 +141,7 @@ is an added benefit.
 
 <figure>
 	<picture>
-		<img  width=477 height=630 src="./cppcrash.jpeg" alt="The cover of the book showing a winged robot with a jet pack.">
+		<img  width=477 height=630 src="./cppcrash.jpeg" alt="The cover of the book showing a winged robot with a jetpack.">
 	</picture>
 	<figcaption>“C++ Crash Course” by Josh Lospinoso, Starch Press 2019</figcaption>
 </figure>
@@ -177,7 +179,8 @@ $ cat output.wasm | brotli -q 11 -c | wc -c
 ```
 
 So I managed to run some fairly complex JavaScript in Wasm without writing a
-whole engine, and ended up with a mere 86KiB. That’s pretty cool.
+whole engine, and ended up with a mere 86KiB (~30KiB brotli’d). That’s pretty
+cool.
 
 > **ES20-ohmygodwhathaveyoudone:** Please don’t get too excited. This
 transpiler supports a miniscule subset of JavaScript and is in no way compliant
@@ -190,21 +193,21 @@ To explain why I think that, I suppose I should explain how this approach
 works.
 
 ## JSXX
-
+ 
 Let’s start with the most normal part of this setup. The parser.
 
 ### Parsing
 
-I didn’t want write my own parser. That’s not where the interesting parts of
+I didn’t want to write my own parser. That’s not where the interesting parts of
 this project were going to happen. Since I wanted to write this transpiler in
-Rust (move over, OCaml), I decided to just rip out the parser and the AST from
-[swc], which would allow me to parse even the most recent ES2022 syntax. My
-goal was to exploit the similarities between JS and C++ to keep the transpiler
-extremely simple. All it would do is traverse the JS AST and emit corresponding
-C++ code in a single pass, without tracking variable scopes, types or any of
-that complicated compiler-y stuff. Most of the meat would be in the runtime
-I was going to write. The guiding principle here is: It doesn’t need to be
-pretty, it just needs to compile.
+Rust, I decided to just rip out the parser and the AST from [swc], which would
+allow me to parse even the most recent ES2022 syntax. My goal was to exploit
+the similarities between JS and C++ to keep the transpiler extremely simple.
+All it would do is traverse the JS AST and emit corresponding C++ code in a
+single pass, without tracking variable scopes, types or any of that complicated
+compiler-y stuff. Most of the meat would be in the runtime I was going to
+write. The guiding principle here is: It doesn’t need to be pretty, it just
+needs to compile.
 
 ### Variables
 
@@ -216,7 +219,7 @@ the implementation easier). There are technically more primitive types like
 
 At a syntactic level, this is easy to translate to C++, especially since C++
 introduced the `auto` keyword for variable declarations.  However, a variable
-has to have a single type, where as a variable in JS can change its type as
+has to have a single type, whereas a variable in JS can change its type as
 often as it likes. Assigning a number and then a string to the same variable
 is common in JS, but problematic for C++’s type system. I needed to introduce
 a type that can hold any JS value. This type turned into the class `JSValue`.
@@ -235,7 +238,7 @@ x = JSValue{"hello"};
 ```
 
 If I was writing C and wanted a variable to contain one of many types, I’d
-use a `union`, which are notoriously not type safe. C++ has a type-safe
+use a `union`, which is notoriously not type safe. C++ has a type-safe
 counterpart to C’s `union`, which is called `std::variant`:
 
 ```cpp
@@ -260,7 +263,7 @@ throw an exception.
 
 ### Primitive types
 
-Most of the primtive types in JS have a direct counterpart in C++. A number
+Most of the primitive types in JS have a direct counterpart in C++. A number
 in JS maps to a C++ `double`, a JS `string` to a C++ `std::string` (let’s
 ignore details of WTF16 vs whatever string encoding is in C++), etc. However,
 I decided to wrap each C++ primitive in a custom class because I knew I’d have
@@ -311,7 +314,7 @@ they are _always_ copied when assigned to another variable or passed as a
 function argument. Other primitives are references, meaning two variables can
 reference the same underlying object.
 
-To mimmick this behavior in C++, I have to start allocating objects and arrays
+To mimic this behavior in C++, I have to start allocating objects and arrays
 on the heap so that their lifetime is tied to the creating function. Once
 you start allocating stuff on the heap, you also have to worry about freeing
 that memory back up. Instead of adding a full-blown garbage collector (one
@@ -414,7 +417,7 @@ let x = {
 ```cpp
 auto x = JSValue::new_object({
   {JSValue{"a"}, JSValue{1}},
-  {JSValie{"b"}, JSValue{"hello"}},
+  {JSValue{"b"}, JSValue{"hello"}},
 });
 ```
 
@@ -435,10 +438,10 @@ auto my_closure = [=](JSValue parameterA, JSValue parameterB) mutable -> JSValue
 
 In parenthesis we have the parameters of the closure. The arrow `->` defines
 the return type of the closure. The `mutable` keyword is necessary in our
-context as C++ closure capture variables as `const` by default, meaning they
+context as C++ closures capture variables as `const` by default, meaning they
 can’t be modified. In JS closures can capture _and modify_ variables from
 outside the function scope, so `mutable` it is. Inside the brackets `[]` you
-can define which variables this closures captures and how. Why does C++
+can define which variables this closure captures and how. Why does C++
 split the capture style across two places of a closure definition? I don’t
 know, but you can define a different capture style for each variable if you
 want. For example, `[a, &b, &c, d]` captures `a` and `d` as a copy, while it
@@ -479,15 +482,15 @@ just inherit the  surrounding `this` value). Secondly, in JS a function can
 take a variable number of arguments. In C++, a function has a fixed number
 of arguments (well, you _can_ have variadic functions in C++, but they
 are [weird][variadic cpp]). For this reason, I decided to transpile all
-closures to C++ closures with exactly 2 parameter:  a `JSValue thisArg` and a
-`std::vector<JSValue>& args`.
+closures to C++ closures with exactly two parameters:  a `JSValue thisArg` and
+a `std::vector<JSValue>& args`.
 
 ### Properties
 
 I’ll admit: I did not want to implement support for the full prototype
 chain mechanism. At the same time, I did need ways to define methods, getters
 and other properties on all basic types, so that the logic for things
-like `myArray.length` had a place to live. I decided to give each primtive
+like `myArray.length` had a place to live. I decided to give each primitive
 type class (`JSBool`, `JSNumber`, etc) a shared base class called `JSBase`
 that offers exactly that: A list of key-value mappings that I interpret as
 properties. The constructor of each primitive type class puts the expected
@@ -550,7 +553,7 @@ for JS’ `finally{...}
 `.
 
 Note that WASI-SDK does not support C++ exceptions yet, even though exceptions
-have landed in WebAssembly natively. Apparently, the Emscripten folks needs to
+have landed in WebAssembly natively. Apparently, the Emscripten folks need to
 upstream their patches to libunwind.
 
 ### Iterators
@@ -563,7 +566,7 @@ implements the [iteration protocol].
 In C++, on the other hand, any type is iterable if it has a `begin()` and a
 `end()` method. These functions return iterator objects that must overload the
 dereferencing operator (`*it`), the postfix increment operator (`it++`) and
-the comparision operator (`it1 == it2`). With that in place, most of the stdlib
+the comparison operator (`it1 == it2`). With that in place, most of the stdlib
 functions like `std::for_each` or the range-for loop (`for(auto item : array)
 { ... }`) will work.
 
@@ -584,8 +587,8 @@ generators in JS, is a pausable, special function. If the C++ compiler
 encounters a coroutine in your code, it creates a data structure that holds all
 necessary state and will take care of storing that state on the heap for you
 (hence “stackless”). Upon resuming the coroutine, it will restore the state and
-continue running the function where it left of previously. The protocol (i.e.
-the expected method and data types) are honestly not straight forward, and I am
+continue running the function where it left off previously. The protocol (i.e.
+the expected method and data types) are honestly not straightforward, and I am
 glad to have found [David Mazières blog post on Coroutines][coroutines] that I
 followed quite closely.
 
@@ -614,7 +617,7 @@ post.
 To make sure that all of this works as expected, I wanted to write and run
 some automated end-to-end tests. The idea is that a test contains a JavaScript
 program which gets compiled to C++, then compiled to a real, native binary,
-then the binary gets run  and its output is compared against a pre-defined
+then the binary gets run  and its output is compared against a predefined
 string.
 
 One piece from the chain is missing: Generating output. Luckily, both POSIX
@@ -646,7 +649,7 @@ JSValue create_IO_global() {
 The `create_IO_global()` function is something the transpiler injects into
 every program as part of the so-called prelude, making the `IO` object available
 as a global. If your program doesn’t use it, the C++ compiler’s
-Dead Code Eliminiation (DCE) will remove it for you! I used this infrastructure
+Dead Code Elimination (DCE) will remove it for you! I used this infrastructure
 to write a whole [battery of tests]. For example:
 
 ```rust
@@ -703,22 +706,22 @@ I don’t think it can compete with a proper JavaScript VM, let alone a JIT
 compiler. Every operator is just a big collection of `if`-`else` chains to
 handle the types. Every. Operator.
 
-Methods are kept in a list of tuples, and every property access has to iterates
+Methods are kept in a list of tuples, and every property access has to iterate
 over the entire list. Doing this dynamic lookup negates many of the C++
 compiler’s superpowers: It can’t perform inlining or DCE, as the
 string-based indirection prevents static analysis. If I were to write a fully
 ES2016- compliant transpiler this way, I don’t think I’d end up with something
 smaller (or faster) than compiling QuickJS to Wasm.
 
-I think a much more interesting and promising approach is do an
-“Almost TypeScript”; something like [AssemblyScript]: Instead of implementing
-one uber-type called `JSValue`, I’d implement each type in its own C++ class.
-I’d write a similarly simple transpiler that turns JS into C++, but using
-using the TypeScript type annotations to strictly define which C++ classes
-are being instantiated and used. All the hard stuff (type checking, inlining,
-optimization) can be deferred to the C++ compiler. You’d get features like
-closures and generators for almost free, as C++20 already has those features.
-AssemblyScript still does not have support for closures or generators.
+I think a much more interesting and promising approach is to do an “Almost
+TypeScript”; something like [AssemblyScript]: Instead of implementing one uber-
+type called `JSValue`, I’d implement each type in its own C++ class. I’d write
+a similarly simple transpiler that turns JS into C++, but using the TypeScript
+type annotations to strictly define which C++ classes are being instantiated
+and used. All the hard stuff (type checking, inlining, optimization) can be
+deferred to the C++ compiler. You’d get features like closures and generators
+for almost free, as C++20 already has those features. AssemblyScript still does
+not have support for closures or generators.
 
 I don’t regret building this at all. It’s been incredibly fun. I hope this was
 useful in some way.

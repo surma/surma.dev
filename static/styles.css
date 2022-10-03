@@ -16,7 +16,7 @@ body {
   padding: 0;
 }
 html {
-  background-color: var(--darkblue);
+  background-color: var(--yellow);
   min-height: 100vh;
 }
 body {
