@@ -44,5 +44,5 @@ canvas.addEventListener('click', ev => {
   }
   limit[0] = limitSlider.value;
   hasChanged[0] = 1;
-  Atomics.wake(hasChanged, 0);
+  Atomics.notify(hasChanged, 0);
 });
