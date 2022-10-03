@@ -275,8 +275,8 @@ a class.
 > **IEEE-754:** The ECMAScript spec demands that all `number`s be a [IEEE-754]
 double-precision floating-point number (i.e. a C++ `double`). However, many
 engines have an optimization to use integers under the hood if the code path
-does not use fraction parts. This is only allowed if the difference is not to
-the developer (apart from execution time).
+does not use fraction parts. This is only allowed if the difference is not
+noticeable to the developer (apart from execution time).
 
 > **std::string**: C++’s `std::string` has no specified encoding scheme. It is
 just a series of bytes. How,... interesting.
