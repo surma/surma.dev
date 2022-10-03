@@ -543,7 +543,7 @@ subset of array methods, and I didn’t implement a setter for `.length`.
 
 `if`, `for`, `while` and friends are all pretty much transpiled 1:1. The only
 thing I needed to look out for is that a C++ `if` expects a C++
-`bool` and a `JSValue`, so the transpiler appends a `.coerce_to_bool()` to
+`bool` and not a `JSValue`, so the transpiler appends a `.coerce_to_bool()` to
 each conditional.
 
 ### Exceptions
