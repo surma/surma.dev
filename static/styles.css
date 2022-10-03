@@ -16,7 +16,7 @@ body {
   padding: 0;
 }
 html {
-  background-color: var(--darkblue);
+  background-color: var(--yellow);
   min-height: 100vh;
 }
 body {
@@ -253,6 +253,13 @@ header > h1 {
   font-variation-settings: "size" var(--title-size), "quad" var(--title-quad),
     "bevl" var(--title-bevl), "oval" var(--title-oval);
 }
+
+@media (max-width: 720px) {
+  header > h1 {
+    flex-basis: 100%;
+  }
+}
+
 header > h1:before,
 header > h1:after {
   content: none;
