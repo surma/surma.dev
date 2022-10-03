@@ -12,6 +12,8 @@ that I forgot to ask myself whether it’s a good idea to build the thing. The
 idea being, transpiling JavaScript to C++ so I can compile _that_ to whatever
 I need.
 
+<!-- more -->
+
 <figure>
   <video width="720" height="390" src="./goldblum.webm" type="video/webm" autoplay muted loop></video>
   <figcaption>Obligatory Jeff Goldblum.</figcaption>
