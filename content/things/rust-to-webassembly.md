@@ -1,8 +1,8 @@
 ---json
 {
   "title": "Compiling Rust to WebAssembly without wasm-bindgen",
-  "date": "2022-12-02",
-  "socialmediaimage": "social.png"
+  "date": "2023-01-15",
+  "socialmediaimage2": "social.png"
 }
 
 ---
