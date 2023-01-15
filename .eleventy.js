@@ -14,6 +14,7 @@ loader([
   "json",
   "rust",
   "jsx",
+  "toml",
 ]);
 // Don’t do any highlighting
 prism.languages.text = {};
