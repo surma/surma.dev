@@ -1,6 +1,6 @@
 ---json
 {
-  "title": "Compiling Rust to WebAssembly without wasm-bindgen",
+  "title": "Compiling Rust to WebAssembly the hard way",
   "date": "2023-01-15",
   "socialmediaimage2": "social.png"
 }
@@ -29,7 +29,7 @@ If you look around the internet, a lot of articles and guides tell you to create
   [dependencies]
 |||
 
-Without setting the crate type to `cdylib`, the Rust compiler would emit a `.rlib` file, which is Rust’s unstable library format that may change from Rust release to Rust release. While `cdylib` implies a dynamic library that is C-compatible, I suspect it really just stands for “use the interoperable format”, or something to that effect.
+Without setting the crate type to `cdylib`, the Rust compiler would emit a `.rlib` file, which is Rust’s unstable library format that may change from Rust release to Rust release. While `cdylib` implies a dynamic library that is C-compatible, I suspect it really just stands for “use the interoperable format, or something to that effect.
 
 For now, we'll work with the default function that Cargo generates when creating a new library:
 
@@ -55,7 +55,7 @@ What is better? It’s a question of preference, as both approaches seem to be f
 
 ### Exporting
 
-Let’s take a look at the WebAssembly code that the default library code generates. For that purpose, I recommend you make sure you have the [WebAssembly Binary Toolkit (wabt for short)][wabt] installed, which provides helpful tools like `wasm-objdump` and `wasm2wat`.
+Let’s take a look at the WebAssembly code that the default library code generates. For that purpose, I recommend the [WebAssembly Binary Toolkit (wabt for short)][wabt] installed, which provides helpful tools like `wasm-objdump` and `wasm2wat`. It’s also good to have [binaryen] installed which provides a bunch of tools, but I really only use `wasm-opt`.
 
 After compiling our library, your shocked eyes will notice that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts.
 
@@ -220,6 +220,94 @@ Again, none of this is something I use regularly when working with Rust and WebA
 
 ## Module size
 
+When deploying WebAssembly on the web, the size of the WebAssembly binary matters. Every byte needs to go over the network and through the compiler, so a smaller binary size means less time spent waiting for the user. If we build our default project from above as a release build, we get a surprising 1.7MB of WebAssembly. That does not seem right for adding two numbers.
+
+A quick way to inspect where those bytes are spent is to have `wasm-objdump` print a summary:
+
+```
+$ wasm-objdump -h target/wasm32-unknown-unknown/release/my_project.wasm
+
+my_project.wasm:        file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x00000011 (size=0x00000007) count: 1
+ Function start=0x00000013 end=0x00000015 (size=0x00000002) count: 1
+    Table start=0x00000017 end=0x0000001c (size=0x00000005) count: 1
+   Memory start=0x0000001e end=0x00000021 (size=0x00000003) count: 1
+   Global start=0x00000023 end=0x0000003c (size=0x00000019) count: 3
+   Export start=0x0000003e end=0x00000069 (size=0x0000002b) count: 4
+     Code start=0x0000006b end=0x00000074 (size=0x00000009) count: 1
+   Custom start=0x00000078 end=0x0005e02e (size=0x0005dfb6) ".debug_info"
+   Custom start=0x0005e031 end=0x0005e197 (size=0x00000166) ".debug_pubtypes"
+   Custom start=0x0005e19b end=0x00087051 (size=0x00028eb6) ".debug_ranges"
+   Custom start=0x00087054 end=0x00087fef (size=0x00000f9b) ".debug_abbrev"
+   Custom start=0x00087ff3 end=0x000cf974 (size=0x00047981) ".debug_line"
+   Custom start=0x000cf978 end=0x00167aa8 (size=0x00098130) ".debug_str"
+   Custom start=0x00167aac end=0x0019f276 (size=0x000377ca) ".debug_pubnames"
+   Custom start=0x0019f278 end=0x0019f299 (size=0x00000021) "name"
+   Custom start=0x0019f29b end=0x0019f2e8 (size=0x0000004d) "producers"
+```
+
+All the sections of significant size are custom sections, which means they are not relevant for the execution of the module. Luckily, wabt comes with `wasm-strip`, that removes everything that is unnecessary. After stripping, we are at a whopping 116B, and the only function in that module executes `(f64.add (local.get 0) (local.get 1)))`, which means the Rust compiler was able to emit optimal code.  Of course, staying on top of binary size gets more complicated once we start writing some actual code.
+
+### Sneaky bloat
+
+Let me show you a stripped-down and simplified example of when I was writing a Rust module to draw to the screen of the [wasm4] game console:
+
+```rust
+struct Framebuffer<'a> {
+    data: &'a mut [u8],
+    width: usize,
+    height: usize,
+}
+
+impl<'a> Framebuffer<'a> {
+    // ...
+    fn set_pixel(&mut self, x: usize, y: usize, v: u8) {
+        self.data[width * y + x] = v;
+    }
+}
+
+const FRAMEBUFFER: usize = 0x00a0;
+
+#[no_mangle]
+fn draw_black_pixel(x: u32, y: u32) {
+    let data = unsafe { 
+      core::slice::from_raw_parts_mut(FRAMEBUFFER as *mut u8, 160 * 160) 
+    };
+    let mut framebuffer = Framebuffer::new(data, 160, 160);
+    framebuffer.set_pixel(x as usize, y as usize, 1);
+}
+```
+
+Even after stripping, the WebAssembly binary ended up being 18K, which is by no means big but seemed surprising for the amount of logic. The same `wasm-objdump` command as above reveals that all the bytes are in the code section. So next up it would be interesting to see _which_ functions are contributing to this. For this, I recommend using the unstripped binary as it provides functions names:
+
+```
+$ wasm-objdump -x -j code target/wasm32-unknown-unknown/release/my_project.wasm
+
+my_project.wasm:        file format wasm 0x1
+
+Section Details:
+
+Code[100]:
+ - func[0] size=53 <draw_black_pixel>
+ - func[1] size=19 <__rust_alloc>
+ - func[2] size=15 <__rust_dealloc>
+ - func[3] size=23 <__rust_realloc>
+ - func[4] size=13 <__rust_alloc_error_handler>
+ - func[5] size=13 <_ZN36_$LT$T$u20$as$u20$core..any..Any$GT$7type_id17h4500e4d02ebf2b65E>
+ - func[6] size=13 <_ZN36_$LT$T$u20$as$u20$core..any..Any$GT$7type_id17hc9db988414a5dba8E>
+...
+```
+
+
+
+
+
+### String formatting
+
+One big source of bloat is the code to turns Rust values into nice, readable strings. Every time you use `format!` and friends, you are pulling in that entire stack of code.  However, I found that intentional use of string formatting is rarely the problem. It’s the unintentional use of string fromatting through panics!
 
 #[no_std]
 #[panic_handler]
@@ -257,3 +345,5 @@ Rust comes with some great tooling to compile and produce WebAssembly modules, l
 [squoosh]: https://squoosh.app
 [wabt]: https://github.com/WebAssembly/wabt
 [vtable]: https://articles.bchlr.de/traits-dynamic-dispatch-upcasting
+[binaryen]: https://github.com/WebAssembly/binaryen
+[wasm4]: https://wasm4.org
