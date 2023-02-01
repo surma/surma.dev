@@ -253,61 +253,117 @@ All the sections of significant size are custom sections, which means they are n
 
 ### Sneaky bloat
 
-Let me show you a stripped-down and simplified example of when I was writing a Rust module to draw to the screen of the [wasm4] game console:
+A very innocent like of code can cause a big increase in binary size. For example, this innocuous program ends up compiling to 18KB of WebAssembly.
 
 ```rust
-struct Framebuffer<'a> {
-    data: &'a mut [u8],
-    width: usize,
-    height: usize,
-}
-
-impl<'a> Framebuffer<'a> {
-    // ...
-    fn set_pixel(&mut self, x: usize, y: usize, v: u8) {
-        self.data[width * y + x] = v;
-    }
-}
-
-const FRAMEBUFFER: usize = 0x00a0;
+static PRIMES: &[i32] = &[2, 3, 5, 7, 11, 13, 17, 19, 23];
 
 #[no_mangle]
-fn draw_black_pixel(x: u32, y: u32) {
-    let data = unsafe { 
-      core::slice::from_raw_parts_mut(FRAMEBUFFER as *mut u8, 160 * 160) 
-    };
-    let mut framebuffer = Framebuffer::new(data, 160, 160);
-    framebuffer.set_pixel(x as usize, y as usize, 1);
+fn nth_prime(n: usize) -> i32 {
+    PRIMES[n]
 }
 ```
 
-Even after stripping, the WebAssembly binary ended up being 18K, which is by no means big but seemed surprising for the amount of logic. The same `wasm-objdump` command as above reveals that all the bytes are in the code section. So next up it would be interesting to see _which_ functions are contributing to this. For this, I recommend using the unstripped binary as it provides functions names:
+Okay, maybe not so innocuous after all. You might already know what's going on here. A quick look at `wasm-objdump` shows that the main contributors to the Wasm module size are functions related to string formatting, memory allocations and panicking. And that makes sense! The parameter `n` is unsanitized and yet is used to index an array. Rust has no choice but to inject bounds checks. If an out-of-bounds check fails, Rust panics.
+
+Panics are quite informative in Rust, the problem with being informative that it involves pretty-printing a lot of information, and because the amount of information depends on the situation (specifically: the depth of the stack), this process needs to allocate memory dynamically. Panics cause our bloat!
+
+One way to handle this is to do the bounds checking ourselves. Rust's compiler is really good at proving whether undefined behavior can happen or not.
+
+|||codediff|rust
+  fn nth_prime(n: usize) -> i32 {
++     if n < 0 || n >= PRIMES.len() { return -1; }
+      PRIMES[n]
+  }
+|||
+
+Alternatively, we can lean into `Option<T>` APIs to control how the error case should be handled:
+
+|||codediff|rust
+  fn nth_prime(n: usize) -> i32 {
+-     PRIMES[n]
++     *PRIMES.get(n).unwrap_or(&-1)
+  }
+|||
+
+A third way would be to use some of the `unchecked` methods that Rust explicitly provides. This opens the door to undefined behavior and as such is `unsafe`, but in certain scenarios (for example when the sanitization happens in the host environment), this can be acceptable or even a path for optimization, both for performance and file size.
+
+|||codediff|rust
+  fn nth_prime(n: usize) -> i32 {
+-     PRIMES[n]
++     unsafe { *PRIMES.get_unchecked(n) }
+  }
+|||
+
+We can try and stay on top of where we might cause a panic and try alternate ways to handle that to avoid all that code getting pulled in. However, once we pull in third-party libraries this is less and less likely to succeed, because we can't easily change how the library does its error handling.
+
+## No Standard
+
+Rust has a [standard library][rust std], which contains a lot of abstractions and utilities that you end up using quite a lot and they are just _there_, no need to crawl through [crates.io] or anything like that.  However, many of the data structures and functions make assumptions about the environment that they are used in: They assume that the details of hardware are abstracted into uniform APIs and they assume that they can somehow allocate (deallocate) chunks of memory at abritrary size. Often, both of these jobs are fulfilled by the operating system.
+
+In almost all fields of coding, these assumptions are fulfilled. However, they are not when you work with raw WebAssembly: Because of the sandbox, there is no access to an operating system (and if you run WebAssembly in the browser, there's yet another sandbox preventing you from exposing it). You also just get access to a linear chunk of memory with no central entity managing which part of the memory belongs to what.
+
+There is another field that works similarly that we can learn from: Embedded systems. While modern embedded systems often do run an entire Linux, smaller microprocessors do not. [Rust does support building for those smaller systems][embedded rust] as well, and the [Embedded Rust Book] as well as the [Embedonomicon] explain on how you write Rust correctly for those kinds of environments.
+
+The biggest part is a crate macro called `#![no_std]`, which tells Rust to not link against the standard library. Instead, it only links against [core][rust core]. To quote the Embedonomicon:
+
+> The `core` crate is a subset of the `std` crate that makes zero assumptions about the system the program will run on. As such, it provides APIs for language primitives like floats, strings and slices, as well as APIs that expose processor features like atomic operations and SIMD instructions. However it lacks APIs for anything that involves heap memory allocations and I/O.
+> 
+> For an application, std does more than just providing a way to access OS abstractions. std also takes care of, among other things, setting up stack overflow protection, processing command line arguments and spawning the main thread before a program's main function is invoked. A #![no_std] application lacks all that standard runtime, so it must initialize its own runtime, if any is required. 
+
+This can sound a bit scary, but also a bit exciting. If we jump straight in with our panic-y program from above and make it non-standard:
+
+|||codediff|rust
++ #![no_std]
+  static PRIMES: &[i32] = &[2, 3, 5, 7, 11, 13, 17, 19, 23];
+  
+  #[no_mangle]
+  fn nth_prime(n: usize) -> i32 {
+      PRIMES[n]
+  }
+|||
+
+Sadly — and this was foreshadowed by the paragraph in the Embedonomicon — we need to provide everything that `core` Rust needs to function. At the very top of the list: What should happen when a panic occurs? This is done by the aptly named panic handler, and can be something as simple as this:
+
+```rust
+#[panic_handler]
+fn panic(_panic: &core::panic::PanicInfo<'_>) -> ! {
+    loop {}
+}
+```
+
+Blocking the thread through spinning is not _great_ behavior on the web, so for WebAssembly specifically, I usually opt to manually emitting an `unreachable` instruction, that stops any Wasm VM in its tracks:
+
+|||codediff|rust
+  fn panic(_panic: &core::panic::PanicInfo<'_>) -> ! {
+-     loop {}
++     core::arch::wasm32::unreachable()
+  }
+|||
+
+With this in place, our program compiles again. After stripping, the binary weighs in at abour 3.3K. We still do string concatenation to fill in our `PanicInfo` struct, but we are not printing a stack trace anymore, so the all strings are available at compile time and no allocations are necessary. 
+
+### A nightly excursion
+
+We are reaching the point of diminishing returns, but there is a way we can do better: Abort on panic. Don’t even bother with the `PanicInfo` struct, just kill everything once something goes wrong. This functionality is called `panic_immediate_abort` and is a feature in core, which means we have to compile core ourselves. That is actually easier (and faster!) than it sounds, but is somewhat irritatingly called [build-std]. Even worse, this feature is unstable, which means we need to dip into Nightly Rust!
+
+Luckily, installing Rust Nightly and the std source code is quite easy if you use [rustup]:
 
 ```
-$ wasm-objdump -x -j code target/wasm32-unknown-unknown/release/my_project.wasm
+$ rustup toolchain add nightly
+$ rustup component add rust-src --toolchain nightly
+```
 
-my_project.wasm:        file format wasm 0x1
+The (long-term) goal of build-std is to allow a crate to explicitly express its dependencies on `core`, `std` and other Rust-internals the same way you express normal dependencies, which includes a list of features. This is not quite what’s implemented, so we have to go via command line flags.
 
-Section Details:
-
-Code[100]:
- - func[0] size=53 <draw_black_pixel>
- - func[1] size=19 <__rust_alloc>
- - func[2] size=15 <__rust_dealloc>
- - func[3] size=23 <__rust_realloc>
- - func[4] size=13 <__rust_alloc_error_handler>
- - func[5] size=13 <_ZN36_$LT$T$u20$as$u20$core..any..Any$GT$7type_id17h4500e4d02ebf2b65E>
- - func[6] size=13 <_ZN36_$LT$T$u20$as$u20$core..any..Any$GT$7type_id17hc9db988414a5dba8E>
-...
+```
+$ cargo +nightly build --target=wasm32-unknown-unknown --release \
+     -Z build-std=core,alloc -Z build-std-features=panic_immediate_abort
 ```
 
 
 
-
-
-### String formatting
-
-One big source of bloat is the code to turns Rust values into nice, readable strings. Every time you use `format!` and friends, you are pulling in that entire stack of code.  However, I found that intentional use of string formatting is rarely the problem. It’s the unintentional use of string fromatting through panics!
+Of course, we have given up a lot by going non-standard. Without heap allocations, there is no `Box`, no `Vec`, no `String`, and many others.
 
 #[no_std]
 #[panic_handler]
@@ -347,3 +403,11 @@ Rust comes with some great tooling to compile and produce WebAssembly modules, l
 [vtable]: https://articles.bchlr.de/traits-dynamic-dispatch-upcasting
 [binaryen]: https://github.com/WebAssembly/binaryen
 [wasm4]: https://wasm4.org
+[rust std]: https://docs.rs/std
+[crates.io]: https://crates.io
+[embedded rust]: https://www.rust-lang.org/what/embedded
+[embedded rust book]: https://docs.rust-embedded.org/book/
+[embedonomicon]: https://docs.rust-embedded.org/embedonomicon/
+[rust core]: https://docs.rs/core
+[build-std]: https://doc.rust-lang.org/cargo/reference/unstable.html#build-std
+[rustup]: https://rustup.rs/
