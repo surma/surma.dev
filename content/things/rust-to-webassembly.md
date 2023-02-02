@@ -55,7 +55,7 @@ What is better? It’s a question of preference, as both approaches seem to be f
 
 ### Exporting
 
-Let’s take a look at the WebAssembly code that the default library code generates. For that purpose, I recommend the [WebAssembly Binary Toolkit (wabt for short)][wabt] installed, which provides helpful tools like `wasm-objdump` and `wasm2wat`. It’s also good to have [binaryen] installed which provides a bunch of tools, but I really only use `wasm-opt`.
+Let’s take a look at the WebAssembly code that the default library code generates. For that purpose, I recommend the [WebAssembly Binary Toolkit (wabt for short)][wabt] installed, which provides helpful tools like `wasm-objdump` and `wasm2wat`. It’s also good to have [binaryen] installed which provides a bunch of tools, but I really only use `wasm-opt`. 
 
 After compiling our library, your shocked eyes will notice that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts.
 
@@ -249,7 +249,37 @@ Sections:
    Custom start=0x0019f29b end=0x0019f2e8 (size=0x0000004d) "producers"
 ```
 
-All the sections of significant size are custom sections, which means they are not relevant for the execution of the module. Luckily, wabt comes with `wasm-strip`, that removes everything that is unnecessary. After stripping, we are at a whopping 116B, and the only function in that module executes `(f64.add (local.get 0) (local.get 1)))`, which means the Rust compiler was able to emit optimal code.  Of course, staying on top of binary size gets more complicated once we start writing some actual code.
+While `wasm-objdump` is quite versatile (and might offer a familiar interface for people who have experience developing in other ISAs in assembly, it doesn’t really make it easy or obvious to answer the question “Why is my module so big?”. Luckily, there is a tool called [Twiggy], that excels at this:
+
+```
+$ twiggy top target/wasm32-unknown-unknown/release/anotherrustlol.wasm
+ Shallow Bytes │ Shallow % │ Item
+───────────────┼───────────┼─────────────────────────────────────────
+        622885 ┊    36.63% ┊ custom section '.debug_str'
+        384938 ┊    22.64% ┊ custom section '.debug_info'
+        293237 ┊    17.24% ┊ custom section '.debug_line'
+        227258 ┊    13.36% ┊ custom section '.debug_pubnames'
+        167592 ┊     9.85% ┊ custom section '.debug_ranges'
+          3981 ┊     0.23% ┊ custom section '.debug_abbrev'
+           342 ┊     0.02% ┊ custom section '.debug_pubtypes'
+            67 ┊     0.00% ┊ custom section 'producers'
+            25 ┊     0.00% ┊ custom section 'name' headers
+            20 ┊     0.00% ┊ custom section '.debug_pubnames' headers
+            19 ┊     0.00% ┊ custom section '.debug_pubtypes' headers
+            18 ┊     0.00% ┊ custom section '.debug_ranges' headers
+            17 ┊     0.00% ┊ custom section '.debug_abbrev' headers
+            16 ┊     0.00% ┊ custom section '.debug_info' headers
+            16 ┊     0.00% ┊ custom section '.debug_line' headers
+            15 ┊     0.00% ┊ custom section '.debug_str' headers
+            14 ┊     0.00% ┊ export "__heap_base"
+            13 ┊     0.00% ┊ export "__data_end"
+            12 ┊     0.00% ┊ custom section 'producers' headers
+             9 ┊     0.00% ┊ export "memory"
+             9 ┊     0.00% ┊ add
+...
+```
+
+All the sections of significant size are custom sections, which means they are not relevant for the execution of the module. Luckily, wabt comes with `wasm-strip`, that removes everything that is unnecessary. After stripping, we are at a whopping 116B, and the only function in that module executes `(f64.add (local.get 0) (local.get 1)))`, which means the Rust compiler was able to emit optimal code. Of course, staying on top of binary size gets more complicated once we start writing some actual code.
 
 ### Sneaky bloat
 
@@ -303,9 +333,13 @@ Rust has a [standard library][rust std], which contains a lot of abstractions an
 
 In almost all fields of coding, these assumptions are fulfilled. However, they are not when you work with raw WebAssembly: Because of the sandbox, there is no access to an operating system (and if you run WebAssembly in the browser, there's yet another sandbox preventing you from exposing it). You also just get access to a linear chunk of memory with no central entity managing which part of the memory belongs to what.
 
+This means that Rust gave us a false sense of security! It provided us with an entire standard library with no operating system to back it with. In fact, many of the stdlib modules are just [aliased][std unsupported] to a dedicated implementation of the stdlib where everything is unsupported. That means all functions that return a `Result<T>` always return `Err`, and all other functions panic.
+
+### Learning from os-less devices
+
 There is another field that works similarly that we can learn from: Embedded systems. While modern embedded systems often do run an entire Linux, smaller microprocessors do not. [Rust does support building for those smaller systems][embedded rust] as well, and the [Embedded Rust Book] as well as the [Embedonomicon] explain on how you write Rust correctly for those kinds of environments.
 
-The biggest part is a crate macro called `#![no_std]`, which tells Rust to not link against the standard library. Instead, it only links against [core][rust core]. To quote the Embedonomicon:
+To enter this new world we have to add one line to our code: `#![no_std]`. This crate macro tells Rust to not link against the standard library. Instead, it only links against [core][rust core]. To quote the Embedonomicon:
 
 > The `core` crate is a subset of the `std` crate that makes zero assumptions about the system the program will run on. As such, it provides APIs for language primitives like floats, strings and slices, as well as APIs that expose processor features like atomic operations and SIMD instructions. However it lacks APIs for anything that involves heap memory allocations and I/O.
 > 
@@ -341,46 +375,202 @@ Blocking the thread through spinning is not _great_ behavior on the web, so for 
   }
 |||
 
-With this in place, our program compiles again. After stripping, the binary weighs in at abour 3.3K. We still do string concatenation to fill in our `PanicInfo` struct, but we are not printing a stack trace anymore, so the all strings are available at compile time and no allocations are necessary. 
+With this in place, our program compiles again. After stripping, the binary weighs in at abour 3.3K. The reason for that size is that there is still some string concatenation happening to fill in our `PanicInfo` struct. We are, however, not printing a stack trace anymore, so there's no stack unrolling and the size of the strings is known at compile time so we don't need to allocate memory.
 
 ### A nightly excursion
 
-We are reaching the point of diminishing returns, but there is a way we can do better: Abort on panic. Don’t even bother with the `PanicInfo` struct, just kill everything once something goes wrong. This functionality is called `panic_immediate_abort` and is a feature in core, which means we have to compile core ourselves. That is actually easier (and faster!) than it sounds, but is somewhat irritatingly called [build-std]. Even worse, this feature is unstable, which means we need to dip into Nightly Rust!
+We are reaching the point of diminishing returns, but there is a way we can do better: Don’t even bother with the `PanicInfo` struct and just hard abort on panic. Kill everything once something goes wrong. This behavior is not the default as it prevents any kind of diagnostic output and is therefore behind a feature flag called `panic_immediate_abort`. This means we have to re-compile `core` to enable it. Luckily, this is actually easier (and faster!) than it sounds, but is somewhat irritatingly called [build-std]. Even worse, this feature is unstable, which means we need to dip into Nightly Rust!
 
-Luckily, installing Rust Nightly and the std source code is quite easy if you use [rustup]:
+Installing Rust Nightly and the std source code is quite easy if you use [rustup]:
 
 ```
 $ rustup toolchain add nightly
 $ rustup component add rust-src --toolchain nightly
 ```
 
-The (long-term) goal of build-std is to allow a crate to explicitly express its dependencies on `core`, `std` and other Rust-internals the same way you express normal dependencies, which includes a list of features. This is not quite what’s implemented, so we have to go via command line flags.
+The (long-term) goal of build-std is to allow a crate to explicitly express its dependencies on `core`, `std` and other Rust-internals the same way you express normal dependencies, which includes a list of features. This is not quite what’s implemented, so for now we have to go via command line flags.
 
 ```
 $ cargo +nightly build --target=wasm32-unknown-unknown --release \
      -Z build-std=core,alloc -Z build-std-features=panic_immediate_abort
 ```
 
+This yields a 246B Wasm module including bounds checks:
+
+```wasm
+
+(module
+  (; ... ;)
+  (func $nth_prime (param i32) (result i32)
+    block  ;; label = @1
+      local.get 0
+      i32.const 8
+      i32.gt_u       ;; if($param0 > 8)
+      br_if 0 (;@1;) ;; goto end-of-block
+      (; ... normal function exection ... ;)
+      return
+    end
+    local.get 0
+    i32.const 9
+    i32.const 1048624
+    call $_ZN4core9panicking18panic_bounds_check17h4c1edae8434bb5cdE
+    unreachable)
+  (func $_ZN4core9panicking18panic_bounds_check17h4c1edae8434bb5cdE (param i32 i32 i32)
+    unreachable    ;; No formatting. No stack unrolling. Just death.
+    unreachable)
+  (; ... ;)
+)
+```
+
+With this in place, we could even remove `#![no_std]` and go back to pretending that we have an operating system in place. However, we already know that another big contributor to our Wasm file size was memory allocations.
+
+## Allocators
+
+Of course, we have given up a lot by going non-standard. Without heap allocations, there is no `Box`, no `Vec`, no `String`, and many others useful things. Luckily, we can get those back without having to provide an entire operating system. 
+
+In many aspects, `std` is just re-exporting things from `core` and another Rust-internal crate called `alloc`. `alloc` contains everything around memory allocations and the data structures that rely on it. By importing it, we can get access to our trusty `Vec`.
+
+```rust
+#![no_std]
+extern crate alloc;
+use alloc::vec::Vec;
+
+#[no_mangle]
+fn nth_prime(n: usize) -> usize {
+    let mut primes: Vec<usize> = Vec::new();
+    let mut current = 2;
+    while primes.len() < n {
+        if !primes.iter().any(|prime| current % prime == 0) {
+            primes.push(current);
+        }
+        current += 1;
+    }
+    primes.into_iter().last().unwrap_or(0)
+}
+
+```
+
+When we want to compile this using our build-std approach from above, we have to add it to the list of internal crates. But of course, it doesn’t compile, as we haven’t actually told Rust what our memory management looks like:
+
+```
+$ cargo +nightly build --target=wasm32-unknown-unknown --release \
+    -Z build-std=core,alloc -Z build-std-features=panic_immediate_abort
+
+error: no global memory allocator found but one is required; link to std or add `#[global_allocator]` to a static item that implements the GlobalAlloc trait
+error: `#[alloc_error_handler]` function required, but not found
+```
+
+There are two things we need to implement: An allocator and an error handler for when allocations fail. Let’s start with the allocator, because after our panic handler, there should be no doubt on how to handle errors responsibly: 
+
+```rust
+#![feature(alloc_error_handler)]
+
+#[alloc_error_handler]
+fn alloc_error_handler(_: core::alloc::Layout) -> ! {
+    core::arch::wasm32::unreachable()
+}
+```
+
+And done. Instead of providing our own implementation, we can also use Rust’s default handler by just specifying `#![feature(default_alloc_error_handler)]`.With `panic_immediate_abort`, this default handler actually yields a slightly smaller binary than when providing a custom handler. Without `panic_immediate_abort`, the custom panic handler saves about 2K.
+
+As in my [C to WebAssembly article][c to wasm], my custom allocator is going to be a minimal bump allocator. We statically allocate an arena that will function as our heap and store where the “free area” begins. Because we are not using Wasm Threads, I am also going to ignore concurrent memory access issues.
+
+```rust
+use core::cell::UnsafeCell;
+
+const ARENA_SIZE: usize = 128 * 1024;
+#[repr(C, align(32))]
+struct SimpleAllocator {
+    arena: UnsafeCell<[u8; ARENA_SIZE]>,
+    head: UnsafeCell<usize>,
+}
+
+impl SimpleAllocator {
+    const fn new() -> Self {
+        SimpleAllocator {
+            arena: UnsafeCell::new([0; ARENA_SIZE]),
+            head: UnsafeCell::new(0),
+        }
+    }
+}
+
+unsafe impl Sync for SimpleAllocator {}
+
+#[global_allocator]
+static ALLOCATOR: SimpleAllocator = SimpleAllocator::new();
+```
+
+`UnsafeCell` is required because the `GlobalAlloc` trait that we are going to implement next only provides us with a `&self`, so we have to use interior mutability. Using `UnsafeCell` makes our struct implicity `!Sync`, which Rust doesn’t like for a global static variable. That’s why we have to also manually implement the `Sync` trait to tell Rust that we know what we are doing. The reason the struct is marked as `#[repr(C)]` is solely so we can manually specify an alignment value. This way we can ensure that even the very first allocation has an alignment of 32, which should satisfy most data structures.
+
+Now for the core of the allocator logic:
+
+```rust
+unsafe impl GlobalAlloc for SimpleAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        let size = layout.size();
+        let align = layout.align();
+
+        let idx = (*self.head.get()).next_multiple_of(align);
+        *self.head.get() = idx + size;
+        let arena: &mut [u8; ARENA_SIZE] = &mut (*self.arena.get());
+        match arena.get_mut(idx) {
+            Some(item) => item as *mut u8,
+            _ => core::ptr::null_mut(),
+        }
+    }
+
+    unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {
+        /* lol */
+    }
+}
+```
+
+As any good bump allocator, you can’t free memory. The allocation logic is as simple as possible: Take the index of the first free byte in the arena, increase if necessary to fit the alignment requirements, and that’s your pointer! Then bump the head forward so you know where the next free byte is for the next allocation.
+
+### wee_alloc
+
+You don’t have to implement the allocator yourself, of course. In fact, it’s probably advisable to rely on well-tested implementations out there. For example, there is [`wee_alloc`][wee_alloc], which is a very small (<1KB) allocator written by the Rust WebAssembly team and it even supports deallocating memory. Sadly, it seems unmaintained and has an open issue about memory corruption and leaking memory. There’s a [`lol_alloc`][lol_alloc] which seems to aspire to replace `wee_alloc` and provides multiple implementations for different use-cases and tradeoffs: 
+
+```rust
+use lol_alloc::{FreeListAllocator, LeakingAllocator};
+use lol_alloc::{LockedAllocator, AssumeSingleThreaded};
+
+// Better version of our allocator above.
+#[global_allocator]
+static ALLOCATOR: AssumeSingleThreaded<LeakingAllocator> = 
+  AssumeSingleThreaded::new(LeakingAllocator::new());
+
+// Proper allocator with added thread-safety
+#[global_allocator]
+static ALLOCATOR: LockedAllocator<FreeListAllocator> = 
+  LockedAllocator::new(FreeListAllocator::new());
+
+// ...
+```
+
+I don’t have any first-hand experience with `lol_alloc` outside of writing this article, but it looks good!
+
+## wasm-bindgen
+
+Now with all of that in our head, we have earned a look at the easy way of writing Rust for WebAssembly, which is using [wasm-bindgen].
+
+wasm-bindgen provides a macro that does a lot of heavy lifting under the hood. It injects the compiler directives we explored at the start of this article to make Rust functions accessible. However, when processing a function `my_func` it also generates another, exported function called `__wbindgen_describe_my_func`, which returns a description of the function’s signature in a [custom, binary format][wasm-bindgen descriptor]. I wrote a small tool to pretty-print the descriptor:
+
+TODO
 
 
-Of course, we have given up a lot by going non-standard. Without heap allocations, there is no `Box`, no `Vec`, no `String`, and many others.
-
-#[no_std]
-#[panic_handler]
-allocator
-
-wasm32-unknown-wasi
 
 
-wasm-bindgen
+- Rust 1.67 added bulk memory operations! Make sure you use it (test with vec impl)
 
 > i.instance.exports.__wbindgen_describe_lol()
-describe 11 Function
-describe 0 i8 // Shim Idx
-describe 1 u8 // Num args
-describe 5 u32 // Arg 0
-describe 5 u32 // Ret
-describe 5 u32 // Inner ret
+describe 11 // Function
+describe 0 // Shim Idx
+describe 2 // Number of arguments
+describe 5 // Type of ARg 0 (= u32)
+describe 5 // Type of Arg 1 (= u32)
+describe 5 // Return type (= u32)
+describe 5 // Inner return type (= u32)
 
 
 wasm-objdump -j import -x target/wasm32-unknown-unknown/release/bindgen.wasm
@@ -411,3 +601,8 @@ Rust comes with some great tooling to compile and produce WebAssembly modules, l
 [rust core]: https://docs.rs/core
 [build-std]: https://doc.rust-lang.org/cargo/reference/unstable.html#build-std
 [rustup]: https://rustup.rs/
+[std unsupported]: https://github.com/rust-lang/rust/blob/0d32c8f2ce10710b6560dcb75f32f79c378410d0/library/std/src/sys/wasm/mod.rs#L26-L27
+[wee_alloc]: https://crates.io/crates/wee_alloc
+[lol_alloc]: https://crates.io/crates/lol_alloc
+[twiggy]: https://rustwasm.github.io/twiggy/
+[wasm-bindgen descriptor]: https://github.com/rustwasm/wasm-bindgen/blob/main/crates/cli-support/src/descriptor.rs
