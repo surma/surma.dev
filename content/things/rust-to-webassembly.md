@@ -1,21 +1,21 @@
 ---json
 {
-  "title": "Compiling Rust to WebAssembly the hard way",
-  "date": "2023-01-15",
+  "title": "Rust to WebAssembly the hard way",
+  "date": "2023-02-03",
   "socialmediaimage2": "social.png"
 }
 
 ---
 
-Rust’s compiler comes with WebAssembly support out of the box and with a strong tooling ecosystem to boot.
+For many, Rust is the first choice when targeting WebAssembly. Let’s take full control.
 
 <!-- more -->
 
-A long old time ago, I wrote a blog post on [how to compile C to WebAssembly without Emscripten][c to wasm]. It’s not something you’d want do on a daily basis, because you lose access to the standard library and it’s generally quite inconvenient. At the same time, it gives you a deeper understanding of what is happening and how much work other tools like [Emscripten] are doing for you. It can also come in handy when you really want to take control of your module and glue code size. So let’s do the same with Rust!
+A long old time ago, I wrote a blog post on [how to compile C to WebAssembly without Emscripten][c to wasm], i.e. without the default tool that makes that process easy. In Rust, the tool that makes WebAssembly easy is called [wasm-bindgen], and we are going to ditch it! At the same time, Rust is a bit different in that WebAssembly was always a first-class target for Rust and the standard library is laid out to support it out of the box.
 
-## Rust to WebAssembly
+## Rust to WebAssembly 101
 
-If you look around the internet, a lot of articles and guides tell you to create a Rust library project with `cargo init --lib` add this line to your `Cargo.toml`:
+Let’s see how we can get Rust to emit WebAssembly with as little deviation from the standard Rust workflow as possible. If you look around the internet, a lot of articles and guides tell you to create a Rust library project with `cargo init --lib` add this line to your `Cargo.toml`:
 
 |||codediff|toml
   [package]
@@ -29,7 +29,7 @@ If you look around the internet, a lot of articles and guides tell you to create
   [dependencies]
 |||
 
-Without setting the crate type to `cdylib`, the Rust compiler would emit a `.rlib` file, which is Rust’s unstable library format that may change from Rust release to Rust release. While `cdylib` implies a dynamic library that is C-compatible, I suspect it really just stands for “use the interoperable format, or something to that effect.
+Without setting the crate type to `cdylib`, the Rust compiler would emit a `.rlib` file, which is Rust’s unstable library format that may change from Rust release to Rust release. While `cdylib` implies a dynamic library that is C-compatible, I suspect it really just stands for “use the interoperable format”, or something to that effect.
 
 For now, we'll work with the default function that Cargo generates when creating a new library:
 
@@ -39,25 +39,25 @@ pub fn add(left: usize, right: usize) -> usize {
 }
 ```
 
-With all that in place, we can now compile this library to WebAssembly.
+With all that in place, we can now compile this library to WebAssembly:
 
 ```
 $ cargo run --target=wasm32-unknown-unknow --release
 ```
 
-and find your a freshly generated WebAssembly module in `target/wasm32-unknown-unknown/release/my_project.wasm`. I'll continue to use `--release` builds throughout this article as it makes the WebAssembly module a lot more readable when we disassemble it.
+You'll find a freshly generated WebAssembly module in `target/wasm32-unknown-unknown/release/my_project.wasm`. I'll continue to use `--release` builds throughout this article as it makes the WebAssembly module a lot more readable if we want to disassemble it.
 
 ### Alternative: As a binary
 
-If you are like me and adding that line to your `Cargo.toml` makes you feel weird, there’s a way around that! If your crate is designated as a binary (i.e. created via `cargo init --bin` and/or has a `main.rs` instead of a `lib.rs`), compilation will succeed without editing the `Cargo.toml`. Well, until you realize that the `main()` function has a fixed signature, and if you don’t want a `main()` function and remove it, the compiler aborts during compilation. But fear not! You can add the `#![no_main]` directive to your `main.rs` and shut the compiler up.
+If you are like me and adding that line to your `Cargo.toml` makes you feel weird, there’s a way around that! If your crate is designated as a binary (i.e. created via `cargo init --bin` and/or has a `main.rs` instead of a `lib.rs`), compilation to WebAssembly will success straight away. Well, until you realize you have to have a `main()` function with the normal `main` function signature, or the compiler will kick off at you. What you can do is remove the `main()` function altogether and let the compiler know that this is intentional by adding the `#![no_main]` crate macro to your `main.rs`.
 
-What is better? It’s a question of preference, as both approaches seem to be functionally equivalent and generate the same code. Most of the time, WebAssembly modules seem to be taking the role of a library more than the role of an executable (except in the context of WASI, which we will be talking about later!), so the library approach seems more semantically correct to me. Unless noted otherwise, I’ll be using the library setup for the remainder of this article. 
+Is that better? It seems like a question of taste to me, as both approaches seem to be functionally equivalent and generate the same WebAssembly code. Most of the time, WebAssembly modules seem to be taking the role of a library more than the role of an executable (except in the context of [WASI]), so the library approach seems semantically more correct to me, but it’s a rather weak argument I think. Unless noted otherwise, I’ll be using the library setup for the remainder of this article. 
 
 ### Exporting
 
-Let’s take a look at the WebAssembly code that the default library code generates. For that purpose, I recommend the [WebAssembly Binary Toolkit (wabt for short)][wabt] installed, which provides helpful tools like `wasm-objdump` and `wasm2wat`. It’s also good to have [binaryen] installed which provides a bunch of tools, but I really only use `wasm-opt`. 
+Let’s take a look at the WebAssembly code that the compiler generates for that `add` function. For that purpose, I recommend the [WebAssembly Binary Toolkit (wabt for short)][wabt], which provides helpful tools like `wasm-objdump` and `wasm2wat`. It’s also good to have [binaryen] installed which provides a bunch of tools, but I really only use `wasm-opt`. 
 
-After compiling our library, your shocked eyes will notice that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts.
+Once compiled and then disassembled again, you’ll be outraged to find that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts.
 
 ```wasm
 (module
@@ -71,7 +71,7 @@ After compiling our library, your shocked eyes will notice that our `add` functi
   (export "__heap_base" (global 2)))
 ```
 
-Well, that’s no good. Turns out the `pub` declaration on our function is _not_ enough to get it to show up in our final WebAssembly module. I am not sure why the compiler is behaving that way. 
+Turns out declaring a function as `pub` is _not_ enough to get it to show up in our final WebAssembly module. I kinda wish it was enough, but I suspect `pub` is exclusive about Rust module visibility, not about linker-level visibility.
 
 The quickest way to change the compiler's behavior is to explicitly give the function an export name:
 
@@ -82,23 +82,26 @@ The quickest way to change the compiler's behavior is to explicitly give the fun
   }
 |||
 
-If you don’t want to change the functions extenral name, you can also use `#[no_mangle]` instead, instructing the compiler to not mangle the symbol name during compilation. I find the `export_name` directive more descriptive in what it achieves. I will also note that function at the module boundary often end up being undiomatic, as you will inevitably pass around raw pointers. A nice pattern here is to give the function at boundary a nice name externally, but a clearly unsafe name internally and write a wrapper function to create an idiomatic signature. For example:
+If you don’t intend to change the functions external name, you can also use `#[no_mangle]` instead, instructing the compiler to not mangle the symbol name during compilation. I feel like `no_mangle` hides the true intention of the developer here, so I tend to prefer the `export_name`. There’s another benefit: I found that functions at the module boundary often end up being undiomatic, as you will inevitably pass around raw pointers as numbers rather than higher-level data types. I often end up writing a wrapper function that contains the conversion from higher-level types to raw pointer values. From the Rust side, I want the wrapper function to have the same name as the low-level function from the WebAssembly side. As a slightly contrived example:
+
 
 ```rust
-#[export_name = "pointer_inc"]
-pub fn pointer_inc_unsafe(ptr_value: u32, delta: u32) {
+#[export_name = "inc_all"]
+pub fn inc_all_unsafe(ptr_value: u32, len: u32, delta: u32) {
     let ptr = ptr_value as *mut u32;
-    unsafe {
-        *ptr += delta;
+    for i in 0..len {
+      unsafe {
+          *ptr.offset(i) += delta;
+      }
     }
 }
 
-pub fn pointer_inc(ptr: &mut u32, delta: u32) {
-    pointer_inc_unsafe(ptr as *mut u32 as u32, delta)
+pub fn inc_all(slice: &mut u32, delta: u32) {
+    inc_all_unsafe(slice as *mut u32 as u32, slice.len() as usize, delta)
 }
  ```
 
-Compiling our `add` function again, we get the following WebAssembly module:
+Having given our `add` function an export name, we can compile the project again and inspect the resulting WebAssembly file:
 
 |||codediff|wasm
   (module
@@ -118,7 +121,7 @@ Compiling our `add` function again, we get the following WebAssembly module:
     (export "__heap_base" (global 2)))
 |||
 
-And we can easily run this WebAssembly module in Node, or Deno or even the browser:
+This module is easy to run in Node, or Deno or even the browser:
 
 ```js
 const data = /* read my_project.wasm into an ArrayBuffer */;
@@ -128,13 +131,13 @@ const {instance} = await WebAssembly.instantiate(data, importObj);
 instance.exports.add(40, 2) // returns 42
 ```
 
-And with that, we can go ahead and use all of Rust to write WebAssembly modules. However, take care to stick to types that map cleanly to WebAsselby types (i.e. `u32`, `i32`, `u64`, `i64`, `f32`, `f64` and `bool`). If you use higher-level types like arrays, slices, or even owned types like `String`, it will compile, but yield a unexpected function signature that is not immediately obvious. More on that later!
+And suddenly, we have pretty much all the power of Rust at our fingertips to write WebAssembly. Special care needs to be taken with functions at the module boundary (i.e. the ones you call from JavaScript). It’s best to stick to types that map cleanly to [WebAssembly types] (like `i32` or `f64`). If you use higher-level types like arrays, slices, or even owned types like `String`, it will compile, but yield a unexpected function signature and will generally become a bit hard to use. More on that later!
 
 ### Importing
 
-One important part of WebAssembly is the sandbox, where our code gets no access to the host environment whatsoever, unless we explicitly provide access to individual functions through imports.
+One important part of WebAssembly is its sandbox. It ensure that the code running in the WebAssembly VM gets no access to the host environment whatsoever, unless it was explicitly given access to individual functions through imports.
 
-Let’s say we want to get access to JavaScript’s randon number generator, so we don’t have to pull in an entire Rust crate just for that. For that to work, we need to declare what we expect to be present on the import object. 
+Let’s say we want to get access to JavaScript’s random number generator. We could pull in the `rand` Rust crate, but why ship code for something if the host has already shipped a solution for the same problem. To make that work, we need to declare that we expect to be given an import.
 
 |||codediff|rust
 + #[link(wasm_import_module = "Math")]
@@ -150,7 +153,11 @@ Let’s say we want to get access to JavaScript’s randon number generator, so 
   }
 |||
 
-If we ran our JavaScript code above again as is, it would throw an error as the WebAssembly module now expects imports that we haven’t provided. As declared, we expect an import module with the name `"Math"` to provide a function called `"random"`. These values have of course been carefully chosen so that we can just pass in the entire `Math` global to satisfy the import.
+`extern "C"` blocks declare functions that we assume to be given ”somewhere else” during linking. This is usually how you link against C libraries in Rust, but the mechanism works for WebAssembly as well. However, external functions are always implicitly unsafe, as the compiler can’t make any safety guarantees for non-Rust functions that are not present. As a result, we need to wrap their invocations into `unsafe { ... }`.
+
+This code will compile!However, if we used the exact same JavaScript code as above, the `WebAssembly.instantiate()` call would throw an error. If a WebAssembly module expects imports, they _must_ be provided on the imports object. 
+
+The imports _object_ is a dictionary of import _modules_, that each are dicitonary of import _items_. As declared, we expect an import module with the name `"Math"` to provide a function called `"random"`. These values have of course been carefully chosen so that we can just pass in the entire `Math` object to satisfy the import.
 
 |||codediff|js
   const importObj = {
@@ -158,7 +165,7 @@ If we ran our JavaScript code above again as is, it would throw an error as the 
   };
 |||
 
-The core part here is the `extern "C" { ... }` block. This is interpreted by the compiler as a list of external functions that we can be assumed to be present once the library gets linked.   In the context of WebAssembly, those semantics are mapped to imports. However, external functions are always implicitly unsafe, as the compiler can’t make any safety guarantees for non-Rust functions that are not present. As a result, we need to wrap their invocations into `unsafe { ... }`. It is often desirable to give the imported function a slightly mangled name and provide a safe wrapper function with the nice name:
+To avoid having to sprinkle `unsafe { ... }` everywhere, it is often desirable to write wrapper functions that restore the safety invariants of Rust.
 
 ```rust
 #[link(wasm_import_module = "Math")]
@@ -177,7 +184,7 @@ pub fn add(left: f64, right: f64) -> f64 {
 }
 ```
 
-If we hadn’t specified the `#[link(wasm_import_module = ...)]` attribute, the functions will be expected on the default `env` module. If `#[link_name = ...]` is not used, the function name will be used verbatim.
+By the way, if we hadn’t specified the `#[link(wasm_import_module = ...)]` attribute, the functions will be expected on the default `env` module. If `#[link_name = ...]` is not used, the function name will be used verbatim.
 
 ### Higher-level types
 
@@ -381,6 +388,8 @@ With this in place, our program compiles again. After stripping, the binary weig
 
 We are reaching the point of diminishing returns, but there is a way we can do better: Don’t even bother with the `PanicInfo` struct and just hard abort on panic. Kill everything once something goes wrong. This behavior is not the default as it prevents any kind of diagnostic output and is therefore behind a feature flag called `panic_immediate_abort`. This means we have to re-compile `core` to enable it. Luckily, this is actually easier (and faster!) than it sounds, but is somewhat irritatingly called [build-std]. Even worse, this feature is unstable, which means we need to dip into Nightly Rust!
 
+> **Note:** At the time of writing, Rust Stable is 1.67 and Nightly is Rust 1.69. nice.
+
 Installing Rust Nightly and the std source code is quite easy if you use [rustup]:
 
 ```
@@ -457,21 +466,7 @@ $ cargo +nightly build --target=wasm32-unknown-unknown --release \
     -Z build-std=core,alloc -Z build-std-features=panic_immediate_abort
 
 error: no global memory allocator found but one is required; link to std or add `#[global_allocator]` to a static item that implements the GlobalAlloc trait
-error: `#[alloc_error_handler]` function required, but not found
 ```
-
-There are two things we need to implement: An allocator and an error handler for when allocations fail. Let’s start with the allocator, because after our panic handler, there should be no doubt on how to handle errors responsibly: 
-
-```rust
-#![feature(alloc_error_handler)]
-
-#[alloc_error_handler]
-fn alloc_error_handler(_: core::alloc::Layout) -> ! {
-    core::arch::wasm32::unreachable()
-}
-```
-
-And done. Instead of providing our own implementation, we can also use Rust’s default handler by just specifying `#![feature(default_alloc_error_handler)]`.With `panic_immediate_abort`, this default handler actually yields a slightly smaller binary than when providing a custom handler. Without `panic_immediate_abort`, the custom panic handler saves about 2K.
 
 As in my [C to WebAssembly article][c to wasm], my custom allocator is going to be a minimal bump allocator. We statically allocate an arena that will function as our heap and store where the “free area” begins. Because we are not using Wasm Threads, I am also going to ignore concurrent memory access issues.
 
@@ -527,7 +522,7 @@ unsafe impl GlobalAlloc for SimpleAllocator {
 
 As any good bump allocator, you can’t free memory. The allocation logic is as simple as possible: Take the index of the first free byte in the arena, increase if necessary to fit the alignment requirements, and that’s your pointer! Then bump the head forward so you know where the next free byte is for the next allocation.
 
-### wee_alloc
+### wee_alloc & lol_alloc
 
 You don’t have to implement the allocator yourself, of course. In fact, it’s probably advisable to rely on well-tested implementations out there. For example, there is [`wee_alloc`][wee_alloc], which is a very small (<1KB) allocator written by the Rust WebAssembly team and it even supports deallocating memory. Sadly, it seems unmaintained and has an open issue about memory corruption and leaking memory. There’s a [`lol_alloc`][lol_alloc] which seems to aspire to replace `wee_alloc` and provides multiple implementations for different use-cases and tradeoffs: 
 
@@ -554,36 +549,35 @@ I don’t have any first-hand experience with `lol_alloc` outside of writing thi
 
 Now with all of that in our head, we have earned a look at the easy way of writing Rust for WebAssembly, which is using [wasm-bindgen].
 
-wasm-bindgen provides a macro that does a lot of heavy lifting under the hood. It injects the compiler directives we explored at the start of this article to make Rust functions accessible. However, when processing a function `my_func` it also generates another, exported function called `__wbindgen_describe_my_func`, which returns a description of the function’s signature in a [custom, binary format][wasm-bindgen descriptor]. I wrote a small tool to pretty-print the descriptor:
+wasm-bindgen provides a macro that does a lot of heavy lifting under the hood. Any function that you want to export, you annotate with the `#[wasm_bindgen]` macro.  This macro adds the same compiler directives we added manually earlier in this article. But that’s not the heavy lifting. When the macro is processing, say, `my_func` it also generates another function called `__wbindgen_describe_my_func` and exports it. 
 
-TODO
+If you were to invoke that additional function on the WebAssembly module, it would return a [numeric representation][wasm-bindgen descriptor] of the function signature of `my_func`. For example, if `my_func` was the `add` function from above, the descriptor would look something like this:
 
+```
+Function(
+    Function {
+        arguments: [
+            U32,
+            U32,
+        ],
+        shim_idx: 0,
+        ret: U32,
+        inner_ret: Some(
+            U32,
+        ),
+    },
+)
+```
 
+This format is capable of representing quite complex function signatures. The CLI that accompanies wasm-bindgen inspects these function signatures to generate near optimal JavaScript bindings (or “glue code”) that let you call these functions seamlessly from JavaScript. It can even pass higher-level types like `ArrayBuffer` or closures.
 
+If you want to write Rust for WebAssembly, wasm-bindgen should be your first choice. wasm-bindgen doesn’t work with `#![no_std]`, but in practice that is rarely a problem.
 
-- Rust 1.67 added bulk memory operations! Make sure you use it (test with vec impl)
+## Conclusion
 
-> i.instance.exports.__wbindgen_describe_lol()
-describe 11 // Function
-describe 0 // Shim Idx
-describe 2 // Number of arguments
-describe 5 // Type of ARg 0 (= u32)
-describe 5 // Type of Arg 1 (= u32)
-describe 5 // Return type (= u32)
-describe 5 // Inner return type (= u32)
+The WebAssembly tooling for Rust is excellent and has gotten a lot better since I worked with it for the first time in [Squoosh]. The modules are fairly small and there are a lot of little levers for you to control module size even more. The glue code that wasm-bindgen emits has become now both modern and tree-shaken, which was one of my concerns at the time. I fully recommend using wasm-bindgen as your first choice when writing Rust for WebAssembly. 
 
-
-wasm-objdump -j import -x target/wasm32-unknown-unknown/release/bindgen.wasm
-
-
-Before I start, though, the WebAssembly tooling for Rust is excellent and has gotten a lot better since I worked with it in [Squoosh].
-The modules are phenomenally small and even the glue code is both modern and tree-shaken. I fully recommend using these tools
-when writing Rust for WebAssembly.
-
-Rust has first-class support for WebAssembly, but also brings a strong tooling ecosystem to build high-quality WebAssembly modules.
-Rust comes with some great tooling to compile and produce WebAssembly modules, like [wasm-bindgen] and [wasm-pack]. But what do these tools actually do?
-
-
+That being said, I find it extremely useful to know what Rust itself is capable of and how to take more control over minute details. I hope this article shed some light on the inner workings of Rust and WebAssembly.
 
 [c to wasm]: /things/c-to-webassembly
 [wasm-bindgen]: https://rustwasm.github.io/wasm-bindgen/
@@ -606,3 +600,5 @@ Rust comes with some great tooling to compile and produce WebAssembly modules, l
 [lol_alloc]: https://crates.io/crates/lol_alloc
 [twiggy]: https://rustwasm.github.io/twiggy/
 [wasm-bindgen descriptor]: https://github.com/rustwasm/wasm-bindgen/blob/main/crates/cli-support/src/descriptor.rs
+[wasi]: https://wasi.dev/
+[webassembly types]: https://webassembly.github.io/spec/core/syntax/types.html#number-types
