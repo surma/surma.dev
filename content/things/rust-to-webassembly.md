@@ -188,42 +188,13 @@ By the way, if we hadn’t specified the `#[link(wasm_import_module = ...)]` att
 
 ### Higher-level types
 
-This section is purely informative and you don’t need to internalize or understand it to make good use of Rust for WebAssembly! In fact, my recommendation is to not deal with higher-level types yourself, but using tools like [`wasm-bindgen`][wasm-bindgen] instead!
+This section is purely informative and the result of me falling into a rabbit hole. You don’t need to know this stuff to make good use of Rust for WebAssembly! In fact, my recommendation is the opposite: Don’t deal with higher-level types yourself. Let battle-tested toolslike [`wasm-bindgen`][wasm-bindgen] do it for you instead! Anyway...
 
-Sized types (so structs, enums, etc) are turned into a simple pointer. As a result, each parameter or return value that is a sized type will come out as a `i32`. The exception are Arrays and Tuples, which are both sized types. Each parameter with one of these types will be translated differently depending on whether a type is bigger than 32 bits. The data of types like `(u8, u8)` or `[u16; 2]` will be squeezed inside a single `i32` and passed as an immediate value. Values of bigger types like `(u32, u32)` or `[u8; 10]` will be passed as a pointer, where the parameter is yet again a `i32`, but it will contain the address of where to find the actual value. To make things even more confusing, if you an array bigger than 32 bit as a function’s return type, it will turn into a function parameter of type `i32`. If a function returns a tuple, it will always be turned into a function parameter of `i32`, even if it is smaller than 32 bit.
+I said earlier that for functions at the module boundary, it is best to stick to value types that map cleanly to the data types that WebAssembly supports. But what _does_ happen with values that do not have an obvious counterpart? I investiged!
 
-In contrast, unsized types (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, are turned into fat pointers. Fat pointers are so called, because they are not just an address, but also some additional piece of metadata. So a parameter that is a fat pointer is effectively an `i32` that points to a tuple `(<pointer to start of data), <pointer to metadata>)`. In the case of a `str` or a slice, the metadata is the length of the data. In the case of a trait object, it’s the virtual table (or vtable), which is a list of function pointers to the individual trait function implementation. If you want to know more details about what a VTable in Rust looks like, I can recommend [this article][vtable] by Thomas Bächler. Just like with array, because the pointer is fat and as such bigger than 32 bit, if your function returns a type that is modelled as a fat pointer, it will be turned into a parameter. So in the cases where a return value is turned into a parameter, it is up to the caller to provide an address that can store the fat pointer for the return value!
+Sized types (like structs, enums, etc) are turned into a simple pointer. As a result, each parameter or return value that is a sized type will come out as a `i32`. The exception are Arrays and Tuples, which are both sized types, but are converted differently depending on whether a type is bigger than 32 bits. The data of types like `(u8, u8)` or `[u16; 2]` will be bitpacked into a single `i32` and passed as an immediate value. Bigger types like `(u32, u32)` or `[u8; 10]` will be passed as a pointer in the form of an `i32`, pointing at the first element. Things get even more confusing if we look at function return values: If you return an array type bigger than 32 bits, it will turn into a function parameter of type `i32`. If a function returns a tuple, it will always be turned into a function parameter of `i32`, even if it is smaller than 32 bit.
 
-```rust
-static A_STRING: &str = "hello";
-#[no_mangle]
-pub fn a_string() -> &'static str {
-  &A_STRING
-}
-```
-
-```wasm
-(module
-  (type (;0;) (func (param i32)))
-  ;; In Rust the function had no parameters and 
-  ;; one return value. In Wasm it has one parameter
-  ;; and no return values.
-  (func $a_string (type 0) (param i32) 
-    ;; Store length of data (i.e. 5) in the second 
-    ;; field (i.e. offset 4) of the fat pointer.
-    (i32.store offset=4
-      (local.get 0)
-      (i32.const 5)) 
-    ;; Store the address of the start of the data 
-    ;; in the first field of the fat pointer.
-    (i32.store
-      (local.get 0)
-      (i32.const 1048576))) 
-  ;; ... same as before ...
-  (data $.rodata (i32.const 1048576) "hello"))
-```
-
-Again, none of this is something I use regularly when working with Rust and WebAssembly. But it can be helpful to know!
+In contrast, unsized types (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, are turned into fat pointers. Fat pointers are so called, because they consist of not just an address, but also of some additional metadata. A parameter that is a fat pointer is effectively an `i32` that points to a tuple `(<pointer to start of data), <pointer to metadata>)`. In the case of a `str` or a slice, the metadata is the length of the data. In the case of a trait object, it’s the virtual table (or vtable), which is a list of function pointers to the individual trait function implementation. If you want to know more details about what a VTable in Rust looks like, I can recommend [this article][vtable] by Thomas Bächler. Because fat pointers are bigger than 32 bit, they, too, are converted from a return value to a function parameter. That means that whenever a return value is turned into a parameter, it is now up to the caller to provide space where the function can store the fat pointer for the return value!
 
 ## Module size
 
