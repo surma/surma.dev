@@ -198,9 +198,9 @@ In contrast, unsized types (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, are 
 
 ## Module size
 
-When deploying WebAssembly on the web, the size of the WebAssembly binary matters. Every byte needs to go over the network and through the compiler, so a smaller binary size means less time spent waiting for the user. If we build our default project from above as a release build, we get a surprising 1.7MB of WebAssembly. That does not seem right for adding two numbers.
+When deploying WebAssembly on the web, the size of the WebAssembly binary matters. Every byte needs to go over the network and through the browser’s WebAssembly compiler, so a smaller binary size means less time spent waiting for the user until the WebAssembly starts working. If we build our default project from above as a release build, we get a whopping 1.7MB of WebAssembly. That does not seem right for adding two numbers.
 
-A quick way to inspect where those bytes are spent is to have `wasm-objdump` print a summary:
+A quick way to inspect the innards of a WebAssembly module is `wasm-objdump`. By printing the headers of all sections using `-h` we get a nice summary:
 
 ```
 $ wasm-objdump -h target/wasm32-unknown-unknown/release/my_project.wasm
@@ -227,10 +227,10 @@ Sections:
    Custom start=0x0019f29b end=0x0019f2e8 (size=0x0000004d) "producers"
 ```
 
-While `wasm-objdump` is quite versatile (and might offer a familiar interface for people who have experience developing in other ISAs in assembly, it doesn’t really make it easy or obvious to answer the question “Why is my module so big?”. Luckily, there is a tool called [Twiggy], that excels at this:
+`wasm-objdump` is quite versatile and offers a familiar CLI for people who have experience developing for other ISAs in assembly. However, specifically for hunting down the culprit of big binary sizes, it lacks some simple functionality like odering the sections by size. Luckily, there is another tool called [Twiggy], that excels at this:
 
 ```
-$ twiggy top target/wasm32-unknown-unknown/release/anotherrustlol.wasm
+$ twiggy top target/wasm32-unknown-unknown/release/my_project.wasm
  Shallow Bytes │ Shallow % │ Item
 ───────────────┼───────────┼─────────────────────────────────────────
         622885 ┊    36.63% ┊ custom section '.debug_str'
@@ -257,11 +257,19 @@ $ twiggy top target/wasm32-unknown-unknown/release/anotherrustlol.wasm
 ...
 ```
 
-All the sections of significant size are custom sections, which means they are not relevant for the execution of the module. Luckily, wabt comes with `wasm-strip`, that removes everything that is unnecessary. After stripping, we are at a whopping 116B, and the only function in that module executes `(f64.add (local.get 0) (local.get 1)))`, which means the Rust compiler was able to emit optimal code. Of course, staying on top of binary size gets more complicated once we start writing some actual code.
+It’s now clearly visible that all main contributors to the module size are custom sections, which means they are not relevant for the execution of the module. They all contain informating that is used for debugging, so their presence might be a bit surprising, considering we were doing a release build. From what I can tell, `--release` makes Rust run code optimization and remove asserts and other checks. It does not affect whether debug symbols are packed into the binary.
+
+wabt comes with `wasm-strip`, a tool that removes everything that is unnecessary, including custom sections. After stripping, we are left with a module of a whopping 116B. Disassembling it show that the only function in that module is called `add` and executes `(f64.add (local.get 0) (local.get 1)))`, which means the Rust compiler was able to emit optimal code. Of course, staying on top of binary size gets more complicated with a growing code base.
 
 ### Sneaky bloat
 
-A very innocent like of code can cause a big increase in binary size. For example, this innocuous program ends up compiling to 18KB of WebAssembly.
+I have seen a couple of complaints online about how big WebAssembly modules create by Rust are that do a seemingly small job. In my experience, there are three reasons why Rust emits surprisingly big WebAssembly binaries:
+
+* Debug build (i.e. forgetting to pass `--release` to `Cargo`)
+* Debug symbols (i.e. forgetting to run `wasm-strip)
+* String formatting and panics 
+
+We have looked at the first two. Let’s take a closer look at the last one. This innocuois line of code compiles to 18KB of WebAssembly:
 
 ```rust
 static PRIMES: &[i32] = &[2, 3, 5, 7, 11, 13, 17, 19, 23];
@@ -272,9 +280,42 @@ fn nth_prime(n: usize) -> i32 {
 }
 ```
 
-Okay, maybe not so innocuous after all. You might already know what's going on here. A quick look at `wasm-objdump` shows that the main contributors to the Wasm module size are functions related to string formatting, memory allocations and panicking. And that makes sense! The parameter `n` is unsanitized and yet is used to index an array. Rust has no choice but to inject bounds checks. If an out-of-bounds check fails, Rust panics.
+Okay, maybe not so innocuous after all. You might already know what's going on here. 
 
-Panics are quite informative in Rust, the problem with being informative that it involves pretty-printing a lot of information, and because the amount of information depends on the situation (specifically: the depth of the stack), this process needs to allocate memory dynamically. Panics cause our bloat!
+### LTO
+
+Before we start dissecting what code is being emitted and why, we can make use of a powerful feature of LLVM called [LTO (Link-Time Optimization)][lto]. While the `rustc` compiles and optimizes each create, there are certain optimizations that only become apparent during link time. A lot of functions have different branches depending on the input. At link time, it might be viable to deduce that only a subset of branches will ever possibly be taken, allowing the linker to eliminate the other branches, and potentially even entire functions that have now become dead code. Error reporting code is one of those examples with lots of branches.
+
+LTO is enabled through one of `rustc`’s many [codegen options], which you control in the `profile` section of your `Cargo.toml`. Specifically, we need to add this line to our `Cargo.toml` to enable LTO in release builds:
+
+|||codediff|toml
+  [package]
+  name = "my_project"
+  version = "0.1.0"
+  edition = "2021"
+  
+  [lib]
+  crate-type = ["cdylib"]
+  
++ [profile.release]
++ lto = true
+|||
+
+With LTO enabled, the stripped binary is reduced to 2.3K, which is quite impressive. The only cost of LTO is longer linking times, which will start getting noticable in bigger projects. But if binary size is a concern, LTO should be one of the first levers you make use of as it “only” costs build time and doesn’t require code changes.
+
+### wasm-opt
+
+Another tool that should almost never be excluded from your build pipeline is `wasm-opt` from [binaryen]. It is another optimization pass that works purely on WebAssembly binaries, agnostic to the source language it was produced with. Of course, higher-level languages have more information to work with to apply more sophisticated optimizations, so `wasm-opt` is not a replacement for enabled optimizations on your language’s compiler. However, it does often manage to shave off a couple percent of your module size.
+
+```
+$ wasm-opt -O3 -o output.wasm target/wasm32-unknown-unknown/my_project.wasm
+```
+
+In our case, `wasm-opt` reduces Rust’s 2.3K WebAssembly binary a bit further, yielding 2.0K. Of course, I won’t stop here. That’s still too much for an array lookup.
+
+### Panicking
+
+A quick look at `twiggy` shows that the main contributors to the Wasm module size are functions related to string formatting and panicking (before LTO, there was also code for memory management in there). And that makes sense! The parameter `n` is unsanitized and used to index an array. Rust has no choice but to inject bounds checks. If a bounds check fails, Rust panics.
 
 One way to handle this is to do the bounds checking ourselves. Rust's compiler is really good at proving whether undefined behavior can happen or not.
 
@@ -285,7 +326,7 @@ One way to handle this is to do the bounds checking ourselves. Rust's compiler i
   }
 |||
 
-Alternatively, we can lean into `Option<T>` APIs to control how the error case should be handled:
+Arguably more idiomatic would be to lean into `Option<T>` APIs to control how the error case should be handled:
 
 |||codediff|rust
   fn nth_prime(n: usize) -> i32 {
@@ -294,7 +335,7 @@ Alternatively, we can lean into `Option<T>` APIs to control how the error case s
   }
 |||
 
-A third way would be to use some of the `unchecked` methods that Rust explicitly provides. This opens the door to undefined behavior and as such is `unsafe`, but in certain scenarios (for example when the sanitization happens in the host environment), this can be acceptable or even a path for optimization, both for performance and file size.
+A third way would be to use some of the `unchecked` methods that Rust explicitly provides. These open the door to undefined behavior and as such are `unsafe`, but if you are okay carrying the burden to ensure safety, the gain in performance (or file size) can be significant!
 
 |||codediff|rust
   fn nth_prime(n: usize) -> i32 {
@@ -303,27 +344,29 @@ A third way would be to use some of the `unchecked` methods that Rust explicitly
   }
 |||
 
-We can try and stay on top of where we might cause a panic and try alternate ways to handle that to avoid all that code getting pulled in. However, once we pull in third-party libraries this is less and less likely to succeed, because we can't easily change how the library does its error handling.
+We can try and stay on top of where we might cause a panic and try to handle those paths manually. However, once we start relying on third-party crates this is less and less likely to succeed, because we can't easily change how the library does its error handling internally.
 
 ## No Standard
 
-Rust has a [standard library][rust std], which contains a lot of abstractions and utilities that you end up using quite a lot and they are just _there_, no need to crawl through [crates.io] or anything like that.  However, many of the data structures and functions make assumptions about the environment that they are used in: They assume that the details of hardware are abstracted into uniform APIs and they assume that they can somehow allocate (deallocate) chunks of memory at abritrary size. Often, both of these jobs are fulfilled by the operating system.
+Rust has a [standard library][rust std], which contains a lot of abstractions and utilities that you need on a daily basis when you do systems programming. Accessing files, getting the current time or opening network sockets. It’s all in there for you to use, without having to go searching on [crates.io] or anything like that. However, many of the data structures and functions make assumptions about the environment that they are used in: They assume that the details of hardware are abstracted into uniform APIs and they assume that they can somehow allocate (deallocate) chunks of memory at abritrary size. Usually, both of these jobs are fulfilled by the operating system.
 
-In almost all fields of coding, these assumptions are fulfilled. However, they are not when you work with raw WebAssembly: Because of the sandbox, there is no access to an operating system (and if you run WebAssembly in the browser, there's yet another sandbox preventing you from exposing it). You also just get access to a linear chunk of memory with no central entity managing which part of the memory belongs to what.
+For most of us and our deployment environments, these assumptions are fulfilled. However, when you instantiate a WebAssembly module via the raw API, things are different: The sandbox — one of the defining security features of WebAssmebly — isolates the WebAssembly code from the host and by extension the operating system. You just get access to a chunk of linear memory, which doesn’t even have some central entity managing which part of the memory is in use and which parts are up for grabs.
 
-This means that Rust gave us a false sense of security! It provided us with an entire standard library with no operating system to back it with. In fact, many of the stdlib modules are just [aliased][std unsupported] to a dedicated implementation of the stdlib where everything is unsupported. That means all functions that return a `Result<T>` always return `Err`, and all other functions panic.
+> **Note:** This is not part of this article, but just like WebAssembly abstracts away what kind of processor your code is running on, [WASI], the WebAssembly Systems Interface, aims to abstract away what kind of operating system your code is running on and give you a uniform API to work with regardless of environmen. Rust has (experimental) support for WASI.
+
+This means that Rust gave us a false sense of security! It provided us with an entire standard library with no operating system to back it with. In fact, many of the stdlib modules are just [aliased][std unsupported] to fail. That means all functions that return a `Result<T>` always return `Err`, and all other functions `panic`.
 
 ### Learning from os-less devices
 
-There is another field that works similarly that we can learn from: Embedded systems. While modern embedded systems often do run an entire Linux, smaller microprocessors do not. [Rust does support building for those smaller systems][embedded rust] as well, and the [Embedded Rust Book] as well as the [Embedonomicon] explain on how you write Rust correctly for those kinds of environments.
+Just a linear chunk of memory. No central entity managing the memory or the periphery. Just arithmetic. That might sound familiar if you have ever written code for bare metal processors, as is sometimes the case when you work with embedded systems. While embedded systems foten do run an entire Linux nowadays, smaller microprocessors do not. [Rust is also a language for embedded systems][embedded rust], and the [Embedded Rust Book] as well as the [Embedonomicon] explain how you write Rust correctly for those kinds of environments. 
 
-To enter this new world we have to add one line to our code: `#![no_std]`. This crate macro tells Rust to not link against the standard library. Instead, it only links against [core][rust core]. To quote the Embedonomicon:
+To enter the world of bare metal 🤘, we have to add a single line to our code: `#![no_std]`. This crate macro tells Rust to not link against the standard library. Instead, it only links against [core][rust core]. The Embedonomicon explains what that means quite concisely:
 
 > The `core` crate is a subset of the `std` crate that makes zero assumptions about the system the program will run on. As such, it provides APIs for language primitives like floats, strings and slices, as well as APIs that expose processor features like atomic operations and SIMD instructions. However it lacks APIs for anything that involves heap memory allocations and I/O.
 > 
 > For an application, std does more than just providing a way to access OS abstractions. std also takes care of, among other things, setting up stack overflow protection, processing command line arguments and spawning the main thread before a program's main function is invoked. A #![no_std] application lacks all that standard runtime, so it must initialize its own runtime, if any is required. 
 
-This can sound a bit scary, but also a bit exciting. If we jump straight in with our panic-y program from above and make it non-standard:
+This can sound a bit scary, but let’s take it step by step. We start by declaring our panic-y prime number program from above as `no_std`:
 
 |||codediff|rust
 + #![no_std]
@@ -335,7 +378,7 @@ This can sound a bit scary, but also a bit exciting. If we jump straight in with
   }
 |||
 
-Sadly — and this was foreshadowed by the paragraph in the Embedonomicon — we need to provide everything that `core` Rust needs to function. At the very top of the list: What should happen when a panic occurs? This is done by the aptly named panic handler, and can be something as simple as this:
+Sadly — and this was foreshadowed by the paragraph in the Embedonomicon — we need to provide some basics that `core` Rust needs to function. At the very top of the list: What should happen when a panic occurs in this environment? This is done by the aptly named panic handler, and can write the Rust-equivalent of “don’t move”:
 
 ```rust
 #[panic_handler]
@@ -344,18 +387,21 @@ fn panic(_panic: &core::panic::PanicInfo<'_>) -> ! {
 }
 ```
 
-Blocking the thread through spinning is not _great_ behavior on the web, so for WebAssembly specifically, I usually opt to manually emitting an `unreachable` instruction, that stops any Wasm VM in its tracks:
+This is quite typical for embedded systems, effectively blocking the processor from making any more progress. However, this is not _great_ behavior on the web, so for WebAssembly specifically, I usually opt to manually emitting an `unreachable` instruction, that stops any Wasm VM in its tracks:
 
 |||codediff|rust
+  #[panic_handler]
   fn panic(_panic: &core::panic::PanicInfo<'_>) -> ! {
 -     loop {}
 +     core::arch::wasm32::unreachable()
   }
 |||
 
-With this in place, our program compiles again. After stripping, the binary weighs in at abour 3.3K. The reason for that size is that there is still some string concatenation happening to fill in our `PanicInfo` struct. We are, however, not printing a stack trace anymore, so there's no stack unrolling and the size of the strings is known at compile time so we don't need to allocate memory.
+With this in place, our program compiles again. After stripping and `wasm-opt`, the binary weighs in at 168B. Minimalism wins again!
 
-### A nightly excursion
+## Memory Management
+
+CAN I KILL ALL THIS NOW?!?
 
 We are reaching the point of diminishing returns, but there is a way we can do better: Don’t even bother with the `PanicInfo` struct and just hard abort on panic. Kill everything once something goes wrong. This behavior is not the default as it prevents any kind of diagnostic output and is therefore behind a feature flag called `panic_immediate_abort`. This means we have to re-compile `core` to enable it. Luckily, this is actually easier (and faster!) than it sounds, but is somewhat irritatingly called [build-std]. Even worse, this feature is unstable, which means we need to dip into Nightly Rust!
 
@@ -573,3 +619,5 @@ That being said, I find it extremely useful to know what Rust itself is capable 
 [wasm-bindgen descriptor]: https://github.com/rustwasm/wasm-bindgen/blob/main/crates/cli-support/src/descriptor.rs
 [wasi]: https://wasi.dev/
 [webassembly types]: https://webassembly.github.io/spec/core/syntax/types.html#number-types
+[lto]: https://llvm.org/docs/LinkTimeOptimization.html
+[codegen options]: https://doc.rust-lang.org/rustc/codegen-options/index.html#overflow-checks
