@@ -401,60 +401,9 @@ With this in place, our program compiles again. After stripping and `wasm-opt`, 
 
 ## Memory Management
 
-CAN I KILL ALL THIS NOW?!?
+Of course, we have given up a lot by going non-standard. Without heap allocations, there is no `Box`, no `Vec`, no `String`, nor many of the other useful things. Luckily, we can get those back without having to provide an entire operating system. 
 
-We are reaching the point of diminishing returns, but there is a way we can do better: Don’t even bother with the `PanicInfo` struct and just hard abort on panic. Kill everything once something goes wrong. This behavior is not the default as it prevents any kind of diagnostic output and is therefore behind a feature flag called `panic_immediate_abort`. This means we have to re-compile `core` to enable it. Luckily, this is actually easier (and faster!) than it sounds, but is somewhat irritatingly called [build-std]. Even worse, this feature is unstable, which means we need to dip into Nightly Rust!
-
-> **Note:** At the time of writing, Rust Stable is 1.67 and Nightly is Rust 1.69. nice.
-
-Installing Rust Nightly and the std source code is quite easy if you use [rustup]:
-
-```
-$ rustup toolchain add nightly
-$ rustup component add rust-src --toolchain nightly
-```
-
-The (long-term) goal of build-std is to allow a crate to explicitly express its dependencies on `core`, `std` and other Rust-internals the same way you express normal dependencies, which includes a list of features. This is not quite what’s implemented, so for now we have to go via command line flags.
-
-```
-$ cargo +nightly build --target=wasm32-unknown-unknown --release \
-     -Z build-std=core,alloc -Z build-std-features=panic_immediate_abort
-```
-
-This yields a 246B Wasm module including bounds checks:
-
-```wasm
-
-(module
-  (; ... ;)
-  (func $nth_prime (param i32) (result i32)
-    block  ;; label = @1
-      local.get 0
-      i32.const 8
-      i32.gt_u       ;; if($param0 > 8)
-      br_if 0 (;@1;) ;; goto end-of-block
-      (; ... normal function exection ... ;)
-      return
-    end
-    local.get 0
-    i32.const 9
-    i32.const 1048624
-    call $_ZN4core9panicking18panic_bounds_check17h4c1edae8434bb5cdE
-    unreachable)
-  (func $_ZN4core9panicking18panic_bounds_check17h4c1edae8434bb5cdE (param i32 i32 i32)
-    unreachable    ;; No formatting. No stack unrolling. Just death.
-    unreachable)
-  (; ... ;)
-)
-```
-
-With this in place, we could even remove `#![no_std]` and go back to pretending that we have an operating system in place. However, we already know that another big contributor to our Wasm file size was memory allocations.
-
-## Allocators
-
-Of course, we have given up a lot by going non-standard. Without heap allocations, there is no `Box`, no `Vec`, no `String`, and many others useful things. Luckily, we can get those back without having to provide an entire operating system. 
-
-In many aspects, `std` is just re-exporting things from `core` and another Rust-internal crate called `alloc`. `alloc` contains everything around memory allocations and the data structures that rely on it. By importing it, we can get access to our trusty `Vec`.
+A good chunk of what `std` offers are just re-exports from `core` and from another Rust-internal crate called `alloc`. `alloc` contains everything around memory allocations and the data structures that rely on it. By importing it, we can regain access to our trusty `Vec`.
 
 ```rust
 #![no_std]
@@ -474,18 +423,34 @@ fn nth_prime(n: usize) -> usize {
     primes.into_iter().last().unwrap_or(0)
 }
 
+#[panic_handler]
+fn panic(_panic: &core::panic::PanicInfo<'_>) -> ! {
+    core::arch::wasm32::unreachable()
+}
 ```
 
-When we want to compile this using our build-std approach from above, we have to add it to the list of internal crates. But of course, it doesn’t compile, as we haven’t actually told Rust what our memory management looks like:
+Trying to compile this will fail of course. We haven’t actually told Rust what our memory management looks like:
 
 ```
-$ cargo +nightly build --target=wasm32-unknown-unknown --release \
-    -Z build-std=core,alloc -Z build-std-features=panic_immediate_abort
 
+$ cargo build --target=wasm32-unknown-unknown --release
 error: no global memory allocator found but one is required; link to std or add `#[global_allocator]` to a static item that implements the GlobalAlloc trait
+
+error: `#[alloc_error_handler]` function required, but not found
+
+note: use `#![feature(default_alloc_error_handler)]` for a default error handler
 ```
 
-As in my [C to WebAssembly article][c to wasm], my custom allocator is going to be a minimal bump allocator. We statically allocate an arena that will function as our heap and store where the “free area” begins. Because we are not using Wasm Threads, I am also going to ignore concurrent memory access issues.
+At the time of writing, in Rust 1.67, you need to provide an error handler that gets invoked when an allocation fails. Rust 1.68 has stablilized `default_alloc_error_handler`, which provides a default implementation of that error handler, so that error will just disappear. If you want to provide your own error handler instead, you can:
+
+```rust
+#[alloc_error_handler]
+fn alloc_error(_: core::alloc::Layout) -> ! {
+    core::arch::wasm32::unreachable()
+}
+```
+
+Withour allocation errors handled, we should finally provide a way to do actual memory allocations. Justl like in my [C to WebAssembly article][c to wasm], my custom allocator is going to be a minimal bump allocator. We statically allocate an arena that will function as our heap and keep track of where the “free area” begins. Because we are not using Wasm Threads, I am also going to ignore thread safety.
 
 ```rust
 use core::cell::UnsafeCell;
@@ -512,9 +477,9 @@ unsafe impl Sync for SimpleAllocator {}
 static ALLOCATOR: SimpleAllocator = SimpleAllocator::new();
 ```
 
-`UnsafeCell` is required because the `GlobalAlloc` trait that we are going to implement next only provides us with a `&self`, so we have to use interior mutability. Using `UnsafeCell` makes our struct implicity `!Sync`, which Rust doesn’t like for a global static variable. That’s why we have to also manually implement the `Sync` trait to tell Rust that we know what we are doing. The reason the struct is marked as `#[repr(C)]` is solely so we can manually specify an alignment value. This way we can ensure that even the very first allocation has an alignment of 32, which should satisfy most data structures.
+The `#[global_allocator]` declares a variable, whose type must implement the [`GlobalAlloc` trait][globalalloc], as the entity that manages the heap. The methods on the `GlobalAlloc` trait all use `&self`, so we have to use  `UnsafeCell` for interior mutability. Using `UnsafeCell` makes our struct implicity `!Sync`, which Rust doesn’t allow for global static variables. That’s why we have to also manually implement the `Sync` trait to tell Rust that we know what we are doing. The reason the struct is marked as `#[repr(C)]` is solely so we can manually specify an alignment value. This way we can ensure that even the very first slot in our arena has an alignment of 32, which should satisfy most data structures.
 
-Now for the core of the allocator logic:
+Now for the actual implementation of the `GlobalAlloc` trait:
 
 ```rust
 unsafe impl GlobalAlloc for SimpleAllocator {
@@ -537,22 +502,24 @@ unsafe impl GlobalAlloc for SimpleAllocator {
 }
 ```
 
-As any good bump allocator, you can’t free memory. The allocation logic is as simple as possible: Take the index of the first free byte in the arena, increase if necessary to fit the alignment requirements, and that’s your pointer! Then bump the head forward so you know where the next free byte is for the next allocation.
+As any good bump allocator, you can’t free memory. I also tried to keep the allocation logic is as simple as possible: Take the index of the first free byte in the arena, increase if necessary to satisfy the alignment requirements, and the address of that fiels is your pointer! Then bump the head forward so you know where the free bytes once the next allocation comes around.
 
 ### wee_alloc & lol_alloc
 
-You don’t have to implement the allocator yourself, of course. In fact, it’s probably advisable to rely on well-tested implementations out there. For example, there is [`wee_alloc`][wee_alloc], which is a very small (<1KB) allocator written by the Rust WebAssembly team and it even supports deallocating memory. Sadly, it seems unmaintained and has an open issue about memory corruption and leaking memory. There’s a [`lol_alloc`][lol_alloc] which seems to aspire to replace `wee_alloc` and provides multiple implementations for different use-cases and tradeoffs: 
+You don’t have to implement the allocator yourself, of course. In fact, it’s probably advisable to rely on a well-tested implementation. Dealing with bugs in the allocator and subtle memory corruption is not fun. 
+
+Many guides recommend [`wee_alloc`][wee_alloc], which is a very small (<1KB) allocator written by the Rust WebAssembly team that can also free memory. Sadly, it seems unmaintained and has an open issue about memory corruption and leaking memory. There’s a [`lol_alloc`][lol_alloc] which seems to aspire to replace `wee_alloc` and provides a modular setup so you can tune your off-the-shelf allocator to your needs: 
 
 ```rust
 use lol_alloc::{FreeListAllocator, LeakingAllocator};
 use lol_alloc::{LockedAllocator, AssumeSingleThreaded};
 
-// Better version of our allocator above.
+// Better version of our bump allocator above.
 #[global_allocator]
 static ALLOCATOR: AssumeSingleThreaded<LeakingAllocator> = 
   AssumeSingleThreaded::new(LeakingAllocator::new());
 
-// Proper allocator with added thread-safety
+// "Proper" allocator with added thread-safety
 #[global_allocator]
 static ALLOCATOR: LockedAllocator<FreeListAllocator> = 
   LockedAllocator::new(FreeListAllocator::new());
@@ -564,11 +531,11 @@ I don’t have any first-hand experience with `lol_alloc` outside of writing thi
 
 ## wasm-bindgen
 
-Now with all of that in our head, we have earned a look at the easy way of writing Rust for WebAssembly, which is using [wasm-bindgen].
+Now that we've done pretty much everything the hard way, we have earned a look at the easy way of writing Rust for WebAssembly, which is using [wasm-bindgen].
 
-wasm-bindgen provides a macro that does a lot of heavy lifting under the hood. Any function that you want to export, you annotate with the `#[wasm_bindgen]` macro.  This macro adds the same compiler directives we added manually earlier in this article. But that’s not the heavy lifting. When the macro is processing, say, `my_func` it also generates another function called `__wbindgen_describe_my_func` and exports it. 
+wasm-bindgen provides a macro that does a lot of heavy lifting under the hood. Any function that you want to export, you annotate with the `#[wasm_bindgen]` macro. This macro adds the same compiler directives we added manually earlier in this article. But that’s not what I mean by heavy lifting. For every function that you want to export from your Wasm module, wasm_bindgen generates another function that returns a descriptor of your function.
 
-If you were to invoke that additional function on the WebAssembly module, it would return a [numeric representation][wasm-bindgen descriptor] of the function signature of `my_func`. For example, if `my_func` was the `add` function from above, the descriptor would look something like this:
+For example, if we wanted to export our `add` function from above, the macro emits another function called `__wbindgen_describe_add` and exports it. If you invoke `__wbindgen_describe_add`, it returns the descriptor in a [numeric representation][wasm-bindgen descriptor]. The descriptor is nothing else than a more detailed version of the function's signature. For example, our `add` function returns this descriptor:
 
 ```
 Function(
@@ -586,9 +553,13 @@ Function(
 )
 ```
 
-This format is capable of representing quite complex function signatures. The CLI that accompanies wasm-bindgen inspects these function signatures to generate near optimal JavaScript bindings (or “glue code”) that let you call these functions seamlessly from JavaScript. It can even pass higher-level types like `ArrayBuffer` or closures.
+This format is capable of representing quite complex function signatures. What for? wasm-bindgen is a crate, but also comes with an accompanying CLI. The CLI extracts and decodes these signatures by execution all `__wbindgen_describe_*` functions and uses that information to generate near optimal JavaScript bindings (or “glue code”), afterwards it removes all these functions from the binary again as they are no longer needed. The JavaScript bindings allow you to call all export functions in a seamless way, even allowing you to pass higher-level types like `ArrayBuffer` or closures.
 
 If you want to write Rust for WebAssembly, wasm-bindgen should be your first choice. wasm-bindgen doesn’t work with `#![no_std]`, but in practice that is rarely a problem.
+
+### wasm-pack
+
+I also quickly want to mention [wasm-pack], which is kind of an orchestrator for many of the tools I have mentioned. `wasm-pack` can bootstrap a new Rust project with settings optimized for WebAssembly. When building a project using `wasm-pack`, it will invoke `cargo` for you with all the right flags, it will then invoke `wasm-bindgen` for you to generate bindigns and finally it will run `wasm-opt` to make sure you are not leaving any performance on the table. `wasm-pack` will also make your WebAssembly module ready to be published to npm, but I have personally never used that functionality.
 
 ## Conclusion
 
@@ -621,3 +592,4 @@ That being said, I find it extremely useful to know what Rust itself is capable 
 [webassembly types]: https://webassembly.github.io/spec/core/syntax/types.html#number-types
 [lto]: https://llvm.org/docs/LinkTimeOptimization.html
 [codegen options]: https://doc.rust-lang.org/rustc/codegen-options/index.html#overflow-checks
+[globalalloc]: https://doc.rust-lang.org/stable/core/alloc/trait.GlobalAlloc.html
