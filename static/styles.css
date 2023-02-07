@@ -358,8 +358,8 @@ footer > .arrows {
   width: var(--social-icon);
   height: var(--social-icon);
   background: var(--white);
-  mask: var(--mask) var(--social-icon);
-  -webkit-mask: var(--mask) var(--social-icon);
+  mask: var(--mask) var(--social-icon) / var(--social-icon);
+  -webkit-mask: var(--mask) var(--social-icon) / var(--social-icon);
 }
 
 .icon:empty {

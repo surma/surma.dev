@@ -5,6 +5,7 @@ const baseData = {
   avatar: "surma.jpg",
   socials: {
     twitter: "https://twitter.com/dassurma",
+    mastodon: "https://toot.cafe/@surma",
     github: "https://github.com/surma",
     instagram: "https://instagram.com/dassurma",
     keybase: "https://keybase.io/surma",
