@@ -11,11 +11,11 @@ For many, Rust is the first choice when targeting WebAssembly. Let’s take full
 
 <!-- more -->
 
-A long old time ago, I wrote a blog post on [how to compile C to WebAssembly without Emscripten][c to wasm], i.e. without the default tool that makes that process easy. In Rust, the tool that makes WebAssembly easy is called [wasm-bindgen], and we are going to ditch it! At the same time, Rust is a bit different in that WebAssembly was always a first-class target for Rust and the standard library is laid out to support it out of the box.
+A long old time ago, I wrote a blog post on [how to compile C to WebAssembly without Emscripten][c to wasm], i.e. without the default tool that makes that process easy. In Rust, the tool that makes WebAssembly easy is called [wasm-bindgen], and we are going to ditch it! At the same time, Rust is a bit different in that WebAssembly was always a first-class target and the standard library is laid out to support it out of the box.
 
 ## Rust to WebAssembly 101
 
-Let’s see how we can get Rust to emit WebAssembly with as little deviation from the standard Rust workflow as possible. If you look around the internet, a lot of articles and guides tell you to create a Rust library project with `cargo init --lib` add this line to your `Cargo.toml`:
+Let’s see how we can get Rust to emit WebAssembly with as little deviation from the standard Rust workflow as possible. If you look around the internet, a lot of articles and guides tell you to create a Rust library project with `cargo init --lib` and add this line to your `Cargo.toml`:
 
 |||codediff|toml
   [package]
@@ -29,7 +29,7 @@ Let’s see how we can get Rust to emit WebAssembly with as little deviation fro
   [dependencies]
 |||
 
-Without setting the crate type to `cdylib`, the Rust compiler would emit a `.rlib` file, which is Rust’s unstable library format that may change from Rust release to Rust release. While `cdylib` implies a dynamic library that is C-compatible, I suspect it really just stands for “use the interoperable format”, or something to that effect.
+Without setting the crate type to `cdylib`, the Rust compiler would emit a `.rlib` file, which is Rust’s own library format. While `cdylib` implies a dynamic library that is C-compatible, I suspect it really just stands for “use the interoperable format”, or something to that effect.
 
 For now, we'll work with the default function that Cargo generates when creating a new library:
 
@@ -49,15 +49,19 @@ You'll find a freshly generated WebAssembly module in `target/wasm32-unknown-unk
 
 ### Alternative: As a binary
 
-If you are like me and adding that line to your `Cargo.toml` makes you feel weird, there’s a way around that! If your crate is designated as a binary (i.e. created via `cargo init --bin` and/or has a `main.rs` instead of a `lib.rs`), compilation to WebAssembly will success straight away. Well, until you realize you have to have a `main()` function with the normal `main` function signature, or the compiler will kick off at you. What you can do is remove the `main()` function altogether and let the compiler know that this is intentional by adding the `#![no_main]` crate macro to your `main.rs`.
+If you are like me and adding that line to your `Cargo.toml` makes you feel weird, there’s a way around that! If your crate is designated as a binary (i.e. created via `cargo init --bin` and/or has a `main.rs` instead of a `lib.rs`), compilation to WebAssembly will succed straight away. Well, until you realize there is a lot more code in that WebAssembly module than you bargained for. You can remove the `main()` function, buth the compiler will kick off at you. You have to actively let the compiler know that the absence of `main()` is intentional by adding the `#![no_main]` crate macro to your `main.rs`. Now the emitted WebAssembly binary looks reasonable, albeit devoid of any functions.
 
-Is that better? It seems like a question of taste to me, as both approaches seem to be functionally equivalent and generate the same WebAssembly code. Most of the time, WebAssembly modules seem to be taking the role of a library more than the role of an executable (except in the context of [WASI]), so the library approach seems semantically more correct to me, but it’s a rather weak argument I think. Unless noted otherwise, I’ll be using the library setup for the remainder of this article. 
+Is that better? It seems like a question of taste to me, as both approaches seem to be functionally equivalent and generate the same WebAssembly code. Most of the time, WebAssembly modules seem to be taking the role of a library more than the role of an executable (except in the context of [WASI], more on that later!), so the library approach seems semantically preferable to me. Unless noted otherwise, I’ll be using the library setup for the remainder of this article. 
 
 ### Exporting
 
-Let’s take a look at the WebAssembly code that the compiler generates for that `add` function. For that purpose, I recommend the [WebAssembly Binary Toolkit (wabt for short)][wabt], which provides helpful tools like `wasm-objdump` and `wasm2wat`. It’s also good to have [binaryen] installed which provides a bunch of tools, but I really only use `wasm-opt`. 
+Okay, we have created a library crate with the default `add` function inside, we have set the crate type to `cdylib` and we have compiled that crate to WebAssembly. Let’s take a look at the WebAssembly code that the compiler generates. For that purpose, I recommend the [WebAssembly Binary Toolkit (wabt for short)][wabt], which provides helpful tools like `wasm-objdump` and `wasm2wat`. It’s also good to have [binaryen] installed which provides `wasm-dis`, but does not emitted "proper" WebAssembly Text Format (WAT). In fact, I usually only use `wasm-opt` from binaryen.
 
-Once compiled and then disassembled again, you’ll be outraged to find that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts.
+```
+$ wasm2wat ./target/wasm32-unknown-unknown/release/my_project.wasm
+```
+
+This command will convert a WebAssembly binary to WAT and output it to stdout.
 
 ```wasm
 (module
@@ -71,7 +75,7 @@ Once compiled and then disassembled again, you’ll be outraged to find that our
   (export "__heap_base" (global 2)))
 ```
 
-Turns out declaring a function as `pub` is _not_ enough to get it to show up in our final WebAssembly module. I kinda wish it was enough, but I suspect `pub` is exclusive about Rust module visibility, not about linker-level visibility.
+It is with outrage that we discover that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts. Turns out declaring a function as `pub` is _not_ enough to get it to show up in our final WebAssembly module. I kinda wish it was enough, but I suspect `pub` is exclusive about Rust module visibility, not about linker-level visibility.
 
 The quickest way to change the compiler's behavior is to explicitly give the function an export name:
 
@@ -82,24 +86,7 @@ The quickest way to change the compiler's behavior is to explicitly give the fun
   }
 |||
 
-If you don’t intend to change the functions external name, you can also use `#[no_mangle]` instead, instructing the compiler to not mangle the symbol name during compilation. I feel like `no_mangle` hides the true intention of the developer here, so I tend to prefer the `export_name`. There’s another benefit: I found that functions at the module boundary often end up being undiomatic, as you will inevitably pass around raw pointers as numbers rather than higher-level data types. I often end up writing a wrapper function that contains the conversion from higher-level types to raw pointer values. From the Rust side, I want the wrapper function to have the same name as the low-level function from the WebAssembly side. As a slightly contrived example:
-
-
-```rust
-#[export_name = "inc_all"]
-pub fn inc_all_unsafe(ptr_value: u32, len: u32, delta: u32) {
-    let ptr = ptr_value as *mut u32;
-    for i in 0..len {
-      unsafe {
-          *ptr.offset(i) += delta;
-      }
-    }
-}
-
-pub fn inc_all(slice: &mut u32, delta: u32) {
-    inc_all_unsafe(slice as *mut u32 as u32, slice.len() as usize, delta)
-}
- ```
+If you don’t intend to change the functions external name, you can also use `#[no_mangle]` instead, which will have the same effect. I feel like `no_mangle` hides the true intention of the developer here, so I tend to prefer the `export_name`. 
 
 Having given our `add` function an export name, we can compile the project again and inspect the resulting WebAssembly file:
 
@@ -124,20 +111,30 @@ Having given our `add` function an export name, we can compile the project again
 This module is easy to run in Node, or Deno or even the browser:
 
 ```js
-const data = /* read my_project.wasm into an ArrayBuffer */;
+// Node
+const data = require("fs").readFileSync("./my_project.wasm");
+// Deno
+const data = await Deno.readFile("./my_project.wasm");
+// Web
+const data = await fetch("./my_project.wasm").then(r => r.arrayBuffer());
+
 const importObj = {
 };
 const {instance} = await WebAssembly.instantiate(data, importObj);
 instance.exports.add(40, 2) // returns 42
 ```
 
-And suddenly, we have pretty much all the power of Rust at our fingertips to write WebAssembly. Special care needs to be taken with functions at the module boundary (i.e. the ones you call from JavaScript). It’s best to stick to types that map cleanly to [WebAssembly types] (like `i32` or `f64`). If you use higher-level types like arrays, slices, or even owned types like `String`, it will compile, but yield a unexpected function signature and will generally become a bit hard to use. More on that later!
+And suddenly, we have pretty much all the power of Rust at our fingertips to write WebAssembly. 
+
+> **Note:** On the web it is advisable to _not_ call `r.arrayBuffer()` and instead pass the `Response` straight to `WebAssembly.instantiateStreaming`. This allows the WebAssembly compiler to start compiling while the file is being downloaded.
+
+Special care needs to be taken with functions at the module boundary (i.e. the ones you call from JavaScript). It’s best to stick to types that map cleanly to [WebAssembly types] (like `i32` or `f64`). If you use higher-level types like arrays, slices, or even owned types like `String`, it will compile, but yield a unexpected function signature and will generally become harder to use. More on that later!
 
 ### Importing
 
-One important part of WebAssembly is its sandbox. It ensure that the code running in the WebAssembly VM gets no access to the host environment whatsoever, unless it was explicitly given access to individual functions through imports.
+One important part of WebAssembly is its sandbox. It ensures that the code running in the WebAssembly VM gets no access to anything in the host environment apart from the functions that were explicitly passed into the sandbox via the imports object.
 
-Let’s say we want to get access to JavaScript’s random number generator. We could pull in the `rand` Rust crate, but why ship code for something if the host has already shipped a solution for the same problem. To make that work, we need to declare that we expect to be given an import.
+Let’s say we want to generate some random numbers in our Rust code. We could pull in the `rand` Rust crate, but why ship code for something if we can grab the existing implementation for free. To make that work, we need to declare that our WebAssembly module expects an import.
 
 |||codediff|rust
 + #[link(wasm_import_module = "Math")]
@@ -153,11 +150,11 @@ Let’s say we want to get access to JavaScript’s random number generator. We 
   }
 |||
 
-`extern "C"` blocks declare functions that we assume to be given ”somewhere else” during linking. This is usually how you link against C libraries in Rust, but the mechanism works for WebAssembly as well. However, external functions are always implicitly unsafe, as the compiler can’t make any safety guarantees for non-Rust functions that are not present. As a result, we need to wrap their invocations into `unsafe { ... }`.
+`extern "C"` blocks declare functions that we assume to be provided by ”someone else” during linking. This is usually how you link against C libraries in Rust, but the mechanism works for WebAssembly as well. However, external functions are always implicitly unsafe, as the compiler can’t make any safety guarantees for non-Rust functions that are not present. As a result, we need to wrap in `unsafe { ... }` blocks whenever we call them.
 
-This code will compile!However, if we used the exact same JavaScript code as above, the `WebAssembly.instantiate()` call would throw an error. If a WebAssembly module expects imports, they _must_ be provided on the imports object. 
+This code will compile, but our JavaScript code that instantiates the module now throws an error. If a WebAssembly module expects imports, they _must_ be present on the imports object. 
 
-The imports _object_ is a dictionary of import _modules_, that each are dicitonary of import _items_. As declared, we expect an import module with the name `"Math"` to provide a function called `"random"`. These values have of course been carefully chosen so that we can just pass in the entire `Math` object to satisfy the import.
+The imports _object_ is a dictionary of import _modules_, that each are dicitonary of import _items_. In our Rust code we declared ab import module with the name `"Math"`, and expect a function called `"random"` to be present in that module. These values have of course been carefully chosen so that we can just pass in the entire `Math` object.
 
 |||codediff|js
   const importObj = {
@@ -180,7 +177,7 @@ fn random() -> f64 {
 
 #[export_name = "add"]
 pub fn add(left: f64, right: f64) -> f64 {
-    left + right  
+    left + right + random()
 }
 ```
 
@@ -188,13 +185,13 @@ By the way, if we hadn’t specified the `#[link(wasm_import_module = ...)]` att
 
 ### Higher-level types
 
-This section is purely informative and the result of me falling into a rabbit hole. You don’t need to know this stuff to make good use of Rust for WebAssembly! In fact, my recommendation is the opposite: Don’t deal with higher-level types yourself. Let battle-tested toolslike [`wasm-bindgen`][wasm-bindgen] do it for you instead! Anyway...
+This section is purely informative and the result of me falling into a rabbit hole. You don’t need to know this stuff to make good use of Rust for WebAssembly! In fact, my recommendation is the opposite: Don’t deal with higher-level types yourself. Let battle-tested tools like [`wasm-bindgen`][wasm-bindgen] do it for you instead! Anyway...
 
 I said earlier that for functions at the module boundary, it is best to stick to value types that map cleanly to the data types that WebAssembly supports. But what _does_ happen with values that do not have an obvious counterpart? I investiged!
 
-Sized types (like structs, enums, etc) are turned into a simple pointer. As a result, each parameter or return value that is a sized type will come out as a `i32`. The exception are Arrays and Tuples, which are both sized types, but are converted differently depending on whether a type is bigger than 32 bits. The data of types like `(u8, u8)` or `[u16; 2]` will be bitpacked into a single `i32` and passed as an immediate value. Bigger types like `(u32, u32)` or `[u8; 10]` will be passed as a pointer in the form of an `i32`, pointing at the first element. Things get even more confusing if we look at function return values: If you return an array type bigger than 32 bits, it will turn into a function parameter of type `i32`. If a function returns a tuple, it will always be turned into a function parameter of `i32`, even if it is smaller than 32 bit.
+Sized types (like structs, enums, etc) are turned into a simple pointer. As a result, each parameter or return value that is a sized type will come out as a `i32`. The exception are Arrays and Tuples, which are both sized types, but are converted depending on whether a type uses more than 32 bits. That means that the data of types like `(u8, u8)` or `[u16; 2]` will be bitpacked into a single `i32` and passed as an immediate value. Bigger types like `(u32, u32)` or `[u8; 10]` will be passed as a pointer in the form of an `i32`, pointing at the first element. Things get even more confusing if we look at function return values: If you return an array type bigger than 32 bits, the function will get _no_ return value and instead will get an additional function parameter of type `i32`, which the function will use a pointer to a place to store the result. If a function returns a tuple, it will always turn into a function parameter, regardless of the tuple's size.
 
-In contrast, unsized types (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, are turned into fat pointers. Fat pointers are so called, because they consist of not just an address, but also of some additional metadata. A parameter that is a fat pointer is effectively an `i32` that points to a tuple `(<pointer to start of data), <pointer to metadata>)`. In the case of a `str` or a slice, the metadata is the length of the data. In the case of a trait object, it’s the virtual table (or vtable), which is a list of function pointers to the individual trait function implementation. If you want to know more details about what a VTable in Rust looks like, I can recommend [this article][vtable] by Thomas Bächler. Because fat pointers are bigger than 32 bit, they, too, are converted from a return value to a function parameter. That means that whenever a return value is turned into a parameter, it is now up to the caller to provide space where the function can store the fat pointer for the return value!
+In contrast, unsized types (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, are turned into fat pointers. Fat pointers are not just an address, but also of some additional metadata. A parameter that is a fat pointer is effectively an `i32` that points to a tuple `(<pointer to start of data), <pointer to metadata>)`. In the case of a `str` or a slice, the metadata is the length of the data. In the case of a trait object, it’s the virtual table (or vtable), which is a list of function pointers to the individual trait function implementation. If you want to know more details about what a VTable in Rust looks like, I can recommend [this article][vtable] by Thomas Bächler. Because fat pointers are bigger than 32 bit, they, too, are converted from a return value to a function parameter. That means that whenever a return value is turned into a parameter, it is now up to the caller to provide space where the function can store the fat pointer for the return value!
 
 ## Module size
 
