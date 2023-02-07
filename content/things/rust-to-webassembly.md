@@ -191,13 +191,19 @@ I said earlier that for functions at the module boundary, it is best to stick to
 
 Sized types (like structs, enums, etc) are turned into a simple pointer. As a result, each parameter or return value that is a sized type will come out as a `i32`. The exception are Arrays and Tuples, which are both sized types, but are converted depending on whether a type uses more than 32 bits. That means that the data of types like `(u8, u8)` or `[u16; 2]` will be bitpacked into a single `i32` and passed as an immediate value. Bigger types like `(u32, u32)` or `[u8; 10]` will be passed as a pointer in the form of an `i32`, pointing at the first element. Things get even more confusing if we look at function return values: If you return an array type bigger than 32 bits, the function will get _no_ return value and instead will get an additional function parameter of type `i32`, which the function will use a pointer to a place to store the result. If a function returns a tuple, it will always turn into a function parameter, regardless of the tuple's size.
 
-In contrast, unsized types (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, are turned into fat pointers. Fat pointers are not just an address, but also of some additional metadata. A parameter that is a fat pointer is effectively an `i32` that points to a tuple `(<pointer to start of data), <pointer to metadata>)`. In the case of a `str` or a slice, the metadata is the length of the data. In the case of a trait object, it’s the virtual table (or vtable), which is a list of function pointers to the individual trait function implementation. If you want to know more details about what a VTable in Rust looks like, I can recommend [this article][vtable] by Thomas Bächler. Because fat pointers are bigger than 32 bit, they, too, are converted from a return value to a function parameter. That means that whenever a return value is turned into a parameter, it is now up to the caller to provide space where the function can store the fat pointer for the return value!
+Unsized types (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, are split into two values: One value is the pointer to the data, the other value is a pointer to a bit of metadata. In the case of a `str` or a slice, the metadata is the length of the data. In the case of a trait object, it’s the virtual table (or vtable), which is a list of function pointers to the individual trait function implementations. If you want to know more details about what a VTable in Rust looks like, I can recommend [this article][vtable] by Thomas Bächler. Function parameters that are unsized types are turned into _two_ parameters, one for each pointer. 
+
+If a function has an unsized type as a return value, the function gets an addition function parameter in the first position. It's the callers responsibility to pass in a pointer where the function can store a “fat pointer”. A fat pointer is a tuple of two pointers, combining the the pointers for data and metadata into one data structure.
+
+> **Note:** While not often used, Rust does have `u128` and `i128` as types. These are split into two `i64` values.
+
+As I said, this is not something you need to know to use Rust for WebAssembly. But if you want to know more, all of this _and more_ is defined in the [C ABI] for WebAssembly that LLVM utilized.
 
 ## Module size
 
 When deploying WebAssembly on the web, the size of the WebAssembly binary matters. Every byte needs to go over the network and through the browser’s WebAssembly compiler, so a smaller binary size means less time spent waiting for the user until the WebAssembly starts working. If we build our default project from above as a release build, we get a whopping 1.7MB of WebAssembly. That does not seem right for adding two numbers.
 
-A quick way to inspect the innards of a WebAssembly module is `wasm-objdump`. By printing the headers of all sections using `-h` we get a nice summary:
+A quick way to inspect the innards of a WebAssembly module is `wasm-objdump`, provided by [wabt]. By printing the headers of all sections using `-h` we get a nice summary:
 
 ```
 $ wasm-objdump -h target/wasm32-unknown-unknown/release/my_project.wasm
@@ -224,7 +230,7 @@ Sections:
    Custom start=0x0019f29b end=0x0019f2e8 (size=0x0000004d) "producers"
 ```
 
-`wasm-objdump` is quite versatile and offers a familiar CLI for people who have experience developing for other ISAs in assembly. However, specifically for hunting down the culprit of big binary sizes, it lacks some simple functionality like odering the sections by size. Luckily, there is another tool called [Twiggy], that excels at this:
+`wasm-objdump` is quite versatile and offers a familiar CLI for people who have experience developing for other ISAs in assembly. However, specifically for debugging binary size, it lacks simple helpers like odering the sections by size. Luckily, there is another WebAssembly-specific tool called [Twiggy], that excels at this:
 
 ```
 $ twiggy top target/wasm32-unknown-unknown/release/my_project.wasm
@@ -254,19 +260,19 @@ $ twiggy top target/wasm32-unknown-unknown/release/my_project.wasm
 ...
 ```
 
-It’s now clearly visible that all main contributors to the module size are custom sections, which means they are not relevant for the execution of the module. They all contain informating that is used for debugging, so their presence might be a bit surprising, considering we were doing a release build. From what I can tell, `--release` makes Rust run code optimization and remove asserts and other checks. It does not affect whether debug symbols are packed into the binary.
+It’s now clearly visible that all main contributors to the module size are custom sections, which — by definition — are not relevant for the execution of the module. Their names imply that they contain information that is used for debugging, so it is somewhat surprising they are even emitted for a `--release` build. I suspect that release builds make `rustc` turn on code optimization, remove asserts and other checks. It does not affect whether debug symbols are packed into the binary.
 
-wabt comes with `wasm-strip`, a tool that removes everything that is unnecessary, including custom sections. After stripping, we are left with a module of a whopping 116B. Disassembling it show that the only function in that module is called `add` and executes `(f64.add (local.get 0) (local.get 1)))`, which means the Rust compiler was able to emit optimal code. Of course, staying on top of binary size gets more complicated with a growing code base.
+To address this we can use `wasm-strip`, provided yet again by wabt. It’s a tool that removes everything that is unnecessary, including custom sections. After stripping, we are left with a module of a whopping 116B. Disassembling it shows that the only function in that module is called `add` and executes `(f64.add (local.get 0) (local.get 1))`, which means the Rust compiler was able to emit optimal code. Of course, staying on top of binary size gets more complicated with a growing code base.
 
 ### Sneaky bloat
 
 I have seen a couple of complaints online about how big WebAssembly modules create by Rust are that do a seemingly small job. In my experience, there are three reasons why Rust emits surprisingly big WebAssembly binaries:
 
 * Debug build (i.e. forgetting to pass `--release` to `Cargo`)
-* Debug symbols (i.e. forgetting to run `wasm-strip)
+* Debug symbols (i.e. forgetting to run `wasm-strip`)
 * String formatting and panics 
 
-We have looked at the first two. Let’s take a closer look at the last one. This innocuois line of code compiles to 18KB of WebAssembly:
+We have looked at the first two. Let’s take a closer look at the last one. This innocuous line of code compiles to 18KB of WebAssembly:
 
 ```rust
 static PRIMES: &[i32] = &[2, 3, 5, 7, 11, 13, 17, 19, 23];
@@ -278,37 +284,6 @@ fn nth_prime(n: usize) -> i32 {
 ```
 
 Okay, maybe not so innocuous after all. You might already know what's going on here. 
-
-### LTO
-
-Before we start dissecting what code is being emitted and why, we can make use of a powerful feature of LLVM called [LTO (Link-Time Optimization)][lto]. While the `rustc` compiles and optimizes each create, there are certain optimizations that only become apparent during link time. A lot of functions have different branches depending on the input. At link time, it might be viable to deduce that only a subset of branches will ever possibly be taken, allowing the linker to eliminate the other branches, and potentially even entire functions that have now become dead code. Error reporting code is one of those examples with lots of branches.
-
-LTO is enabled through one of `rustc`’s many [codegen options], which you control in the `profile` section of your `Cargo.toml`. Specifically, we need to add this line to our `Cargo.toml` to enable LTO in release builds:
-
-|||codediff|toml
-  [package]
-  name = "my_project"
-  version = "0.1.0"
-  edition = "2021"
-  
-  [lib]
-  crate-type = ["cdylib"]
-  
-+ [profile.release]
-+ lto = true
-|||
-
-With LTO enabled, the stripped binary is reduced to 2.3K, which is quite impressive. The only cost of LTO is longer linking times, which will start getting noticable in bigger projects. But if binary size is a concern, LTO should be one of the first levers you make use of as it “only” costs build time and doesn’t require code changes.
-
-### wasm-opt
-
-Another tool that should almost never be excluded from your build pipeline is `wasm-opt` from [binaryen]. It is another optimization pass that works purely on WebAssembly binaries, agnostic to the source language it was produced with. Of course, higher-level languages have more information to work with to apply more sophisticated optimizations, so `wasm-opt` is not a replacement for enabled optimizations on your language’s compiler. However, it does often manage to shave off a couple percent of your module size.
-
-```
-$ wasm-opt -O3 -o output.wasm target/wasm32-unknown-unknown/my_project.wasm
-```
-
-In our case, `wasm-opt` reduces Rust’s 2.3K WebAssembly binary a bit further, yielding 2.0K. Of course, I won’t stop here. That’s still too much for an array lookup.
 
 ### Panicking
 
@@ -343,21 +318,52 @@ A third way would be to use some of the `unchecked` methods that Rust explicitly
 
 We can try and stay on top of where we might cause a panic and try to handle those paths manually. However, once we start relying on third-party crates this is less and less likely to succeed, because we can't easily change how the library does its error handling internally.
 
+### LTO
+
+We’ll probably have to make our peace with the fact that once we can’t avoid having a code path for panics in our code base. While we can try and mitigate the impact of panics (and we will do that!), there is a rather powerful optimization that will often yield some significant code saving. This optimization pass is provided by LLVM and is called [LTO (Link-Time Optimization)][lto]. `rustc` compiles and then optimizes each crate that you use and then links it all together. However, there are certain optimizations that only become apparent during link time. A lot of functions have different branches depending on the input. During compile time, you can only see the invocations of the functions from within the same crate. At link time, you know _all_ possible invocations of any given functions, so it might be possible for the linker to prove that certain paths of a function will never be taken, allowing it that code branch or even an entire function.
+
+LTO is disabled by default, as it is quite a costly optimization that can slow down compile times significantly, especially in bigger crates. It can be enabled through one of `rustc`’s many [codegen options], which you control in the `profile` section of your `Cargo.toml`. Specifically, we need to add this line to our `Cargo.toml` to enable LTO in release builds:
+
+|||codediff|toml
+  [package]
+  name = "my_project"
+  version = "0.1.0"
+  edition = "2021"
+  
+  [lib]
+  crate-type = ["cdylib"]
+  
++ [profile.release]
++ lto = true
+|||
+
+With LTO enabled, the stripped binary is reduced to 2.3K, which is quite impressive. The only cost of LTO is longer linking times, but if binary size is a concern, LTO should be one of the first levers you make use of as it “only” costs build time and doesn’t require code changes.
+
+### wasm-opt
+
+Another tool that should almost never be excluded from your build pipeline is `wasm-opt` from [binaryen]. It is another collection of optimization passes that work purely on the WebAssembly VM instructions, agnostic to the source language they were produced with. Of course, higher-level languages have more information to work with to apply more sophisticated optimizations, so `wasm-opt` is not a replacement for enabled optimizations on your language’s compiler. However, it does often manage to shave a couple additional bytes off your module size.
+
+```
+$ wasm-opt -O3 -o output.wasm target/wasm32-unknown-unknown/my_project.wasm
+```
+
+In our case, `wasm-opt` reduces Rust’s 2.3K WebAssembly binary a bit further, yielding 2.0K. But rest assured, I won’t stop here. That’s still too much for reading a value from an array lookup.
+
 ## No Standard
 
-Rust has a [standard library][rust std], which contains a lot of abstractions and utilities that you need on a daily basis when you do systems programming. Accessing files, getting the current time or opening network sockets. It’s all in there for you to use, without having to go searching on [crates.io] or anything like that. However, many of the data structures and functions make assumptions about the environment that they are used in: They assume that the details of hardware are abstracted into uniform APIs and they assume that they can somehow allocate (deallocate) chunks of memory at abritrary size. Usually, both of these jobs are fulfilled by the operating system.
+Rust has a [standard library][rust std], which contains a lot of abstractions and utilities that you need on a daily basis when you do systems programming. Accessing files, getting the current time or opening network sockets. It’s all in there for you to use, without having to go searching on [crates.io] or anything like that. However, many of the data structures and functions make assumptions about the environment that they are used in: They assume that the details of hardware are abstracted into uniform APIs and they assume that they can somehow allocate (and deallocate) chunks of memory of abritrary size. Usually, both of these jobs are fulfilled by the operating system, and most of us work in top an operating system.
+ 
+However, when you instantiate a WebAssembly module via the raw API, things are different: The sandbox — one of the defining security features of WebAssmebly — isolates the WebAssembly code from the host and by extension the operating system. All your code gets access to is a chunk of linear memory, which isn’t even managed to figure out which parse are in use and which parts are up for grabs.
 
-For most of us and our deployment environments, these assumptions are fulfilled. However, when you instantiate a WebAssembly module via the raw API, things are different: The sandbox — one of the defining security features of WebAssmebly — isolates the WebAssembly code from the host and by extension the operating system. You just get access to a chunk of linear memory, which doesn’t even have some central entity managing which part of the memory is in use and which parts are up for grabs.
-
-> **Note:** This is not part of this article, but just like WebAssembly abstracts away what kind of processor your code is running on, [WASI], the WebAssembly Systems Interface, aims to abstract away what kind of operating system your code is running on and give you a uniform API to work with regardless of environmen. Rust has (experimental) support for WASI.
+> **Note:** This is not part of this article, but just like WebAssembly s ian abstraction for the processor your code is running on, [WASI] (WebAssembly Systems Interface) aims to be an abstraction for the operating system your code is running on and give you a single, uniform API to work with regardless of environment. Rust has support for WASI, although WASI itself is still in development.
 
 This means that Rust gave us a false sense of security! It provided us with an entire standard library with no operating system to back it with. In fact, many of the stdlib modules are just [aliased][std unsupported] to fail. That means all functions that return a `Result<T>` always return `Err`, and all other functions `panic`.
 
 ### Learning from os-less devices
 
-Just a linear chunk of memory. No central entity managing the memory or the periphery. Just arithmetic. That might sound familiar if you have ever written code for bare metal processors, as is sometimes the case when you work with embedded systems. While embedded systems foten do run an entire Linux nowadays, smaller microprocessors do not. [Rust is also a language for embedded systems][embedded rust], and the [Embedded Rust Book] as well as the [Embedonomicon] explain how you write Rust correctly for those kinds of environments. 
+Just a linear chunk of memory. No central entity managing the memory or the periphery. Just arithmetic. That might sound familiar if you have ever written code for bare metal processors, as is sometimes the case when you work with embedded systems. While embedded systems often run Linux nowadays, smaller microprocessors don’t have enough resources to do so. [Rust is also a language for embedded systems][embedded rust], and the [Embedded Rust Book] as well as the [Embedonomicon] explain how you write Rust correctly for those kinds of environments. 
 
-To enter the world of bare metal 🤘, we have to add a single line to our code: `#![no_std]`. This crate macro tells Rust to not link against the standard library. Instead, it only links against [core][rust core]. The Embedonomicon explains what that means quite concisely:
+To enter the world of bare metal 🤘, we have to add a single line to our code: `#![no_std]`. This crate macro tells Rust to not link against the standard library. Instead, it only links against [core][rust core]. The Embedonomicon [explains][embedo no_std] what that means quite concisely:
 
 > The `core` crate is a subset of the `std` crate that makes zero assumptions about the system the program will run on. As such, it provides APIs for language primitives like floats, strings and slices, as well as APIs that expose processor features like atomic operations and SIMD instructions. However it lacks APIs for anything that involves heap memory allocations and I/O.
 > 
@@ -375,7 +381,7 @@ This can sound a bit scary, but let’s take it step by step. We start by declar
   }
 |||
 
-Sadly — and this was foreshadowed by the paragraph in the Embedonomicon — we need to provide some basics that `core` Rust needs to function. At the very top of the list: What should happen when a panic occurs in this environment? This is done by the aptly named panic handler, and can write the Rust-equivalent of “don’t move”:
+Sadly — and this was foreshafdowed by the paragraph in the Embedonomicon — this doesn’t compile as we need to provide some basics that `core` Rust needs to function. At the very top of the list: What should happen when a panic occurs in this environment? This is done by the aptly named panic handler, and we can get away with the Rust-equivalent of “FREEZE!”:
 
 ```rust
 #[panic_handler]
@@ -384,7 +390,7 @@ fn panic(_panic: &core::panic::PanicInfo<'_>) -> ! {
 }
 ```
 
-This is quite typical for embedded systems, effectively blocking the processor from making any more progress. However, this is not _great_ behavior on the web, so for WebAssembly specifically, I usually opt to manually emitting an `unreachable` instruction, that stops any Wasm VM in its tracks:
+This is quite typical for embedded systems, effectively blocking the processor from making any more progress after a panic happened. However, this is not _great_ behavior on the web, so for WebAssembly I usually opt to manually emitting an `unreachable` instruction, that stops any Wasm VM in its tracks:
 
 |||codediff|rust
   #[panic_handler]
@@ -438,7 +444,7 @@ error: `#[alloc_error_handler]` function required, but not found
 note: use `#![feature(default_alloc_error_handler)]` for a default error handler
 ```
 
-At the time of writing, in Rust 1.67, you need to provide an error handler that gets invoked when an allocation fails. Rust 1.68 has stablilized `default_alloc_error_handler`, which provides a default implementation of that error handler, so that error will just disappear. If you want to provide your own error handler instead, you can:
+At the time of writing, in Rust 1.67, you need to provide an error handler that gets invoked when an allocation fails. In the next release, Rust 1.68,`default_alloc_error_handler` has been stabilized, which means every Rust non-standard Rust program will come with a default implementation of that error handler. If you want to provide your own error handler anyway, you can:
 
 ```rust
 #[alloc_error_handler]
@@ -447,7 +453,7 @@ fn alloc_error(_: core::alloc::Layout) -> ! {
 }
 ```
 
-Withour allocation errors handled, we should finally provide a way to do actual memory allocations. Justl like in my [C to WebAssembly article][c to wasm], my custom allocator is going to be a minimal bump allocator. We statically allocate an arena that will function as our heap and keep track of where the “free area” begins. Because we are not using Wasm Threads, I am also going to ignore thread safety.
+Without allocation errors handled, we should finally provide a way to do actual memory allocations. Just like in my [C to WebAssembly article][c to wasm], my custom allocator is going to be a minimal bump allocator. We statically allocate an arena that will function as our heap and keep track of where the “free area” begins. Because we are not using Wasm Threads, I am also going to ignore thread safety.
 
 ```rust
 use core::cell::UnsafeCell;
@@ -474,7 +480,7 @@ unsafe impl Sync for SimpleAllocator {}
 static ALLOCATOR: SimpleAllocator = SimpleAllocator::new();
 ```
 
-The `#[global_allocator]` declares a variable, whose type must implement the [`GlobalAlloc` trait][globalalloc], as the entity that manages the heap. The methods on the `GlobalAlloc` trait all use `&self`, so we have to use  `UnsafeCell` for interior mutability. Using `UnsafeCell` makes our struct implicity `!Sync`, which Rust doesn’t allow for global static variables. That’s why we have to also manually implement the `Sync` trait to tell Rust that we know what we are doing. The reason the struct is marked as `#[repr(C)]` is solely so we can manually specify an alignment value. This way we can ensure that even the very first slot in our arena has an alignment of 32, which should satisfy most data structures.
+The `#[global_allocator]` marks a global variable, whose type must implement the [`GlobalAlloc` trait][globalalloc], as the entity that manages the heap. The methods on the `GlobalAlloc` trait all use `&self`, so we have to use  interior mutability. I opted for `UnsafeCell` here. Using `UnsafeCell` makes our struct implicity `!Sync`, which Rust doesn’t allow for global static variables. That’s why we have to also manually implement the `Sync` trait to tell Rust that we know what we are doing. The reason the struct is marked as `#[repr(C)]` is solely so we can manually specify an alignment value. This way we can ensure that even the very first slot in our arena has an alignment of 32, which should satisfy most data structures.
 
 Now for the actual implementation of the `GlobalAlloc` trait:
 
@@ -484,9 +490,13 @@ unsafe impl GlobalAlloc for SimpleAllocator {
         let size = layout.size();
         let align = layout.align();
 
+        // Find the next address that has the right alignment.
         let idx = (*self.head.get()).next_multiple_of(align);
+        // Bump the head to the next free byte
         *self.head.get() = idx + size;
         let arena: &mut [u8; ARENA_SIZE] = &mut (*self.arena.get());
+        // If we ran out of arena space, we return a null pointer, which
+        // signals a failed allocation.
         match arena.get_mut(idx) {
             Some(item) => item as *mut u8,
             _ => core::ptr::null_mut(),
@@ -499,13 +509,13 @@ unsafe impl GlobalAlloc for SimpleAllocator {
 }
 ```
 
-As any good bump allocator, you can’t free memory. I also tried to keep the allocation logic is as simple as possible: Take the index of the first free byte in the arena, increase if necessary to satisfy the alignment requirements, and the address of that fiels is your pointer! Then bump the head forward so you know where the free bytes once the next allocation comes around.
+As with any good bump allocator, you can’t free memory.
 
 ### wee_alloc & lol_alloc
 
 You don’t have to implement the allocator yourself, of course. In fact, it’s probably advisable to rely on a well-tested implementation. Dealing with bugs in the allocator and subtle memory corruption is not fun. 
 
-Many guides recommend [`wee_alloc`][wee_alloc], which is a very small (<1KB) allocator written by the Rust WebAssembly team that can also free memory. Sadly, it seems unmaintained and has an open issue about memory corruption and leaking memory. There’s a [`lol_alloc`][lol_alloc] which seems to aspire to replace `wee_alloc` and provides a modular setup so you can tune your off-the-shelf allocator to your needs: 
+Many guides recommend [`wee_alloc`][wee_alloc], which is a very small (<1KB) allocator written by the Rust WebAssembly team that can also free memory. Sadly, it seems unmaintained and has an open issue about memory corruption and leaking memory. There’s a [`lol_alloc`][lol_alloc] which seems to aspire to replace `wee_alloc` and provides a modular setup so you can tune the allocator to your needs: 
 
 ```rust
 use lol_alloc::{FreeListAllocator, LeakingAllocator};
@@ -590,3 +600,5 @@ That being said, I find it extremely useful to know what Rust itself is capable 
 [lto]: https://llvm.org/docs/LinkTimeOptimization.html
 [codegen options]: https://doc.rust-lang.org/rustc/codegen-options/index.html#overflow-checks
 [globalalloc]: https://doc.rust-lang.org/stable/core/alloc/trait.GlobalAlloc.html
+[c abi]: https://github.com/WebAssembly/tool-conventions/blob/main/BasicCABI.md#function-signatures
+[embedo no_std]: https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#what-does-no_std-mean
