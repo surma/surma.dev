@@ -196,9 +196,9 @@ Unsized types (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, are split into tw
 
 If a function has an unsized type as a return value, the function gets an addition function parameter in the first position. It's the callers responsibility to pass in a pointer where the function can store a “fat pointer”. A fat pointer is a tuple of two pointers, combining the the pointers for data and metadata into one data structure.
 
-> **Octowords:** While not often used, Rust does have `u128` and `i128` as types. These are split into two `i64` values.
+> **Octowords:** While not often used, Rust does have `u128` and `i128` as types. Just like fat pointers, these 128-bit wide types are split into two separate `i64` values.
 
-As I said, this is not something you need to know to use Rust for WebAssembly. But if you want to know more, all of this _and more_ is defined in the [C ABI] for WebAssembly that LLVM utilized.
+As I said, this is not something you need to know to use Rust for WebAssembly. But if you want to know more, all of this _and more_ is defined in the [C ABI] for WebAssembly that LLVM utilizes.
 
 ## Module size
 
