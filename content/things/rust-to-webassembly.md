@@ -576,8 +576,10 @@ If you want to write Rust for WebAssembly, wasm-bindgen should be your first cho
 Fun fact: We can use Rust to add our own custom sections to a WebAssembly module. If we declare an array of bytes (not a slice!), we can add a `#[link_section = ...]` attribute to pack those bytes into its own section.
 
 ```rust
-#[link_section = "surmsection"]
-pub static _GENERATED: [u8; 5] = *b"hello world";
+const _: () = {
+    #[link_section = "surmsection"]
+    static SECTION_CONTENT: [u8; 11] = *b"hello world";
+};
 ```
 
 And we can extract this data using the [`WebAssembly.Module.customSection()` API][customsection] or using `wasm-objdump`:
