@@ -511,6 +511,8 @@ unsafe impl GlobalAlloc for SimpleAllocator {
 
 As with any good bump allocator, you can’t free memory.
 
+`#[global_allocator]` is not limited to `#[no_std]`! You can override Rust's default allocator and replace it with your own, as Rust's default allocator consumes about 10K of Wasm space.
+
 ### wee_alloc & lol_alloc
 
 You don’t have to implement the allocator yourself, of course. In fact, it’s probably advisable to rely on a well-tested implementation. Dealing with bugs in the allocator and subtle memory corruption is not fun. 
@@ -540,9 +542,9 @@ I don’t have any first-hand experience with `lol_alloc` outside of writing thi
 
 Now that we've done pretty much everything the hard way, we have earned a look at the easy way of writing Rust for WebAssembly, which is using [wasm-bindgen].
 
-wasm-bindgen provides a macro that does a lot of heavy lifting under the hood. Any function that you want to export, you annotate with the `#[wasm_bindgen]` macro. This macro adds the same compiler directives we added manually earlier in this article. But that’s not what I mean by heavy lifting. For every function that you want to export from your Wasm module, wasm_bindgen generates another function that returns a descriptor of your function.
+They key feature of wasm-bindgen is the `#[wasm_bindgen]` macro that you put on every function that you want to be exported. This macro adds the same compiler directives we added manually earlier in this article, but it does something way more useful in addition to that:
 
-For example, if we wanted to export our `add` function from above, the macro emits another function called `__wbindgen_describe_add` and exports it. If you invoke `__wbindgen_describe_add`, it returns the descriptor in a [numeric representation][wasm-bindgen descriptor]. The descriptor is nothing else than a more detailed version of the function's signature. For example, our `add` function returns this descriptor:
+For example, if we add the macro to our `add` function from above, it emits another function called `__wbindgen_describe_add` and exports it. This function returns the a description of the function's signature in a [numeric format][wasm-bindgen descriptor]. The descriptor of our `add` function looks like this:
 
 ```
 Function(
@@ -560,19 +562,44 @@ Function(
 )
 ```
 
-This format is capable of representing quite complex function signatures. What for? wasm-bindgen is a crate, but also comes with an accompanying CLI. The CLI extracts and decodes these signatures by execution all `__wbindgen_describe_*` functions and uses that information to generate near optimal JavaScript bindings (or “glue code”), afterwards it removes all these functions from the binary again as they are no longer needed. The JavaScript bindings allow you to call all export functions in a seamless way, even allowing you to pass higher-level types like `ArrayBuffer` or closures.
+This is quite the simple function, but descriptor data structure is capable of representing quite complex function signatures. 
 
+wasm-bindgen is not just a crate, but also comes with a CLI, that you run as a post-processing step on our Wasm binary. The CLI extracts those descriptors and uses the information to generate tailor-made JavaScript bindings (often also called “glue code”), and then removes all these descriptor functions from the binary. The JavaScript encodes all the knowledge about higher-level types I talked about earlier, allowing you to seamlessly pass types like strings, `ArrayBuffer` or even closures.
+\
 If you want to write Rust for WebAssembly, wasm-bindgen should be your first choice. wasm-bindgen doesn’t work with `#![no_std]`, but in practice that is rarely a problem.
 
-### wasm-pack
+### Custom Section
 
-I also quickly want to mention [wasm-pack], which is kind of an orchestrator for many of the tools I have mentioned. `wasm-pack` can bootstrap a new Rust project with settings optimized for WebAssembly. When building a project using `wasm-pack`, it will invoke `cargo` for you with all the right flags, it will then invoke `wasm-bindgen` for you to generate bindigns and finally it will run `wasm-opt` to make sure you are not leaving any performance on the table. `wasm-pack` will also make your WebAssembly module ready to be published to npm, but I have personally never used that functionality.
+Fun fact: We can use Rust to add our own custom sections to a WebAssembly module. If we declare an array of bytes (not a slice!), we can add a `#[link_section = ...]` attribute to pack those bytes into its own section.
+
+```rust
+#[link_section = "surmsection"]
+pub static _GENERATED: [u8; 5] = *b"hello world";
+```
+
+And we can extract this data using the [`WebAssembly.Module.customSection()` API][customsection] or using `wasm-objdump`:
+
+```
+$ wasm-objdump -s -j surmsection target/wasm32-unknown-unknown/release/my_project.wasm
+
+my_project.wasm:   file format wasm 0x1
+
+Contents of section Custom:
+00d7e30: 0b73 7572 6d73 6563 7469 6f6e 6865 6c6c  .surmsectionhell
+00d7e40: 6f20 776f 726c 64                        o world
+```
+
+This can come in handy if, like wasm-bindgen, you want to embed additional data into a binary for a post-processing step.
+
+## wasm-pack
+
+I also quickly want to mention [wasm-pack], which is another Rust tool for WebAssembly. We have used a whole battery of tools to compile and process our WebAssembly to optimize the end result. `wasm-pack` is a tool that codifies most of these processes. It can bootstrap a new Rust project where all settings are optimized for WebAssembly. It can build the project and will invoke `cargo` with all the right flags, then it invokes the `wasm-bindgen` CLI to generate bindings and finally it will run `wasm-opt` to make sure we are not leaving any performance on the table. `wasm-pack` is also able to prepare your WebAssembly module for publishing to npm, but I have personally never used that functionality.
 
 ## Conclusion
 
-The WebAssembly tooling for Rust is excellent and has gotten a lot better since I worked with it for the first time in [Squoosh]. The modules are fairly small and there are a lot of little levers for you to control module size even more. The glue code that wasm-bindgen emits has become now both modern and tree-shaken, which was one of my concerns at the time. I fully recommend using wasm-bindgen as your first choice when writing Rust for WebAssembly. 
+Rust is a great language to target WebAssembly. With LTO enabled and a smaller allocator, you can get extremely small modules. The WebAssembly tooling for Rust is excellent and has gotten a lot better since I worked with it for the first time in [Squoosh]. The modules are fairly small and there are many tools and control knobs to adjust module size even more. The glue code that `wasm-bindgen` emits is both modern and tree-shaken.
 
-That being said, I find it extremely useful to know what Rust itself is capable of and how to take more control over minute details. I hope this article shed some light on the inner workings of Rust and WebAssembly.
+I had a lot of fun learning about how it all works under the hood and it helped me understand and appreciate what all the tools are doing for me. I hope you feel similarly.
 
 [c to wasm]: /things/c-to-webassembly
 [wasm-bindgen]: https://rustwasm.github.io/wasm-bindgen/
@@ -602,3 +629,4 @@ That being said, I find it extremely useful to know what Rust itself is capable 
 [globalalloc]: https://doc.rust-lang.org/stable/core/alloc/trait.GlobalAlloc.html
 [c abi]: https://github.com/WebAssembly/tool-conventions/blob/main/BasicCABI.md#function-signatures
 [embedo no_std]: https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#what-does-no_std-mean
+[customsection]: https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Module/customSections
