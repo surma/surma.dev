@@ -126,7 +126,7 @@ instance.exports.add(40, 2) // returns 42
 
 And suddenly, we have pretty much all the power of Rust at our fingertips to write WebAssembly. 
 
-> **Note:** On the web it is advisable to _not_ call `r.arrayBuffer()` and instead pass the `Response` straight to `WebAssembly.instantiateStreaming`. This allows the WebAssembly compiler to start compiling while the file is being downloaded.
+> **Streaming:** On the web it is advisable to _not_ call `r.arrayBuffer()` and instead pass the `Response` straight to `WebAssembly.instantiateStreaming`. This allows the WebAssembly compiler to start compiling while the file is being downloaded.
 
 Special care needs to be taken with functions at the module boundary (i.e. the ones you call from JavaScript). It’s best to stick to types that map cleanly to [WebAssembly types] (like `i32` or `f64`). If you use higher-level types like arrays, slices, or even owned types like `String`, it will compile, but yield a unexpected function signature and will generally become harder to use. More on that later!
 
@@ -195,7 +195,7 @@ Unsized types (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, are split into tw
 
 If a function has an unsized type as a return value, the function gets an addition function parameter in the first position. It's the callers responsibility to pass in a pointer where the function can store a “fat pointer”. A fat pointer is a tuple of two pointers, combining the the pointers for data and metadata into one data structure.
 
-> **Note:** While not often used, Rust does have `u128` and `i128` as types. These are split into two `i64` values.
+> **Octowords:** While not often used, Rust does have `u128` and `i128` as types. These are split into two `i64` values.
 
 As I said, this is not something you need to know to use Rust for WebAssembly. But if you want to know more, all of this _and more_ is defined in the [C ABI] for WebAssembly that LLVM utilized.
 
@@ -355,7 +355,7 @@ Rust has a [standard library][rust std], which contains a lot of abstractions an
  
 However, when you instantiate a WebAssembly module via the raw API, things are different: The sandbox — one of the defining security features of WebAssmebly — isolates the WebAssembly code from the host and by extension the operating system. All your code gets access to is a chunk of linear memory, which isn’t even managed to figure out which parse are in use and which parts are up for grabs.
 
-> **Note:** This is not part of this article, but just like WebAssembly s ian abstraction for the processor your code is running on, [WASI] (WebAssembly Systems Interface) aims to be an abstraction for the operating system your code is running on and give you a single, uniform API to work with regardless of environment. Rust has support for WASI, although WASI itself is still in development.
+> **WASI:** This is not part of this article, but just like WebAssembly s ian abstraction for the processor your code is running on, [WASI] (WebAssembly Systems Interface) aims to be an abstraction for the operating system your code is running on and give you a single, uniform API to work with regardless of environment. Rust has support for WASI, although WASI itself is still in development.
 
 This means that Rust gave us a false sense of security! It provided us with an entire standard library with no operating system to back it with. In fact, many of the stdlib modules are just [aliased][std unsupported] to fail. That means all functions that return a `Result<T>` always return `Err`, and all other functions `panic`.
 
@@ -563,6 +563,8 @@ Function(
 ```
 
 This is quite the simple function, but descriptor data structure is capable of representing quite complex function signatures. 
+
+> **Expand:** If you want to see what code the `#[wasm_bindgen]` macro emits, use rust-analyzer's "Expand Macro recursively" functionality. You can run it via VS Code through the Command Palette.
 
 wasm-bindgen is not just a crate, but also comes with a CLI, that you run as a post-processing step on our Wasm binary. The CLI extracts those descriptors and uses the information to generate tailor-made JavaScript bindings (often also called “glue code”), and then removes all these descriptor functions from the binary. The JavaScript encodes all the knowledge about higher-level types I talked about earlier, allowing you to seamlessly pass types like strings, `ArrayBuffer` or even closures.
 \
