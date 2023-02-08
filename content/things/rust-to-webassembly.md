@@ -1,8 +1,9 @@
 ---json
 {
   "title": "Rust to WebAssembly the hard way",
-  "date": "2023-02-03",
-  "socialmediaimage2": "social.png"
+  "date": "2023-02-08",
+  "socialmediaimage2": "social.jpg",
+  "live": false
 }
 
 ---
