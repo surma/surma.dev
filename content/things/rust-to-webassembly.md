@@ -78,18 +78,16 @@ This command will convert a WebAssembly binary to WAT and output it to stdout.
 
 It is with outrage that we discover that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts. Turns out declaring a function as `pub` is _not_ enough to get it to show up in our final WebAssembly module. I kinda wish it was enough, but I suspect `pub` is exclusive about Rust module visibility, not about linker-level visibility.
 
-The quickest way to change the compiler's behavior is to explicitly give the function an export name:
+The quickest way to change the compiler's behavior is to add the `#[no_mangle]` attribute, although I find its name not very descriptive.
 
 |||codediff|rust
-+ #[export_name = "add"]
++ #[no_mangle]
   pub fn add(left: usize, right: usize) -> usize {
       left + right
   }
 |||
 
-If you don’t intend to change the functions external name, you can also use `#[no_mangle]` instead, which will have the same effect. I feel like `no_mangle` hides the true intention of the developer here, so I tend to prefer the `export_name`. 
-
-Having given our `add` function an export name, we can compile the project again and inspect the resulting WebAssembly file:
+Although rarely necessary, you can export a function with a different name than its Rust-internal name by using `#[export_name = "..."]`. Having makred our `add` function as an export, we can compile the project again and inspect the resulting WebAssembly file:
 
 |||codediff|wasm
   (module
@@ -109,25 +107,26 @@ Having given our `add` function an export name, we can compile the project again
     (export "__heap_base" (global 2)))
 |||
 
-This module is easy to run in Node, or Deno or even the browser:
+This module can be run in Node, or Deno or even the browser with the vanilla WebAssembly APIs:
 
 ```js
 // Node
 const data = require("fs").readFileSync("./my_project.wasm");
 // Deno
 const data = await Deno.readFile("./my_project.wasm");
-// Web
-const data = await fetch("./my_project.wasm").then(r => r.arrayBuffer());
 
 const importObj = {
 };
 const {instance} = await WebAssembly.instantiate(data, importObj);
+
+// For Web, it's advisable to use `instantiateStreaming` whenever possible:
+// const response = await fetch("./my_project.wasm");
+// const {instance} = await WebAssembly.instantiateStreaming(response, importObj);
+
 instance.exports.add(40, 2) // returns 42
 ```
 
 And suddenly, we have pretty much all the power of Rust at our fingertips to write WebAssembly. 
-
-> **Streaming:** On the web it is advisable to _not_ call `r.arrayBuffer()` and instead pass the `Response` straight to `WebAssembly.instantiateStreaming`. This allows the WebAssembly compiler to start compiling while the file is being downloaded.
 
 Special care needs to be taken with functions at the module boundary (i.e. the ones you call from JavaScript). It’s best to stick to types that map cleanly to [WebAssembly types] (like `i32` or `f64`). If you use higher-level types like arrays, slices, or even owned types like `String`, it will compile, but yield a unexpected function signature and will generally become harder to use. More on that later!
 
@@ -140,7 +139,6 @@ Let’s say we want to generate some random numbers in our Rust code. We could p
 |||codediff|rust
 + #[link(wasm_import_module = "Math")]
 + extern "C" {
-+     #[link_name = "random"]
 +     fn random() -> f64;
 + }
   
@@ -163,26 +161,29 @@ The imports _object_ is a dictionary of import _modules_, that each are dicitona
   };
 |||
 
-To avoid having to sprinkle `unsafe { ... }` everywhere, it is often desirable to write wrapper functions that restore the safety invariants of Rust.
+To avoid having to sprinkle `unsafe { ... }` everywhere, it is often desirable to write wrapper functions that restore the safety invariants of Rust. We can make use of Rust's inline modules for that:
 
 ```rust
-#[link(wasm_import_module = "Math")]
-extern "C" {
-    #[link_name = "random"]
-    fn random_unsafe() -> f64;
+mod math_js {
+    #[link(wasm_import_module = "Math")]
+    extern "C" {
+        pub fn random() -> f64;
+    }
 }
 
-fn random() -> f64 {
-  unsafe { random_unsafe() }
+mod math {
+    pub fn random() -> f64 {
+        unsafe { super::math_js::random() }
+    }
 }
 
 #[export_name = "add"]
 pub fn add(left: f64, right: f64) -> f64 {
-    left + right + random()
+    left + right + math::random()
 }
 ```
 
-By the way, if we hadn’t specified the `#[link(wasm_import_module = ...)]` attribute, the functions will be expected on the default `env` module. If `#[link_name = ...]` is not used, the function name will be used verbatim.
+By the way, if we hadn’t specified the `#[link(wasm_import_module = ...)]` attribute, the functions will be expected on the default `env` module. Just like you can change the name a function is exported with using `#[export_name = "..."]`, you can change the name the name a function is imported under by using `#[link_name = "..."]`.
 
 ### Higher-level types
 
@@ -198,11 +199,13 @@ If a function has an unsized type as a return value, the function gets an additi
 
 > **Octowords:** While not often used, Rust does have `u128` and `i128` as types. Just like fat pointers, these 128-bit wide types are split into two separate `i64` values.
 
-As I said, this is not something you need to know to use Rust for WebAssembly. But if you want to know more, all of this _and more_ is defined in the [C ABI] for WebAssembly that LLVM utilizes.
+As I said, this is not something you need to know to use Rust for WebAssembly. But if you want to know more, all of this _and more_ is defined in the [C ABI] for WebAssembly that LLVM utilizes. Additionally, the [WebAssembly mutlivalue proposal][multivalue] has landed, with means WebAssembly functions can return tuples of values. [Work to use it in Rust is on-going][rustc multivalue], but it should [drastically simplify][godbolt multivalue] the above.
 
 ## Module size
 
 When deploying WebAssembly on the web, the size of the WebAssembly binary matters. Every byte needs to go over the network and through the browser’s WebAssembly compiler, so a smaller binary size means less time spent waiting for the user until the WebAssembly starts working. If we build our default project from above as a release build, we get a whopping 1.7MB of WebAssembly. That does not seem right for adding two numbers.
+
+> **Data sections:** Often, a good chunk of a WebAssembly module is made up of data sections. I.e. static data that gets copied to the linear memory at some point. Those sections don't need to be compiled and are fairly cheap, which is something to keep in mind when optimizing module startup time.
 
 A quick way to inspect the innards of a WebAssembly module is `wasm-objdump`, provided by [wabt]. By printing the headers of all sections using `-h` we get a nice summary:
 
@@ -261,9 +264,23 @@ $ twiggy top target/wasm32-unknown-unknown/release/my_project.wasm
 ...
 ```
 
-It’s now clearly visible that all main contributors to the module size are custom sections, which — by definition — are not relevant for the execution of the module. Their names imply that they contain information that is used for debugging, so it is somewhat surprising they are even emitted for a `--release` build. I suspect that release builds make `rustc` turn on code optimization, remove asserts and other checks. It does not affect whether debug symbols are packed into the binary.
+It’s now clearly visible that all main contributors to the module size are custom sections, which — by definition — are not relevant for the execution of the module. Their names imply that they contain information that is used for debugging, so the fact that these sections are emitted for a `--release` build is somewhat surprising. It seems related to a long-standing bug, where _our_ code is compiled without debug symbols, but the pre-compiled standard library on our machine still has debug symbols.
 
-To address this we can use `wasm-strip`, provided yet again by wabt. It’s a tool that removes everything that is unnecessary, including custom sections. After stripping, we are left with a module of a whopping 116B. Disassembling it shows that the only function in that module is called `add` and executes `(f64.add (local.get 0) (local.get 1))`, which means the Rust compiler was able to emit optimal code. Of course, staying on top of binary size gets more complicated with a growing code base.
+ To address this we add another line to our `Cargo.toml`:
+
+```toml
+[profile.release]
+strip = true
+```
+
+There is also tool provided by [wabt] called `wasm-strip` which removes all custom sections. The benefit of `wasm-strip` is that it allows you to keep specific custom sections around, like the `name` section that gives all your Wasm functiosn readable names (that is, once my [PR][wasm-strip pr] lands):
+
+```
+$ wasm-strip -k target/wasm32-unknown-unknown/release/my_project.wasm
+```
+
+After stripping, we are left with a module of a whopping 116B. Disassembling it shows that the only function in that module is called `add` and executes `(f64.add (local.get 0) (local.get 1))`, which means the Rust compiler was able to emit optimal code. Of course, staying on top of binary size gets more complicated with a growing code base.
+
 
 ### Sneaky bloat
 
@@ -290,7 +307,7 @@ Okay, maybe not so innocuous after all. You might already know what's going on h
 
 A quick look at `twiggy` shows that the main contributors to the Wasm module size are functions related to string formatting and panicking (before LTO, there was also code for memory management in there). And that makes sense! The parameter `n` is unsanitized and used to index an array. Rust has no choice but to inject bounds checks. If a bounds check fails, Rust panics.
 
-One way to handle this is to do the bounds checking ourselves. Rust's compiler is really good at proving whether undefined behavior can happen or not.
+One way to handle this is to do the bounds checking ourselves. Rust's compiler is really good at proving whether the code can end up accessing out of bounds.
 
 |||codediff|rust
   fn nth_prime(n: usize) -> i32 {
@@ -304,7 +321,7 @@ Arguably more idiomatic would be to lean into `Option<T>` APIs to control how th
 |||codediff|rust
   fn nth_prime(n: usize) -> i32 {
 -     PRIMES[n]
-+     *PRIMES.get(n).unwrap_or(&-1)
++     PRIMES.get(n).copied().unwrap_or(-1)
   }
 |||
 
@@ -342,7 +359,7 @@ With LTO enabled, the stripped binary is reduced to 2.3K, which is quite impress
 
 ### wasm-opt
 
-Another tool that should almost never be excluded from your build pipeline is `wasm-opt` from [binaryen]. It is another collection of optimization passes that work purely on the WebAssembly VM instructions, agnostic to the source language they were produced with. Of course, higher-level languages have more information to work with to apply more sophisticated optimizations, so `wasm-opt` is not a replacement for enabled optimizations on your language’s compiler. However, it does often manage to shave a couple additional bytes off your module size.
+Another tool that should almost always be a part of your build pipeline is `wasm-opt` from [binaryen]. It is another collection of optimization passes that work purely on the WebAssembly VM instructions, agnostic to the source language they were produced with. Of course, higher-level languages have more information to work with to apply more sophisticated optimizations, so `wasm-opt` is not a replacement for enabled optimizations on your language’s compiler. However, it does often manage to shave a couple additional bytes off your module size.
 
 ```
 $ wasm-opt -O3 -o output.wasm target/wasm32-unknown-unknown/my_project.wasm
@@ -568,7 +585,7 @@ This is quite the simple function, but descriptor data structure is capable of r
 > **Expand:** If you want to see what code the `#[wasm_bindgen]` macro emits, use rust-analyzer's "Expand Macro recursively" functionality. You can run it via VS Code through the Command Palette.
 
 wasm-bindgen is not just a crate, but also comes with a CLI, that you run as a post-processing step on our Wasm binary. The CLI extracts those descriptors and uses the information to generate tailor-made JavaScript bindings (often also called “glue code”), and then removes all these descriptor functions from the binary. The JavaScript encodes all the knowledge about higher-level types I talked about earlier, allowing you to seamlessly pass types like strings, `ArrayBuffer` or even closures.
-\
+
 If you want to write Rust for WebAssembly, wasm-bindgen should be your first choice. wasm-bindgen doesn’t work with `#![no_std]`, but in practice that is rarely a problem.
 
 ### Custom Section
@@ -606,6 +623,8 @@ Rust is a great language to target WebAssembly. With LTO enabled and a smaller a
 
 I had a lot of fun learning about how it all works under the hood and it helped me understand and appreciate what all the tools are doing for me. I hope you feel similarly.
 
+Massive thanks to [@rreverser] for reviewing this article.
+
 [c to wasm]: /things/c-to-webassembly
 [wasm-bindgen]: https://rustwasm.github.io/wasm-bindgen/
 [wasm-pack]: https://rustwasm.github.io/wasm-pack/
@@ -635,3 +654,8 @@ I had a lot of fun learning about how it all works under the hood and it helped 
 [c abi]: https://github.com/WebAssembly/tool-conventions/blob/main/BasicCABI.md#function-signatures
 [embedo no_std]: https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#what-does-no_std-mean
 [customsection]: https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Module/customSections
+[godbolt multivalue]: https://godbolt.org/z/TWfPa5nhq
+[multivalue]: https://github.com/WebAssembly/multi-memory/blob/main/proposals/multi-value/Overview.md
+[rustc multivalue]: https://github.com/rust-lang/rust/issues/73755
+[@rreverser]: https://twitter.com/rreverser
+[wasm-strip pr]: https://github.com/WebAssembly/wabt/pull/2143
