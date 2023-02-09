@@ -199,7 +199,7 @@ If a function has an unsized type as a return value, the function gets an additi
 
 > **Octowords:** While not often used, Rust does have `u128` and `i128` as types. Just like fat pointers, these 128-bit wide types are split into two separate `i64` values.
 
-As I said, this is not something you need to know to use Rust for WebAssembly. But if you want to know more, all of this _and more_ is defined in the [C ABI] for WebAssembly that LLVM utilizes. Additionally, the [WebAssembly mutlivalue proposal][multivalue] has landed, with means WebAssembly functions can return tuples of values. [Work to use it in Rust is on-going][rustc multivalue], but it should [drastically simplify][godbolt multivalue] the above.
+As I said, this is not something you need to know to use Rust for WebAssembly. But if you want to know more, all of this _and more_ is defined in the [C ABI] for WebAssembly that LLVM utilizes. Additionally, the [WebAssembly multivalue proposal][multivalue] has landed, with means WebAssembly functions can return tuples of values. [Work to use it in Rust is on-going][rustc multivalue], but it should [drastically simplify][godbolt multivalue] the above.
 
 ## Module size
 
