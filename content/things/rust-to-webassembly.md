@@ -87,7 +87,7 @@ The quickest way to change the compiler's behavior is to add the `#[no_mangle]` 
   }
 |||
 
-Although rarely necessary, you can export a function with a different name than its Rust-internal name by using `#[export_name = "..."]`. Having makred our `add` function as an export, we can compile the project again and inspect the resulting WebAssembly file:
+Although rarely necessary, you can export a function with a different name than its Rust-internal name by using `#[export_name = "..."]`. Having marked our `add` function as an export, we can compile the project again and inspect the resulting WebAssembly file:
 
 |||codediff|wasm
   (module
