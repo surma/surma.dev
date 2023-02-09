@@ -356,7 +356,7 @@ Rust has a [standard library][rust std], which contains a lot of abstractions an
  
 However, when you instantiate a WebAssembly module via the raw API, things are different: The sandbox — one of the defining security features of WebAssmebly — isolates the WebAssembly code from the host and by extension the operating system. All your code gets access to is a chunk of linear memory, which isn’t even managed to figure out which parse are in use and which parts are up for grabs.
 
-> **WASI:** This is not part of this article, but just like WebAssembly s ian abstraction for the processor your code is running on, [WASI] (WebAssembly Systems Interface) aims to be an abstraction for the operating system your code is running on and give you a single, uniform API to work with regardless of environment. Rust has support for WASI, although WASI itself is still in development.
+> **WASI:** This is not part of this article, but just like WebAssembly is an abstraction for the processor your code is running on, [WASI] (WebAssembly Systems Interface) aims to be an abstraction for the operating system your code is running on and give you a single, uniform API to work with regardless of environment. Rust has support for WASI, although WASI itself is still in development.
 
 This means that Rust gave us a false sense of security! It provided us with an entire standard library with no operating system to back it with. In fact, many of the stdlib modules are just [aliased][std unsupported] to fail. That means all functions that return a `Result<T>` always return `Err`, and all other functions `panic`.
 
