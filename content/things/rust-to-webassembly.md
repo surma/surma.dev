@@ -54,6 +54,7 @@ If you are like me and adding that line to your `Cargo.toml` makes you feel weir
 
 Is that better? It seems like a question of taste to me, as both approaches seem to be functionally equivalent and generate the same WebAssembly code. Most of the time, WebAssembly modules seem to be taking the role of a library more than the role of an executable (except in the context of [WASI], more on that later!), so the library approach seems semantically preferable to me. Unless noted otherwise, I’ll be using the library setup for the remainder of this article. 
 
+
 ### Exporting
 
 Okay, we have created a library crate with the default `add` function inside, we have set the crate type to `cdylib` and we have compiled that crate to WebAssembly. Let’s take a look at the WebAssembly code that the compiler generates. For that purpose, I recommend the [WebAssembly Binary Toolkit (wabt for short)][wabt], which provides helpful tools like `wasm-objdump` and `wasm2wat`. It’s also good to have [binaryen] installed which provides `wasm-dis`, but does not emitted "proper" WebAssembly Text Format (WAT). In fact, I usually only use `wasm-opt` from binaryen.
@@ -130,6 +131,22 @@ And suddenly, we have pretty much all the power of Rust at our fingertips to wri
 
 Special care needs to be taken with functions at the module boundary (i.e. the ones you call from JavaScript). It’s best to stick to types that map cleanly to [WebAssembly types] (like `i32` or `f64`). If you use higher-level types like arrays, slices, or even owned types like `String`, it will compile, but yield a unexpected function signature and will generally become harder to use. More on that later!
 
+### ABIs
+
+On that note: While compiling Rust to WebAssembly works with our code, there's actually no guarantee by Rust that the signature `rustc` generates for our function will remain the same between releases of Rust. One day we might update to a new release of Rust and just recompile our Rust code, and suddenly our accompanying JS code isn't able to call our exported functions correctly anymore. How `rustc` is translated from Rust to a WebAssembly (or any other ISAs) is part of the ABI. Currently, our functions use implicitly Rust’s internal ABI, which is allowed to change between releases.
+
+To stabilize this situation, we can explicitly define which ABI an exported function should be using using the [`extern`][extern] keyword. One long-standing choice for inter-language function calls is the C ABI, which we'll encounter again later.
+
+|||codediff|rust
+  #[no_mangle]
+- pub fn add(left: usize, right: usize) -> usize {
++ pub extern "C" fn add(left: usize, right: usize) -> usize {
+      left + right
+  }
+|||
+
+You could even omit the `"C"`, as the C ABI is the default when you mark a function as `extern`. With this, you can be confident that the `rustc` compiler will continue to create the same WebAssembly function signature, regardless of compiler version. 
+
 ### Importing
 
 One important part of WebAssembly is its sandbox. It ensures that the code running in the WebAssembly VM gets no access to anything in the host environment apart from the functions that were explicitly passed into the sandbox via the imports object.
@@ -149,7 +166,7 @@ Let’s say we want to generate some random numbers in our Rust code. We could p
   }
 |||
 
-`extern "C"` blocks declare functions that we assume to be provided by ”someone else” during linking. This is usually how you link against C libraries in Rust, but the mechanism works for WebAssembly as well. However, external functions are always implicitly unsafe, as the compiler can’t make any safety guarantees for non-Rust functions that are not present. As a result, we need to wrap in `unsafe { ... }` blocks whenever we call them.
+`extern "C"` _blocks_ (not to be confused with extern functions above) declare functions that the compiler expects to provided by ”someone else” during linking. This is usually how you link against C libraries in Rust, but the mechanism works for WebAssembly as well. However, external functions are always implicitly unsafe, as the compiler can’t make any safety guarantees for non-Rust functions that are not present. As a result, we need to wrap in `unsafe { ... }` blocks whenever we call them.
 
 This code will compile, but our JavaScript code that instantiates the module now throws an error. If a WebAssembly module expects imports, they _must_ be present on the imports object. 
 
@@ -164,21 +181,22 @@ The imports _object_ is a dictionary of import _modules_, that each are dicitona
 To avoid having to sprinkle `unsafe { ... }` everywhere, it is often desirable to write wrapper functions that restore the safety invariants of Rust. We can make use of Rust's inline modules for that:
 
 ```rust
-mod math_js {
-    #[link(wasm_import_module = "Math")]
-    extern "C" {
-        pub fn random() -> f64;
-    }
-}
 
 mod math {
+    mod math_js {
+        #[link(wasm_import_module = "Math")]
+        extern "C" {
+            pub fn random() -> f64;
+        }
+    }
+
     pub fn random() -> f64 {
-        unsafe { super::math_js::random() }
+        unsafe { math_js::random() }
     }
 }
 
 #[export_name = "add"]
-pub fn add(left: f64, right: f64) -> f64 {
+pub extern "C" fn add(left: f64, right: f64) -> f64 {
     left + right + math::random()
 }
 ```
@@ -273,10 +291,11 @@ It’s now clearly visible that all main contributors to the module size are cus
 strip = true
 ```
 
-There is also tool provided by [wabt] called `wasm-strip` which removes all custom sections. The benefit of `wasm-strip` is that it allows you to keep specific custom sections around, like the `name` section that gives all your Wasm functiosn readable names (that is, once my [PR][wasm-strip pr] lands):
+There is also `llvm-strip`, which allows you to strip all unneeded data (like custom sections) from any binary, including WebAssembly modules. It should be available on all systems, but if not, you can replace `llvm-strip` with `wasm-strip` from [wabt].
+
 
 ```
-$ wasm-strip -k target/wasm32-unknown-unknown/release/my_project.wasm
+$ llvm-strip --keep-section=name target/wasm32-unknown-unknown/release/bindgen.wasm
 ```
 
 After stripping, we are left with a module of a whopping 116B. Disassembling it shows that the only function in that module is called `add` and executes `(f64.add (local.get 0) (local.get 1))`, which means the Rust compiler was able to emit optimal code. Of course, staying on top of binary size gets more complicated with a growing code base.
@@ -296,7 +315,7 @@ We have looked at the first two. Let’s take a closer look at the last one. Thi
 static PRIMES: &[i32] = &[2, 3, 5, 7, 11, 13, 17, 19, 23];
 
 #[no_mangle]
-fn nth_prime(n: usize) -> i32 {
+extern "C" fn nth_prime(n: usize) -> i32 {
     PRIMES[n]
 }
 ```
@@ -394,7 +413,7 @@ This can sound a bit scary, but let’s take it step by step. We start by declar
   static PRIMES: &[i32] = &[2, 3, 5, 7, 11, 13, 17, 19, 23];
   
   #[no_mangle]
-  fn nth_prime(n: usize) -> i32 {
+  extern "C" fn nth_prime(n: usize) -> i32 {
       PRIMES[n]
   }
 |||
@@ -432,7 +451,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 
 #[no_mangle]
-fn nth_prime(n: usize) -> usize {
+extern "C" fn nth_prime(n: usize) -> usize {
     let mut primes: Vec<usize> = Vec::new();
     let mut current = 2;
     while primes.len() < n {
@@ -659,3 +678,4 @@ Massive thanks to [@rreverser] for reviewing this article.
 [rustc multivalue]: https://github.com/rust-lang/rust/issues/73755
 [@rreverser]: https://twitter.com/rreverser
 [wasm-strip pr]: https://github.com/WebAssembly/wabt/pull/2143
+[extern]: https://doc.rust-lang.org/reference/items/functions.html#extern-function-qualifier
