@@ -8,11 +8,11 @@
 
 ---
 
-For many, Rust is the first choice when targeting WebAssembly. Let’s take full control.
+What follows is a brain dump of everything I know about compiling Rust to WebAssembly. Enjoy.
 
 <!-- more -->
 
-A long old time ago, I wrote a blog post on [how to compile C to WebAssembly without Emscripten][c to wasm], i.e. without the default tool that makes that process easy. In Rust, the tool that makes WebAssembly easy is called [wasm-bindgen], and we are going to ditch it! At the same time, Rust is a bit different in that WebAssembly was always a first-class target and the standard library is laid out to support it out of the box.
+Some time ago, I wrote a blog post on [how to compile C to WebAssembly without Emscripten][c to wasm], i.e. without the default tool that makes that process easy. In Rust, the tool that makes WebAssembly easy is called [wasm-bindgen], and we are going to ditch it! At the same time, Rust is a bit different in that WebAssembly was always a first-class target and the standard library is laid out to support it out of the box.
 
 ## Rust to WebAssembly 101
 
@@ -30,9 +30,9 @@ Let’s see how we can get Rust to emit WebAssembly with as little deviation fro
   [dependencies]
 |||
 
-Without setting the crate type to `cdylib`, the Rust compiler would emit a `.rlib` file, which is Rust’s own library format. While `cdylib` implies a dynamic library that is C-compatible, I suspect it really just stands for “use the interoperable format”, or something to that effect.
+Without setting the crate type to `cdylib`, the Rust compiler would emit a `.rlib` file, which is Rust’s own library format. While the name `cdylib` implies a dynamic library that is C-compatible, I suspect it really just stands for “use the interoperable format”, or something to that effect.
 
-For now, we'll work with the default function that Cargo generates when creating a new library:
+For now, we’ll work with the default/example function that Cargo generates when creating a new library:
 
 ```rust
 pub fn add(left: usize, right: usize) -> usize {
@@ -46,18 +46,19 @@ With all that in place, we can now compile this library to WebAssembly:
 $ cargo run --target=wasm32-unknown-unknow --release
 ```
 
-You'll find a freshly generated WebAssembly module in `target/wasm32-unknown-unknown/release/my_project.wasm`. I'll continue to use `--release` builds throughout this article as it makes the WebAssembly module a lot more readable if we want to disassemble it.
+You'll find a freshly generated WebAssembly module in `target/wasm32-unknown-unknown/release/my_project.wasm`. I'll continue to use `--release` builds throughout this article as it makes the WebAssembly module a lot more readable when we disassemble it.
 
 ### Alternative: As a binary
 
-If you are like me and adding that line to your `Cargo.toml` makes you feel weird, there’s a way around that! If your crate is designated as a binary (i.e. created via `cargo init --bin` and/or has a `main.rs` instead of a `lib.rs`), compilation to WebAssembly will succed straight away. Well, until you realize there is a lot more code in that WebAssembly module than you bargained for. You can remove the `main()` function, buth the compiler will kick off at you. You have to actively let the compiler know that the absence of `main()` is intentional by adding the `#![no_main]` crate macro to your `main.rs`. Now the emitted WebAssembly binary looks reasonable, albeit devoid of any functions.
+If you are like me and adding that line to your `Cargo.toml` makes you feel weird, there’s a way around that! If your crate is designated as a binary (i.e. created via `cargo init --bin` and/or has a `main.rs` instead of a `lib.rs`), compilation to WebAssembly will succed straight away. Well, until you realize there is a lot more code in that WebAssembly module than you bargained for. You can remove the `main()` function, but the compiler will kick off at you for not having one. You can shut the compiler up using the `#![no_main]` crate macro to declare that the lack of a `main()` is intentional. Now the emitted WebAssembly binary looks identical to the library version.
 
-Is that better? It seems like a question of taste to me, as both approaches seem to be functionally equivalent and generate the same WebAssembly code. Most of the time, WebAssembly modules seem to be taking the role of a library more than the role of an executable (except in the context of [WASI], more on that later!), so the library approach seems semantically preferable to me. Unless noted otherwise, I’ll be using the library setup for the remainder of this article. 
+Is that better? It seems like a question of taste to me, as both approaches seem to be functionally equivalent and generate the same WebAssembly code. Most of the time, WebAssembly modules seem to be taking the role of a library more than the role of an executable (except in the context of [WASI] — more on that later!), so the library approach seems semantically preferable to me. Unless noted otherwise, I’ll be using the library setup for the remainder of this article. 
 
 
 ### Exporting
 
-Okay, we have created a library crate with the default `add` function inside, we have set the crate type to `cdylib` and we have compiled that crate to WebAssembly. Let’s take a look at the WebAssembly code that the compiler generates. For that purpose, I recommend the [WebAssembly Binary Toolkit (wabt for short)][wabt], which provides helpful tools like `wasm-objdump` and `wasm2wat`. It’s also good to have [binaryen] installed which provides `wasm-dis`, but does not emitted "proper" WebAssembly Text Format (WAT). In fact, I usually only use `wasm-opt` from binaryen.
+Continuing with the library-style setup, let’s take a look at the WebAssembly code that the compiler generates. For that purpose, I recommend the [WebAssembly Binary Toolkit][wabt] (“wabt” for short), which provides helpful tools like `wasm-objdump` and `wasm2wat`. While you are at it, also make sure you have [binaryen] installed, as we need `wasm-opt` later in this article. Binaryen also provides `wasm-dis`, which serves a similar purpose to `wasm2wat`, but does not emit WebAssembly Text Format (WAT). It emits the less-standardizes WebAssembly S-Expression Text Format (WAST).
+
 
 ```
 $ wasm2wat ./target/wasm32-unknown-unknown/release/my_project.wasm
@@ -77,9 +78,9 @@ This command will convert a WebAssembly binary to WAT and output it to stdout.
   (export "__heap_base" (global 2)))
 ```
 
-It is with outrage that we discover that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts. Turns out declaring a function as `pub` is _not_ enough to get it to show up in our final WebAssembly module. I kinda wish it was enough, but I suspect `pub` is exclusive about Rust module visibility, not about linker-level visibility.
+It is with outrage that we discover that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts. Turns out declaring a function as `pub` is _not_ enough to get it to show up in our final WebAssembly module. I kinda wish it was enough, but I suspect `pub` is exclusive about Rust module visibility, not about linker-level symbol visibility.
 
-The quickest way to change the compiler's behavior is to add the `#[no_mangle]` attribute, although I find its name not very descriptive.
+The quickest way to change the compiler's behavior is to add the `#[no_mangle]` attribute, although I find the name not very descriptive.
 
 |||codediff|rust
 + #[no_mangle]
@@ -122,20 +123,23 @@ const {instance} = await WebAssembly.instantiate(data, importObj);
 
 // For Web, it's advisable to use `instantiateStreaming` whenever possible:
 // const response = await fetch("./my_project.wasm");
-// const {instance} = await WebAssembly.instantiateStreaming(response, importObj);
+// const {instance} = 
+//   await WebAssembly.instantiateStreaming(response, importObj);
 
 instance.exports.add(40, 2) // returns 42
 ```
 
 And suddenly, we have pretty much all the power of Rust at our fingertips to write WebAssembly. 
 
-Special care needs to be taken with functions at the module boundary (i.e. the ones you call from JavaScript). It’s best to stick to types that map cleanly to [WebAssembly types] (like `i32` or `f64`). If you use higher-level types like arrays, slices, or even owned types like `String`, it will compile, but yield a unexpected function signature and will generally become harder to use. More on that later!
+Special care needs to be taken with functions at the module boundary (i.e. the ones you call from JavaScript). It’s best to stick to types that map cleanly to [WebAssembly types] (like `i32` or `f64`). If you use higher-level types like arrays, slices, or even owned types like `String`, it will compile, but yield a unexpected function signature and will generally become harder to use.
 
 ### ABIs
 
-On that note: While compiling Rust to WebAssembly works with our code, there's actually no guarantee by Rust that the signature `rustc` generates for our function will remain the same between releases of Rust. One day we might update to a new release of Rust and just recompile our Rust code, and suddenly our accompanying JS code isn't able to call our exported functions correctly anymore. How `rustc` is translated from Rust to a WebAssembly (or any other ISAs) is part of the ABI. Currently, our functions use implicitly Rust’s internal ABI, which is allowed to change between releases.
+On that note: While we are successfully compiling Rust to WebAssembly, there's actually no guarantee `rustc` won’t change the function signatures when you compile them next time. One day we might update to a new release of Rust to recompile our code, and suddenly we have to invoke our functions with our parameters in a different order or even with different types. 
 
-To stabilize this situation, we can explicitly define which ABI an exported function should be using using the [`extern`][extern] keyword. One long-standing choice for inter-language function calls is the C ABI, which we'll encounter again later.
+The way function parameters are passed from caller to callee (in memory with specific alignment? As an immediate value in a register?...) and how Rust-level types are translated to the ISAs types is part of the Application Binary Interface definition, or “ABI” for short. `rustc` uses Rust’s ABI by default, which is allowed to change between releases.
+
+To stabilize this situation, we can explicitly define another ABI for a function to conform to by using the [`extern`][extern] keyword. One long-standing choice for inter-language function calls is the C ABI, which we will use here. 
 
 |||codediff|rust
   #[no_mangle]
@@ -145,7 +149,7 @@ To stabilize this situation, we can explicitly define which ABI an exported func
   }
 |||
 
-You could even omit the `"C"`, as the C ABI is the default when you mark a function as `extern`. With this, you can be confident that the `rustc` compiler will continue to create the same WebAssembly function signature, regardless of compiler version. 
+We could even omit the `"C"` and just use `extern`, as the C ABI is the default alternative ABI. With this, you can be confident that the `rustc` compiler will continue to create the same WebAssembly function signature, regardless of compiler version. 
 
 ### Importing
 
@@ -673,7 +677,7 @@ Massive thanks to [@rreverser] for reviewing this article.
 [c abi]: https://github.com/WebAssembly/tool-conventions/blob/main/BasicCABI.md#function-signatures
 [embedo no_std]: https://docs.rust-embedded.org/embedonomicon/smallest-no-std.html#what-does-no_std-mean
 [customsection]: https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Module/customSections
-[godbolt multivalue]: https://godbolt.org/z/TWfPa5nhq
+[godbolt multivalue]: https://godbolt.org/z/o7Psfqh4E
 [multivalue]: https://github.com/WebAssembly/multi-memory/blob/main/proposals/multi-value/Overview.md
 [rustc multivalue]: https://github.com/rust-lang/rust/issues/73755
 [@rreverser]: https://twitter.com/rreverser
