@@ -3,7 +3,7 @@
   "title": "Rust to WebAssembly the hard way",
   "date": "2023-02-13",
   "socialmediaimage": "social.jpg",
-  "live": false
+  "live": true
 }
 
 ---
