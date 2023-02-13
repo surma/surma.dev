@@ -16,7 +16,7 @@ Some time ago, I wrote a blog post on [how to compile C to WebAssembly without E
 
 ## Rust to WebAssembly 101
 
-Let’s see how we can get Rust to emit WebAssembly with as little deviation from the standard Rust workflow as possible. If you look around the internet, a lot of articles and guides tell you to create a Rust library project with `cargo init --lib` and add this line to your `Cargo.toml`:
+Let’s see how we can get Rust to emit WebAssembly with as little deviation from the standard Rust workflow as possible. If you look around The Internet, a lot of articles and guides tell you to create a Rust library project with `cargo init --lib` and add this line to your `Cargo.toml`:
 
 |||codediff|toml
   [package]
@@ -76,7 +76,7 @@ This command will convert a WebAssembly binary to WAT:
   (export "__heap_base" (global 2)))
 ```
 
-It is with outrage that we discover that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts. Turns out declaring a function as `pub` is _not_ enough to get it to show up in our final WebAssembly module. I kinda wish it was enough, but I suspect `pub` is exclusive about Rust module visibility, not about linker-level symbol visibility.
+It is with outrage that we discover that our `add` function has been completely removed from the binary. All we are left with is a stack pointer, and two globals designating where the data section ends and the heap starts. Turns out declaring a function as `pub` is _not_ enough to get it to show up in our final WebAssembly module. I kinda wish it were enough, but I suspect `pub` is exclusive about Rust module visibility, not about linker-level symbol visibility.
 
 The quickest way to make sure the compiler does not remove a function we care about is to add the `#[no_mangle]` attribute, although I am not a fan of the naming.
 
@@ -154,7 +154,7 @@ We could even omit the `"C"` and just use `extern`, as the C ABI is the default 
 
 One important part of WebAssembly is its sandbox. It ensures that the code running in the WebAssembly VM gets no access to anything in the host environment apart from the functions that were explicitly passed into the sandbox via the imports object.
 
-Let’s say we want to generate some random numbers in our Rust code. We could pull in the `rand` Rust crate, but why ship code for something if there is already something in the host environment. As a first step, we need to declare that our WebAssembly module expects an import:
+Let’s say we want to generate random numbers in our Rust code. We could pull in the `rand` Rust crate, but why ship code for something if there is already something in the host environment. As a first step, we need to declare that our WebAssembly module expects an import:
 
 |||codediff|rust
 + #[link(wasm_import_module = "Math")]
@@ -283,7 +283,7 @@ $ twiggy top target/wasm32-unknown-unknown/release/my_project.wasm
 ...
 ```
 
-It’s now clearly visible that all main contributors to the module size are custom sections, which — by definition — are not relevant for the execution of the module. Their names imply that they contain information that is used for debugging, so the fact that these sections are emitted for a `--release` build is somewhat surprising. It seems related to a long-standing bug, where _our_ code is compiled without debug symbols, but the pre-compiled standard library on our machine still has debug symbols.
+It’s now clearly visible that all main contributors to the module size are custom sections, which — by definition — are not relevant to the execution of the module. Their names imply that they contain information that is used for debugging, so the fact that these sections are emitted for a `--release` build is somewhat surprising. It seems related to a long-standing bug, where _our_ code is compiled without debug symbols, but the pre-compiled standard library on our machine still has debug symbols.
 
  To address this we add another line to our `Cargo.toml`:
 
@@ -417,9 +417,9 @@ In our case, `wasm-opt` reduces Rust’s 2.3K WebAssembly binary a bit further, 
 
 ## No Standard
 
-Rust has a [standard library][rust std], which contains a lot of abstractions and utilities that you need on a daily basis when you do systems programming. Accessing files, getting the current time or opening network sockets. It’s all in there for you to use, without having to go searching on [crates.io] or anything like that. However, many of the data structures and functions make assumptions about the environment that they are used in: They assume that the details of hardware are abstracted into uniform APIs and they assume that they can somehow allocate (and deallocate) chunks of memory of abritrary size. Usually, both of these jobs are fulfilled by the operating system, and most of us work atop an operating system on a daily basis.
+Rust has a [standard library][rust std], which contains a lot of abstractions and utilities that you need on a daily basis when you do systems programming: accessing files, getting the current time, or opening network sockets. It’s all in there for you to use, without having to go searching on [crates.io] or anything like that. However, many of the data structures and functions make assumptions about the environment that they are used in: They assume that the details of the hardware are abstracted into uniform APIs and they assume that they can somehow allocate (and deallocate) chunks of memory of arbitrary size. Usually, both of these jobs are fulfilled by the operating system, and most of us work atop an operating system on a daily basis.
  
-However, when you instantiate a WebAssembly module via the raw API, things are different: The sandbox — one of the defining security features of WebAssmebly — isolates the WebAssembly code from the host and by extension the operating system. Your code gets access to nothing more than a chunk of linear memory, which isn’t even managed to figure out which parts are in use and which parts are up for grabs.
+However, when you instantiate a WebAssembly module via the raw API, things are different: the sandbox — one of the defining security features of WebAssmebly — isolates the WebAssembly code from the host and, by extension, the operating system. Your code gets access to nothing more than a chunk of linear memory, which isn’t even managed to figure out which parts are in use and which parts are up for grabs.
 
 > **WASI:** This is not part of this article, but just like WebAssembly is an abstraction for the processor your code is running on, [WASI] (WebAssembly Systems Interface) aims to be an abstraction for the operating system your code is running on and give you a single, uniform API to work with regardless of environment. Rust has support for WASI, although WASI itself is still in development.
 
@@ -447,7 +447,7 @@ This can sound a bit scary, but let’s take it step by step. We start by declar
   }
 |||
 
-Sadly — and this was foreshadowed by the paragraph from the Embedonomicon — as we haven't provided some of the basics that `core` relies on. At the very top of the list, we need to define what should happen when a panic occurs in this environment/ This is done by the aptly named panic handler, and the Embedonomicon gives this as an example:
+Sadly — and this was foreshadowed by the paragraph from the Embedonomicon — as we haven't provided some of the basics that `core` relies on. At the very top of the list, we need to define what should happen when a panic occurs in this environment. This is done by the aptly named panic handler, and the Embedonomicon gives this as an example:
 
 ```rust
 #[panic_handler]
@@ -502,7 +502,7 @@ fn panic(_panic: &core::panic::PanicInfo<'_>) -> ! {
 }
 ```
 
-Trying to compile this will fail of course. We haven’t actually told Rust what our memory management looks like, and `Vec` needs to know that to function.
+Trying to compile this will fail, of course - we haven’t actually told Rust what our memory management looks like, and `Vec` needs to know that to function.
 
 ```
 
@@ -552,7 +552,7 @@ unsafe impl Sync for SimpleAllocator {}
 static ALLOCATOR: SimpleAllocator = SimpleAllocator::new();
 ```
 
-The `#[global_allocator]` marks a global variable as the entity that manages the heap. The type of this variable must implement the [`GlobalAlloc` trait][globalalloc]. The methods on the `GlobalAlloc` trait all use `&self`, so if you want to modify any values inside the data type, you have to use interior mutability. I opted for `UnsafeCell` here. Using `UnsafeCell` makes our struct implicity `!Sync`, which Rust doesn’t allow for global static variables. That’s why we have to also manually implement the `Sync` trait to tell Rust that we know that we are responsible to make this data type thread safe (and we are totally ignoring that). 
+The `#[global_allocator]` marks a global variable as the entity that manages the heap. The type of this variable must implement the [`GlobalAlloc` trait][globalalloc]. The methods on the `GlobalAlloc` trait all use `&self`, so if you want to modify any values inside the data type, you have to use interior mutability. I opted for `UnsafeCell` here. Using `UnsafeCell` makes our struct implicitly `!Sync`, which Rust doesn’t allow for global static variables. That’s why we also have to manually implement the `Sync` trait to tell Rust that we know that we are responsible to make this data type thread safe (and we are totally ignoring that). 
 
 The reason the struct is marked as `#[repr(C)]` is solely so we can manually specify an alignment value. This way we can ensure that even the very first byte in our arena (and by extension the first pointer we return) has an alignment of 32, which should satisfy most data structures.
 
