@@ -66,6 +66,7 @@ figure {
 }
 :not(pre) > code {
   color: var(--blue);
+  white-space: nowrap;
 }
 blockquote code {
   color: var(--orange);
