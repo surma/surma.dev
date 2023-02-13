@@ -171,7 +171,7 @@ Let’s say we want to generate random numbers in our Rust code. We could pull i
 
 `extern "C"` _blocks_ (not to be confused with the `extern "C"` _functions_ above) declare functions that the compiler expects to provided by ”someone else” at link time. This is usually how you link against C libraries in Rust, but the mechanism works for WebAssembly as well. However, external functions are always implicitly unsafe, as the compiler can’t make any safety guarantees for non-Rust functions. As a result, we can’t call them unless we wrap invocations in `unsafe { ... }` blocks.
 
-The code above will _compile_, but it won’t run. Our JavaScript code throws an error and needs to be updated to satisfy the imports we have specified. The imports _object_ is a dictionary of import _modules_, each being a dicitonary of import _items_. In our Rust code we declared an import module with the name `"Math"`, and expect a function called `"random"` to be present in that module. These values have of course been carefully chosen so that we can just pass in the entire `Math` object.
+The code above will _compile_, but it won’t run. Our JavaScript code throws an error and needs to be updated to satisfy the imports we have specified. The imports _object_ is a dictionary of import _modules_, each being a dictionary of import _items_. In our Rust code we declared an import module with the name `"Math"`, and expect a function called `"random"` to be present in that module. These values have of course been carefully chosen so that we can just pass in the entire `Math` object.
 
 ```js
   const importObj = {
@@ -253,7 +253,7 @@ Idx Name            Size     VMA      Type
  15 producers       00000043 00000000
 ```
 
-`llvm-objdump` is quite versatile and offers a familiar CLI for people who have experience developing for other ISAs in assembly. However, specifically for debugging binary size, it lacks simple helpers like odering the sections by size, or breaking the `CODE` section up by function. Luckily, there is another WebAssembly-specific tool called [Twiggy], that excels at this:
+`llvm-objdump` is quite versatile and offers a familiar CLI for people who have experience developing for other ISAs in assembly. However, specifically for debugging binary size, it lacks simple helpers like ordering the sections by size, or breaking the `CODE` section up by function. Luckily, there is another WebAssembly-specific tool called [Twiggy], that excels at this:
 
 ```
 $ twiggy top target/wasm32-unknown-unknown/release/my_project.wasm
@@ -386,7 +386,7 @@ We can try and stay on top of where we might cause a panic and try to handle tho
 
 ### LTO
 
-We’ll probably have to make our peace with the fact that once we can’t avoid having a code path for panics in our code base. While we can try and mitigate the impact of panics (and we will do that!), there is a rather powerful optimization that will often yield some significant code saving. This optimization pass is provided by LLVM and is called [LTO (Link-Time Optimization)][lto]. `rustc` compiles and optimizes each crate, and only then doe it link it everything into the final binary. However, there are certain optimizations that only become apparent _after_ linking. For example, many functions have different branches depending on the input. During compile time, you can only see the invocations of the functions from within the same crate. At link time, you know _all_ possible invocations of any given function, which means it might now be possible to eliminate some of these code branches. 
+We’ll probably have to make our peace with the fact that once we can’t avoid having a code path for panics in our code base. While we can try and mitigate the impact of panics (and we will do that!), there is a rather powerful optimization that will often yield some significant code saving. This optimization pass is provided by LLVM and is called [LTO (Link-Time Optimization)][lto]. `rustc` compiles and optimizes each crate, and only then does it link it everything into the final binary. However, there are certain optimizations that only become apparent _after_ linking. For example, many functions have different branches depending on the input. During compile time, you can only see the invocations of the functions from within the same crate. At link time, you know _all_ possible invocations of any given function, which means it might now be possible to eliminate some of these code branches. 
 
 LTO is turned off by default, as it is quite a costly optimization that can slow down compile times significantly, especially in bigger crates. It can be enabled through one of `rustc`’s many [codegen options], which you control in the `profile` section of your `Cargo.toml`. Specifically, we need to add this line to our `Cargo.toml` to enable LTO in release builds:
 
@@ -516,7 +516,7 @@ error: `#[alloc_error_handler]` function required, but not found
 note: use `#![feature(default_alloc_error_handler)]` for a default error handler
 ```
 
-At the time of writing, in Rust 1.67, you need to provide an error handler that gets invoked when an allocation fails. In the next release, Rust 1.68, `default_alloc_error_handler` has been stabilized, which means every Rust non-standard Rust program will come with a default implementation of that error handler. If you want to provide your own error handler anyway, you can:
+At the time of writing, in Rust 1.67, you need to provide an error handler that gets invoked when an allocation fails. In the next release, Rust 1.68, `default_alloc_error_handler` has been stabilized, which means every  non-standard Rust program will come with a default implementation of that error handler. If you want to provide your own error handler anyway, you can:
 
 ```rust
 #[alloc_error_handler]
@@ -596,7 +596,7 @@ In any WebAssembly module of decent complexity, the 10KB consumed by Rust’s de
 
 Now that we’ve done pretty much everything the hard way, we have earned a look at the convenient way of writing Rust for WebAssembly, which is using [wasm-bindgen].
 
-They key feature of wasm-bindgen is the `#[wasm_bindgen]` macro that we can put on every function that we want to exported. This macro adds the same compiler directives we added manually earlier in this article, but it does something way more useful in addition to that:
+They key feature of wasm-bindgen is the `#[wasm_bindgen]` macro that we can put on every function that we want to export. This macro adds the same compiler directives we added manually earlier in this article, but it does something way more useful in addition to that:
 
 For example, if we add the macro to our `add` function from above, it emits another function called `__wbindgen_describe_add` that returns a description of our `add` function in a [numeric format][wasm-bindgen descriptor]. Concretely, the descriptor of our `add` function looks like this:
 
