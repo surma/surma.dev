@@ -46,11 +46,11 @@ With all that in place, we can now compile this library to WebAssembly:
 $ cargo run --target=wasm32-unknown-unknow --release
 ```
 
-You'll find a freshly generated WebAssembly module in `target/wasm32-unknown-unknown/release/my_project.wasm`. I'll continue to use `--release` builds throughout this article as it makes the WebAssembly module a lot more readable when we disassemble it.
+You’ll find a freshly generated WebAssembly module in `target/wasm32-unknown-unknown/release/my_project.wasm`. I’ll continue to use `--release` builds throughout this article as it makes the WebAssembly module a lot more readable when we disassemble it.
 
 ### Executable vs library
 
-You don't have to create a library, you can also create a Rust executable (via `cargo init --bin`). Note, however, that you either have to have a `main()` function with the well-stablished signature, or you have to shut the compiler up using `#![no_main]` to let it know that the absence of a `main()` is intentional.
+You don’t have to create a library, you can also create a Rust executable (via `cargo init --bin`). Note, however, that you either have to have a `main()` function with the well-stablished signature, or you have to shut the compiler up using `#![no_main]` to let it know that the absence of a `main()` is intentional.
 
 Is that better? It seems like a question of taste to me, as both approaches seem to be functionally equivalent and generate the same WebAssembly code. Most of the time, WebAssembly modules seem to be taking the role of a library more than the role of an executable (except in the context of [WASI] — more on that later!), so the library approach seems semantically preferable to me. Unless noted otherwise, I’ll be using the library setup for the remainder of this article. 
 
@@ -122,7 +122,7 @@ const {instance} = await WebAssembly.instantiate(data, importObj);
 const data = await Deno.readFile("./my_project.wasm");
 const {instance} = await WebAssembly.instantiate(data, importObj);
 
-// For Web, it's advisable to use `instantiateStreaming` whenever possible:
+// For Web, it’s advisable to use `instantiateStreaming` whenever possible:
 const response = await fetch("./my_project.wasm");
 const {instance} = 
   await WebAssembly.instantiateStreaming(response, importObj);
@@ -138,7 +138,7 @@ Special care needs to be taken with functions at the module boundary (i.e. the o
 
 On that note: Yes, we are successfully compiling Rust to WebAssembly. However, in the version of Rust _might_ emit a WebAssembly module with completely different function signatures. The way function parameters are passed from caller to callee (e.g. as a pointer to a memory or as an immediate value) is part of the Application Binary Interface definition, or “ABI” for short. `rustc` uses Rust’s ABI by default, which is not stable and mostly consider a Rust internal.
 
-To stabilize this situation, we can explicitly define which ABI we want `rustc` to use for a function. This is done by using the [`extern`][extern] keyword. One long-standing choice for inter-language function calls is the [C ABI], which we will use here. The C ABI won't change, so we can be sure that our WebAssembly module interface won't change either.
+To stabilize this situation, we can explicitly define which ABI we want `rustc` to use for a function. This is done by using the [`extern`][extern] keyword. One long-standing choice for inter-language function calls is the [C ABI], which we will use here. The C ABI won’t change, so we can be sure that our WebAssembly module interface won’t change either.
 
 |||codediff|rust
   #[no_mangle]
@@ -169,7 +169,7 @@ Let’s say we want to generate random numbers in our Rust code. We could pull i
   }
 |||
 
-`extern "C"` _blocks_ (not to be confused with the `extern "C"` _functions_ above) declare functions that the compiler expects to provided by ”someone else” at link time. This is usually how you link against C libraries in Rust, but the mechanism works for WebAssembly as well. However, external functions are always implicitly unsafe, as the compiler can’t make any safety guarantees for non-Rust functions. As a result, we can't call them unless we wrap invocations in `unsafe { ... }` blocks.
+`extern "C"` _blocks_ (not to be confused with the `extern "C"` _functions_ above) declare functions that the compiler expects to provided by ”someone else” at link time. This is usually how you link against C libraries in Rust, but the mechanism works for WebAssembly as well. However, external functions are always implicitly unsafe, as the compiler can’t make any safety guarantees for non-Rust functions. As a result, we can’t call them unless we wrap invocations in `unsafe { ... }` blocks.
 
 The code above will _compile_, but it won’t run. Our JavaScript code throws an error and needs to be updated to satisfy the imports we have specified. The imports _object_ is a dictionary of import _modules_, each being a dicitonary of import _items_. In our Rust code we declared an import module with the name `"Math"`, and expect a function called `"random"` to be present in that module. These values have of course been carefully chosen so that we can just pass in the entire `Math` object.
 
@@ -214,11 +214,11 @@ By the way, if we hadn’t specified the `#[link(wasm_import_module = ...)]` att
 
 I said earlier that for functions at the module boundary, it is best to stick to value types that map cleanly to the data types that WebAssembly supports. Of course, the compiler does allow you to use higher-level types as function parameters and return values. What the compiler emits in those cases is defined in the [C ABI] (apart from [a bug][rustc wasm bug] where `rustc` currently doesn’t fully adhere to the C ABI).
 
-Without going into too much detail, sized types (like structs, enums, etc) are turned into a simple pointer. Arrays and Tuples, which are both sized types, get special treatment and are converted to an immediate value if they use less then 32 bits. Things get even more complicated if we look at function return values: If you return an array type bigger than 32 bits, the function will get _no_ return value and instead will get an additional function parameter of type `i32`, which the function will use a pointer to a place to store the result. If a function returns a tuple, it will always turn into a function parameter, regardless of the tuple's size.
+Without going into too much detail, sized types (like structs, enums, etc) are turned into a simple pointer. Arrays and Tuples, which are both sized types, get special treatment and are converted to an immediate value if they use less then 32 bits. Things get even more complicated if we look at function return values: If you return an array type bigger than 32 bits, the function will get _no_ return value and instead will get an additional function parameter of type `i32`, which the function will use a pointer to a place to store the result. If a function returns a tuple, it will always turn into a function parameter, regardless of the tuple’s size.
 
 A function parameter with an unsized type (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, is split into two parameters: One value is the pointer to the data, the other value is a pointer to a bit of metadata. In the case of a `str` or a slice, the metadata is the length of the data. In the case of a trait object, it’s the virtual table (or vtable), which is a list of function pointers to the individual trait function implementations. If you want to know more details about what a VTable in Rust looks like, I can recommend [this article][vtable] by Thomas Bächler. 
 
-I'm skipping over loads of detail here, because unless you are trying to write the next wasm-bindgen, I would recommmend relying on existing tools rather than reinventing this wheel.
+I’m skipping over loads of detail here, because unless you are trying to write the next wasm-bindgen, I would recommmend relying on existing tools rather than reinventing this wheel.
 
 ## Module size
 
@@ -349,13 +349,13 @@ extern "C" fn nth_prime(n: usize) -> i32 {
 }
 ```
 
-Okay, maybe not so innocuous after all. You might already know where I'm going with this.
+Okay, maybe not so innocuous after all. You might already know where I’m going with this.
 
 ### Panicking
 
 A quick look at `twiggy` shows that the main contributors to the Wasm module size are functions related to string formatting, panicking and memory allocations. And that makes sense! The parameter `n` is unsanitized and used to index an array. Rust has no choice but to inject bounds checks. If a bounds check fails, Rust panics, which requires creating a nicely formatted error message and stack trace.
 
-One way to handle this is to do the bounds checking ourselves. Rust's compiler is really good at only injecting checks when needed.
+One way to handle this is to do the bounds checking ourselves. Rust’s compiler is really good at only injecting checks when needed.
 
 |||codediff|rust
   fn nth_prime(n: usize) -> i32 {
@@ -382,7 +382,7 @@ A third way would be to use some of the `unchecked` methods that Rust explicitly
   }
 |||
 
-We can try and stay on top of where we might cause a panic and try to handle those paths manually. However, once we start relying on third-party crates this is less and less likely to succeed, because we can't easily change how the library does its error handling internally.
+We can try and stay on top of where we might cause a panic and try to handle those paths manually. However, once we start relying on third-party crates this is less and less likely to succeed, because we can’t easily change how the library does its error handling internally.
 
 ### LTO
 
@@ -433,7 +433,7 @@ To enter the world of bare metal 🤘, we have to add a single line to our code:
 
 > The `core` crate is a subset of the `std` crate that makes zero assumptions about the system the program will run on. As such, it provides APIs for language primitives like floats, strings and slices, as well as APIs that expose processor features like atomic operations and SIMD instructions. However it lacks APIs for anything that involves heap memory allocations and I/O.
 > 
-> For an application, std does more than just providing a way to access OS abstractions. std also takes care of, among other things, setting up stack overflow protection, processing command line arguments and spawning the main thread before a program's main function is invoked. A #![no_std] application lacks all that standard runtime, so it must initialize its own runtime, if any is required. 
+> For an application, std does more than just providing a way to access OS abstractions. std also takes care of, among other things, setting up stack overflow protection, processing command line arguments and spawning the main thread before a program’s main function is invoked. A #![no_std] application lacks all that standard runtime, so it must initialize its own runtime, if any is required. 
 
 This can sound a bit scary, but let’s take it step by step. We start by declaring our panic-y prime number program from above as `no_std`:
 
@@ -447,7 +447,7 @@ This can sound a bit scary, but let’s take it step by step. We start by declar
   }
 |||
 
-Sadly — and this was foreshadowed by the paragraph from the Embedonomicon — as we haven't provided some of the basics that `core` relies on. At the very top of the list, we need to define what should happen when a panic occurs in this environment. This is done by the aptly named panic handler, and the Embedonomicon gives this as an example:
+Sadly — and this was foreshadowed by the paragraph from the Embedonomicon — as we haven’t provided some of the basics that `core` relies on. At the very top of the list, we need to define what should happen when a panic occurs in this environment. This is done by the aptly named panic handler, and the Embedonomicon gives this as an example:
 
 ```rust
 #[panic_handler]
@@ -525,7 +525,7 @@ fn alloc_error(_: core::alloc::Layout) -> ! {
 }
 ```
 
-With this sophisticated error handler in place, we should finally provide a way to do actual memory allocations. Just like in my [C to WebAssembly article][c to wasm], my custom allocator is going to be a minimal bump allocator, which tend to be fast _and_ small, but can't free memory. We statically allocate an arena that will function as our heap and keep track of where the “free area” begins. Because we are not using Wasm Threads, I am also going to ignore thread safety.
+With this sophisticated error handler in place, we should finally provide a way to do actual memory allocations. Just like in my [C to WebAssembly article][c to wasm], my custom allocator is going to be a minimal bump allocator, which tend to be fast _and_ small, but can’t free memory. We statically allocate an arena that will function as our heap and keep track of where the “free area” begins. Because we are not using Wasm Threads, I am also going to ignore thread safety.
 
 ```rust
 use core::cell::UnsafeCell;
@@ -583,18 +583,18 @@ unsafe impl GlobalAlloc for SimpleAllocator {
 }
 ```
 
-`#[global_allocator]` is not limited to `#[no_std]`! You can also use it override Rust's default allocator and replace it with your own, as Rust's default allocator consumes about 10K of Wasm space.
+`#[global_allocator]` is not limited to `#[no_std]`! You can also use it override Rust’s default allocator and replace it with your own, as Rust’s default allocator consumes about 10K of Wasm space.
 
 ### wee_alloc 
 You don’t have to implement the allocator yourself, of course. In fact, it’s probably advisable to rely on a well-tested implementation. Dealing with bugs in the allocator and subtle memory corruption is not fun. 
 
 Many guides recommend [`wee_alloc`][wee_alloc], which is a very small (<1KB) allocator written by the Rust WebAssembly team that can also free memory. Sadly, it seems unmaintained and has an [open issue about memory corruption][wee_alloc mem corruption] and leaking memory. 
 
-In any WebAssembly module of decent complexity, the 10KB consumed by Rust's defaul allocator will make up for only a tiny fraction of the overall module size, so I recommend sticking to it and knowing that the allocator is well-tested and performant.
+In any WebAssembly module of decent complexity, the 10KB consumed by Rust’s defaul allocator will make up for only a tiny fraction of the overall module size, so I recommend sticking to it and knowing that the allocator is well-tested and performant.
 
 ## wasm-bindgen
 
-Now that we've done pretty much everything the hard way, we have earned a look at the convenient way of writing Rust for WebAssembly, which is using [wasm-bindgen].
+Now that we’ve done pretty much everything the hard way, we have earned a look at the convenient way of writing Rust for WebAssembly, which is using [wasm-bindgen].
 
 They key feature of wasm-bindgen is the `#[wasm_bindgen]` macro that we can put on every function that we want to exported. This macro adds the same compiler directives we added manually earlier in this article, but it does something way more useful in addition to that:
 
@@ -618,7 +618,7 @@ Function(
 
 This is quite the simple function, but the descriptors in wasm-bindgen are capable of representing quite complex function signatures. 
 
-> **Expand:** If you want to see what code the `#[wasm_bindgen]` macro emits, use rust-analyzer's "Expand Macro recursively" functionality. You can run it via VS Code through the Command Palette.
+> **Expand:** If you want to see what code the `#[wasm_bindgen]` macro emits, use rust-analyzer’s “Expand Macro recursively” functionality. You can run it via VS Code through the Command Palette.
 
 What are these descriptors used for? wasm-bindgen does not just provide a macro, it also comes with a CLI we can use to post-process our Wasm binary. The CLI extracts those descriptors and uses the information to generate tailor-made JavaScript bindings (and then removes all these descriptor functions as they are no longer needed). The generated JavaScript has all the routines to deal with higher-level types, allowing you to seamlessly pass types like strings, `ArrayBuffer` or even closures.
 
