@@ -1,0 +1,9 @@
+---json
+{
+  "live": false
+}
+---
+<h2>All PostIts</h2>
+<ul class="postits collection">
+  <%- include("../../_includes/listing", {items: collections.postits, max: -1}) %>
+</ul>
