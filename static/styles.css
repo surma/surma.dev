@@ -124,6 +124,7 @@ pre,
   margin-right: calc((100vw - var(--width)) / -2);
   background-color: var(--color);
   padding: var(--grid-height) 0;
+  tab-size: 4;
 }
 pre:before,
 pre:after,
