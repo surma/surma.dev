@@ -43,7 +43,7 @@ pub fn add(left: usize, right: usize) -> usize {
 With all that in place, we can now compile this library to WebAssembly:
 
 ```
-$ cargo run --target=wasm32-unknown-unknow --release
+$ cargo run --target=wasm32-unknown-unknown --release
 ```
 
 You’ll find a freshly generated WebAssembly module in `target/wasm32-unknown-unknown/release/my_project.wasm`. I’ll continue to use `--release` builds throughout this article as it makes the WebAssembly module a lot more readable when we disassemble it.
@@ -208,7 +208,7 @@ pub extern "C" fn add(left: f64, right: f64) -> f64 {
 }
 ```
 
-By the way, if we hadn’t specified the `#[link(wasm_import_module = ...)]` attribute, the functions will be expected on the default `env` module. Also, just like you can change the name a function is exported with using `#[export_name = "..."]`, you can change the name the name a function is imported under by using `#[link_name = "..."]`.
+By the way, if we hadn’t specified the `#[link(wasm_import_module = ...)]` attribute, the functions will be expected on the default `env` module. Also, just like you can change the name a function is exported with using `#[export_name = "..."]`, you can change the name a function is imported under by using `#[link_name = "..."]`.
 
 ### Higher-level types
 
@@ -226,7 +226,7 @@ When deploying WebAssembly on the web, the size of the WebAssembly binary matter
 
 > **Data sections:** Often, a good chunk of a WebAssembly module is made up of data sections. I.e. static data that gets copied to the linear memory at some point. Those sections are fairly cheap as the compiler just skips them, which is something to keep in mind when analyzing and optimizing module startup time.
 
-A quick way to inspect the innards of a WebAssembly module is `llvm-objdump` that should be available on your system. Alternatively, you can use `wasm-objdump` wich is part of [wabt] and generally provides the same interface. 
+A quick way to inspect the innards of a WebAssembly module is `llvm-objdump` that should be available on your system. Alternatively, you can use `wasm-objdump` which is part of [wabt] and generally provides the same interface. 
 
 ```
 $ llvm-objdump -h target/wasm32-unknown-unknown/release/my_project.wasm
@@ -332,7 +332,7 @@ Contents of section surmsection:
 
 ### Sneaky bloat
 
-I have seen a couple of complaints online about how big WebAssembly modules create by Rust are that do a seemingly small job. In my experience, there are three reasons why WebAssembly binaries creates by Rust can be large:
+I have seen a couple of complaints online about how big WebAssembly modules created by Rust are that do a seemingly small job. In my experience, there are three reasons why WebAssembly binaries created by Rust can be large:
 
 * Debug build (i.e. forgetting to pass `--release` to `Cargo`)
 * Debug symbols (i.e. forgetting to run `llvm-strip`)
