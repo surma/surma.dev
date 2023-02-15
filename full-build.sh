@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 BRANCH=${BRANCH:-$(git branch --show-current)}
 TARGET_DOMAIN="$BRANCH--surmblog.netlify.app"
 if [ "$BRANCH" = "master" ]; then

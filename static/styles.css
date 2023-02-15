@@ -124,6 +124,7 @@ pre,
   margin-right: calc((100vw - var(--width)) / -2);
   background-color: var(--color);
   padding: var(--grid-height) 0;
+  tab-size: 4;
 }
 pre:before,
 pre:after,
@@ -391,23 +392,23 @@ footer > .arrows {
     opacity: 0;
   }
 }
-ul.things {
+ul.collection {
   list-style: none;
   padding: 0;
 }
-.things .date {
+.collection .date {
   display: block;
   text-align: right;
   font-size: 0.5em;
   line-height: 1em;
 }
-.things .excerpt {
+.collection .excerpt {
   margin: 0;
 }
-.things .more {
+.collection .more {
   text-align: right;
 }
-.things .item {
+.collection .item {
   margin-bottom: calc(2 * var(--grid-height));
 }
 .back {
