@@ -3,7 +3,7 @@
   "title": "Spawning a WASI Thread with raw WebAssembly",
   "date": "2023-02-15",
   "socialmediaimage": "social.jpg",
-  "live": false
+  "live": true
 }
 
 ---
