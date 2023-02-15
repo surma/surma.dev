@@ -1,7 +1,7 @@
 ---json
 {
   "title": "Spawning a WASI Thread with raw WebAssembly",
-  "date": "2023-02-14",
+  "date": "2023-02-15",
   "socialmediaimage": "social.jpg",
   "live": false
 }
@@ -284,7 +284,10 @@ From thread 2
 From thread 1
 ```
 
-There is an experimental release of [WASI-SDK v20][wasi-sdk v20] that has support for WASI Threads via the pthreads API. I hope Rust will follow soon.
+There is an experimental release of [WASI-SDK v20][wasi-sdk v20] that has o support for WASI Threads via the pthreads API. I hope Rust will follow soon.
+
+The full WAT code can be found [here][code].
+
 
 [WASI Threads]: https://github.com/WebAssembly/wasi-threads
 [wasmtime]: https://github.com/bytecodealliance/wasmtime
@@ -292,3 +295,4 @@ There is an experimental release of [WASI-SDK v20][wasi-sdk v20] that has suppor
 [wabt]: https://github.com/WebAssembly/wabt
 [wasi-sdk v20]: https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-20%2Bthreads
 [wasi threads import path]: https://github.com/bytecodealliance/wasmtime/blob/e10094dcd6d0354628255a6f2e69c1e4c327d6e7/crates/wasi-threads/src/lib.rs#L114-L115
+[code]: /postits/wasi-threads-code
