@@ -2,6 +2,7 @@
 {
   "title": "Spawning a WASI Thread with raw WebAssembly",
   "date": "2023-02-15",
+  "tags": ["postits"],
   "socialmediaimage": "social.jpg",
   "live": true
 }

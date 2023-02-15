@@ -1,4 +1,4 @@
 module.exports = {
-  tags: ["postits"],
+  // tags: ["postits"],
   hasBackButton: true
 };
