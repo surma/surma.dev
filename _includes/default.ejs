@@ -134,6 +134,7 @@
   <a href="/" class="back">← Back to home</a>
   <% } %>
   <h1>
+    <% if(tags.includes("postits")) { %> [PostIt] <% } %>
     <% if(typeof title === "string") { %> <%= title %> <% } else { %> surma.dev
     <% } %> <% if(typeof title === "string" && typeof live === "boolean" && live
     === false) { %>
