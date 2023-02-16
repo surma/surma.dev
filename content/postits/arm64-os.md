@@ -107,17 +107,55 @@ qemu-system-aarch64 -M virt -cpu cortex-a35  -m 128M -nographic -kernel kernel.b
 ```rust
 
 #![no_std]
-#[no_mangle]
-static UART0DR: *const u8 = 0x9000000 as *const u8;
+#![no_main]
 
-pub extern "C" fn main() {
+fn send_uart(c: u8) {
+    const UART0DR: *const u8 = 0x9000000 as *const u8;
     unsafe {
-        *(UART0DR as *mut u8) = 'H';
+        *(UART0DR as *mut u8) = c;
     }
+}
+
+#[no_mangle]
+pub extern "C" fn mymain() {
+    send_uart('H' as u8);
+}
+
+#[panic_handler]
+unsafe fn panic_handler(_: &core::panic::PanicInfo) -> ! {
+    loop {}
 }
 ```
 
-... TBD
+- `rustc --emit=obj --target=aarch64-unknown-none main.rs`
+
+```
+start:
+	LDR X10, =mymain
+	BLR X10
+spinlock:
+	B spinlock
+```
+
+### more
+
+```rust
+
+const UART0DR: *mut u8 = 0x9000000 as *mut u8;
+fn send_uart(str: &str) {
+    for c in str.chars() {
+        let as_byte: u8 = c.try_into().unwrap_or('?' as u8);
+        unsafe {
+            *UART0DR = as_byte;
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn mymain() {
+    send_uart("Hello world!😭\n");
+}
+```
 
 ## Multicore
 
