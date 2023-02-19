@@ -3,6 +3,7 @@
   "title": "Writing Arm64",
   "date": "2023-01-15",
   "socialmediaimage2": "social.png",
+  "tags": ["postits"],
   "live": false
 }
 
