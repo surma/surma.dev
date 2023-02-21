@@ -3,6 +3,7 @@ const syntaxhighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
 const prism = require("prismjs");
 const loader = require("prismjs/components/");
 loader([
+  "armasm",
   "erlang",
   "wasm",
   "bash",

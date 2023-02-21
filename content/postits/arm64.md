@@ -1,6 +1,6 @@
 ---json
 {
-  "title": "Writing Arm64",
+  "title": "Writing and debugging bare metal arm64",
   "date": "2023-02-21",
   "socialmediaimage2": "social.png",
   "tags": ["postits"],
@@ -13,7 +13,46 @@ I learned a bit of arm64 (aarch64) and of course had to write it on the bare met
 
 <!-- more -->
 
-I wanted to understand the code WebAssembly runtimes like [v8] or [wasmtime] emit on my MacBook Air M1, and for that I'd need to underst
+I wanted to understand the machine code WebAssembly runtimes like [v8] or [wasmtime] emit on my MacBook Air M1, and for that learned arm64 assembly (a bit). My colleague [Saúl Cabrera][saul] recommended "Programming with 64-Bit ARM Assembly Language" by Stephen Smith, and I can only echo that recommendation.
+
+
+<figure>
+	<picture>
+		<source type="image/avif" srcset="./book.avif">
+  <img loading="lazy" width="676" height="1024" style="max-height: 512px" src="./book.jpg">
+	</picture>
+  <figcaption>"Programming with 64-Bit ARM Assembly Language" by Stephen Smith, APress 2020</figcaption>
+</figure>
+
+The book does a great job of teaching the comparatively small instruction set, the optimization tricks as well as conventions and ABIs. However, it only makes you write programs against an operating system, not against a bare metal processor like you could do on a Rasperry Pi or similar. So that's what I wanted to do.
+
+## Qemu
+
+Because real hardware is annoyingly hard to bootstrap and debug, I am scoping this to a completely virtual platform. [Qemu] is my emulator of choice here as it can emulate a wide variety of processor architectures on a many different boards. For this, I'll use the [`virt`][virt] system that, while it is completely imaginary, is sufficiently well documented. For the CPU I'll use an Cortex-A72, mostly because that's the CPU that's in the [Rasperry Pi 400], which I eventually want to program this way.
+
+### Test program
+
+ Without an operating system, you can't rely on good old `printf` debugging. There is nothing there that writes characters to the screen for you. Instead, we'll use the built-in capabilities that qemu offers to verify that our programs are working. At least intially.
+
+Here's a minimal program that puts a specific value into one of the CPU's register and then loops forever. 
+
+```armasm
+.global _reset
+_reset:
+	mov X13, #0x1337
+	# Loop endlessly
+	B . 
+```
+
+If you are on an M1 like me, you could use the system-provided `as` to turn this into machine code. But the [binutils] that MacOS provides have been changed and are not as powerful as the GNU variants, so I recommend installing `aarch64-elf-binutils` via homebrew or building them yourself (although it's a bit tedious because of a bunch of dependencies I had to discover incrementally:
+
+```
+$ ./configure --prefix=<PREFIX> --disable-gdb --target=aarch64-elf-linux
+$ make
+$ make install
+# ... all tools will be in $PREFIX/bin
+```
+ 
 - More on dynamic/static linking: https://michaelspangler.io/posts/statically-linking-on-macos.html
 - Hello Silicon: https://github.com/below/HelloSilicon
 - Linking on MacOS without libSystem: https://stackoverflow.com/questions/32453849/minimal-mach-o-64-binary/32659692#32659692
@@ -32,10 +71,9 @@ start:
 ```
 
 ```
-
 ENTRY(_reset)
 SECTIONS {
- . = 0x10000;
+ . = 0x400000000;
  .text : { *(.text) }
  . = ALIGN(8);
  . = . + 0x1000; /* 4kB of stack memory */
@@ -167,4 +205,11 @@ pub extern "C" fn mymain() {
 
 - `qemu ... -smp 2 ...`
 
-[wasmtime]
+[wasmtime]: https://wasmtime.dev/
+[v8]: https://v8.dev
+[saul]: https://twitter.com/saulecabrera
+[qemu]: https://www.qemu.org/
+[virt]: https://qemu.readthedocs.io/en/latest/system/arm/virt.html
+[linker scripts]: https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts
+[binutils]: https://www.gnu.org/software/binutils/
+[rasperry pi 400]: https://www.raspberrypi.com/products/raspberry-pi-400/
