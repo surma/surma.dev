@@ -1,7 +1,7 @@
 ---json
 {
   "title": "Writing Arm64",
-  "date": "2023-01-15",
+  "date": "2023-02-21",
   "socialmediaimage2": "social.png",
   "tags": ["postits"],
   "live": false
@@ -9,6 +9,11 @@
 
 ---
 
+I learned a bit of arm64 (aarch64) and of course had to write it on the bare metal.
+
+<!-- more -->
+
+I wanted to understand the code WebAssembly runtimes like [v8] or [wasmtime] emit on my MacBook Air M1, and for that I'd need to underst
 - More on dynamic/static linking: https://michaelspangler.io/posts/statically-linking-on-macos.html
 - Hello Silicon: https://github.com/below/HelloSilicon
 - Linking on MacOS without libSystem: https://stackoverflow.com/questions/32453849/minimal-mach-o-64-binary/32659692#32659692
@@ -162,4 +167,4 @@ pub extern "C" fn mymain() {
 
 - `qemu ... -smp 2 ...`
 
-
+[wasmtime]
