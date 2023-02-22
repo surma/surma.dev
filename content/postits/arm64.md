@@ -9,11 +9,11 @@
 
 ---
 
-I learned a bit of arm64 (aarch64) and of course had to write it on the bare metal.
+I learned a bit of arm64 (aarch64) and wanted to write it for the bare metal.
 
 <!-- more -->
 
-I wanted to understand the machine code WebAssembly runtimes like [v8] or [wasmtime] emit on my MacBook Air M1, and for that learned arm64 assembly (a bit). My colleague [Saúl Cabrera][saul] recommended "Programming with 64-Bit ARM Assembly Language" by Stephen Smith, and I can only echo that recommendation.
+I wanted to understand, analyze and scrutinize the machine code WebAssembly runtimes like [v8] or [wasmtime] emit on my MacBook Air M1. To that end I learned arm64 assembly (...a bit). My colleague [Saúl Cabrera][saul] recommended "Programming with 64-Bit ARM Assembly Language" by Stephen Smith, and I can only echo that recommendation.
 
 
 <figure>
@@ -24,7 +24,7 @@ I wanted to understand the machine code WebAssembly runtimes like [v8] or [wasmt
   <figcaption>"Programming with 64-Bit ARM Assembly Language" by Stephen Smith, APress 2020</figcaption>
 </figure>
 
-The book does a great job of teaching the comparatively small instruction set, the optimization tricks as well as conventions and ABIs. However, it only makes you write programs against an operating system, not against a bare metal processor like you could do on a Rasperry Pi or similar. So that's what I wanted to do.
+The book does a great job of teaching the instruction set, the optimization tricks as well as conventions and ABIs. However, it only makes you write programs against an operating system. I'd love to bootstrap my own BBC Microbit or Rasperry Pi. This PostIt documents my first couple steps in that direction.
 
 ## Qemu
 
@@ -33,15 +33,15 @@ Because real hardware is annoyingly hard to bootstrap and debug, I am scoping th
 The most important parts from the documentation are at the very end of the page:
 * Flash memory starts at address `0x0000_0000`
 * RAM starts at `0x4000_0000`
-* The DTB is at the start of RAM, i.e. `0x4000_0000`
+* The DTB (more on that later) is at the start of RAM, i.e. `0x4000_0000`
 
-We will configure or instance to have 128MiB of RAM, so our usable memory addresses will go from `0x4000_0000` to `0x4800_0000`. More on the DTB later.
+We will configure or instance to have 128MiB of RAM, so our usable memory address range will go from `0x4000_0000` to `0x4800_0000`.
 
 ### Test program
 
- Without an operating system, you can't rely on good old `printf` debugging. There is nothing there that writes characters to the screen for you. Instead, we'll use the built-in capabilities that qemu offers to verify that our programs are working. At least intially.
+ Without an operating system, you can't use good old `printf` debugging. There is nothing turns your string into pixels on the screen _for you_, we'd have to do that ourselves. That's a lot of work, so instead, we'll use the built-in capabilities that qemu offers to verify that our setup is working.
 
-To assemble our assembly code to binary machine code, we will use `as`. If you are on an M1 like me, you could use the system-provided `as`. However, the [binutils] that MacOS provides have been changed and are not as powerful as the GNU originals, so I recommend installing `aarch64-elf-binutils` via homebrew or building them yourself (although it's a bit tedious because of a bunch of dependencies I had to discover incrementally):
+To assemble our assembly code to binary machine code, we will use `as`. If you are on an M1 like me, you could use the system-provided `as`. However, the [binutils] that MacOS provides are only GNU-_like_, and have been changed to enforce certain constraints and assumptions specific to Apple M1 processors and MacOS.  I recommend installing `aarch64-elf-binutils` via homebrew or building binutils yourself (although it's a bit tedious because I only discovered all dependencies incrementally through compilation errors):
 
 ```
 $ ./configure --prefix=<PREFIX> --disable-gdb --target=aarch64-elf-linux
@@ -50,7 +50,7 @@ $ make install
 # ... all tools will be in $PREFIX/bin
 ```
 
-Here's a minimal program that puts a specific value into one of the CPU's register and then loops forever. 
+As a minimal test that our setup is working, let's put a special value into one of the CPU's register and then loop forever afterwards.
 
 ```armasm
 # main.s
@@ -59,7 +59,7 @@ Here's a minimal program that puts a specific value into one of the CPU's regist
 _reset:
 	# Set up stack pointer
 	LDR X2, =stack_top
-  MOV SP, X2
+	MOV SP, X2
 	# Magic number
 	MOV X13, #0x1337
 	# Loop endlessly
@@ -72,18 +72,18 @@ We can turn this into an object files as follows:
 $ as -o main.o main.s
 ```
 
-in the next step we need to link our object file into the final machine code using `ld`. By default, `ld` is configured to create an executable conforming to certain operating system defaults. We don't want any of that, so we have to write our own linker script. Linker scripts are very weird in my opinion, and I haven't fully understood them, despite finding the [documentation][linker scripts].
+In the next step we need to link our object file into the final machine code using `ld`. By default, `ld` is configured to create an executable as the operating system it has been told to target expects. Since we don't have an operating system, we need to ignore those defaults and provide our own through a so-called inker script. Linker scripts are very weird in my opinion, and I haven't fully understood them still, despite finding the [documentation][linker scripts].
 
-The following linker script will adjust our machine code that it has the assumption baked in that it will be loaded at `0x4010_0000`, so 1MiB after the ominous DTB. It also defines the `stack_top` symbol to point 4KiB afer our code ended, which means we have 4KiB of stack space. We won't be using the stack, but it's always good to set it up so that something as basic as a function call works correctly.
- 
+The following linker script will adjust our machine code, so that it expects to be loaded at `0x4010_0000`, which I chose to be 1MiB after the ominous DTB.  It also defines the `stack_top` symbol to point to an adress 4KiB after our code, which means we have 4KiB of stack space. We won't be using the stack, but it's always good to set it up so that something as basic as a function call works correctly.
+
 ```
 /* linker.ld */
 SECTIONS {
- . = 0x40100000;
- .text : { *(.text) }
- . = ALIGN(8);
- . = . + 0x1000; 
- stack_top = .;
+	. = 0x40100000;
+	.text : { *(.text) }
+	. = ALIGN(8);
+	. = . + 0x1000; 
+	stack_top = .;
 }
 ```
 
@@ -93,7 +93,7 @@ Let's link our code:
 $ ld -T linker.ld -o main.elf main.o
 ```
 
-To verify that this worked correctly, we can use `objdump`:
+We can use `objdump` to inspect that the addresses and instructions have been linked correctly:
 
 ```
 $ objdump -d kernel.elf
@@ -107,13 +107,13 @@ Disassembly of section .text:
     40100004:   14000000        b       40100004 <_reset+0x4>
 ```
 
-Now we have an [ELF] file, but we won't have an operating system that can decode that format to load the instruction into memory. To extract the raw binary instructions, `objcopy` comes in handy:
+We have an [ELF] file, but again, we are running bare metal, where there is no operating system that can decode the ELF file format and load the instruction into the right spot in memory. We have to extract the raw binary instructions ahead of time and `objcopy` comes in handy for that task:
 
 ```
 $ objcopy -O binary main.elf main.bin
 ```
 
-Instead of dealing with BIOSes or boot sectors and other shenanigans, we'll use Qemu's [generic loader] functionality to load files into memory:
+Instead of dealing with BIOSes, boot sectors or other shenanigans, we'll use Qemu's [generic loader] functionality to load that file into memory:
 
 ```
 $ qemu-system-aarch64 \
@@ -125,7 +125,7 @@ $ qemu-system-aarch64 \
 
 The first `-device` directive loads a file into memory at the specific address. The second `-device` directive sets the CPUs starting address.
 
-Of course, there won't be any output. But we can open Qemu's console using `[Ctrl+a][c]` and use the `info registers` command to dump the current contents of the CPU registers.
+Of course, there won't be any output. Instead, we can open Qemu's console using `Ctrl-a c` and use the `info registers` command to dump the current contents of the CPU registers.
 
 ```
 QEMU 7.2.0 monitor - type 'help' for more information
@@ -151,19 +151,20 @@ PSTATE=400003c5 -Z-- EL1h    FPU disabled
 
 ### Touch my 'elf
 
-There is no operating system that can decode ELF files, but Qemu can, and it can load an ELF file into memory as it is prescribed! This allows us to simplify the our invocation, but would also allow us to use more complicated linker script setups in the future:
+I lied. While there is no operating system running in our emulated environment to decode ELF files, but Qemu can decode ELF files. The generic loader actually supports ELF files and automatically unpacks and loads the contents into memory as it is prescribed by the ELF file headers! This allows us to simplify the our invocation, but would also allow us to use more complicated linker script setups in the future.
 
-```
-$ qemu-system-aarch64 \
-	-M virt -cpu cortex-a72 \
-	-m 128M -nographic \
-	-device loader,file=kernel.elf \
-	-device loader,addr=0x40100000,cpu-num=0
-```
+|||codediff|text
+  $ qemu-system-aarch64 \
+  	-M virt -cpu cortex-a72 \
+  	-m 128M -nographic \
+- 	-device loader,file=kernel.bin,addr=0x40100000 \
++ 	-device loader,file=kernel.elf \
+  	-device loader,addr=0x40100000,cpu-num=0
+|||
 
 ## Debugging
 
-Putting magic values into registers is as close as we'll get to `printf` debugging, but nothing beats step debugging when writing assembly. You can use `gdb` step through the system emulated by Qemu, but `gdb` does note support the M1 platform. Luckily, `lldb` understands gdb-style remote debugging as well. We can start Qemu with gdb remote debugging enabled (`-S`), and tell it to wait with starting the system (`-s`).
+Putting magic values into registers is not a great way to debug. A much much better way is to use `gdb` step through the system emulated by Qemu, but `gdb` does note support the M1 platform. Luckily, `lldb` understands the gdb remote debugging protocol. We can start Qemu with gdb remote debugging enabled (`-S`), and tell it to start in a pauses state (`-s`).
 
 ```
 $ qemu-system-aarch64 \
@@ -174,7 +175,7 @@ $ qemu-system-aarch64 \
 	-s -S
 ```
 
-Now we start `lldb` to connect:
+To connect `lldb` to Qemu, run the following:
 
 ```
 $ lldb kernel.elf
@@ -193,13 +194,13 @@ Now we have the full power of a debugger. Stepping, break points, memory and reg
 
 ## Serial I/O
 
-From the documentatoin of the `virt` platform, we know that it comes with a PL011 chip to handle the UART port (also called "serial port"). This seems like the easiest way to generate some output.
+From the documentation of the `virt` platform, we can see that it comes with a PL011 chip to handle the UART port (also called "serial port"). This seems like the easiest way to have some form of I/O.
 
-Looking at [the manual][pl011], we can write data to a register called `UARTDR` to send something over the serial port. The register has an offset of `0x000` from the PL011's base address, but what is the base address? That changes from system to system and needs to be determined at runtime.
+Looking at [the manual][pl011] of the PL011, the way to make the chip send a character over UART, is to write a value to a register called `UARTDR`. This register is mapped to memory and can be found at an offset of `0x000` from the PL011's base address — but what is the base address? That changes from system to system and needs to be determined at runtime.
 
 ## Device Tree
 
-The [Device Tree] is an open specification for a binary format and a text format to describe what periherals a system has and how to access them. The `virt` documentation said that the DTB, short for "Device Tree Blob", will be at the start of the RAM. 
+The [Device Tree] is an open specification for a binary format (Device Tree Blob, or DTB for short) and a text format (Device Tree Syntax, or DTS for short). A device tree describes what periherals a system has and how to access them. The `virt` documentation said that the DTB will be at `0x4000_0000`.
 
 While the correct thing to do would be to write code to parse the DTB, for now we are going to settle with dumping the DTB to disk using `lldb` and extracting the relevant information:
 
@@ -248,6 +249,8 @@ UARTDR:
 ```
 
 This writes the ASCII code for `'!'` into `UARTDR`, and Qemu should output it to your shell.
+
+This is where I'll stop for now. I tried to figure out how to start up a multi-core processor (`-smp 4`), but  figure out which processor internal registers need to be manipulated.
 
 
 
