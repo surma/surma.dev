@@ -1,10 +1,10 @@
 ---json
 {
   "title": "Writing and debugging bare metal arm64",
-  "date": "2023-02-21",
-  "socialmediaimage2": "social.png",
+  "date": "2023-02-22",
+  "socialmediaimage": "social.jpg",
   "tags": ["postits"],
-  "live": false
+  "live": true
 }
 
 ---
