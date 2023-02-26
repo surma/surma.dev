@@ -72,7 +72,7 @@ We can turn this into an object files as follows:
 $ as -o main.o main.s
 ```
 
-In the next step we need to link our object file into the final machine code using `ld`. By default, `ld` is configured to create an executable as the operating system it has been told to target expects. Since we don't have an operating system, we need to ignore those defaults and provide our own through a so-called inker script. Linker scripts are very weird in my opinion, and I haven't fully understood them still, despite finding the [documentation][linker scripts].
+In the next step we need to link our object file into the final machine code using `ld`. By default, `ld` is configured to create an executable as the operating system it has been told to target expects. This configuration is done via a so-called linker script. You can look at the default linker script by running `ld --verbose`. But since we don't have an operating system, we'll have to write our own. Linker scripts are very weird in my opinion, and I haven't fully understood them still, despite finding the [documentation][linker scripts].
 
 The following linker script will adjust our machine code, so that it expects to be loaded at `0x4010_0000`, which I chose to be 1MiB after the ominous DTB.  It also defines the `stack_top` symbol to point to an adress 4KiB after our code, which means we have 4KiB of stack space. We won't be using the stack, but it's always good to set it up so that something as basic as a function call works correctly.
 
