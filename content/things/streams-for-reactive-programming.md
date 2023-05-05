@@ -41,7 +41,7 @@ observable.subscribe(event => {
 
 Just having a different syntax to subscribe to events is not really that interesting, though. What makes RP really powerful is the ability to encapsulate behaviors or kinds of data processing. RxJS calls these encapsulations “operators”. You can connect multiple observables into a whole graph of data streams using these operators.
 
-An operator takes an observable and returns a new observable, giving the operator a chance to mangle or transform the data. This can be a basic transformation like a `map` or `filter` which you might know from Arrays. But the transformation can also be more complex like debouncing high-frequency events with `debouce`, flattening higher-order observables (an observable of observables) into a first-order observable with `concatAll` or combining multiple observables into one with `combineLatestWith`.
+An operator takes an observable and returns a new observable, giving the operator a chance to mangle or transform the data. This can be a basic transformation like a `map` or `filter` which you might know from Arrays. But the transformation can also be more complex like debouncing high-frequency events with `debounce`, flattening higher-order observables (an observable of observables) into a first-order observable with `concatAll` or combining multiple observables into one with `combineLatestWith`.
 
 Here is a RxJS example using a debounce operator:
 
