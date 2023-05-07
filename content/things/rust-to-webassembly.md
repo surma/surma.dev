@@ -43,7 +43,7 @@ pub fn add(left: usize, right: usize) -> usize {
 With all that in place, we can now compile this library to WebAssembly:
 
 ```
-$ cargo run --target=wasm32-unknown-unknown --release
+$ cargo build --target=wasm32-unknown-unknown --release
 ```
 
 You’ll find a freshly generated WebAssembly module in `target/wasm32-unknown-unknown/release/my_project.wasm`. I’ll continue to use `--release` builds throughout this article as it makes the WebAssembly module a lot more readable when we disassemble it.
