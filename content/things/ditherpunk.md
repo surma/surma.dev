@@ -79,7 +79,7 @@ Quantization is the process of mapping a large set of values to a smaller, usual
 
 Both black-and-white photos use 256 different shades of gray. If we wanted to use fewer colors — for example just black and white to achieve monochromaticity — we have to change every pixel to be either pure black or pure white. In this scenario, the colors black and white are called our “color palette” and the process of changing pixels that do not use a color from the palette is called “quantization”. Because not all colors from the original images are in the color palette, this will inevitably introduce an error called the “quantization error”. The naïve solution is to quantizer each pixel to the color in the palette that is closest to the pixel’s original color.
 
-> **Note:** Defining which colors are “close to each other” is open to interpretation and depends on how you measure the distance between two colors. I suppose ideally we’d measure distance in a psycho-visual way, but most of the articles I found simply used the euclidian distance in the RGB cube, i.e. $\sqrt{\Delta\text{red}^2 + \Delta\text{green}^2 + \Delta\text{blue}^2}$.
+> **Note:** Defining which colors are “close to each other” is open to interpretation and depends on how you measure the distance between two colors. I suppose ideally we’d measure distance in a psycho-visual way, but most of the articles I found simply used the euclidean distance in the RGB cube, i.e. $\sqrt{\Delta\text{red}^2 + \Delta\text{green}^2 + \Delta\text{blue}^2}$.
 
 With our palette only consisting of black and white, we can use the brightness of a pixel to decide which color to quantize to. A brightness of 0 means black, a brightness of 1 means white, everything else is in-between, ideally correlating with human perception such that a brightness of 0.5 is a nice mid-gray. To quantize a given color, we only need to check if the color’s brightness is greater or less than 0.5 and quantize to white and black respectively. Applying this quantization to the image above yields an... unsatisfying result.
 
@@ -365,7 +365,7 @@ $$
 \right)
 $$
 
-<figcaption>Diffusion matrix that shares half the error to 2 neightboring pixels, * marking the current pixel.</figcaption>
+<figcaption>Diffusion matrix that shares half the error to 2 neighboring pixels, * marking the current pixel.</figcaption>
 </figure>
 
 The diffusion algorithm visits each pixel in the image (in the right order!), quantizes the current pixel and measures the quantization error. Note that the quantization error is signed, i.e. it can be negative if the quantization made the pixel brighter than the original brightness value. We then add fractions of the quantization error to neighboring pixels as specified by the matrix. Rinse and repeat.

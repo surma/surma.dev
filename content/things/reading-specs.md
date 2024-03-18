@@ -14,20 +14,20 @@ If you are like me and you like to live on the bleeding edge, you will probably 
 
 Today I started to familiarize myself with [WebVR]. At the time of writing, Firefox Nightly and Samsung Internet Browser has support for WebVR and there are custom Chromium builds for Windows. Yes, that’s Chromium, not Chrome Canary. There’s a branch on the Chromium repo, but the code has not been pulled into master, so my colleague [Brandon Jones] picked up the slack and is providing custom builds. Once the code has been pulled in, I expect WebVR to be available in Canary behind a flag rather quickly.
 
-I don’t own an VR device besides a [Google Cardboard], but as it turns out that is not necessary to explore the API. Despite only two and a half native implementations and the rather expensive required hardware, WebVR already has a suprisingly vibrant community which have found ways to get started with WebVR regardless. There’s [ThreeJS demos], there’s an [Chrome extension] that emulates a VR device in DevTools, and there’s a [polyfill] with a very nice progressive enhancement approach to the whole problem.
+I don’t own an VR device besides a [Google Cardboard], but as it turns out that is not necessary to explore the API. Despite only two and a half native implementations and the rather expensive required hardware, WebVR already has a surprisingly vibrant community which have found ways to get started with WebVR regardless. There’s [ThreeJS demos], there’s an [Chrome extension] that emulates a VR device in DevTools, and there’s a [polyfill] with a very nice progressive enhancement approach to the whole problem.
 
 So much for the ecosystem. However, how do I _write_ WebVR? Most of the WebVR articles I found were snippets of code that did most of the work for you and didn’t explain how or why, mostly using [ThreeJS]. At that point I didn’t even know where the line for responsibilities is drawn between WebGL and WebVR. My work with [Houdini] taught me to work with specs a little and so I was less afraid to dive into the [WebVR spec]. Hopefully you’ll feel the same in the future after reading this.
 
 ## Specs and where they come from
 
-I know it doesn’t sound that way when you (try to) read them, but specs are written by humans. Like, real people. The reason I am mentioning this is because even though they sound like they follow a strict pattern and have very well defined and consice language (“MUST”, “SHOULD”, …), they are more prose with pseudo-code than anything else. I will try my best to give _general_ instructions on how to navigate and “parse” a spec, but keep in mind that each will have its own flavor and you _will_ need your brain to understand them.
+I know it doesn’t sound that way when you (try to) read them, but specs are written by humans. Like, real people. The reason I am mentioning this is because even though they sound like they follow a strict pattern and have very well defined and concise language (“MUST”, “SHOULD”, …), they are more prose with pseudo-code than anything else. I will try my best to give _general_ instructions on how to navigate and “parse” a spec, but keep in mind that each will have its own flavor and you _will_ need your brain to understand them.
 
 At the time of writing, WebVR was an Editor’s draft. Even though that is pretty early in a spec’s life cycle, it does mean that the proposal has a good amount of momentum and that a working group is working on it. Due to the public attention WebVR has gotten, I am assuming it is well reviewed and follows the best practices pretty closely. But in general: The earlier the spec is in the process, the more a spec might deviate from said best practices. Once a spec has reached the W3C, reviews will have ensured that language (*insert “normative” joke here*), structure and code are sufficiently in line.
 
 
 ## The sections of a spec
 
-> Note: For the sake of conistency, I saved a [copy of the spec](WebVR.html) as it was at the time of writing. All future links will use this copy instead of the [official spec][WebVR spec].
+> Note: For the sake of consistency, I saved a [copy of the spec](WebVR.html) as it was at the time of writing. All future links will use this copy instead of the [official spec][WebVR spec].
 
 Where do we start? In the spec! Well, not quite, but as a stepping stone to the “Explainer”. An explainer is written before the spec itself is used as a foundation to have a discussion about the API proposal. It gives a high-level rationale and a rough outline of the API that the author(s) envisioned. The good thing about explainers are that they are not 20 million pages long and use normal English. They might even be enjoyable to read.
 
@@ -39,7 +39,7 @@ The heading tells you what the name of the spec is (duh), what stage of the life
 
 ![The header of the WebVR spec](spec-head.png)
 
-Although it is not explicitely linked, the repository where the spec is maintained _usually_ also contains an explainer. Taking a look at the linked GitHub repository, you’ll find a [`explainer.md`](https://github.com/w3c/webvr/blob/2050aa85bedadd689cc817465e3b6fff6667ff8f/explainer.md). Take a look!
+Although it is not explicitly linked, the repository where the spec is maintained _usually_ also contains an explainer. Taking a look at the linked GitHub repository, you’ll find a [`explainer.md`](https://github.com/w3c/webvr/blob/2050aa85bedadd689cc817465e3b6fff6667ff8f/explainer.md). Take a look!
 
 ### Introduction
 
@@ -54,7 +54,7 @@ What follows after the introduction is not always the same and is highly depende
 
 ### Interfaces (and how to use them)
 
-At some point – at least for JavaScript APIs – you will come across code fragments that define interfaces. JavaScript doesn’t really have the concept of an interface (let alone types), so a JavaScript-like syntax called “[WebIDL]” is used instead. The [offical spec for WebIDL][WebIDL] is not a light read, but luckily it is rather intuitive.
+At some point – at least for JavaScript APIs – you will come across code fragments that define interfaces. JavaScript doesn’t really have the concept of an interface (let alone types), so a JavaScript-like syntax called “[WebIDL]” is used instead. The [official spec for WebIDL][WebIDL] is not a light read, but luckily it is rather intuitive.
 
 ![An trimmed down WebIDL definition of WebVR’s VRDisplay](spec-webidl.png)
 
@@ -93,7 +93,7 @@ We got our `VRDevice`! Now we can use all the methods defined on that type or re
 
 ### Typedefs
 
-Looking at the [WebIDL for `requestPresent`](WebVR.html#ref-for-dom-vrdisplay-requestpresent-1), it expects a sequece of `VRLayer`. So let’s look at the definition of `VRLayer` (ProTip™: Just click it!).
+Looking at the [WebIDL for `requestPresent`](WebVR.html#ref-for-dom-vrdisplay-requestpresent-1), it expects a sequence of `VRLayer`. So let’s look at the definition of `VRLayer` (ProTip™: Just click it!).
 
 ![WebIDL of VRLayer](spec-vrlayer.png)
 
@@ -107,7 +107,7 @@ So a `VRLayer` is a dictionary with three optional attributes. Directly undernea
 
 Okay! So, each `VRLayer` has a `VRSource`, for which we define 2 rectangles to map regions to left and right eye, defaulting to a split right down the middle of the `source`.
 
-The defintion for a `VRSource` is right above the definition of a `VRLayer` and is a `typedef`. Typedefs, as they are known from C, are nothing more than a type alias, although in this case it’s more like a union. A `VRSource` can be either `HTMLCanvasElement` or a `OffscreenCanvas`. So both just work as a value for the `source` attribute.
+The definition for a `VRSource` is right above the definition of a `VRLayer` and is a `typedef`. Typedefs, as they are known from C, are nothing more than a type alias, although in this case it’s more like a union. A `VRSource` can be either `HTMLCanvasElement` or a `OffscreenCanvas`. So both just work as a value for the `source` attribute.
 
 And with this, the call to `requestPresent()` in the example makes sense. It expects a sequence (hence the array) of `VRLayer`s (hence the objects with a `source` attributes).
 

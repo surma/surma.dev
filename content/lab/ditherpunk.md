@@ -7,6 +7,6 @@ Demo accompanying the [Ditherpunk][ditherpunk] article which dithers an image of
 
 <!-- more -->
 
-The implementation is sufficiently fast for small images, but is not very optimized. I wouldn’t be suprised if it’s slow and memory-hungry for bigger images.
+The implementation is sufficiently fast for small images, but is not very optimized. I wouldn’t be surprised if it’s slow and memory-hungry for bigger images.
 
 [ditherpunk]: /things/ditherpunk

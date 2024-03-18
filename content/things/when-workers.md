@@ -45,7 +45,7 @@ While we are getting faster flagship phones every cycle, the vast majority of pe
 
 ## JavaScript is blocking
 
-Maybe it’s worth spelling it out: The bad thing about long-running JavaScript is that it’s blocking. Nothing else can happen while JavaScript is running. **The main thread has other responsibilties in addition to running a web app’s JavaScript.** It also has to do page layout, paint, ship all those pixels to the screen in a timely fashion and look out for user interactions like clicking or scrolling. All of these can’t happen while JavaScript is running.
+Maybe it’s worth spelling it out: The bad thing about long-running JavaScript is that it’s blocking. Nothing else can happen while JavaScript is running. **The main thread has other responsibilities in addition to running a web app’s JavaScript.** It also has to do page layout, paint, ship all those pixels to the screen in a timely fashion and look out for user interactions like clicking or scrolling. All of these can’t happen while JavaScript is running.
 
 Browsers have shipped some mitigations for this, for example by moving the scrolling logic to a different thread under certain conditions. In general, however, if you block the main thread, your users will have a bad time. Like _bad_. They will be rage-tapping your buttons, they will be tortured by janky animations and potentially laggy scrolling.
 

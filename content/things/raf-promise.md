@@ -93,7 +93,7 @@ function animate(element, stylz) {
 }
 ```
 
-And that’s it! That’s all that’s going on behind the scenes to make my code snippet above work. I think this extremely lightweight abstraction yields _a lot_ of developer convenience when working with animations and transitions. Don’t forget that all the tooling around Promises like [`Promise.all()`] is available to you to do things like running multiple animations in parallel. The concept can easily be applied to all other kinds of event-emiting constructs in the JavaScript ecosystem, as well.
+And that’s it! That’s all that’s going on behind the scenes to make my code snippet above work. I think this extremely lightweight abstraction yields _a lot_ of developer convenience when working with animations and transitions. Don’t forget that all the tooling around Promises like [`Promise.all()`] is available to you to do things like running multiple animations in parallel. The concept can easily be applied to all other kinds of event-emitting constructs in the JavaScript ecosystem, as well.
 
 ## Trip wires
 

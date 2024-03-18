@@ -51,7 +51,7 @@ It’s the WebRTC version of “How to draw an owl”:
 
 ![How to draw an owl. Draw some circles. Draw the rest of the fucking owl.](owl.jpg)
 
-In my opinion, there’s a multitude of drawbacks with this approach to teaching WebRTC. First of all: WebRTC is about creating peer-to-peer connections on the web. There’s no reason to consistently conflate WebRTC with the Media API. While I do understand that one of the main motivations behind WebRTC was telecommunications/teleconferencing on the web, only presenting WebRTC and Media API in tandem adds a lot of cognitive load if you are not initmately familiar with `getUserMedia()`. It makes it harder for the reader to see where WebRTC’s responsibilities end and Media API’s responsibilities start. And you need all the cognitive capacity you can muster because I have to say that WebRTC is one of the weirder APIs; one of those APIs that stand out because they are not very intuitive to a web developer. It takes energy not to get mad, but it’s what we got. So buckle in, let’s make it work.
+In my opinion, there’s a multitude of drawbacks with this approach to teaching WebRTC. First of all: WebRTC is about creating peer-to-peer connections on the web. There’s no reason to consistently conflate WebRTC with the Media API. While I do understand that one of the main motivations behind WebRTC was telecommunications/teleconferencing on the web, only presenting WebRTC and Media API in tandem adds a lot of cognitive load if you are not intimately familiar with `getUserMedia()`. It makes it harder for the reader to see where WebRTC’s responsibilities end and Media API’s responsibilities start. And you need all the cognitive capacity you can muster because I have to say that WebRTC is one of the weirder APIs; one of those APIs that stand out because they are not very intuitive to a web developer. It takes energy not to get mad, but it’s what we got. So buckle in, let’s make it work.
 
 > **Note:** I will skip some details in my code snippets on this blog post. The full length code can be found in my [demo][demo code].
 
@@ -171,7 +171,7 @@ for(const candidate of remoteIceCandidates)
   connection.addIceCandidate(candidate);
 ```
 
-At this point our `RTCPeerConnection` is exactly that, a proper connection! 🎉 You can see why most tutorials start with creating a connection within the same page as it allows them to skip the backend and just pass the offer and the answer directly to both ends of the connection. But we want the real deal, and we felt the pain, didn’t we? Now that our connection is established, we don‘t need our backend anymore(!!). Our channel promise should resolve and we can actually start transfering data. We can send buffers or strings using `send()` and listen to incoming messages using `onmessage` on that channel object.
+At this point our `RTCPeerConnection` is exactly that, a proper connection! 🎉 You can see why most tutorials start with creating a connection within the same page as it allows them to skip the backend and just pass the offer and the answer directly to both ends of the connection. But we want the real deal, and we felt the pain, didn’t we? Now that our connection is established, we don‘t need our backend anymore(!!). Our channel promise should resolve and we can actually start transferring data. We can send buffers or strings using `send()` and listen to incoming messages using `onmessage` on that channel object.
 
 ### Firewalls? NAT?
 
@@ -240,7 +240,7 @@ Comlink works with everything that uses `postMessage`, so it can work between pa
 
 ## WebRTC + Comlink = 💖?
 
-Here’s where I got my idea: The `send()` method of the [`RTCPeerConnection`][RTCPeerConnection] is very close to a `postMessage()` interface. If I could make Comlink work with a `RTCPeerConnection` I could expose valus from one machine to another. There’s only two things missing:
+Here’s where I got my idea: The `send()` method of the [`RTCPeerConnection`][RTCPeerConnection] is very close to a `postMessage()` interface. If I could make Comlink work with a `RTCPeerConnection` I could expose values from one machine to another. There’s only two things missing:
 
 - `send()` is string-based while `postMessage()` can send proper JavaScript objects. So I’ll have to call `JSON.stringify()` myself.
 - `postMessage()` can transfer [`MessagePort`s][MessageChannel] to create new side channels. I’ll have to implement that myself.

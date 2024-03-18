@@ -17,13 +17,13 @@ When using OpenGL (or WebGL), you have to do _everything_ yourself, including fo
   <source src="dom2texture_x264.mp4" type="video/mp4; codecs=h264">
 </video>
 
-When you want to render strings to screen in OpenGL, it’s not uncommon to use [a bitmap font and distance field] (https://github.com/libgdx/libgdx/wiki/Distance-field-fonts) to place each individual symbol on a quad. You have to do everything yourself: Font sizing and smoothing, calculating the coordinates of each of these quads, when to line wrap and how to handle the baseline. If you want them, you will also need to implement support for ligatures yourself. Most of the time, being able to render text is only a precursor to having a 2D UI within your 3D OpenGL world, so you start implementing layout algorithms too. That seems not only unfun to me, but highly redunant. You could implement the UI in vanilla DOM and place the elements _on top_ of the WebGL canvas, but that would start failing once you wanted to expand your 3D experience to WebVR. So I got creative!
+When you want to render strings to screen in OpenGL, it’s not uncommon to use [a bitmap font and distance field] (https://github.com/libgdx/libgdx/wiki/Distance-field-fonts) to place each individual symbol on a quad. You have to do everything yourself: Font sizing and smoothing, calculating the coordinates of each of these quads, when to line wrap and how to handle the baseline. If you want them, you will also need to implement support for ligatures yourself. Most of the time, being able to render text is only a precursor to having a 2D UI within your 3D OpenGL world, so you start implementing layout algorithms too. That seems not only unfun to me, but highly redundant. You could implement the UI in vanilla DOM and place the elements _on top_ of the WebGL canvas, but that would start failing once you wanted to expand your 3D experience to WebVR. So I got creative!
 
 As you can tell by the [demo][] (and the presence of a TL;DR), there *is* a way to render DOM elements to a canvas  – if you don’t mind bending over backwards. And once we have something on canvas, we can use it as a texture in WebGL and it would allow us to make use of all the things the browser has already implemented: Loading different fonts, rendering them, coloring them, text shadows, text decorations, weights, RTL, word-wrapping, etc etc etc. But be warned: The TL;DR might make you think that this blog is short. It’s not. Brace yourself.
 
 ## Step 1: Foreign Objects
 
-Let’s start with Arcane API #1: As far as I am aware, [Foreign Objects](https://developer.mozilla.org/en/docs/Web/SVG/Element/foreignObject) are seldomly used. They allow you to include a different XML namespace into an SVG and the SVG renderer will hand of the rendering to the renderer responsible for that namespace. (Danger: This is probably a gross oversimplification.) So by using `<foreignObject>` we can mix SVG graphics with, let’s say, a `<button>` and it will not only render, it will function and be interactive. Amazing!
+Let’s start with Arcane API #1: As far as I am aware, [Foreign Objects](https://developer.mozilla.org/en/docs/Web/SVG/Element/foreignObject) are rarely used. They allow you to include a different XML namespace into an SVG and the SVG renderer will hand of the rendering to the renderer responsible for that namespace. (Danger: This is probably a gross oversimplification.) So by using `<foreignObject>` we can mix SVG graphics with, let’s say, a `<button>` and it will not only render, it will function and be interactive. Amazing!
 
 ```html
 <!doctype html>
@@ -164,7 +164,7 @@ Thinking I was done, I went ahead and tried using this technique to render some 
 
 Turns out I didn’t grasp the isolated nature of our SVG in its entirety. Take a [look](styleddom.html):
 
-![A colored square with colord text and an image inside. Next to it a completely unstyled version of the text and no image.](styleddom.png)
+![A colored square with colored text and an image inside. Next to it a completely unstyled version of the text and no image.](styleddom.png)
 
 Not only is all styling gone, but the image is a no-show. What’s going on here?
 
@@ -174,7 +174,7 @@ Once you think about it, it makes sense that there’s no styling. We are basica
 ```javascript
 Array.from(document.querySelectorAll('style'))
   .forEach(styleTag => {
-    fo.appendChild(styleTag.cloneNode(true));
+    foo.appendChild(styleTag.cloneNode(true));
   });
 ```
 

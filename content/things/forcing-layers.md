@@ -19,7 +19,7 @@ A very simplified rendering engine of a browser works as follows:
 2. Process styling to lay out the document, generating a “layout tree”.
 3. Turn the layout tree into paint instructions, generating a “paint tree”.
 4. Generate a canvas big enough to hold the entire document.
-5. Execture all those paint instruction on that canvas.
+5. Execute all those paint instruction on that canvas.
 
 This work brilliantly until you make changes often. Like 60 times a second often. If, for example, we want to have an element rotating, we can’t really reuse the old canvas. We have to start fresh and go all the way back to step 2.
 
@@ -46,8 +46,8 @@ Fast forward to March 2016: iOS 9 gets support for the `will-change` property th
 ## Side-effects
 What might not be immediately obvious is that all of these techniques have side-effect with varying degrees of _eugh_.
 
-### backface-visbility
-As the name implies, `backface-visbility: hidden` has the side-effect to hide the back-side of your element. Usually that side is not “facing” the user, but when you rotate your elements in 3D space, it can happen. If you take a look at [this demo](bfv.html) and press the “Flip boxes” button, you can see that the element with `backface-visibility: hidden` has it’s backface hidden.
+### backface-visibility
+As the name implies, `backface-visibility: hidden` has the side-effect to hide the back-side of your element. Usually that side is not “facing” the user, but when you rotate your elements in 3D space, it can happen. If you take a look at [this demo](bfv.html) and press the “Flip boxes” button, you can see that the element with `backface-visibility: hidden` has it’s backface hidden.
 
 <video controls autoplay loop muted>
   <source src="bfv_vp8.webm" type="video/webm; codecs=vp8">

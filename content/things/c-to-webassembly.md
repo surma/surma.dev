@@ -176,7 +176,7 @@ Of course the most important part is to see that this _actually_ works. [As we d
 </script>
 ```
 
-If nothing went wrong, you shoud see a `17` in your DevTool’s console. **We just successfully compiled C to WebAssembly without touching Emscripten.** It’s also worth noting that we don’t have any glue code that is required to setup and load the WebAssembly module.
+If nothing went wrong, you should see a `17` in your DevTool’s console. **We just successfully compiled C to WebAssembly without touching Emscripten.** It’s also worth noting that we don’t have any glue code that is required to setup and load the WebAssembly module.
 
 ## Compiling C the slightly less hard way
 
@@ -252,12 +252,12 @@ Let’s take a look at the WAT of our WebAssembly module by running `wasm2wat`:
   (export "add" (func $add)))
 ```
 
-Wowza that’s _a lot_ of WAT. To my suprise, the module uses memory (indicated by the `i32.load` and `i32.store` operations), 8 local variables and a couple of globals. If you think you’d be able to write a shorter version by hand, you’d probably be right. The reason this program is so big is because we didn’t have any optimizations enabled. Let’s change that:
+Wowza that’s _a lot_ of WAT. To my surprise, the module uses memory (indicated by the `i32.load` and `i32.store` operations), 8 local variables and a couple of globals. If you think you’d be able to write a shorter version by hand, you’d probably be right. The reason this program is so big is because we didn’t have any optimizations enabled. Let’s change that:
 
 ```diff
  clang \
    --target=wasm32 \
-+  -O3 \ # Agressive optimizations
++  -O3 \ # Aggressive optimizations
 +  -flto \ # Add metadata for link-time optimizations
    -nostdlib \
    -Wl,--no-entry \
