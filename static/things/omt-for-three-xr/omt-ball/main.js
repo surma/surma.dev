@@ -404,7 +404,7 @@ define("./main.js",['require', './comlink-706df4ec'], function (require, comlink
       }),
       ballCount
     );
-    // ThreeJS doesn't support frustrum culling for InstancedMesh yet.
+    // ThreeJS doesn't support frustum culling for InstancedMesh yet.
     balls.frustumCulled = false;
     room.add(balls);
 

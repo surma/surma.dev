@@ -218,7 +218,7 @@ Without going into too much detail, sized types (like structs, enums, etc) are t
 
 A function parameter with an unsized type (`?Sized`), like `str`, `[u8]` or `dyn MyTrait`, is split into two parameters: One value is the pointer to the data, the other value is a pointer to a bit of metadata. In the case of a `str` or a slice, the metadata is the length of the data. In the case of a trait object, it’s the virtual table (or vtable), which is a list of function pointers to the individual trait function implementations. If you want to know more details about what a VTable in Rust looks like, I can recommend [this article][vtable] by Thomas Bächler. 
 
-I’m skipping over loads of detail here, because unless you are trying to write the next wasm-bindgen, I would recommmend relying on existing tools rather than reinventing this wheel.
+I’m skipping over loads of detail here, because unless you are trying to write the next wasm-bindgen, I would recommend relying on existing tools rather than reinventing this wheel.
 
 ## Module size
 
@@ -292,7 +292,7 @@ It’s now clearly visible that all main contributors to the module size are cus
 strip = true
 ```
 
-This will cause `rustc` to strip all custom sections, including the one that provides function names. This can be undesirable at times because now the output of `twiggy` will just say `code[0]` or similar for a function. If you want to keep function names around, we can use a specifc strip mode:
+This will cause `rustc` to strip all custom sections, including the one that provides function names. This can be undesirable at times because now the output of `twiggy` will just say `code[0]` or similar for a function. If you want to keep function names around, we can use a specific strip mode:
 
 |||codediff|toml
   [profile.release]
@@ -300,7 +300,7 @@ This will cause `rustc` to strip all custom sections, including the one that pro
 + strip = "debuginfo"
 |||
 
-If you need super finegrained control, you can go back and disable stripping in `rustc` altogether and use `llvm-strip` manually (or `wasm-strip` from [wabt]). This allows you control over which custom sections should be kept around.
+If you need super fine-grained control, you can go back and disable stripping in `rustc` altogether and use `llvm-strip` manually (or `wasm-strip` from [wabt]). This allows you control over which custom sections should be kept around.
 
 ```
 $ llvm-strip --keep-section=name target/wasm32-unknown-unknown/release/my_project.wasm
@@ -419,7 +419,7 @@ In our case, `wasm-opt` reduces Rust’s 2.3K WebAssembly binary a bit further, 
 
 Rust has a [standard library][rust std], which contains a lot of abstractions and utilities that you need on a daily basis when you do systems programming: accessing files, getting the current time, or opening network sockets. It’s all in there for you to use, without having to go searching on [crates.io] or anything like that. However, many of the data structures and functions make assumptions about the environment that they are used in: They assume that the details of the hardware are abstracted into uniform APIs and they assume that they can somehow allocate (and deallocate) chunks of memory of arbitrary size. Usually, both of these jobs are fulfilled by the operating system, and most of us work atop an operating system on a daily basis.
  
-However, when you instantiate a WebAssembly module via the raw API, things are different: the sandbox — one of the defining security features of WebAssmebly — isolates the WebAssembly code from the host and, by extension, the operating system. Your code gets access to nothing more than a chunk of linear memory, which isn’t even managed to figure out which parts are in use and which parts are up for grabs.
+However, when you instantiate a WebAssembly module via the raw API, things are different: the sandbox — one of the defining security features of WebAssembly — isolates the WebAssembly code from the host and, by extension, the operating system. Your code gets access to nothing more than a chunk of linear memory, which isn’t even managed to figure out which parts are in use and which parts are up for grabs.
 
 > **WASI:** This is not part of this article, but just like WebAssembly is an abstraction for the processor your code is running on, [WASI] (WebAssembly Systems Interface) aims to be an abstraction for the operating system your code is running on and give you a single, uniform API to work with regardless of environment. Rust has support for WASI, although WASI itself is still in development.
 
@@ -590,7 +590,7 @@ You don’t have to implement the allocator yourself, of course. In fact, it’s
 
 Many guides recommend [`wee_alloc`][wee_alloc], which is a very small (<1KB) allocator written by the Rust WebAssembly team that can also free memory. Sadly, it seems unmaintained and has an [open issue about memory corruption][wee_alloc mem corruption] and leaking memory. 
 
-In any WebAssembly module of decent complexity, the 10KB consumed by Rust’s defaul allocator will make up for only a tiny fraction of the overall module size, so I recommend sticking to it and knowing that the allocator is well-tested and performant.
+In any WebAssembly module of decent complexity, the 10KB consumed by Rust’s default allocator will make up for only a tiny fraction of the overall module size, so I recommend sticking to it and knowing that the allocator is well-tested and performant.
 
 ## wasm-bindgen
 

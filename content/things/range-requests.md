@@ -63,7 +63,7 @@ function handle(request: Request): Promise<Response> {
 await serve(handle, { port: 8080 });
 ```
 
-Most requests are handled by the standard libary’s [`serveFile` function][deno/std/http/file_server/servefile], which I use to serve files from `STATIC_ROOT` on the local filesystem. If a resource from `/raw/` is requested, our special logic kicks in, extracts the blob hash and calls `streamBlob()`. This is where it gets interesting:
+Most requests are handled by the standard library’s [`serveFile` function][deno/std/http/file_server/servefile], which I use to serve files from `STATIC_ROOT` on the local filesystem. If a resource from `/raw/` is requested, our special logic kicks in, extracts the blob hash and calls `streamBlob()`. This is where it gets interesting:
 
 ```ts
 // perkeep.ts is a class that wraps the JSON HTTP API of Perkeep.
@@ -89,7 +89,7 @@ async function streamBlob(req: Request, ref: string): Promise<Response> {
 }
 ```
 
-To concatenate all the individual parts into one, consecutive stream, we create a `TransformStream`. `TransformStream`s without a `transform` function will forward everything that is written into their `writable` to their `readable`, without any transformation inbetween. The `readable` will be our `Response`’s body. In a concurrent async IIFE, we fetch each part’s contents using `fetch()`, grab the `ReadableStream<Uint8Array>` body and feed them into our `writable` using `pipeTo`, which will cause all chunks to come out the `readadable` in order. We just re-assembled the file on the fly!
+To concatenate all the individual parts into one, consecutive stream, we create a `TransformStream`. `TransformStream`s without a `transform` function will forward everything that is written into their `writable` to their `readable`, without any transformation in between. The `readable` will be our `Response`’s body. In a concurrent async IIFE, we fetch each part’s contents using `fetch()`, grab the `ReadableStream<Uint8Array>` body and feed them into our `writable` using `pipeTo`, which will cause all chunks to come out the `readadable` in order. We just re-assembled the file on the fly!
 
 In the case of using the output of one stream as the input to another, there are three scenarios that we need to think about:
 

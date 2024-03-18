@@ -367,7 +367,7 @@ define("./comlink-706df4ec.js",['exports'], function (exports) { 'use strict';
 
 		},
 
-		// compute euclidian modulo of m % n
+		// compute euclidean modulo of m % n
 		// https://en.wikipedia.org/wiki/Modulo_operation
 
 		euclideanModulo: function ( n, m ) {
@@ -29127,7 +29127,7 @@ define("./comlink-706df4ec.js",['exports'], function (exports) { 'use strict';
 
 		for ( i = 0; i <= tubularSegments; ++ i ) {
 
-			// the radian "u" is used to calculate the position on the torus curve of the current tubular segement
+			// the radian "u" is used to calculate the position on the torus curve of the current tubular segment
 
 			var u = i / tubularSegments * p * Math.PI * 2;
 

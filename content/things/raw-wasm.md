@@ -48,7 +48,7 @@ You can follow along on your own machine with the tools mentioned above, open th
 )
 ```
 
-The file starts with a module expression, which is a list of declarations what the module contains. This can be a multitude of things, but in this case it’s just the declaration of a function and an export statement. Everthing that starts with `$` is a named identifier and is turned into a unique number during compilation. These identifiers can be omitted (and the compiler will take care of the numbering), but the named identifiers make Wat code much easier to follow.
+The file starts with a module expression, which is a list of declarations what the module contains. This can be a multitude of things, but in this case it’s just the declaration of a function and an export statement. Everything that starts with `$` is a named identifier and is turned into a unique number during compilation. These identifiers can be omitted (and the compiler will take care of the numbering), but the named identifiers make Wat code much easier to follow.
 
 After assembling our `.wat` file with `wat2wasm`, we can disassemble it again (for lols) with `wasm2wat`. The result is below.
 
@@ -64,13 +64,13 @@ After assembling our `.wat` file with `wat2wasm`, we can disassemble it again (f
 )
 ```
 
-As you can see, the named identifiers have disappeared and have been replaced with (somewhat) helpful comments by the disassembler. You can also see a `type` declaration that was generated for you by `wat2wasm`. It’s technically always necessary to declare a function’s type before declaring the function itself, but because the type is fully inferrable from the declaration, `wat2wasm` injects the type declaration for us. Within this context, function type declarations will seem a bit redundant, but they will become more useful when we talk about function imports later.
+As you can see, the named identifiers have disappeared and have been replaced with (somewhat) helpful comments by the disassembler. You can also see a `type` declaration that was generated for you by `wat2wasm`. It’s technically always necessary to declare a function’s type before declaring the function itself, but because the type is fully inferable from the declaration, `wat2wasm` injects the type declaration for us. Within this context, function type declarations will seem a bit redundant, but they will become more useful when we talk about function imports later.
 
 > **Pro tip**: Did you know that the “Source” panel in DevTools will automatically disassemble .wasm files for you?
 >
 > ![Screenshot of DevTools disassembling a WebAssembly module](devtools.png)
 
-A function declaration consists of a couple of items, starting with `func` keyword, followed by the (optional) identifer. We also need to specify a list of parameters with their types, the return type and an optional list of local variables. The function body is itself a list of [instructions] for the VM’s stack. Using these instructions you can push values onto the stack, pop values off the stack and replace them with the result of an operation or load and store values in local variables, global variables or even memory (more about that later). A function _must_ leave exactly one value on the stack as the function’s return value.
+A function declaration consists of a couple of items, starting with `func` keyword, followed by the (optional) identifier. We also need to specify a list of parameters with their types, the return type and an optional list of local variables. The function body is itself a list of [instructions] for the VM’s stack. Using these instructions you can push values onto the stack, pop values off the stack and replace them with the result of an operation or load and store values in local variables, global variables or even memory (more about that later). A function _must_ leave exactly one value on the stack as the function’s return value.
 
 Writing code for a stack-based machine can sometimes feel a bit weird. Wat also offers “folded” instructions, which look a bit like functional programming. The following two function declarations are equivalent:
 
@@ -294,7 +294,7 @@ WebAssembly can only work with numbers as parameters. It can also only return nu
 
 There are a couple of things that WebAssembly modules can do that I didn’t talk about:
 
-- [Memory initialization][meminit]: Memory can be initalized with data in the WebAssembly file. Take a look at `datastring` in the [memory initializers][meminit] and [data segments].
+- [Memory initialization][meminit]: Memory can be initialized with data in the WebAssembly file. Take a look at `datastring` in the [memory initializers][meminit] and [data segments].
 - [Tables]: Tables are mostly useful to implement concepts like function points and consequently patterns like dynamic dispatch or dynamic linking.
 - [Globals]: Yes, you can have global variables.
 - [Many, many other operations on stack values][numeric instructions].
@@ -302,7 +302,7 @@ There are a couple of things that WebAssembly modules can do that I didn’t tal
 
 ## AssemblyScript
 
-Writing Wat by hand can feel a bit awkward and is probably not the most productive way to create WebAssembly modules. [AssemblyScript] is a language with TypeScript’s syntax compiles to WebAssembly and closely mimicks the capabilities of the WebAssembly VM. The functions that are provided by the standard library often map straight to WebAssembly VM instructions. I highly recommend taking a look!
+Writing Wat by hand can feel a bit awkward and is probably not the most productive way to create WebAssembly modules. [AssemblyScript] is a language with TypeScript’s syntax compiles to WebAssembly and closely mimics the capabilities of the WebAssembly VM. The functions that are provided by the standard library often map straight to WebAssembly VM instructions. I highly recommend taking a look!
 
 ## Conclusion
 
@@ -321,7 +321,7 @@ Is Wat useful for your daily life as a web developer? Probably not. I have found
 [Int8Array]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array
 [Memory]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory
 [meminit]: https://webassembly.github.io/spec/core/bikeshed/index.html#memories%E2%91%A7
-[data segements]: https://webassembly.github.io/spec/core/bikeshed/index.html#data-segments%E2%91%A4
+[data segments]: https://webassembly.github.io/spec/core/bikeshed/index.html#data-segments%E2%91%A4
 [numeric instructions]: https://webassembly.github.io/spec/core/bikeshed/index.html#numeric-instructions%E2%91%A8
 [tables]: https://webassembly.github.io/spec/core/bikeshed/index.html#tables%E2%91%A7
 [AssemblyScript]: https://github.com/AssemblyScript

@@ -42,7 +42,7 @@ If you are extraordinarily lazy (as any developer should be), I have uploaded a 
 ## Tools
 ### SimpleHTTP2Server
 
-For **local development**, setting up a webserver and generating a certificate with OpenSSL is quite tedious. For that purpose (and that purpose only) I wrote a small tool called `simplehttp2server`. It’s a binary that serves the currenty directory using HTTP/2 and even has support for push. You can also use this tool as a shorthand to generate a certificate for `localhost`.
+For **local development**, setting up a webserver and generating a certificate with OpenSSL is quite tedious. For that purpose (and that purpose only) I wrote a small tool called `simplehttp2server`. It’s a binary that serves the current directory using HTTP/2 and even has support for push. You can also use this tool as a shorthand to generate a certificate for `localhost`.
 
 You can grab the binaries from the [release section][simplehttp2 release] of the [GitHub repository][simplehttp2 repo], where you’ll also find the README with more details.
 
@@ -87,7 +87,7 @@ $ sudo ln -sf ../mods-available/ssl.* .
 $ sudo ln -sf ../mods-available/http2.* .
 ```
 
-If you already have a `VirtualHost` for HTTPS, skip this step. Otherwise, edit the file containg your `VirtualHost` and add copy of your original said `VirtualHost` on port 443:
+If you already have a `VirtualHost` for HTTPS, skip this step. Otherwise, edit the file containing your `VirtualHost` and add copy of your original said `VirtualHost` on port 443:
 ```
 <VirtualHost *:443>
   # ...
@@ -191,7 +191,7 @@ maxThreads="150" SSLEnabled="true">
 
 No HTTP/2 support just yet :(
 
-> *Update from Novemeber 2016*:  I thought I would have H2 in 1.6 if you remember :-) So let's say that we'll put a lot of efforts into getting H2 in 1.8. [Source][haproxy source]
+> *Update from November 2016*:  I thought I would have H2 in 1.6 if you remember :-) So let's say that we'll put a lot of efforts into getting H2 in 1.8. [Source][haproxy source]
 
 ### AWS
 

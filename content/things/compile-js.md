@@ -185,7 +185,7 @@ whole engine, and ended up with a mere 86KiB (~30KiB brotli’d). That’s prett
 cool.
 
 > **ES20-ohmygodwhathaveyoudone:** Please don’t get too excited. This
-transpiler supports a miniscule subset of JavaScript and is in no way compliant
+transpiler supports a minuscule subset of JavaScript and is in no way compliant
 to any ECMAScript standard. It _could_ be, but as of now it’s not.
 
 If you want to inspect the generated C++ code, pass the `--emit-cpp` flag.

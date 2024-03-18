@@ -282,7 +282,7 @@ const x = {
 console.logAndEval('x');
 ```
 
-One consequence of using Symbols is that we need some way to distribute our symbols so we (or others) can use them. Well-known symbols attach themselves to the global `Symbol` object, `Symbol` also offers a registry. The only way I know about this is because [section 19.4][Symbol 19.4] lists all properties of the `Symbol` object. In-between all those well-known symbols are two convenince methods: `Symbol.for()` and `Symbol.keyFor()`. `Symbol.for()` is like a factory. If a symbol for the given key exists it will be returned, if not it will be created, appended to the registry and then returned.
+One consequence of using Symbols is that we need some way to distribute our symbols so we (or others) can use them. Well-known symbols attach themselves to the global `Symbol` object, `Symbol` also offers a registry. The only way I know about this is because [section 19.4][Symbol 19.4] lists all properties of the `Symbol` object. In-between all those well-known symbols are two convenience methods: `Symbol.for()` and `Symbol.keyFor()`. `Symbol.for()` is like a factory. If a symbol for the given key exists it will be returned, if not it will be created, appended to the registry and then returned.
 
 You might be asking why to use the provided registry over just attaching Symbols yourself to the global `Symbol` object, and the spec has a hint as to why:
 

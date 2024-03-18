@@ -50,7 +50,7 @@ The next step is obviously to increase the number of balls:
 This yields a horrible, even nauseating experience:
 
 <figure>
-  <video src="/things/omt-for-three-xr/ballshooter-frustrum-lag.mp4" muted loop controls></video>
+  <video src="/things/omt-for-three-xr/ballshooter-frustum-lag.mp4" muted loop controls></video>
   <figcaption>Increasing the number of balls to 2000 prevents the Oculus Quest from shipping frames in time.</figcaption>
 </figure>
 
@@ -335,7 +335,7 @@ async function init() {
     }),
     ballCount
   );
-  // ThreeJS doesn't support frustrum culling for InstancedMesh yet.
+  // ThreeJS doesn't support frustum culling for InstancedMesh yet.
   balls.frustumCulled = false;
   room.add(balls);
 

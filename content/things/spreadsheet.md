@@ -25,9 +25,9 @@ Before starting to code, I find it helpful to plan ahead and analyze the task at
 - Vagueness means more room to interpret the problem in way that plays to your strengths.
 - You can show off that you can spot vagueness early on and are able to create clarity with well-phrased questions.
 
-Most coding interviews are between 40 minutes and 2 hours long. Different people work at different paces, so in my experience interviewers start with a very minimal version of the problem and make it more complicated over time. That also lets the interviewer see how the candiate adapts to a changing constraints. While interviewers should strive to evaluate a candidate to their strengths, **I suspect that many interviewers use “how far” you got into a problem as an indicator for your engineering skill.** If you make the interviewer run out of constraints to add, you probably did well.
+Most coding interviews are between 40 minutes and 2 hours long. Different people work at different paces, so in my experience interviewers start with a very minimal version of the problem and make it more complicated over time. That also lets the interviewer see how the candidate adapts to a changing constraints. While interviewers should strive to evaluate a candidate to their strengths, **I suspect that many interviewers use “how far” you got into a problem as an indicator for your engineering skill.** If you make the interviewer run out of constraints to add, you probably did well.
 
-However, even for the fastest of engineers, the time alloted to a coding problem is rarely enough to produce polished, production-ready code. Consequently, I believe that **optimizing for iteration** is a good bet to do well in coding interviews.
+However, even for the fastest of engineers, the time allotted to a coding problem is rarely enough to produce polished, production-ready code. Consequently, I believe that **optimizing for iteration** is a good bet to do well in coding interviews.
 
 ### Optimizing for Iteration
 
@@ -35,7 +35,7 @@ Optimizing for Iteration, to me, means starting small, and doing many, small inc
 
 Each iteration should be runnable and allows you to verify that it works as expected. This way you only have to comb through a small amount of code changes if something breaks. This also makes it easy for the interviewer to follow along. In fact, in my interviews I even created git repositories and made commits for each iteration. That way I could inspect diffs or reset to the previous iteration if I went down a fruitless path.
 
-Optimizing for Iteration also means to write code in a way that allows you to switch out parts easily as new constraints come in. My general advice to keep code flexible is to not hard-code constants, to use many small, well-named functions and to keep code [DRY]. Keeping functions small makes it easier to verify just by reading that a function does what it’s supposed to do. If constrainst change, it’s often a matter of augmenting or replacing a single function, without having to touch any of the other parts. Another nice side-effect is that a good function name is basically docmentation and helps the interviewer understand what you are doing.
+Optimizing for Iteration also means to write code in a way that allows you to switch out parts easily as new constraints come in. My general advice to keep code flexible is to not hard-code constants, to use many small, well-named functions and to keep code [DRY]. Keeping functions small makes it easier to verify just by reading that a function does what it’s supposed to do. If constraints change, it’s often a matter of augmenting or replacing a single function, without having to touch any of the other parts. Another nice side-effect is that a good function name is basically documentation and helps the interviewer understand what you are doing.
 
 **Disclaimer:** You should ask your interviewer what they are assessing. Is it development velocity? Accuracy? App performance? Polish? Accessibility? The answer can have strong implications for how valuable this blog post is for you. 
 
@@ -53,11 +53,11 @@ The interview question, as expected, is rather short and to the point:
 
 Just to be clear: I didn’t encounter this question in an interview personally. I’ll be pretending to go through a ~60 minute interview with an imaginary interviewer. And what you will read here is how I would tackle this question and how I predict the interview would go, informed by my experience in interviews. While reading all of this, it’s important to remember that **the most important part of an interview is communication**. Keep your interviewer in the loop! Not only tell them what you are currently doing, but also what you are working towards. Think out loud and describe what your ideas are and how you plan to implement them. Most interviewers want to help and will reinforce good ideas and try and prevent you from going down the wrong path. A coder that can’t articulate what they are doing is likely not going to do well in a team environment.
 
-It’s also worth nothing that this might not actually be a great interview question. Spreadsheets (like Google Spreadsheets) have a whole team of engineers working on multiple aspects of the app. So tasking you with building something similar in 60 minutes will force the candidate to take shortcuts, which could lead to a bad impression if the assessment criteria are not communicated clearly. Again: Talk to the interviewer to make sure you are not going in a wrong direciton.
+It’s also worth nothing that this might not actually be a great interview question. Spreadsheets (like Google Spreadsheets) have a whole team of engineers working on multiple aspects of the app. So tasking you with building something similar in 60 minutes will force the candidate to take shortcuts, which could lead to a bad impression if the assessment criteria are not communicated clearly. Again: Talk to the interviewer to make sure you are not going in a wrong direction.
 
 ## Level 1: Scaffolding
 
-Before I start to write any code, it’s a good idea to set everything up. As I said, time is crucial in an interview, so I don’t like messing around with a build system unless absolutely necessary. In most interviews I end up writing vanilla JavaScript, CSS and HTML, and use something like `npx superstatic .` to spin up a web server. If I need to build any dynamic UI, I often assemble HTML strings and assign them to `.innerHTML`. That has all kinds of issues, especially when processing user input, but that is usally fine to do in an interview. Remember: In my approach, “make it work” comes first. “Right” and “fast” can come later.
+Before I start to write any code, it’s a good idea to set everything up. As I said, time is crucial in an interview, so I don’t like messing around with a build system unless absolutely necessary. In most interviews I end up writing vanilla JavaScript, CSS and HTML, and use something like `npx superstatic .` to spin up a web server. If I need to build any dynamic UI, I often assemble HTML strings and assign them to `.innerHTML`. That has all kinds of issues, especially when processing user input, but that is usually fine to do in an interview. Remember: In my approach, “make it work” comes first. “Right” and “fast” can come later.
 
 > **Note:** This is highly subjective. In the “make it work” stage, in my opinion, everything goes. Use whatever you know the best, what you are comfortable with and what allows you to move fast. For me, that’s vanilla JS and using the platform directly. If it’s React for you, use React. However, if you deviate from industry best practices or the company’s tech stack, it might not work in your favor.
 
@@ -189,7 +189,7 @@ In interviews I usually ignore aesthetics. After all, I am building a Proof Of C
   <script type="module" src="./main.jsx"></script>
 ||||
 
-`spreadsheetColumn` turns a column _number_ into the letters we know and love from Excel & co. It is also an example of a shortcut. This function will create nonesense if it’s given a column index above 25, but the interviewer limited the columns to 10 for now, so that will work just fine. This way I can avoid spending time on the _slightly_ more complex code that returns `"AA"` for `idx = 26` and so on. If the interviewer decides they want a bigger spreadsheet, I only need to go back to this one function and fix it.
+`spreadsheetColumn` turns a column _number_ into the letters we know and love from Excel & co. It is also an example of a shortcut. This function will create nonsense if it’s given a column index above 25, but the interviewer limited the columns to 10 for now, so that will work just fine. This way I can avoid spending time on the _slightly_ more complex code that returns `"AA"` for `idx = 26` and so on. If the interviewer decides they want a bigger spreadsheet, I only need to go back to this one function and fix it.
 
 <figure>
   <img loading="lazy" width="1030" height="423" src="./step2.webp">
@@ -239,7 +239,7 @@ function useSpreadsheetData(rows, cols) {
 
 I am writing my own pseudo-hook here to keep the component function to be mostly about markup. It also allows me to hide some of the component-specific workarounds in a function, which can make future endeavours (like maybe I could even run the spreadsheet calculations in a worker later on 🤯) easier. Again: Lots of small functions make for easier refactoring!
 
-> **Note:** I’m fairly new to hooks. If I’m being unidiomatic here, I apologize. Some might take offsense that I am using a mutable data structure as state here, but it works and makes it quite easy to follow, in my opinion.
+> **Note:** I’m fairly new to hooks. If I’m being unidiomatic here, I apologize. Some might take offense that I am using a mutable data structure as state here, but it works and makes it quite easy to follow, in my opinion.
 
 I can’t use an instance of the `SpreadsheetData` class with `useReducer` directly. Preact checks for object equality to decide whether to rerender a component. My class instance will always be the same object and that means the component would never rerender. Wrapping the class instance in an object and creating a new wrapper object on every `dispatch()` call forces object <em>in</em>equality and subsequently a rerender. The `dispatch()` function takes a cell’s coordinates and the new value and updates the spreadsheet data accordingly.
 

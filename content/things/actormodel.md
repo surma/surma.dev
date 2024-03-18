@@ -8,7 +8,7 @@
 Everything old is new again. Let’s take a concurrency model from the 70s and apply it to the web in 2017. Why? Well, read on, will ya?
 <!--more-->
 
-The whole reason I started to think about actors was because I was playing around with [Erlang]. Erlang is not the only language to use the Actor Model, of course, but arguably the most popular one. There’s also it’s more modern reincarnation [Elixir], the JVM langauge [Scala], or the systems programming language [Pony].
+The whole reason I started to think about actors was because I was playing around with [Erlang]. Erlang is not the only language to use the Actor Model, of course, but arguably the most popular one. There’s also it’s more modern reincarnation [Elixir], the JVM language [Scala], or the systems programming language [Pony].
 
 It struck me that the Actor Model could work on the web. The more I thought about it, the more it seems like a natural fit.
 
@@ -49,7 +49,7 @@ Let’s take a look at some Erlang code as a quick, superficial introduction to 
 
 ### Example 1
 
-I want to do some _incredibly_ expensive mathematical operations like adding and multiplying the numbers 4 and 9. These operations, as we all know, are so expensive that it’s sensible te move them into their own actor to potentially run in a different thread. In the Erlang world, my main program could look like this:
+I want to do some _incredibly_ expensive mathematical operations like adding and multiplying the numbers 4 and 9. These operations, as we all know, are so expensive that it’s sensible to move them into their own actor to potentially run in a different thread. In the Erlang world, my main program could look like this:
 
 ```erlang
 main() ->
@@ -86,7 +86,7 @@ With `receive` you can wait for the next message to arrive in the current actor�
 As you can see, we have to put the sender’s mailbox address into the messages ourselves. Otherwise, our math worker wouldn’t be able to respond with the result.
 
 ### Example 2
-As a next example I want to read a string from a file. It’s a very simple example, but I like it as it very cleary involves a resources that is not thread-safe:
+As a next example I want to read a string from a file. It’s a very simple example, but I like it as it very clearly involves a resources that is not thread-safe:
 
 ```erlang
 FileHandle = open_file("/myResource.txt"),
@@ -110,7 +110,7 @@ read_from_file(FileHandle) ->
 
 It turns out that the `FileHandle` we used is actually an actor’s mailbox address! Access to the file itself is managed by an actor. This means that the file handle can be shared and be used my multiple actors (or threads) without more than one actor reading or writing at any given time.
 
-What really blew my mind was the fact that Erlang can run in a cluster where actors are scattered across multiple machines on a network. Mailbox addresses are unique within the cluster and the Erlang runtime takes care of dispatching a messgage across the network if necessary. So an actor running on one server is capable of _directly_ working with a file on another server without being aware of it.
+What really blew my mind was the fact that Erlang can run in a cluster where actors are scattered across multiple machines on a network. Mailbox addresses are unique within the cluster and the Erlang runtime takes care of dispatching a message across the network if necessary. So an actor running on one server is capable of _directly_ working with a file on another server without being aware of it.
 
 > **Note:** Is this slow? Maybe. Let’s ignore this concern and continue to work on a conceptual level, shall we?
 
