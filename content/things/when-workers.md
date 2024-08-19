@@ -16,7 +16,7 @@ Did I get your attention with that? Good. Of course, as with any topic, there is
 
 ## The Performance Gap is widening
 
-> **Note:** I hate the “emerging markets” terminology, but to makes this blog post intuitive to as many people as possible, I’ll be using it here.
+> **Note:** I hate the “emerging markets” terminology, but to make this blog post intuitive to as many people as possible, I’ll be using it here.
 
 Phones are getting faster. I don’t think anyone will disagree with that. Stronger GPUs, faster and more CPUs, more RAM. Phones are going through the same rapid development desktop machines did in the early 2000s.
 
@@ -25,7 +25,7 @@ Phones are getting faster. I don’t think anyone will disagree with that. Stron
   <figcaption>Benchmark scores taken from <a href="https://browser.geekbench.com/ios-benchmarks">Geekbench</a> (single-core).</figcaption>
 </figure>
 
-However, that’s just one edge of the distribution. **_Slow_ phones are stuck in 2014.** The process to create the chips from half a decade ago has gotten so cheap that phones can now be sold for around $20, and cheaper phone will reach a wider audience. ~50% of the world are online, meaning that the other ~50% are not. However, these offliners are _coming_ online and are predominantly located in emerging markets, where people simply can’t afford any of the [Wealthy Western Web] flagship phones.
+However, that’s just one edge of the distribution. **_Slow_ phones are stuck in 2014.** The process to create the chips from half a decade ago has gotten so cheap that phones can now be sold for around $20, and cheaper phones will reach a wider audience. ~50% of the world are online, meaning that the other ~50% are not. However, these offliners are _coming_ online and are predominantly located in emerging markets, where people simply can’t afford any of the [Wealthy Western Web] flagship phones.
 
 At Google I/O 2019, [Elizabeth Sweeny] and [Barb Palser] handed out Nokia 2 phones at a partner meeting and encouraged them to use it for a week to _really_ get a feel for what class of device many people in the world use on a daily basis. The Nokia 2 is interesting because it looks and feels like a high-end phone but under the hood it is more like a smartphone from half a decade ago with a browser and an OS from today — and you can feel that mismatch.
 
@@ -111,15 +111,15 @@ I said before that the main thread has other responsibilities in addition to run
 So far, Workers have seen practically no adoption, apart from a few “slam dunk” use-cases, which usually involve long-running number crunching tasks. I think that should change. **We should start using workers. A lot.**
 
 ### All the cool kids are doing it
-This is not novel idea. At all. Quite the opposite, actually. **Most native platforms call the main thread the UI thread, as it should _only_ be used for UI work,** and they give you the tools to achieve that. Android has had [`AsyncTask`][AsyncTask] since it’s earliest versions and has added more convenient APIs since then (most recently [Coroutines][coroutines], which can be easily scheduled on different threads). If you opt-in to [“Strict mode”][strict mode], certain APIs — like file operations — will crash your app when used on the UI thread, helping you notice when you are doing non-UI work on the UI thread.
+This is not a novel idea. At all. Quite the opposite, actually. **Most native platforms call the main thread the UI thread, as it should _only_ be used for UI work,** and they give you the tools to achieve that. Android has had [`AsyncTask`][AsyncTask] since its earliest versions and has added more convenient APIs since then (most recently [Coroutines][coroutines], which can be easily scheduled on different threads). If you opt in to [“Strict mode”][strict mode], certain APIs — like file operations — will crash your app when used on the UI thread, helping you notice when you are doing non-UI work on the UI thread.
 
-iOS has had [Grand Central Dispatch][gcd] (“GCD”) from the very start to schedule work on different, system-provided thread pools, including the UI thread. This way they are enforcing both patterns: You always have to chunk your work into tasks so that it can be put in a queue, allowing the UI thread to attend to its other responsibilities whenever necessary, but also allowing you to run non-UI work on a different thread simply by putting the task into a different queue. As a cherry on top, tasks can be assigned a priority which helps to ensure that time-critical work is done as soon as possible without sacrifcing the responsiveness of the system as a whole.
+iOS has had [Grand Central Dispatch][gcd] (“GCD”) from the very start to schedule work on different, system-provided thread pools, including the UI thread. This way they are enforcing both patterns: You always have to chunk your work into tasks so that it can be put in a queue, allowing the UI thread to attend to its other responsibilities whenever necessary, but also allowing you to run non-UI work on a different thread simply by putting the task into a different queue. As a cherry on top, tasks can be assigned a priority which helps to ensure that time-critical work is done as soon as possible without sacrificing the responsiveness of the system as a whole.
 
 The point is that these native platforms have had support for utilizing non-UI threads since their inception. I think it’s fair to say that, over time, they have proven that this is a Good Idea™️. Keeping work on the UI thread to a minimum helps your app to stay responsive. Why hasn’t this pattern been adopted on the web?
 
 ## Developer Experience as a hurdle
 
-The only primitive we have for threading on the web are Web Workers. When you start using Workers with the API they provide, the `message` event handler becomes the center of your universe. That doesn’t feel great. Additionally, Workers are _like_ threads, but they are not the same as threads. You can’t have multiple threads access the same variable (like a state object) as everything needs to go via messages and these messages can carry many but not all JavaScript values. For example: you can’t send an `Event`, or any class instances without data loss. This, I think, has been a major deterrant for developers.
+The only primitive we have for threading on the web are Web Workers. When you start using Workers with the API they provide, the `message` event handler becomes the center of your universe. That doesn’t feel great. Additionally, Workers are _like_ threads, but they are not the same as threads. You can’t have multiple threads access the same variable (like a state object) as everything needs to go via messages and these messages can carry many but not all JavaScript values. For example: you can’t send an `Event`, or any class instances without data loss. This, I think, has been a major deterrent for developers.
 
 ### Comlink
 For this exact reason I wrote [Comlink], which not only hides `postMessage()` from you, but also the fact that you are working with Workers in the first place. It _feels_ like you have shared access to variables from other threads:
@@ -166,7 +166,7 @@ Some of you are probably wondering: **is it worth the effort to adopt an off-mai
 
 <figure>
   <img src="trace-omt.png" alt="A trace of PROXX running with an off-main-thread architecture.">
-  <figcaption>PROXX’ event handler are lean and are only used to send a message to a dedicated worker. All in all the task takes 48ms.</figcaption>
+  <figcaption>PROXX’s event handlers are lean and are only used to send a message to a dedicated worker. All in all the task takes 48ms.</figcaption>
 </figure>
 
 <figure>
@@ -178,9 +178,9 @@ It’s important to note that the work doesn’t just disappear. With an off-mai
 
 ## The Framework Quandary
 
-Now for my juicy hot take: **Our current generation of frameworks makes off-main-thread architectures hard and diminishes its returns.** UI frameworks are supposed to do UI work and therefore have the right to run on the UI thread. In reality, however, the work they are doing is a mixture of UI work and other related, but ultimately non-UI work.
+Now for my juicy hot take: **Our current generation of frameworks makes off-main-thread architectures hard and diminishes their returns.** UI frameworks are supposed to do UI work and therefore have the right to run on the UI thread. In reality, however, the work they are doing is a mixture of UI work and other related, but ultimately non-UI work.
 
-Let’s take VDOM diffing as an example: The purpose of a virtual DOM is to decouple costly updates to the real DOM from what the developers does. The virtual DOM is just a data structure mirroring the real DOM, where changes don’t have any costly side-effects. Only when the framework deems it appropriate, will the changes to the virtual DOM be replayed against the real DOM. This is often called “flushing”. Everything up until flushing has absolutely no requirement to run on the UI thread. Yet it is, wasting your precious UI thread budget. On [PROXX] we actually [opted out of VDOM diffing][proxx board] and implemented the DOM manipulations ourselves, because the phones at the lower end of the spectrum couldn’t cope with the amount of diffing work.
+Let’s take VDOM diffing as an example: The purpose of a virtual DOM is to decouple costly updates to the real DOM from what the developer does. The virtual DOM is just a data structure mirroring the real DOM, where changes don’t have any costly side-effects. Only when the framework deems it appropriate, will the changes to the virtual DOM be replayed against the real DOM. This is often called “flushing”. Everything up until flushing has absolutely no requirement to run on the UI thread. Yet it is, wasting your precious UI thread budget. On [PROXX] we actually [opted out of VDOM diffing][proxx board] and implemented the DOM manipulations ourselves, because the phones at the lower end of the spectrum couldn’t cope with the amount of diffing work.
 
 VDOM diffing is just one of many examples of a framework choosing developer experience or simplicity of implementation over being frugal with their end-user’s resources. Unless a globally launched framework labels itself as exclusively targeting the users of the [Wealthy Western Web], **it has a responsibility to help developers target every phone on The Widening Performance Gap™️ spectrum.**
 
