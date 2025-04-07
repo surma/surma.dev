@@ -392,6 +392,8 @@ The astute observer might have noticed that the total number of shader invocatio
 
 If you want, you can run this [demo][demo1] and inspect the full source.
 
+Note: the newly added lines do not seem to be needed anymore. [See this issue][no length check needed].
+
 ### A structure for the madness
 
 Our goal here is to have a whole lotta balls moving through 2D space and have happy little collisions. For that, each ball needs to have a radius, a position and a velocity vector. We could just continue working on `array<f32>`, and say the first float is the first ball’s x position, the second float is the first ball’s y position and so on, and so forth. That’s not what I would call ergonomic. Luckily, WGSL allows us to define our own structs to tie multiple pieces of data together in a neat bag.
@@ -461,13 +463,13 @@ We have successfully managed to read data from the GPU, bring it to JavaScript a
 
 ```js
 let inputBalls = new Float32Array(new ArrayBuffer(BUFFER_SIZE));
-for (let i = 0; i < NUM_BALLS; i++) {
-  inputBalls[i * 6 + 0] = randomBetween(2, 10); // radius
-  inputBalls[i * 6 + 1] = 0; // padding
-  inputBalls[i * 6 + 2] = randomBetween(0, ctx.canvas.width); // position.x
-  inputBalls[i * 6 + 3] = randomBetween(0, ctx.canvas.height); // position.y
-  inputBalls[i * 6 + 4] = randomBetween(-100, 100); // velocity.x
-  inputBalls[i * 6 + 5] = randomBetween(-100, 100); // velocity.y
+for (let i = 0; i < NUM_BALLS*6; i+=6) {
+  inputBalls[i + 0] = randomBetween(2, 10); // radius
+  inputBalls[i + 1] = 0; // padding
+  inputBalls[i + 2] = randomBetween(0, ctx.canvas.width); // position.x
+  inputBalls[i + 3] = randomBetween(0, ctx.canvas.height); // position.y
+  inputBalls[i + 4] = randomBetween(-100, 100); // velocity.x
+  inputBalls[i + 5] = randomBetween(-100, 100); // velocity.y
 }
 ```
 
@@ -619,6 +621,7 @@ _Thanks to [Brandon Jones][tojiro] for proof-reading this article and the [WebGP
 [requestadapter]: https://gpuweb.github.io/gpuweb/#gpu-interface
 [requestdevice]: https://gpuweb.github.io/gpuweb/#gpuadapter
 [handling lost devices]: https://toji.dev/webgpu-best-practices/device-loss.html
+[no length check needed]: https://github.com/surma/surma.dev/issues/38
 [webgpu limits defaults]: https://gpuweb.github.io/gpuweb/#limit
 [Corentin]: https://twitter.com/dakangz
 [WGSL]: https://gpuweb.github.io/gpuweb/wgsl
