@@ -69,10 +69,15 @@ const adapter = await navigator.gpu.requestAdapter();
 if (!adapter) throw Error("Couldn’t request WebGPU adapter.");
 
 const device = await adapter.requestDevice();
-if (!device) throw Error("Couldn’t request WebGPU logical device.");
+device.lost.then(()=>{
+    throw Error("WebGPU logical device was lost.");
+})
+
 ```
 
 Without any options, `requestDevice()` will return a device that does _not_ necessarily match the physical device’s capabilities, but rather what the WebGPU team considers a reasonable, lowest common denominator of all GPUs. The details are [specified][webgpu limits defaults] in the WebGPU standard. For example, even though my GPU is easily capable of handling data buffers up to 4GiB in size, the `device` returned will only allow data buffers up to 1GiB, and will reject any data buffers that are bigger. This might seem restrictive, but is actually quite helpful: If your WebGPU app runs with the default device, it will run on the vast majority of devices. If necessary, you can inspect the real limits of the physical GPU via `adapter.limits` and request a `device` with raised limits by passing an options object to `requestDevice()`.
+
+For details about handling lost devices, check this [blog post][handling lost devices].
 
 ### Shaders
 
@@ -613,6 +618,7 @@ _Thanks to [Brandon Jones][tojiro] for proof-reading this article and the [WebGP
 [transform feedback]: https://webgl2fundamentals.org/webgl/lessons/webgl-gpgpu.html
 [requestadapter]: https://gpuweb.github.io/gpuweb/#gpu-interface
 [requestdevice]: https://gpuweb.github.io/gpuweb/#gpuadapter
+[handling lost devices]: https://toji.dev/webgpu-best-practices/device-loss.html
 [webgpu limits defaults]: https://gpuweb.github.io/gpuweb/#limit
 [Corentin]: https://twitter.com/dakangz
 [WGSL]: https://gpuweb.github.io/gpuweb/wgsl
