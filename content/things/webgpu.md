@@ -390,9 +390,8 @@ The astute observer might have noticed that the total number of shader invocatio
   }
 |||
 
-If you want, you can run this [demo][demo1] and inspect the full source.
-
-Note: the newly added lines do not seem to be needed anymore. [See this issue][no length check needed].
+If you want, you can run this [demo][demo1] and inspect the full source. 
+Note: the extra additions do not seem happen anymore. But we keep them to stop extra executions. [See this issue][no length check needed].
 
 ### A structure for the madness
 
