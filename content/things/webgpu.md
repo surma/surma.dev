@@ -54,7 +54,7 @@ The _driver_ — provided by the GPU manufacturer — will expose the GPU’s ca
 
 The GPU is a shared resource. It is not only used by many applications at the same time, but also controls what you see on your monitor. There needs to be something that enables multiple processes to use the GPU concurrently, so that each app can put their own UI on screen without interfering with other apps or even maliciously reading other apps’ data. To each process, it looks like they have sole control over the physical GPU, but that is obviously not really the case. This multiplexing is mostly done by the driver and the operating system.
 
-Adapters, in turn, are the translation layer from operation system’s native graphics API to WebGPU. As the browser is a single OS-level application that can run multiple web applications, there is yet again a need for multiplexing, so that each web app feels like it has sole control of the GPU. This is modelled in WebGPU with the concept of _logical_ devices.
+Adapters, in turn, are the translation layer from operating system’s native graphics API to WebGPU. As the browser is a single OS-level application that can run multiple web applications, there is yet again a need for multiplexing, so that each web app feels like it has sole control of the GPU. This is modelled in WebGPU with the concept of _logical_ devices.
 
 To get access to an adapter, you call `navigator.gpu.requestAdapter()`. At the time of writing, [`requestAdapter()`][requestAdapter] takes very few options. The options allow you to request a high-performance or low-energy adapter.
 
@@ -69,10 +69,15 @@ const adapter = await navigator.gpu.requestAdapter();
 if (!adapter) throw Error("Couldn’t request WebGPU adapter.");
 
 const device = await adapter.requestDevice();
-if (!device) throw Error("Couldn’t request WebGPU logical device.");
+device.lost.then(()=>{ // this one should not be await-ed.
+    throw Error("WebGPU logical device was lost.");
+})
+
 ```
 
 Without any options, `requestDevice()` will return a device that does _not_ necessarily match the physical device’s capabilities, but rather what the WebGPU team considers a reasonable, lowest common denominator of all GPUs. The details are [specified][webgpu limits defaults] in the WebGPU standard. For example, even though my GPU is easily capable of handling data buffers up to 4GiB in size, the `device` returned will only allow data buffers up to 1GiB, and will reject any data buffers that are bigger. This might seem restrictive, but is actually quite helpful: If your WebGPU app runs with the default device, it will run on the vast majority of devices. If necessary, you can inspect the real limits of the physical GPU via `adapter.limits` and request a `device` with raised limits by passing an options object to `requestDevice()`.
+
+For best practices about handling lost devices, check [this blog post][handling lost devices].
 
 ### Shaders
 
@@ -152,7 +157,7 @@ The collection of all work items (which I will call the “workload”) is broke
   <figcaption>This is a workload. White-bordered cubes are a work item. Red-bordered cuboids are a workgroup.</figcaption>
 </figure>
 
-Finally, we have enough information to talk about the `@workgroup_size(x, y, z)` attribute, and it might even be mostly self-explanatory at this point: The attribute allows you to tell the GPU what the the size of a workgroup for this shader should be. Or in the language of the picture above, the `@workgroup_size` attribute defines the size of the red-bordered cubes. $x \times y \times z$ is the number of work items per workgroup. Any skipped parameter is assumed to be 1, so `@workgroup_size(64)` is equivalent to `@workgroup_size(64, 1, 1)`.
+Finally, we have enough information to talk about the `@workgroup_size(x, y, z)` attribute, and it might even be mostly self-explanatory at this point: The attribute allows you to tell the GPU what the size of a workgroup for this shader should be. Or in the language of the picture above, the `@workgroup_size` attribute defines the size of the red-bordered cubes. $x \times y \times z$ is the number of work items per workgroup. Any skipped parameter is assumed to be 1, so `@workgroup_size(64)` is equivalent to `@workgroup_size(64, 1, 1)`.
 
 Of course, the actual EUs are not arranged in the 3D grid on the chip. The aim of modelling work items in a 3D grid is to increase locality. The assumption is that it is likely that neighboring work groups will access similar areas in memory, so when running neighboring workgroups sequentially, the chances of already having values in the cache are higher, saving a couple of hundred cycles by not having to grab them from memory. However, most hardware seemingly just runs workgroups in a serial order as the difference between running a shader with `@workgroup_size(64)` or `@workgroup_size(8, 8)` is negligible. So this concept is considered somewhat legacy.
 
@@ -385,7 +390,8 @@ The astute observer might have noticed that the total number of shader invocatio
   }
 |||
 
-If you want, you can run this [demo][demo1] and inspect the full source.
+If you want, you can run this [demo][demo1] and inspect the full source. 
+Note: the extra additions do not seem happen anymore. But we keep them to stop extra executions. [See this issue][no length check needed].
 
 ### A structure for the madness
 
@@ -434,7 +440,7 @@ If you run this [demo][demo2], you’ll see this in your console:
 
 I put `999` the first field of the struct to make it easy to see where the struct begins in the buffer. There’s a total of 6 numbers until we reach the next `999`, which is a bit surprising because the struct really only has 5 numbers to store: `radius`, `position.x`, `position.y`, `velocity.x` and `velocity.y`. Taking a closer look, it is clear that the number after `radius` is always 0. This is because of alignment.
 
-Each WGSL data type has well-defined [alignment requirements][wgsl alignment]. If a data type has an alignment of $N$, it means that a value of that data type can only be stored at a memory address that is a multiple of $N$. `f32` has an alignment of 4, while `vec2<f32>` has an alignment of 8. If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as 0 is a multiple of 4. The next field in the struct is `vec2<f32>`, which has an alignment of 8. However, the first free address after `radius` is 4, which is _not_ a multiple of 8. To remedy this, the compiler adds padding of 4 bytes to get to the next address that is a multiple of 8. This explains what we see an unused field with the value 0 in the DevTools console.
+Each WGSL data type has well-defined [alignment requirements][wgsl alignment]. If a data type has an alignment of $N$, it means that a value of that data type can only be stored at a memory address that is a multiple of $N$. `f32` has an alignment of 4, while `vec2<f32>` has an alignment of 8. If we assume our struct starts at address 0, then the `radius` field can be stored at address 0, as 0 is a multiple of 4. The next field in the struct is `vec2<f32>`, which has an alignment of 8. However, the first free address after `radius` is 4, which is _not_ a multiple of 8. To remedy this, the compiler adds padding of 4 bytes to get to the next address that is a multiple of 8. This explains why we see an unused field with the value 0 in the DevTools console.
 
 <figure>
   <picture loading="lazy" width=797 height=605>
@@ -456,13 +462,13 @@ We have successfully managed to read data from the GPU, bring it to JavaScript a
 
 ```js
 let inputBalls = new Float32Array(new ArrayBuffer(BUFFER_SIZE));
-for (let i = 0; i < NUM_BALLS; i++) {
-  inputBalls[i * 6 + 0] = randomBetween(2, 10); // radius
-  inputBalls[i * 6 + 1] = 0; // padding
-  inputBalls[i * 6 + 2] = randomBetween(0, ctx.canvas.width); // position.x
-  inputBalls[i * 6 + 3] = randomBetween(0, ctx.canvas.height); // position.y
-  inputBalls[i * 6 + 4] = randomBetween(-100, 100); // velocity.x
-  inputBalls[i * 6 + 5] = randomBetween(-100, 100); // velocity.y
+for (let i = 0; i < NUM_BALLS*6; i+=6) {
+  inputBalls[i + 0] = randomBetween(2, 10); // radius
+  inputBalls[i + 1] = 0; // padding
+  inputBalls[i + 2] = randomBetween(0, ctx.canvas.width); // position.x
+  inputBalls[i + 3] = randomBetween(0, ctx.canvas.height); // position.y
+  inputBalls[i + 4] = randomBetween(-100, 100); // velocity.x
+  inputBalls[i + 5] = randomBetween(-100, 100); // velocity.y
 }
 ```
 
@@ -613,6 +619,8 @@ _Thanks to [Brandon Jones][tojiro] for proof-reading this article and the [WebGP
 [transform feedback]: https://webgl2fundamentals.org/webgl/lessons/webgl-gpgpu.html
 [requestadapter]: https://gpuweb.github.io/gpuweb/#gpu-interface
 [requestdevice]: https://gpuweb.github.io/gpuweb/#gpuadapter
+[handling lost devices]: https://toji.dev/webgpu-best-practices/device-loss.html
+[no length check needed]: https://github.com/surma/surma.dev/issues/38
 [webgpu limits defaults]: https://gpuweb.github.io/gpuweb/#limit
 [Corentin]: https://twitter.com/dakangz
 [WGSL]: https://gpuweb.github.io/gpuweb/wgsl
