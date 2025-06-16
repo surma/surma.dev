@@ -162,19 +162,16 @@ const llm_with_webfetch = llm.bindTools([webfetch]);
 const result = await llm_with_webfetch.invoke(
   "What is my IP? You can find it on https://jsonip.com"
 );
-```
-
-```js
-{
-  content: "",
-  tool_calls: [
-    {
-      name: "webfetch",
-      args: { url: "https://jsonip.com" },
-      ...
-    }
-  ]
-}
+// {
+//   content: "",
+//   tool_calls: [
+//     {
+//       name: "webfetch",
+//       args: { url: "https://jsonip.com" },
+//       ...
+//     }
+//   ]
+// }
 ```
 
 Great! It works! The LLM clearly has access to the tool and decided that it is useful for the task at hand. However, the LLM can only tell us that it wants to invoke a tool. We have to write the logic for the actual invocation ourselves. That means we have to analyze the LLMs response to detect that it is a tool invocation, figure out which tool is being invoked (there may be multiple!), we have to then manually invoke the tool, capture the return value of the tool and then invoke the LLM again, passing along the tool’s result to allow the LLM to process it. Quite tedious.
@@ -253,7 +250,12 @@ You can imagine that looking at code like this and figuring out what is happenin
 gr.getGraph().drawMermaidPng();
 ```
 
-```mermaid
+<figure>
+  <img src="looper.svg" style="max-height: 50vh">
+  <figcaption>The graph that we programmatically created.</figcaption>
+</figure>
+
+<script language="mermaid" style="display: none;">
 graph TD;
 	__start__([<p>__start__</p>]):::first
 	incrementer(incrementer)
@@ -264,9 +266,9 @@ graph TD;
 	incrementer -. &nbsp;false&nbsp; .-> doubler;
 	incrementer -. &nbsp;true&nbsp; .-> incrementer;
 	classDef default fill:#f2f0ff,line-height:1.2;
-	classDef first fill-opacity:0;
 	classDef last fill:#bfb6fc;
-````
+	classDef first fill:#bfb6fc;
+</script>
   
 ### Parallelism
 
