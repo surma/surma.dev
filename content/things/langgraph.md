@@ -7,7 +7,7 @@ live: true
 
 ---
 
-LangGraph lets you build complex workflow architectures and codify them into powerful automations. Yes, it also integrates really well with LangChain and therefore LLMs, but it's a powerful tool to have in your tool belt regardless.
+LangGraph lets you build complex workflow architectures and codify them into powerful automations. Also LLMs, if you want. But you don’t have to!
 
 <!-- more -->
 
@@ -15,9 +15,9 @@ LangGraph lets you build complex workflow architectures and codify them into pow
 
 I always liked the idea of running LLMs locally, rather than spending money for an LLM provider off-site. Especially if we imagine a future where the OS or the browser provide LLM models, it becomes increasingly important to be able to build robust workflows on top of an unknown LLM.
 
-Smaller LLMs struggle with ambiguity and with larger tasks, so it becomes important to break the task into smaller, well-scope subtasks. Effectively, you have to start orchestrating multiple LLMs, which is a pattern that is also becoming more popular with large LLMs under the topic of clusters and swarms. This not only allow you to have different LLMs with different specializations, but also to run multiple inference steps in parallel or even mix and match different models, if you have multiple at your disposal. These models can validate each others' work, give feedback or have access to different tools. In some cases, distributing your task across multiple LLMS can also get you to the final result _quicker_, although that aspect is admittedly a bit more hit and miss.
+Smaller LLMs struggle with ambiguity and with larger tasks, so it becomes important to break the task into smaller, well-scope subtasks. Effectively, you have to start orchestrating multiple LLMs, which is a pattern that is also becoming more popular with large LLMs under the topic of clusters and swarms. This not only allow you to have different LLMs with different specializations, but also to run multiple inference steps in parallel or even mix and match different models, if you have multiple at your disposal. These models can validate each others’ work, give feedback or have access to different tools. In some cases, distributing your task across multiple LLMS can also get you to the final result _quicker_, although that aspect is admittedly a bit more hit and miss.
 
-But how do you build such an orchestration of LLMs? There are multiple options out there, and I have no skin in the game of declaring any one of them superior. If you google for "Agent framework", you will find an oceas of options. This blog post, however, focuses on [LangGraph], from the same makers of [LangChain], one of the bedrock libraries in the LLM space. They are excellent Python libraries and have a flourishing ecosystem out there.
+But how do you build such an orchestration of LLMs? There are multiple options out there, and I have no skin in the game of declaring any one of them superior. If you google for “Agent framework”, you will find an oceas of options. This blog post, however, focuses on [LangGraph], from the same makers of [LangChain], one of the bedrock libraries in the LLM space. They are excellent Python libraries and have a flourishing ecosystem out there.
 
 As it turns out, they have also published [langchain.js] and [langgraph.js] to cater to the JS audience, and while their API documentation leaves some things to be (strongly) desired, I do enjoy the layering of LangGraph and found it quite intuitive to build more complex architectures with.
 
@@ -47,7 +47,7 @@ const llm = new ChatAnthropic({
 });
 ```
 
-No matter which package you used, the resulting `llm` instance will provide an `invoke()` method to create a chat completion. This is not groundbreaking, of course, but it is nice to have a uniform API regardless of LLM provider. Let's make sure it works:
+No matter which package you used, the resulting `llm` instance will provide an `invoke()` method to create a chat completion. This is not groundbreaking, of course, but it is nice to have a uniform API regardless of LLM provider. Let’s make sure it works:
 
 
 ```typescript
@@ -66,9 +66,9 @@ you get a total of 2 units. Addition combines quantities,
 so one item plus one more item equals two items in total.
 ```
 
-## Structured Responses
+### Structured Responses
 
-Often, the tasks we give to LLMs require the LLM to give us a specific answer. In the examplea above we requested an answer and an explanation. However, by default, we just get a blob of prose and we have to figure out ourselves how we extract the bits of information that we are interested in. While _some_ LLMs now have the ability to provide “structured” responses - sometimes also called JSON mode - not all of them do. Again, LangChain tries to level things out here for us. If the model has support for structured responses, it will utilize this ability. If not, it will try and “polyfill”. It does this by piping the prose answer through the LLM a 2nd time and requesting it to reformat the answer as JSON. No matter which path has been taken, since we have defined our expected schema, for example with [zod], it will validate that the answer conforms to this schema before returning it to us.
+Often, the tasks we give to LLMs require the LLM to give us a specific answer. In the examplea above we requested an answer and an explanation. However, by default, we just get a blob of prose and we have to figure out ourselves how we extract the bits of information that we are interested in. While _some_ LLMs now have the ability to provide “structured” responses — sometimes also called JSON mode — not all of them do. Again, LangChain tries to level things out here for us. If the model has support for structured responses, it will utilize this ability. If not, it will try and “polyfill”. It does this by piping the prose answer through the LLM a 2nd time and requesting it to reformat the answer as JSON. No matter which path has been taken, since we have defined our expected schema, for example with [zod], it will validate that the answer conforms to this schema before returning it to us.
 
 
 ```typescript
@@ -100,11 +100,11 @@ Which yields a nicely inspectable object:
 }
 ```
 
-## Tools
+### Tools
 
-Tools is the feature formerly known as "functions". An LLM that supports tools can be given a list of function signatures (including parameter types and descriptions), along with the user's message. If it seems correct to the LLM, instead of responding with text, it will respond with a special message indicating which of the provided tools should be called and what the parameters should be.
+Tools is the feature formerly known as “functions”. An LLM that supports tools can be given a list of function signatures (including parameter types and descriptions), along with the user’s message. If it seems correct to the LLM, instead of responding with text, it will respond with a special message indicating which of the provided tools should be called and what the parameters should be.
 
-The ability to call tools is a huge increase in the utility that LLMs provide. With the somewhat recent introduction and de-facto standardization of the
+The ability to call tools hugely increases the utility that LLMs provide. With the somewhat recent introduction and de-facto standardization of the
 [Model Context Protocol][mcp] and the resulting ecosystem of MCP servers, being able to utilize tools with LLMs is essential. LangChain provides a convenient function to expose any arbitrary asynchronous functions as a tool, using zod to both define and validate the schema of the function parameters.
 
 For example, here I define a tool called `webfetch` allows agents to download and read web content. Ideally we’d pipe the HTML through [Jina AI’s Reader-LM](https://huggingface.com/jinaai/readerlm-v2) to turn it into Markdown, but this article was already getting out of hand.
@@ -139,7 +139,7 @@ As you can tell, that makes it very easy to write you own custom tools. Tapping 
 
 
 ```typescript
-import { MultiServerMCPClient } from "npm:@langchain/mcp-adapters";
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 
 const mcps = new MultiServerMCPClient({
   mcpServers: {
@@ -154,7 +154,7 @@ const mcps = new MultiServerMCPClient({
 const mcpTools = await mcps.getTools();
 ```
 
-For a LangChain LLM instance to be able to invoke a tool, they have to be "bound" to the LLM. 
+For a LangChain LLM instance to be able to invoke a tool, they have to be “bound” to the LLM. 
 
 
 ```typescript
@@ -177,27 +177,27 @@ const result = await llm_with_webfetch.invoke(
 }
 ```
 
-Great! It works! The LLM clearly has access to the tool and decided that it is useful for the task at hand. However, the LLM can only tell us that it wants to invoke a tool. We have to write the logic for the actual invocation ourselves. That means we have to analyze the LLMs response to detect that it is a tool invocation, figure out which tool is being invoked (there may be multiple!), we have to then manually invoke the tool, capture the return value of the tool and then invoke the LLM again, passing along the tool's result to allow the LLM to process it. Quite tedious.
+Great! It works! The LLM clearly has access to the tool and decided that it is useful for the task at hand. However, the LLM can only tell us that it wants to invoke a tool. We have to write the logic for the actual invocation ourselves. That means we have to analyze the LLMs response to detect that it is a tool invocation, figure out which tool is being invoked (there may be multiple!), we have to then manually invoke the tool, capture the return value of the tool and then invoke the LLM again, passing along the tool’s result to allow the LLM to process it. Quite tedious.
 
 It seems intuitive that what should happen here is that the tools that the LLM wants to invoke actually get invoked automatically and the LLM gets fed the response. In fact, what happens quite often is that the LLM will invoke a tool, and that the response with prompt the LLM to invoke yet another tool. And this can keep going until the user’s request has been fulfilled. The number of steps that are required is not clear and inherently depends on the complexity of the request.
 
 What we are working towards here is an “agent”. An agent is an LLM with an identity (read: system prompt) and access to a bunch of tools. It ill keep going in circles between invoking the LLM and invoking a tool until a stop condition is met (typically until the LLM is no longer wanting to invoke tools).
 
-The problem is that this is cyclic (LLM -> Tools -> LLM -> Tools -> ...) and as such LangChain‘s DAG-based architecture cannot model this approach. Enter LangGraph!
+The problem is that this is cyclic (LLM -> Tools -> LLM -> Tools -> ...) and as such LangChain’s DAG-based architecture cannot model this approach. Enter LangGraph!
 
-# LangGraph
+## LangGraph
 
-LangGraph is from the same folks as LangChain and therefore is LangChain-aware. However, at it’s core, LangGraph is a standalone graph library.
+LangGraph is a graph library from the same folks as LangChain and therefore is LangChain-aware. However, at it’s core, LangGraph is a standalone graph library. So let’s put all the LLM shenanigans to one side for a moment and just build some nice little graphs!
 
-Let’s put all the LLM shenanigans to one side for a moment and just build a little graph example!
+Graphs, in the mathematical sense, are nodes which are connected by edges. In LangGraph, a graph has a state object (whose schema is defined using Zod) that gets passed to the active node to work on. The active node can manipulate the data in the state object. While there is only a single start node, LangGraph is able to take multiple edges for the active node at once, making multiple nodes become active in ~parallel.
 
-Graphs, in the mathematical sense, are nodes which are connected by edges. In LangGraph, a graph has a state object (defined using Zod) that gets passed around, and nodes can manipulate the state object. While there is only a single start node, multiple edges _can_ be taken at once, so over time, multiple nodes can be active in ~parallel. The purest form of a node is just an async function. It gets the state passed in as the first argument and returns the _changes_ it wants to make to the state object. It cannot manipulate the state object directly, as it is working on a copy, which avoids race conditions when multiple nodes are active.
+The simplest form of a node is an async function. When the node becomes active, the async function gets invoked with the state object as the first parameter. The async function can return the _updates_ it wants to make to the state object.
 
 
 ```typescript
-import { StateGraph, START, END } from "npm:@langchain/langgraph";
-import { z } from "npm:zod";
-import "npm:@langchain/langgraph/zod";
+import { StateGraph, START, END } from "@langchain/langgraph";
+import { z } from "zod";
+import "@langchain/langgraph/zod";
 
 const GraphState = z.object({
   count: z.number(),
@@ -211,21 +211,15 @@ const graphBuilder = new StateGraph(GraphState)
   .addEdge("incrementer", END);
 
 const graph = graphBuilder.compile();
-await graph.invoke({ count: 0 });
+const result = await graph.invoke({ count: 0 });
+// { count : 1 }
 ```
-
-
-
-
-    { count: [33m1[39m }
-
-
 
 How exciting.
 
-Now let’s make sure that we can actually do loops! Just like in coding, loops need to have a break condition, and for that purpose LangGraph has the concept of conditional edges.
+### Loops
 
-Conditional edges, often also called “routers”, are functions that take the graph state and return a value. The coditional edge takese a third parameter that maps the router’s return value to the node name that should get activated next.
+The thing that LangChain could not do is loop. So let’s make sure that LangGraph actually solves this. Just like in coding, loops need to have a break condition, and for that LangGraph has the concept of conditional edges. Conditional edges are inserted similarly to normal edges. Instead of the target node, the second argument is a function that take the graph state and returns a value. The third argument is a map that maps the function’s return value to the target node’s name.
 
 
 ```typescript
@@ -249,40 +243,32 @@ const graphBuilder = new StateGraph(GraphState)
   .addEdge("doubler", END);
 
 const graph = graphBuilder.compile();
-await graph.invoke({ count: 0 });
+const result = await graph.invoke({ count: 0 });
+// { count: 20 }
 ```
 
-
-
-
-    { count: [33m20[39m }
-
-
-
-You can imagine this getting a bit hard to read. For that purpose LangGraph can visualize your graph for you:
-
+You can imagine that looking at code like this and figuring out what is happening can get a bit unwieldy over time. To address that, LangGraph can visualize your graph for you:
 
 ```typescript
-async function renderGraph(gr) {
-    const g = gr.getGraph();
-    const image = await g.drawaidPng();
-    const data = new Uint8Array(await image.arrayBuffer());
-    return Deno.jupyter.image(data);
-}
-
-await renderGraph(graph);
+gr.getGraph().drawMermaidPng();
 ```
 
-
-
-
-    
-![jpeg](output_27_0.jpg)
-    
-
-
-
-# Parallelism
+```mermaid
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	incrementer(incrementer)
+	doubler(doubler)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> incrementer;
+	doubler --> __end__;
+	incrementer -. &nbsp;false&nbsp; .-> doubler;
+	incrementer -. &nbsp;true&nbsp; .-> incrementer;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+````
+  
+### Parallelism
 
 Parallelism seems almost out of scope for a fundamental introduction like this, but I decided to include it because it explains an important design decision in the graph’s state object.
 
