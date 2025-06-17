@@ -5,3 +5,6 @@
 .env
 .parcel-cache
 /build
+
+# Local Netlify folder
+.netlify
