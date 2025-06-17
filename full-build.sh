@@ -2,7 +2,7 @@
 
 set -e
 
-BRANCH=${BRANCH:-$(git branch --show-current)}
+BRANCH=$(echo ${BRANCH:-$(git branch --show-current)} | sed -r 's!/!-!g')
 TARGET_DOMAIN="$BRANCH--surmblog.netlify.app"
 if [ "$BRANCH" = "master" ]; then
   TARGET_DOMAIN="surma.dev"
