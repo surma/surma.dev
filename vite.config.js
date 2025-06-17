@@ -23,27 +23,27 @@ export default {
     },
 	},
 	plugins: [
-		// {
-		// 	name: 'social-image',
-		// 	transformIndexHtml: {
-		// 		async transform(html, {bundle}) {
-		// 			// console.log(bundle);
-		// 			const rx = /<meta property="og:image" content="([^"]+)">/g;
-		// 			while(true) {
-		// 				const matches = rx.exec(html);
-		// 				if(!matches) return;
-		// 				const imgUrl = new URL(matches[1]);
-		// 				const path = `.${imgUrl.pathname}`;
-		// 				const file = await readFile(`.tmp${imgUrl.pathname}`);
-		// 				bundle[path] = {
-		// 					type: 'asset',
-		// 					source: file,
-		// 					fileName: path,
-		// 				};						
-		// 			}
-		// 		}
-		// 	}
-		// },
+		{
+			name: 'social-image',
+			transformIndexHtml: {
+				async transform(html, {bundle}) {
+					// console.log(bundle);
+					const rx = /<meta property="og:image" content="([^"]+)">/g;
+					while(true) {
+						const matches = rx.exec(html);
+						if(!matches) return;
+						const imgUrl = new URL(matches[1]);
+						const path = `.${imgUrl.pathname}`;
+						const file = await readFile(`.tmp${imgUrl.pathname}`);
+						bundle[path] = {
+							type: 'asset',
+							source: file,
+							fileName: path,
+						};						
+					}
+				}
+			}
+		},
 		{
 			name: 'vue-parser-workaround',
 			transformIndexHtml: {
